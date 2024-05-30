@@ -295,7 +295,7 @@ public sealed class LianeServiceImpl(
     using var tx = connection.BeginTransaction();
 
     var lianeId = Guid.Parse(liane.Id);
-    var member = await MarkAsRead(connection, lianeId, tx);
+    var member = await MarkAsRead(connection, lianeId, tx, DateTime.UtcNow);
 
     var filter = Filter<LianeMessageDb>.Where(m => m.LianeId, ComparisonOperator.Eq, lianeId)
                  & Filter<LianeMessageDb>.Where(m => m.CreatedAt, ComparisonOperator.Gt, member.JoinedAt);
@@ -345,16 +345,16 @@ public sealed class LianeServiceImpl(
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
     var lianeId = Guid.Parse(liane.Id);
-    await MarkAsRead(connection, lianeId, tx);
+    await MarkAsRead(connection, lianeId, tx, DateTime.UtcNow);
     tx.Commit();
   }
 
-  private async Task<LianeMemberDb> MarkAsRead(IDbConnection connection, Guid lianeId, IDbTransaction tx)
+  private async Task<LianeMemberDb> MarkAsRead(IDbConnection connection, Guid lianeId, IDbTransaction tx, DateTime now)
   {
     var userId = currentContext.CurrentUser().Id;
 
     var update = Query.Update<LianeMemberDb>()
-      .Set(m => m.LastReadAt, DateTime.UtcNow)
+      .Set(m => m.LastReadAt, now)
       .Where(l => l.LianeId, ComparisonOperator.Eq, lianeId)
       .And(l => l.UserId, ComparisonOperator.Eq, userId);
     var updated = await connection.UpdateAsync(update, tx);
