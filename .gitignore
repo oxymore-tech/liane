@@ -24,3 +24,9 @@ dump.rdb
 .env.*
 deploy/db/user.json
 *.temprp.*
+/app/ios/liane.xcworkspace/contents.xcworkspacedata
+/app/ios/liane.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+/app/ios/liane.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+/app/ios/liane.xcworkspace/xcshareddata/swiftpm/Package.resolved
+/common/package-lock.json
+/app/ios/Podfile.lock

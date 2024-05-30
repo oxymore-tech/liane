@@ -68,7 +68,8 @@ export const ContextualColors = {
     light: "#FFBC8B"
   },
   greenValid: {
-    light: "#B9E7C3"
+    light: "#B9E7C3",
+    accent: "#00ce2d"
   },
   redAlert: {
     light: "#ffd7d0",

@@ -7,10 +7,25 @@ import {
   useNavigation,
   useRoute
 } from "@react-navigation/native";
-import { JoinLianeRequestDetailed, Liane, Event, Notification, JoinRequest, User, UnionUtils } from "@liane/common";
+import {
+  JoinLianeRequestDetailed,
+  Liane,
+  Event,
+  Notification,
+  JoinRequest,
+  User,
+  UnionUtils,
+  MatchGroup,
+  CoMatch,
+  CoLianeRequest,
+  CoLiane,
+  LianeRequest,
+  ResolvedLianeRequest
+} from "@liane/common";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack/src/types";
 import { InternalLianeRequest } from "@/screens/publish/StateMachine";
 import { checkInitialNotification } from "@/api/service/notification";
+import { GroupeCovoiturage } from "@/util/Mock/groups";
 
 export const HOME_TRIPS = "Mes trajets";
 export type NavigationParamList = {
@@ -21,6 +36,8 @@ export type NavigationParamList = {
   RequestJoin: { request: JoinLianeRequestDetailed };
   LianeJoinRequestDetail: { request: JoinLianeRequestDetailed | string };
   Chat: { conversationId: string; liane?: Liane };
+  Communities: undefined;
+  CommunitiesChat: { group?: CoMatch; liane?: CoLiane; request?: CoLianeRequest | ResolvedLianeRequest; lianeId?: string };
   LianeDetail: { liane: Liane | string };
   Profile: { user: User } | undefined;
   ProfileEdit: undefined;
@@ -32,6 +49,8 @@ export type NavigationParamList = {
   //OpenValidateTrip: { liane: Liane };
   Notifications: undefined;
   RallyingPointRequests: undefined;
+  CommunitiesDetails: { liane: CoLiane };
+  ListGroups: { groups: CoMatch[]; lianeRequest: ResolvedLianeRequest };
 };
 
 export const NavigationScreenTitles = {
@@ -59,6 +78,9 @@ export const AppLinking: LinkingOptions<NavigationParamList> = {
       },
       OpenJoinLianeRequest: {
         path: "join_request/:request"
+      },
+      CommunitiesChat: {
+        path: "community_chat/:lianeId"
       }
     }
   }

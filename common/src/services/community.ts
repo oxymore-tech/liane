@@ -1,6 +1,7 @@
 import { DayOfWeekFlag, Entity, Liane, PaginatedRequestParams, PaginatedResponse, RallyingPoint, Ref, User, UTCDateTime } from "../api";
 import { HttpClient } from "./http";
 import { TimeRange } from "./time";
+import { IUnion } from "../union";
 
 export type TimeConstraint = {
   when: TimeRange;
@@ -10,7 +11,7 @@ export type TimeConstraint = {
 
 export type CoLianeRequest = Entity & {
   name: string;
-  wayPoints: Ref<RallyingPoint>[];
+  wayPoints: RallyingPoint[];
   roundTrip: boolean;
   canDrive: boolean;
   weekDays: DayOfWeekFlag;
@@ -59,25 +60,28 @@ export type CoLianeUpdate = {
 
 export type CoLianeMember = {
   user: User;
-  lianeRequest: Ref<CoLianeRequest>;
+  lianeRequest: CoLianeRequest;
   joinedAt: UTCDateTime;
   lastReadAt?: UTCDateTime;
 };
 
 export type CoMatch = MatchSingle | MatchGroup;
 
-export type MessageContentText = { type: "text"; value: string };
-export type MessageContentTrip = { type: "trip"; value: Ref<Liane> };
+export type MessageContentText = { value: string } & IUnion<"text">;
+export type MessageContentTrip = { value: Ref<Liane> } & IUnion<"trip">;
 export type MessageContent = MessageContentText | MessageContentTrip;
 
 export type LianeMessage = Entity & { content: MessageContent };
+export type TypedLianeMessage<T extends MessageContentText | MessageContentTrip> = LianeMessage & { content: T };
 
 export interface CommunityService {
   list(): Promise<CoLianeMatch[]>;
 
+  getLiane(liane: string): Promise<CoLiane>;
+
   create(lianeRequest: CoLianeRequest): Promise<CoLianeRequest>;
 
-  update(lianeRequestId: string, request: CoLianeRequest): Promise<CoLianeRequest>;
+  update(lianeRequestId: string, request: ResolvedLianeRequest): Promise<CoLianeRequest>;
 
   delete(lianeRequestId: string): Promise<void>;
 
@@ -111,7 +115,7 @@ export class CommunityServiceClient implements CommunityService {
     await this.http.del(`/community/liane/request/${lianeRequestId}`);
   }
 
-  update(lianeRequestId: string, request: CoLianeRequest) {
+  update(lianeRequestId: string, request: ResolvedLianeRequest) {
     return this.http.postAs<CoLianeRequest>(`/community/liane/request/${lianeRequestId}`, { body: request });
   }
 
@@ -141,5 +145,9 @@ export class CommunityServiceClient implements CommunityService {
 
   getUnreadLianes() {
     return this.http.get<Record<string, number>>("/community/liane/unread");
+  }
+
+  getLiane(liane: string) {
+    return this.http.get<CoLiane>(`/community/liane/${liane}`);
   }
 }

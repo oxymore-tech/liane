@@ -24,6 +24,9 @@ import { SettingsScreen } from "@/screens/user/SettingsScreen";
 import { PublishScreen } from "@/screens/publish/PublishScreen";
 import { LianeDetailScreen, LianeJoinRequestDetailScreen } from "@/screens/detail/LianeDetailScreen";
 import { ChatScreen } from "@/screens/ChatScreen";
+import { CommunitiesChatScreen } from "@/screens/communities/CommunitiesChatScreen";
+import { ListGroupScreen } from "@/screens/communities/ListGroupScreen";
+import { CommunitiesDetailScreen } from "@/screens/communities/CommunitiesDetailScreen";
 import { OpenJoinRequestScreen } from "@/screens/modals/OpenJoinRequestScreen";
 import { RequestJoinScreen } from "@/screens/search/RequestJoinScreen";
 import { TripGeolocationWizard } from "@/screens/home/TripGeolocationWizard";
@@ -204,6 +207,9 @@ function Navigation() {
         <Stack.Screen name="Publish" component={PublishScreen} options={{ headerShown: false, animation: "fade" }} />
         <Stack.Screen name="LianeDetail" component={LianeDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Chat" component={ChatScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Communities" component={CommunitiesScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="CommunitiesChat" component={CommunitiesChatScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="CommunitiesDetails" component={CommunitiesDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
         <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} options={{ headerShown: false }} />
         <Stack.Screen name="RequestJoin" component={RequestJoinScreen} options={{ headerShown: false, presentation: "modal" }} />
@@ -217,6 +223,7 @@ function Navigation() {
         <Stack.Screen name="Account" component={AccountScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Notifications" component={NotificationScreen} />
         <Stack.Screen name="RallyingPointRequests" component={RallyingPointRequestsScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="ListGroups" component={ListGroupScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
     );
   }
