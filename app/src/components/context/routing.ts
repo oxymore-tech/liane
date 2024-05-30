@@ -80,7 +80,7 @@ export const AppLinking: LinkingOptions<NavigationParamList> = {
         path: "join_request/:request"
       },
       CommunitiesChat: {
-        path: "community_chat/:lianeId"
+        path: "community/:lianeId"
       }
     }
   }
@@ -105,6 +105,9 @@ export function getNotificationNavigation(notification: Notification) {
   } else if (UnionUtils.isInstanceOf(notification, "NewMessage")) {
     return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
       navigation.navigate("Chat", { conversationId: notification.conversation });
+  } else if (UnionUtils.isInstanceOf(notification, "LianeMessage")) {
+    return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
+      navigation.navigate("CommunitiesChat", { lianeId: notification.liane });
   }
   return undefined;
 }

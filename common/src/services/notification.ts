@@ -3,8 +3,9 @@ import { BehaviorSubject, map, Observable, SubscriptionLike } from "rxjs";
 import { LianeEvent } from "../event";
 import { HttpClient } from "./http";
 import { IUnion } from "../union";
+import { CoLiane } from "./community";
 
-export type Notification = Info | Event | NewMessage;
+export type Notification = Info | Event | NewMessage | LianeMessage;
 
 export enum Answer {
   Accept = "Accept",
@@ -35,6 +36,10 @@ export type NewMessage = Readonly<{
   conversation: Ref<ConversationGroup>;
 }> &
   AbstractNotification<"NewMessage">;
+
+export type LianeMessage = AbstractNotification<"LianeMessage"> & {
+  liane: Ref<CoLiane>;
+};
 
 export type Event<T extends LianeEvent = LianeEvent> = Readonly<{
   payload: T;

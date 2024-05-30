@@ -28,6 +28,7 @@ const NotificationScreen = WithFetchPaginatedResponse<Notification>(
     const insets = useSafeAreaInsets();
     const { navigation } = useAppNavigation();
     const { services, user } = useContext(AppContext);
+    console.log("@@@@@@@@@@@@@@@@@@@@@@@@@ DATA", data);
 
     const queryUpdater = useQueryUpdater();
     services.realTimeHub.subscribeToNotifications(async (_: Notification) => {
