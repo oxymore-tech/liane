@@ -9,20 +9,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Liane.Web.Internal.Auth;
 
-public sealed class TokenRequirementHandler : AuthorizationHandler<TokenRequirement>
+public sealed class TokenRequirementHandler(ILogger<TokenRequirementHandler> logger, IHttpContextAccessor httpContextAccessor, IAuthService authService)
+  : AuthorizationHandler<TokenRequirement>
 {
-    private readonly IHttpContextAccessor httpContextAccessor;
-    private readonly IAuthService authService;
-    private readonly ILogger<TokenRequirementHandler> logger;
-
-    public TokenRequirementHandler(ILogger<TokenRequirementHandler> logger, IHttpContextAccessor httpContextAccessor, IAuthService authService)
-    {
-        this.logger = logger;
-        this.httpContextAccessor = httpContextAccessor;
-        this.authService = authService;
-    }
-    
-    protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, TokenRequirement requirement)
+  protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, TokenRequirement requirement)
     {
         var httpContext = httpContextAccessor.HttpContext!;
 

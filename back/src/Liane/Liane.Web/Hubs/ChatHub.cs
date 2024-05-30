@@ -62,10 +62,10 @@ public sealed class ChatHub(
     });
     return liane;
   }
-  
+
   public async Task ReadLiane(string lianeId, DateTime timestamp)
   {
-    await lianeService.MarkAsRead(lianeId);
+    await lianeService.MarkAsRead(lianeId, timestamp);
   }
 
   public async Task SendToGroup(ChatMessage message, string groupId)
@@ -99,7 +99,7 @@ public sealed class ChatHub(
     var userId = currentContext.CurrentUser().Id;
     await chatService.ReadConversation(convId, userId, timestamp);
   }
-  
+
   public override async Task OnConnectedAsync()
   {
     await base.OnConnectedAsync();

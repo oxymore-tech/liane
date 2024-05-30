@@ -21,7 +21,7 @@ public sealed class LianeRequestFetcher(IRallyingPointService rallyingPointServi
     var lianeRequest = (await FetchLianeRequests(connection, ImmutableList.Create(lianeRequestId), tx)).FirstOrDefault();
     if (lianeRequest is null)
     {
-      throw new ResourceNotFoundException($"Liane request {lianeRequest} not found");
+      throw new ResourceNotFoundException($"Liane request '{lianeRequestId}' not found");
     }
 
     return lianeRequest;
