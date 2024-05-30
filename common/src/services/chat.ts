@@ -1,6 +1,6 @@
 import { ConsumeMessage, OnLatestMessagesCallback } from "./hub";
 import { HubConnection } from "@microsoft/signalr";
-import { ChatMessage, ConversationGroup, PaginatedResponse, Ref } from "../api";
+import { ChatMessage, ConversationGroup, PaginatedResponse, Ref, UTCDateTime } from "../api";
 import { AppLogger } from "../logger";
 import { CoLiane, LianeMessage, MessageContent } from "./community";
 
@@ -57,6 +57,10 @@ export class Chat<TChatType extends ChatType> {
     } catch (e) {
       this.logger.warn("CHAT", `Could not send message to group ${this.currentGroup}`, e);
     }
+  }
+
+  async readConversation(conversation: Ref<GroupTypeOf<TChatType>>, timestamp: UTCDateTime) {
+    await this.hub.invoke(`Read${this.name}`, conversation, timestamp);
   }
 
   async joinGroupChat(conversationId: Ref<GroupTypeOf<TChatType>>) {
