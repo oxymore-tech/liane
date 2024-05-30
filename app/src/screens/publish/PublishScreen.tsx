@@ -426,7 +426,7 @@ const TimeConstraintView = ({ title, onChange, value }: { title: string; value: 
 const TimeStepView = ({ editable, onChange, initialValue, onRequestEdit }: StepProps<TimeIntervalConstraint>) => {
   const [arriveBefore, setArriveBefore] = useState(initialValue?.arriveBefore);
   const [leaveAfter, setLeaveAfter] = useState(initialValue?.leaveAfter);
-  console.log(arriveBefore, leaveAfter);
+
   const daysMessage = useMemo(() => {
     if (!!arriveBefore && !!leaveAfter) {
       return `Entre ${AppLocalization.formatTime(leaveAfter)} et ${AppLocalization.formatTime(arriveBefore)}`;
@@ -438,7 +438,7 @@ const TimeStepView = ({ editable, onChange, initialValue, onRequestEdit }: StepP
       return "Journée entière";
     }
   }, [arriveBefore, leaveAfter]);
-  console.log(arriveBefore, leaveAfter, daysMessage);
+
   return (
     <Pressable disabled={editable} onPress={onRequestEdit}>
       {!editable && (

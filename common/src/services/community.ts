@@ -1,6 +1,7 @@
 import { DayOfWeekFlag, Entity, Liane, PaginatedRequestParams, PaginatedResponse, RallyingPoint, Ref, User, UTCDateTime } from "../api";
 import { HttpClient } from "./http";
 import { TimeRange } from "./time";
+import { IUnion } from "../union";
 
 export type TimeConstraint = {
   when: TimeRange;
@@ -66,11 +67,12 @@ export type CoLianeMember = {
 
 export type CoMatch = MatchSingle | MatchGroup;
 
-export type MessageContentText = { type: "text"; value: string };
-export type MessageContentTrip = { type: "trip"; value: Ref<Liane> };
+export type MessageContentText = { value: string } & IUnion<"text">;
+export type MessageContentTrip = { value: Ref<Liane> } & IUnion<"trip">;
 export type MessageContent = MessageContentText | MessageContentTrip;
 
 export type LianeMessage = Entity & { content: MessageContent };
+export type TypedLianeMessage<T extends MessageContentText | MessageContentTrip> = LianeMessage & { content: T };
 
 export interface CommunityService {
   list(): Promise<CoLianeMatch[]>;

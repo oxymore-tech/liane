@@ -26,7 +26,7 @@ const extractData = (wayPoints: WayPoint[]) => {
   };
 };
 
-const WayPointView = ({
+export const WayPointView = ({
   wayPoint,
   type,
   isPast = false,

@@ -14,7 +14,7 @@
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		32FE5308134C4924AF6F6A8E /* SourceSans3-ExtraLight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D3A4DE792B5343AAA3C4383B /* SourceSans3-ExtraLight.ttf */; };
 		558B1FFA83122B946BEFE84E /* libPods-liane.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BBD753819A9162E0D7CEC3E6 /* libPods-liane.a */; };
-		630A2E072982781900527AC3 /* liane/GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 630A2E062982781900527AC3 /* liane/GoogleService-Info.plist */; };
+		630A2E072982781900527AC3 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 630A2E062982781900527AC3 /* GoogleService-Info.plist */; };
 		63335D0A29CCA8990085E911 /* Mapbox in Frameworks */ = {isa = PBXBuildFile; productRef = 7553E0B7B3CA65096C16C1D2 /* Mapbox */; };
 		63335D0B29CCA8990085E911 /* Mapbox in Frameworks */ = {isa = PBXBuildFile; productRef = B182FD48B8B247A4E023B90C /* Mapbox */; };
 		63335D0E29CCA9D70085E911 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 63335D1029CCA9D70085E911 /* InfoPlist.strings */; };
@@ -61,7 +61,7 @@
 		28FD28F2E04E407C883866EF /* SourceSans3-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "SourceSans3-Medium.ttf"; path = "../assets/fonts/SourceSans3-Medium.ttf"; sourceTree = "<group>"; };
 		61FD6F939BE9CCA034401A36 /* libPods-liane-lianeTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-liane-lianeTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		62F3939E764A4059AF2E3BB5 /* SourceSans3-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "SourceSans3-Regular.ttf"; path = "../assets/fonts/SourceSans3-Regular.ttf"; sourceTree = "<group>"; };
-		630A2E062982781900527AC3 /* liane/GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "liane/GoogleService-Info.plist"; sourceTree = "<group>"; };
+		630A2E062982781900527AC3 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "liane/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		63335D0F29CCA9D70085E911 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		63335D1129CCAA490085E911 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		63B3F0F62AEE731C008B90B8 /* liane-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "liane-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -172,7 +172,7 @@
 			children = (
 				63B3F0E52AEE6FEB008B90B8 /* Geolocation */,
 				63335D1029CCA9D70085E911 /* InfoPlist.strings */,
-				630A2E062982781900527AC3 /* liane/GoogleService-Info.plist */,
+				630A2E062982781900527AC3 /* GoogleService-Info.plist */,
 				13B07FAE1A68108700A75B9A /* liane */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				00E356EF1AD99517003FC87E /* lianeTests */,
@@ -330,7 +330,7 @@
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				E2A8BDC1218A4D828F3DCDA4 /* SourceSans3-Bold.ttf in Resources */,
-				630A2E072982781900527AC3 /* liane/GoogleService-Info.plist in Resources */,
+				630A2E072982781900527AC3 /* GoogleService-Info.plist in Resources */,
 				32FE5308134C4924AF6F6A8E /* SourceSans3-ExtraLight.ttf in Resources */,
 				E33F0B549EDD4F298C7FE756 /* SourceSans3-Medium.ttf in Resources */,
 				D02F6E33B2D44CE3A3C3F71B /* SourceSans3-Regular.ttf in Resources */,
@@ -752,7 +752,10 @@
 					"-DFOLLY_MOBILE=1",
 					"-DFOLLY_USE_LIBCPP=1",
 				);
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
@@ -823,7 +826,10 @@
 					"-DFOLLY_MOBILE=1",
 					"-DFOLLY_USE_LIBCPP=1",
 				);
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
