@@ -39,7 +39,7 @@ export class Chat<TChatType extends ChatType> {
 
   async disconnect() {
     if (!this.currentGroup) {
-      this.logger.debug("CHAT", "Tried to leave an undefined conversation.");
+      this.logger.info("CHAT", "Tried to leave an undefined conversation.");
       return;
     }
     this.onReceiveLatestMessagesCallback = null;
@@ -72,6 +72,7 @@ export class Chat<TChatType extends ChatType> {
     this.logger.info("CHAT", "received : msg", convId, message, this.currentGroup?.id);
 
     if (this.currentGroup?.id === convId && this.onReceiveMessageCallback) {
+      console.log("onReceiveMessageCallback", message);
       this.onReceiveMessageCallback(message);
       return true;
     }

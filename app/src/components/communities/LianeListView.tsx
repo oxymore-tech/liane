@@ -68,9 +68,10 @@ const convertToDateSections = (data: CoLianeMatch[], member: Ref<User>, reverseS
 const LianeRequestItem = ({ item, onRefresh }: { item: CoLianeMatch; onRefresh: (() => void) | undefined }) => {
   const { services, user } = useContext(AppContext);
   const { navigation } = useAppNavigation();
-  const unreadLianes = useMemo(async () => {
+  /*const unreadLianes = useMemo(async () => {
     return await services.community.getUnreadLianes();
-  }, []);
+  }, []);*/
+  const unreadLianes: any[] = [];
 
   const { to, from } = useMemo(() => extractWaypointFromTo(item.lianeRequest?.wayPoints), [item.lianeRequest.wayPoints]);
 

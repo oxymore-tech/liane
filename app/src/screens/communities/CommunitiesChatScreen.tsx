@@ -1,14 +1,13 @@
 import {
   capitalize,
-  ChatMessage,
+  Chat,
   CoLiane,
-  CoLianeMatch,
   CoLianeRequest,
   CoMatch,
-  ConversationGroup,
+  LianeMessage,
   MatchGroup,
   MatchSingle,
-  MessageContentText,
+  MessageContent,
   PaginatedResponse,
   Ref,
   ResolvedLianeRequest,
@@ -25,14 +24,11 @@ import { AppContext } from "@/components/context/ContextProvider";
 import { AppExpandingTextInput } from "@/components/base/AppExpandingTextInput";
 import { AppLocalization } from "@/api/i18n";
 import { useAppNavigation } from "@/components/context/routing";
-import { SimpleModal } from "@/components/modal/SimpleModal";
-import { AppPressableIcon, AppPressableOverlay } from "@/components/base/AppPressable";
+import { AppPressableIcon } from "@/components/base/AppPressable";
 import { DebugIdView } from "@/components/base/DebugIdView";
 import { UserPicture } from "@/components/UserPicture";
 import { AppStyles } from "@/theme/styles";
 import { extractDays } from "@/util/hooks/days";
-import { useQueries } from "react-query";
-import { LianeQueryKey } from "@/screens/communities/CommunitiesScreen";
 import { AppLogger } from "@/api/logger";
 
 const MessageBubble = ({
@@ -41,7 +37,7 @@ const MessageBubble = ({
   isSender,
   previousSender
 }: {
-  message: ChatMessage;
+  message: LianeMessage;
   sender: User;
   isSender: boolean;
   previousSender?: Ref<User> | undefined;
@@ -77,7 +73,7 @@ const MessageBubble = ({
           }}
           spacing={4}>
           <AppText numberOfLines={-1} style={{ fontSize: 15 }}>
-            {message.text}
+            {message.content.value}
           </AppText>
           <AppText style={{ fontSize: 12, alignSelf: isSender ? "flex-end" : "flex-start" }}>{date}</AppText>
         </Column>
@@ -90,9 +86,9 @@ export const CommunitiesChatScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesChat">();
   const { user, services } = useContext(AppContext);
   const insets = useSafeAreaInsets();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<LianeMessage[]>([]);
   const [paginationCursor, setPaginationCursor] = useState<string>();
-  const [conversation, setConversation] = useState<ConversationGroup>();
+  const [chat, setchat] = useState<Chat<"Liane">>();
   const [inputValue, setInputValue] = useState<string>("");
   const [error, setError] = useState<Error | undefined>(undefined);
   const [isSending, setIsSending] = useState(false);
@@ -101,15 +97,15 @@ export const CommunitiesChatScreen = () => {
   const [request, setRequest] = useState<CoLianeRequest | ResolvedLianeRequest | undefined>(undefined);
 
   const members: { [k: string]: User } | undefined = useMemo(
-    () => conversation?.members.reduce((a: { [k: string]: User }, b) => ((a[b.user.id!] = b.user), a), {}),
-    [conversation?.members]
+    () => chat?.currentGroup?.members?.reduce((a: { [k: string]: User }, b) => ((a[b.user.id!] = b.user), a), {}),
+    [chat?.currentGroup?.members, liane]
   );
 
   const sendMessage = async (inputValue: string) => {
     let lianeTemp = liane;
     setIsSending(true);
 
-    if (group) {
+    if (!chat) {
       // Dans le cas ou on envoie un message dans le chat et que nous avons juste l'information du group et non de la liane
       // Cela signifie que nous n'avous pas encore rejoint le groupe
       // Il faut donc le rejoindre avant d'envoyer le message
@@ -122,7 +118,6 @@ export const CommunitiesChatScreen = () => {
         if (request && request.id && lianeCible) {
           const coLiane = await services.community.join(request.id, lianeCible);
           setGroup(undefined);
-          setLiane(coLiane);
           lianeTemp = coLiane;
         }
       } else {
@@ -130,46 +125,58 @@ export const CommunitiesChatScreen = () => {
         if (request && request.id && lianeRequest && lianeRequest.id) {
           const coLiane = await services.community.joinNew(request.id, lianeRequest.id);
           setGroup(undefined);
-          setLiane(coLiane);
           lianeTemp = coLiane;
         }
       }
-    }
 
-    if (lianeTemp && lianeTemp.id && inputValue && inputValue.length > 0) {
-      try {
-        const updatedLianeRequest = await services.community.sendMessage(lianeTemp.id, {
-          type: "text",
-          value: inputValue
-        });
-        AppLogger.debug("COMMUNITIES", "Join liane avec succès", updatedLianeRequest);
-      } catch (error) {
-        setError(new Error("Message non envoyé suite à une erreur"));
-        AppLogger.debug("COMMUNITIES", "Une erreur est survenu lors de l'entrée dans une nouvelle liane", error);
-        setIsSending(false);
+      if (lianeTemp && lianeTemp.id) {
+        try {
+          const updatedLianeRequest = await services.community.sendMessage(lianeTemp.id, {
+            type: "text",
+            value: inputValue
+          });
+          setLiane(lianeTemp);
+        } catch (error) {
+          setError(new Error("Message non envoyé suite à une erreur"));
+          AppLogger.debug("COMMUNITIES", "Une erreur est survenu lors de l'entrée dans une nouvelle liane", error);
+          setIsSending(false);
+        }
       }
     } else {
-      setError(new Error("Message non envoyé suite à une erreur"));
+      if (lianeTemp && lianeTemp.id && inputValue && inputValue.length > 0) {
+        try {
+          const updatedLianeRequest = await chat?.send({
+            type: "text",
+            value: inputValue
+          });
+        } catch (error) {
+          setError(new Error("Message non envoyé suite à une erreur"));
+          AppLogger.debug("COMMUNITIES", "Une erreur est survenu lors de l'entrée dans une nouvelle liane", error);
+          setIsSending(false);
+        }
+      } else {
+        setError(new Error("Message non envoyé suite à une erreur"));
+      }
     }
 
     setIsSending(false);
   };
 
-  const appendMessage = (m: ChatMessage) => {
+  const appendMessage = (m: LianeMessage) => {
     // console.log([m, ...messages]);
     setMessages(oldList => [m, ...oldList]);
     setInputValue("");
-    liane && liane.id && services.realTimeHub.readConversation(liane.id, new Date().toISOString()).catch(e => console.warn(e));
+    liane && liane.id && chat && chat.readConversation(liane.id, new Date().toISOString()).catch(e => console.warn(e));
   };
 
-  const onReceiveLatestMessages = (m: PaginatedResponse<ChatMessage>) => {
+  const onReceiveLatestMessages = (m: PaginatedResponse<LianeMessage>) => {
     setMessages(m.data);
     setPaginationCursor(m.next);
   };
 
   const fetchNextPage = async () => {
     if (paginationCursor && liane && liane.id) {
-      const paginatedResult = await services.realTimeHub.list(liane.id, { cursor: paginationCursor, limit: 15 });
+      const paginatedResult = await services.community.getMessages(liane.id, { cursor: paginationCursor, limit: 15 });
       setMessages(oldList => {
         return [...oldList, ...paginatedResult.data];
       });
@@ -207,28 +214,33 @@ export const CommunitiesChatScreen = () => {
       setRequest(route.params.request);
     }
     if (route.params.lianeId) {
-      console.log("lianeId", route.params.lianeId);
       // Lorsqu'on arrive par une notification
       //TODO recup Liane
-      fetchLiane(route.params.lianeId).then(r => undefined);
+      fetchLiane(route.params.lianeId).then();
     }
   }, [route.params]);
 
   useEffect(() => {
+    console.log("CONNECT TRY", liane?.id, liane);
     if (liane && liane.id) {
       services.realTimeHub
-        .connectToChat(liane.id, onReceiveLatestMessages, appendMessage)
+        .connectToLianeChat(liane.id, onReceiveLatestMessages, appendMessage)
         .then(conv => {
+          console.log("HERE WE GO", conv);
+
           /* if (__DEV__) {
-            console.debug("Joined conversation", conv);
+            console.debug("Joined chat", conv);
           } */
-          setConversation(conv);
+          setchat(conv);
         })
-        .catch(e => setError(e));
+        .catch(e => {
+          console.log("ERRROOROROROROROROOR", e);
+          setError(e);
+        });
     }
     return () => {
       if (liane && liane.id) {
-        services.realTimeHub.disconnectFromChat(liane.id).catch(e => {
+        services.realTimeHub.disconnectFromChat().catch(e => {
           if (__DEV__) {
             console.warn(e);
           }
@@ -250,29 +262,29 @@ export const CommunitiesChatScreen = () => {
     </View>
   );
 
-  console.log("LIANE", liane, route.params);
-
   return (
     <View style={{ backgroundColor: AppColors.lightGrayBackground, justifyContent: "flex-end", flex: 1 }}>
-      {conversation && (
+      {chat && (
         <FlatList
           style={{ paddingHorizontal: 16, marginTop: insets.top + 72 }}
           data={messages}
           keyExtractor={m => m.id!}
-          renderItem={({ item, index }) => (
-            <MessageBubble
-              message={item}
-              sender={members![item.createdBy!]}
-              isSender={item.createdBy === user?.id}
-              previousSender={index < messages.length - 1 ? messages[index + 1].createdBy : undefined}
-            />
-          )}
+          renderItem={({ item, index }) =>
+            members ? (
+              <MessageBubble
+                message={item}
+                sender={members[item.createdBy!]}
+                isSender={item.createdBy === user?.id}
+                previousSender={index < messages.length - 1 ? messages[index + 1].createdBy : undefined}
+              />
+            ) : null
+          }
           inverted={true}
           onEndReachedThreshold={0.2}
           onEndReached={() => fetchNextPage()}
         />
       )}
-      {!conversation && liane && <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />}
+      {!chat && liane && <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />}
       {error && (
         <Center style={{ flex: 1 }}>
           <AppText style={{ color: ContextualColors.redAlert.text }}>{error.message}</AppText>
@@ -344,7 +356,7 @@ export const CommunitiesChatScreen = () => {
             )}
           </Row>
         </Row>
-        {conversation && <DebugIdView object={conversation} />}
+        {chat?.currentGroup && <DebugIdView object={chat?.currentGroup} />}
       </View>
 
       <KeyboardAvoidingView behavior={Platform.OS === "android" ? "height" : "padding"}>

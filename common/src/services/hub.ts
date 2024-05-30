@@ -231,6 +231,8 @@ export class HubServiceClient extends AbstractHubService {
   }
 
   private async receiveMessage<TChatType extends ChatType>(chatType: TChatType, conversationId: string, message: MessageTypeOf<TChatType>) {
+    console.log("############## receiveMessage", message);
+
     if (!this.currentChat) {
       this.logger.error("HUB", `Not connected to ${chatType} chat to receive message`);
       return false;
@@ -316,7 +318,6 @@ export class HubServiceClient extends AbstractHubService {
     if (this.currentChat) {
       await this.currentChat.disconnect();
     }
-
     const currentChat = new Chat<TChatType>(this.hub, name, this.logger);
     await currentChat.connect(conversationRef, onReceiveLatestMessages, onReceiveMessage);
 
