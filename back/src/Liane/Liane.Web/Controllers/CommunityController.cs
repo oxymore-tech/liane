@@ -56,6 +56,13 @@ public sealed class CommunityController(ILianeService lianeService)
   {
     return lianeService.Update(id, lianeUpdate);
   }
+  
+  [HttpGet("liane/{id}")]
+  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Community.Liane))]
+  public Task GetRequest(string id)
+  {
+    return lianeService.Get(id);
+  }
 
   [HttpPost("liane/{id}/leave")]
   public Task<bool> Leave(string id)
