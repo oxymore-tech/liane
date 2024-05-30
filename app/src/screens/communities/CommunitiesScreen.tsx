@@ -1,4 +1,4 @@
-import React, { useContext, useMemo } from "react";
+import React, { useCallback, useContext, useMemo } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useQueries, UseQueryResult } from "react-query";
 import { CoLianeMatch, UnauthorizedError } from "@liane/common";
@@ -13,6 +13,8 @@ import { AppStyles } from "@/theme/styles";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppPressableIcon } from "@/components/base/AppPressable";
 import { useObservable } from "@/util/hooks/subscription";
+import { useFocusEffect } from "@react-navigation/native";
+import { LianeGeolocation } from "@/api/service/location.ts";
 
 const Header = () => {
   const { navigation } = useAppNavigation();
@@ -63,6 +65,12 @@ export const CommunitiesScreen = () => {
   const data: CoLianeMatch[] = useMemo(() => {
     return queriesData[0].data ?? [];
   }, [queriesData]);
+
+  useFocusEffect(
+    useCallback(() => {
+      forceRefetch(queriesData);
+    }, [forceRefetch])
+  );
 
   if (isLoading) {
     return (
@@ -120,6 +128,10 @@ const refetch = (queriesData: UseQueryResult[]) => {
   if (queriesData[0].error) {
     queriesData[0].refetch();
   }
+};
+
+const forceRefetch = (queriesData: UseQueryResult[]) => {
+  queriesData[0].refetch();
 };
 
 const styles = StyleSheet.create({

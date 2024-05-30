@@ -177,14 +177,26 @@ export const CommunitiesChatScreen = () => {
   };
 
   useEffect(() => {
+    setLiane(undefined);
+    setGroup(undefined);
+    setRequest(undefined);
+    setError(undefined);
+
     if (route.params.liane) {
+      // Lorsqu'on arrive directement par une liane
       setLiane(route.params.liane);
     }
     if (route.params.group) {
+      // Lorsqu'on arrive par un group mais qu'on ne la pas encore rejoint
       setGroup(route.params.group);
     }
     if (route.params.request) {
+      // La requête permettant de rejoindre un groupe
       setRequest(route.params.request);
+    }
+    if (route.params.lianeId) {
+      // Lorsqu'on arrive par une notification
+      //TODO recup Liane
     }
   }, [route.params]);
 
@@ -224,6 +236,8 @@ export const CommunitiesChatScreen = () => {
     </View>
   );
 
+  console.log("LIANE", liane);
+
   return (
     <View style={{ backgroundColor: AppColors.lightGrayBackground, justifyContent: "flex-end", flex: 1 }}>
       {conversation && (
@@ -244,7 +258,7 @@ export const CommunitiesChatScreen = () => {
           onEndReached={() => fetchNextPage()}
         />
       )}
-      {!conversation && !group && <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />}
+      {!conversation && liane && <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />}
       {error && (
         <Center style={{ flex: 1 }}>
           <AppText style={{ color: ContextualColors.redAlert.text }}>{error.message}</AppText>
@@ -281,7 +295,7 @@ export const CommunitiesChatScreen = () => {
                 </AppText>
 
                 <AppText style={{ fontSize: 14, fontWeight: "400", flexShrink: 1, lineHeight: 16, color: AppColors.black }}>
-                  {liane?.members?.map(item => item.user?.pseudo).join(", ")}
+                  {liane && liane.members?.map(item => item.user?.pseudo).join(", ")}
                 </AppText>
               </View>
             )}

@@ -37,7 +37,7 @@ export type NavigationParamList = {
   LianeJoinRequestDetail: { request: JoinLianeRequestDetailed | string };
   Chat: { conversationId: string; liane?: Liane };
   Communities: undefined;
-  CommunitiesChat: { group?: CoMatch; liane?: CoLiane; request?: CoLianeRequest | ResolvedLianeRequest };
+  CommunitiesChat: { group?: CoMatch; liane?: CoLiane; request?: CoLianeRequest | ResolvedLianeRequest; lianeId?: string };
   LianeDetail: { liane: Liane | string };
   Profile: { user: User } | undefined;
   ProfileEdit: undefined;
@@ -78,6 +78,9 @@ export const AppLinking: LinkingOptions<NavigationParamList> = {
       },
       OpenJoinLianeRequest: {
         path: "join_request/:request"
+      },
+      CommunitiesChat: {
+        path: "community_chat/:lianeId"
       }
     }
   }

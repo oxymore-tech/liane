@@ -71,7 +71,7 @@ export const JoinedLianeView = ({ joinedLiane, unreadMessage }: GroupsViewProps)
   const { navigation } = useAppNavigation();
 
   return (
-    <Pressable onPress={() => navigation.navigate("CommunitiesChat", { group: joinedLiane, liane: joinedLiane.liane })}>
+    <Pressable onPress={() => navigation.navigate("CommunitiesChat", { liane: joinedLiane.liane })}>
       <RenderGroupsView joinedLiane={joinedLiane} unreadMessage={unreadMessage} />
     </Pressable>
   );
