@@ -49,30 +49,29 @@ export const TripSurveyView = ({ survey, coLiane }: { survey: TypedLianeMessage<
     return capitalize(AppLocalization.formatMonthDay(new Date(survey.createdAt!)));
   }, [survey.createdAt]);
 
-  const name = useMemo(() => {
-    return survey.createdBy!;
-  }, [survey.createdBy]);
-
   const { services, user } = useContext(AppContext);
 
   const trip = useQuery(LianeDetailQueryKey(survey.content.value), async () => {
     const liane = await services.liane.get(survey.content.value);
+    const createdBy = liane.members.find(m => m.user.id === survey.createdBy);
     if (liane.members.some(m => m.user.id === user!.id)) {
       // User is already a member of the trip
-      return { liane, isMember: true };
+      return { liane, isMember: true, createdBy };
     } else {
       // TODO compute liane's version if user joins the trip
-      return { liane, isMember: false };
+      return { liane, isMember: false, createdBy };
     }
   });
 
   return (
     <View style={{ backgroundColor: AppColors.backgroundColor, borderRadius: 16, padding: 8 }}>
-      <AppText style={{ fontWeight: "600", color: AppColorPalettes.gray[500], fontSize: 16 }}>{name} relance le trajet pour </AppText>
-      <AppText style={{ fontWeight: "bold", fontSize: 18 }}>{date}</AppText>
       {!trip.data && <ActivityIndicator />}
       {!!trip.data && (
         <>
+          <AppText style={{ fontWeight: "600", color: AppColorPalettes.gray[500], fontSize: 16 }}>
+            {trip.data?.createdBy?.user.pseudo} relance le trajet pour{" "}
+          </AppText>
+          <AppText style={{ fontWeight: "bold", fontSize: 18 }}>{date}</AppText>
           <LoadedTripSurveyView coLiane={coLiane} trip={trip.data.liane} />
           {trip.data.isMember && <AppText style={{ fontStyle: "italic", color: AppColorPalettes.gray[500] }}>En attente de membres</AppText>}
           {!trip.data.isMember && (

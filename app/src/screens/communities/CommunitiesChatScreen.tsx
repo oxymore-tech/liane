@@ -7,14 +7,16 @@ import {
   LianeMessage,
   MatchGroup,
   MatchSingle,
-  MessageContent,
+  MessageContentTrip,
   PaginatedResponse,
   Ref,
   ResolvedLianeRequest,
+  TypedLianeMessage,
+  UnionUtils,
   User
 } from "@liane/common";
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, View } from "react-native";
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Center, Column, Row } from "@/components/base/AppLayout";
@@ -30,6 +32,9 @@ import { UserPicture } from "@/components/UserPicture";
 import { AppStyles } from "@/theme/styles";
 import { extractDays } from "@/util/hooks/days";
 import { AppLogger } from "@/api/logger";
+import { SimpleModal } from "@/components/modal/SimpleModal.tsx";
+import { AppStorage } from "@/api/storage.ts";
+import { TripSurveyView } from "@/components/trip/TripSurveyView.tsx";
 
 const MessageBubble = ({
   message,
@@ -95,6 +100,7 @@ export const CommunitiesChatScreen = () => {
   const [group, setGroup] = useState<CoMatch | undefined>(undefined);
   const [liane, setLiane] = useState<CoLiane | undefined>(undefined);
   const [request, setRequest] = useState<CoLianeRequest | ResolvedLianeRequest | undefined>(undefined);
+  const [tripModalVisible, setTripModalVisible] = useState(false);
 
   const members: { [k: string]: User } | undefined = useMemo(
     () => chat?.currentGroup?.members?.reduce((a: { [k: string]: User }, b) => ((a[b.user.id!] = b.user), a), {}),
@@ -185,6 +191,33 @@ export const CommunitiesChatScreen = () => {
     }
   };
 
+  const launchTrip = async (roundTrip: boolean) => {
+    setTripModalVisible(false);
+    const coliane = liane!;
+    const me = coliane.members.find(m => m.user.id === user!.id)!;
+    const geolocationLevel = await AppStorage.getSetting("geolocation");
+
+    const created = await services.liane.post({
+      departureTime: new Date().toISOString(),
+      returnTime: roundTrip ? undefined : undefined, //TODO
+      from: me.lianeRequest.wayPoints[0].id!,
+      to: me.lianeRequest.wayPoints[1].id!,
+      availableSeats: me.lianeRequest.canDrive ? 1 : -1,
+      geolocationLevel: geolocationLevel || "None",
+      recurrence: me.lianeRequest.weekDays
+    });
+    await services.community.sendMessage(liane!.id!, {
+      type: "trip",
+      value: created.id!
+    });
+    if (created.return) {
+      await services.community.sendMessage(liane!.id!, {
+        type: "trip",
+        value: created.return
+      });
+    }
+  };
+
   useEffect(() => {
     setLiane(undefined);
     setGroup(undefined);
@@ -263,6 +296,7 @@ export const CommunitiesChatScreen = () => {
     </View>
   );
 
+  console.debug(JSON.stringify(messages));
   return (
     <View style={{ backgroundColor: AppColors.lightGrayBackground, justifyContent: "flex-end", flex: 1 }}>
       {chat && (
@@ -272,12 +306,18 @@ export const CommunitiesChatScreen = () => {
           keyExtractor={m => m.id!}
           renderItem={({ item, index }) =>
             members ? (
-              <MessageBubble
-                message={item}
-                sender={members[item.createdBy!]}
-                isSender={item.createdBy === user?.id}
-                previousSender={index < messages.length - 1 ? messages[index + 1].createdBy : undefined}
-              />
+              UnionUtils.isInstanceOf(item.content, "Trip") && !!liane ? (
+                <View style={{ marginHorizontal: 24, marginVertical: 16 }}>
+                  <TripSurveyView survey={item as TypedLianeMessage<MessageContentTrip>} coLiane={liane!} />
+                </View>
+              ) : (
+                <MessageBubble
+                  message={item}
+                  sender={members[item.createdBy!]}
+                  isSender={item.createdBy === user?.id}
+                  previousSender={index < messages.length - 1 ? messages[index + 1].createdBy : undefined}
+                />
+              )
             ) : null
           }
           inverted={true}
@@ -369,15 +409,16 @@ export const CommunitiesChatScreen = () => {
             marginTop: 8
           }}>
           <Row spacing={16}>
-            {/*} <AppButton
-              onPress={() => {
-                setShowMoreModal(true);
-              }}
-              icon="attach-outline"
-              color={AppColors.white}
-              kind="circular"
-              foregroundColor={AppColors.blue}
-            />*/}
+            {!!liane && (
+              <AppPressableIcon
+                size={32}
+                color={AppColors.white}
+                onPress={() => setTripModalVisible(true)}
+                name={"plus-outline"}
+                style={{ padding: 12 }}
+                backgroundStyle={{ borderRadius: 24, backgroundColor: AppColors.primaryColor }}
+              />
+            )}
 
             <AppExpandingTextInput
               multiline={true}
@@ -395,7 +436,28 @@ export const CommunitiesChatScreen = () => {
             />
           </Row>
         </View>
+        <SimpleModal visible={tripModalVisible} setVisible={setTripModalVisible} backgroundColor={AppColors.white} hideClose>
+          <Column spacing={8}>
+            <AppText style={styles.modalText}>Proposer...</AppText>
+            <Pressable style={{ flexDirection: "row", marginHorizontal: 16, paddingVertical: 8 }} onPress={() => launchTrip(false)}>
+              <AppIcon name={"car"} />
+              <AppText style={[{ marginLeft: 5 }, styles.modalText]}>Trajet aller-simple</AppText>
+            </Pressable>
+            <Pressable style={{ flexDirection: "row", marginHorizontal: 16, paddingVertical: 8 }} onPress={() => launchTrip(true)}>
+              <AppIcon name={"car"} />
+              <AppText style={[{ marginLeft: 5 }, styles.modalText]}>Trajet aller-retour</AppText>
+            </Pressable>
+          </Column>
+        </SimpleModal>
       </KeyboardAvoidingView>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  modalText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    lineHeight: 24
+  }
+});

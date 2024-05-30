@@ -67,8 +67,8 @@ export type CoLianeMember = {
 
 export type CoMatch = MatchSingle | MatchGroup;
 
-export type MessageContentText = { value: string } & IUnion<"text">;
-export type MessageContentTrip = { value: Ref<Liane> } & IUnion<"trip">;
+export type MessageContentText = { value: string } & IUnion<"Text">;
+export type MessageContentTrip = { value: Ref<Liane> } & IUnion<"Trip">;
 export type MessageContent = MessageContentText | MessageContentTrip;
 
 export type LianeMessage = Entity & { content: MessageContent };
