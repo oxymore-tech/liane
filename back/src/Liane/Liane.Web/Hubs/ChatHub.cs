@@ -65,7 +65,7 @@ public sealed class ChatHub(
   
   public async Task ReadLiane(string lianeId, DateTime timestamp)
   {
-    await lianeService.ReadConversation(lianeId, timestamp);
+    await lianeService.MarkAsRead(lianeId);
   }
 
   public async Task SendToGroup(ChatMessage message, string groupId)
