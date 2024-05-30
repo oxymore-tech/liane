@@ -302,8 +302,8 @@ public sealed class LianeServiceImpl(
     var query = Query.Select<LianeMessageDb>()
       .Where(filter)
       .And(pagination.ToFilter<LianeMessageDb>())
-      .OrderBy(m => m.Id, pagination.SortAsc)
-      .OrderBy(m => m.CreatedAt)
+      .OrderBy(m => m.Id, false)
+      .OrderBy(m => m.CreatedAt, false)
       .Take(pagination.Limit + 1);
 
     var total = await connection.QuerySingleAsync<int>(Query.Count<LianeMessageDb>().Where(filter), tx);
