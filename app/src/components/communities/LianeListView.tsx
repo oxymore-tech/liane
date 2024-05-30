@@ -100,6 +100,9 @@ const LianeRequestItem = ({ item, onRefresh }: { item: CoLianeMatch; onRefresh: 
 
       try {
         const updatedLianeRequest = await services.community.update(lianeRequest.id, lianeRequest);
+        if (onRefresh) {
+          onRefresh();
+        }
         AppLogger.debug("COMMUNITIES", "Changement du status d'une liane fait avec succès", updatedLianeRequest);
       } catch (error) {
         AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors du changement du status d'une liane", error);
@@ -137,7 +140,7 @@ const LianeRequestItem = ({ item, onRefresh }: { item: CoLianeMatch; onRefresh: 
                     flexShrink: 1,
                     lineHeight: 27,
                     color: "black"
-                  }}>{`${from} ➔ ${to}`}</AppText>
+                  }}>{`${(from as RallyingPoint).label} ➔ ${(to as RallyingPoint).label}`}</AppText>
                 <AppText
                   style={{
                     fontSize: 14,

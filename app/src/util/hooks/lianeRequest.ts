@@ -2,7 +2,7 @@ import { CoLianeRequest, RallyingPoint, ResolvedLianeRequest, WayPoint } from "@
 import { extractDays } from "@/util/hooks/days";
 import { useMemo } from "react";
 
-export const extractWaypointFromTo = (wayPoints: WayPoint[] | RallyingPoint[] | string[]) => {
+export const extractWaypointFromTo = (wayPoints: WayPoint[] | RallyingPoint[]) => {
   //console.debug("extract data", JSON.stringify(wayPoints), departureTime);
   const from = wayPoints[0];
   const to = wayPoints[wayPoints.length - 1];
