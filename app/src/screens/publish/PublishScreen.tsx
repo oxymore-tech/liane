@@ -33,7 +33,7 @@ import { LianeQueryKey } from "@/screens/user/MyTripsScreen";
 
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
-import { DayOfWeekFlag, TimeConstraint } from "@liane/common";
+import { DayOfWeekFlag, TimeConstraint, TimeOnly } from "@liane/common";
 import { PageHeader } from "@/components/context/Navigation";
 import { AppModalNavigationContext } from "@/components/AppModalNavigationProvider";
 import { HOME_TRIPS, useAppNavigation } from "@/components/context/routing";
@@ -64,7 +64,7 @@ export const PublishScreen = () => {
         const tEnd = end ? { hour: end.getHours(), minute: end.getMinutes() } : { hour: 23, minute: 59 };
         let start = ctx.request.departureConstraints?.leaveAfter;
         const tStart = start ? { hour: start.getHours(), minute: start.getMinutes() } : { hour: 0, minute: 0 };
-        timeConstraints.push({ when: { start: tStart, end: tEnd }, at: ctx.request.from!.id! });
+        timeConstraints.push({ when: { start: tStart as TimeOnly, end: tEnd as TimeOnly }, at: ctx.request.from!.id! });
       }
 
       const liane = await services.community.create({

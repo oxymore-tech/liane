@@ -1,7 +1,7 @@
 import React, { useContext, useMemo, useState } from "react";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Center, Column, Row } from "@/components/base/AppLayout";
+import { Center, Column } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppPressableIcon } from "@/components/base/AppPressable";
@@ -11,10 +11,8 @@ import { AppColors, ContextualColors } from "@/theme/colors";
 import { SimpleModal } from "@/components/modal/SimpleModal";
 import { AppLogger } from "@/api/logger";
 import { CoLianeMember, RallyingPoint, User } from "@liane/common";
-import { extractDays } from "@/util/hooks/days";
 import { extractDaysTimes, extractWaypointFromTo } from "@/util/hooks/lianeRequest";
 import { AppContext } from "@/components/context/ContextProvider";
-import Navigation from "@/components/context/Navigation.tsx";
 
 export const CommunitiesDetailScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesDetails">();
