@@ -14,7 +14,9 @@ import {
   HubServiceClient,
   LocationService,
   DEFAULT_TLS,
-  AppLogger
+  AppLogger,
+  ConversationService,
+  ConversationServiceClient
 } from "@liane/common";
 import { RNAppEnv } from "@/api/env";
 import { AppStorage } from "@/api/storage";
@@ -32,6 +34,7 @@ export type AppServices = {
   routing: RoutingService;
   notification: NotificationService;
   reminder: ReminderService;
+  conversation: ConversationService;
 };
 
 const http = new HttpClient(RNAppEnv.baseUrl, logger as AppLogger, AppStorage);
@@ -45,5 +48,6 @@ export const CreateAppServices = (): AppServices => ({
   realTimeHub: new HubServiceClient(RNAppEnv.baseUrl, logger as AppLogger, AppStorage, http),
   location: new ReactNativeLocationService(RNAppEnv, AppStorage, http, DEFAULT_TLS),
   routing: new RoutingServiceClient(http),
-  notification: new NotificationServiceClient(http)
+  notification: new NotificationServiceClient(http),
+  conversation: new ConversationServiceClient(http)
 });

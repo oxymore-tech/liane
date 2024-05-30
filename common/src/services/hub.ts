@@ -1,4 +1,4 @@
-import { ChatMessage, ConversationGroup, FullUser, Liane, PaginatedRequestParams, PaginatedResponse, Ref, TrackingInfo, UTCDateTime } from "../api";
+import { ChatMessage, ConversationGroup, FullUser, Liane, PaginatedRequestParams, PaginatedResponse, Ref, TrackingInfo } from "../api";
 import { Answer, Notification } from "./notification";
 import { AppLogger } from "../logger";
 import { LianeEvent } from "../event";
@@ -7,25 +7,29 @@ import { HttpClient } from "./http";
 import { HubConnection, HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import { BehaviorSubject, Observable, Subject, SubscriptionLike } from "rxjs";
 import { NetworkUnavailable, UnauthorizedError } from "../exception";
+import { CoLiane, LianeMessage } from "./community";
+import { AbstractChat, Chat, ChatType, GroupTypeOf, MessageTypeOf } from "./chat";
 
 export type HubState = "online" | "reconnecting" | "offline";
 
 export interface HubService {
-  list(id: Ref<ConversationGroup>, params: PaginatedRequestParams): Promise<PaginatedResponse<ChatMessage>>;
-
-  send(message: ChatMessage): Promise<void>;
-
   stop(): Promise<void>;
 
   start(): Promise<void>;
 
-  connectToChat(
-    conversation: Ref<ConversationGroup>,
-    onReceiveLatestMessages: OnLatestMessagesCallback,
-    onReceiveMessage: ConsumeMessage
-  ): Promise<ConversationGroup>;
+  connectToTripChat(
+    conversationRef: Ref<ConversationGroup>,
+    onReceiveLatestMessages: OnLatestMessagesCallback<ChatMessage>,
+    onReceiveMessage: ConsumeMessage<ChatMessage>
+  ): Promise<Chat<"Group">>;
 
-  disconnectFromChat(conversation: Ref<ConversationGroup>): Promise<void>;
+  connectToLianeChat(
+    conversation: Ref<CoLiane>,
+    onReceiveLatestMessages: OnLatestMessagesCallback<LianeMessage>,
+    onReceiveMessage: ConsumeMessage<LianeMessage>
+  ): Promise<Chat<"Liane">>;
+
+  disconnectFromChat(): Promise<void>;
 
   subscribeToNotifications(callback: OnNotificationCallback): SubscriptionLike;
 
@@ -34,8 +38,6 @@ export interface HubService {
   postAnswer(notificationId: string, answer: Answer): Promise<void>;
 
   updateActiveState(active: boolean): void;
-
-  readConversation(conversation: Ref<ConversationGroup>, timestamp: UTCDateTime): Promise<void>;
 
   subscribeToTrackingInfo(lianeId: string, callback: OnLocationCallback): Promise<{ closed: boolean; unsubscribe: () => Promise<void> }>;
 
@@ -48,10 +50,9 @@ export interface HubService {
   hubState: Observable<HubState>;
 }
 
-export type ConsumeMessage = (res: ChatMessage) => void;
+export type ConsumeMessage<TMessage> = (res: TMessage) => void;
 
-export type Disconnect = () => Promise<void>;
-export type OnLatestMessagesCallback = (res: PaginatedResponse<ChatMessage>) => void;
+export type OnLatestMessagesCallback<TMessage> = (res: PaginatedResponse<TMessage>) => void;
 export type OnNotificationCallback = (n: Notification) => void;
 export type OnLocationCallback = (l: TrackingInfo) => void;
 
@@ -61,17 +62,14 @@ type UnreadOverview = Readonly<{
 }>;
 
 export abstract class AbstractHubService implements HubService {
-  protected currentConversationId?: string = undefined;
   readonly unreadConversations: BehaviorSubject<Ref<ConversationGroup>[]> = new BehaviorSubject<Ref<ConversationGroup>[]>([]);
+
   protected readonly notificationSubject: Subject<Notification> = new Subject<Notification>();
   lianeUpdates = new Subject<Liane>();
   userUpdates = new Subject<FullUser>();
   unreadNotifications = new BehaviorSubject<Ref<Notification>[]>([]);
   hubState = new Subject<HubState>();
-  protected onReceiveLatestMessagesCallback: OnLatestMessagesCallback | null = null;
-  // Sets a callback to receive messages after joining a conversation.
-  // This callback will be automatically disposed of when closing conversation.
-  protected onReceiveMessageCallback: ConsumeMessage | null = null;
+  protected currentChat?: AbstractChat;
   protected onReceiveLocationUpdateCallback: OnLocationCallback | undefined;
   protected appStateActive: boolean = true;
 
@@ -79,28 +77,6 @@ export abstract class AbstractHubService implements HubService {
     protected readonly baseUrl: string,
     protected readonly logger: AppLogger
   ) {}
-
-  protected receiveMessage = async (convId: string, message: ChatMessage) => {
-    // Called when receiving a message inside current conversation
-    this.logger.info("HUB", "received : msg", this.appStateActive, convId, message, this.currentConversationId);
-    if (!this.appStateActive) {
-      return false;
-    }
-    if (this.currentConversationId === convId && this.onReceiveMessageCallback) {
-      this.onReceiveMessageCallback(message);
-      return true;
-    } else if (!this.unreadConversations.getValue().includes(convId)) {
-      this.unreadConversations.next([...this.unreadConversations.getValue(), convId]);
-      return false;
-    }
-  };
-
-  protected receiveUnreadOverview = async (unread: UnreadOverview) => {
-    // Called when hub is started
-    this.logger.info("HUB", "unread", unread);
-    this.unreadConversations.next(unread.conversations);
-    this.unreadNotifications.next(unread.notifications);
-  };
 
   protected receiveNotification = async (notification: Notification) => {
     // Called on new notification
@@ -113,16 +89,7 @@ export abstract class AbstractHubService implements HubService {
     return false;
   };
 
-  protected receiveLatestMessages = async (messages: PaginatedResponse<ChatMessage>) => {
-    // Called after joining a conversation
-    if (this.onReceiveLatestMessagesCallback) {
-      this.onReceiveLatestMessagesCallback(messages);
-    }
-  };
-
   subscribeToNotifications = (callback: OnNotificationCallback) => this.notificationSubject.subscribe(callback);
-
-  abstract list(id: Ref<ConversationGroup>, params: PaginatedRequestParams): Promise<PaginatedResponse<ChatMessage>>;
 
   abstract start(): Promise<void>;
 
@@ -134,48 +101,27 @@ export abstract class AbstractHubService implements HubService {
     this.appStateActive = active;
   }
 
-  connectToChat = async (
+  connectToTripChat(
     conversationRef: Ref<ConversationGroup>,
-    onReceiveLatestMessages: OnLatestMessagesCallback,
-    onReceiveMessage: ConsumeMessage
-  ): Promise<ConversationGroup> => {
-    if (this.currentConversationId) {
-      await this.disconnectFromChat(this.currentConversationId);
-    }
-    this.onReceiveLatestMessagesCallback = onReceiveLatestMessages;
-    this.onReceiveMessageCallback = onReceiveMessage;
-    const conv: ConversationGroup = await this.joinGroupChat(conversationRef);
-    this.logger.info("HUB", "joined " + conv.id);
-    this.currentConversationId = conv.id;
-    // Remove from unread conversations
-    if (this.unreadConversations.getValue().includes(conversationRef)) {
-      this.unreadConversations.next(this.unreadConversations.getValue().filter(c => c !== conversationRef));
-    }
-
-    return conv;
-  };
-
-  async disconnectFromChat(_: Ref<ConversationGroup>): Promise<void> {
-    if (this.currentConversationId) {
-      this.onReceiveLatestMessagesCallback = null;
-      this.onReceiveMessageCallback = null;
-      this.logger.info("HUB", "left " + this.currentConversationId);
-      this.currentConversationId = undefined;
-    } else {
-      this.logger.debug("HUB", "Tried to leave an undefined conversation.");
-    }
+    onReceiveLatestMessages: OnLatestMessagesCallback<ChatMessage>,
+    onReceiveMessage: ConsumeMessage<ChatMessage>
+  ) {
+    return this.connectToChat("Group", conversationRef, onReceiveLatestMessages, onReceiveMessage);
   }
 
-  async send(message: ChatMessage): Promise<void> {
-    if (this.currentConversationId) {
-      try {
-        await this.sendToGroup(message);
-      } catch (e) {
-        this.logger.warn("HUB", `Could not send message to group ${this.currentConversationId}`, e);
-      }
-    } else {
-      throw new Error("Could not send message to undefined conversation");
+  connectToLianeChat(
+    conversationRef: Ref<CoLiane>,
+    onReceiveLatestMessages: OnLatestMessagesCallback<LianeMessage>,
+    onReceiveMessage: ConsumeMessage<LianeMessage>
+  ) {
+    return this.connectToChat("Liane", conversationRef, onReceiveLatestMessages, onReceiveMessage);
+  }
+
+  async disconnectFromChat() {
+    if (this.currentChat) {
+      await this.currentChat.disconnect();
     }
+    this.currentChat = undefined;
   }
 
   protected receiveLocationUpdateCallback: OnLocationCallback = l => {
@@ -194,11 +140,12 @@ export abstract class AbstractHubService implements HubService {
     this.userUpdates.next(user);
   };
 
-  abstract readConversation(conversation: Ref<ConversationGroup>, timestamp: UTCDateTime): Promise<void>;
-
-  abstract sendToGroup(message: ChatMessage): Promise<void>;
-
-  abstract joinGroupChat(conversationId: Ref<ConversationGroup>): Promise<ConversationGroup>;
+  protected abstract connectToChat<TChatType extends ChatType>(
+    name: TChatType,
+    conversationRef: Ref<GroupTypeOf<TChatType>>,
+    onReceiveLatestMessages: OnLatestMessagesCallback<MessageTypeOf<TChatType>>,
+    onReceiveMessage: ConsumeMessage<MessageTypeOf<TChatType>>
+  ): Promise<Chat<TChatType>>;
 
   abstract postEvent(lianeEvent: LianeEvent): Promise<void>;
 
@@ -247,13 +194,18 @@ export class HubServiceClient extends AbstractHubService {
       this.logger.debug("HUB", "Reconnected");
       this.hubState.next("online");
     });
-    this.hub.on("ReceiveLatestMessages", this.receiveLatestMessages);
-    this.hub.on("ReceiveMessage", this.receiveMessage);
+
+    this.hub.on("ReceiveLatestGroupMessages", async (m: PaginatedResponse<ChatMessage>) => this.receiveLatestMessages("Group", m));
+    this.hub.on("ReceiveGroupMessage", async (c: string, m: ChatMessage) => this.receiveMessage("Group", c, m));
+
+    this.hub.on("ReceiveLatestLianeMessages", async (m: PaginatedResponse<LianeMessage>) => this.receiveLatestMessages("Liane", m));
+    this.hub.on("ReceiveLianeMessage", async (c: string, m: LianeMessage) => this.receiveMessage("Liane", c, m));
+
+    this.hub.on("ReceiveUnreadOverview", this.receiveUnreadOverview);
     this.hub.on("Me", async (next: FullUser) => {
       await this.storage.storeUser(next);
       this.receiveUserUpdate(next);
     });
-    this.hub.on("ReceiveUnreadOverview", this.receiveUnreadOverview);
     this.hub.on("ReceiveNotification", this.receiveNotification);
     this.hub.on("ReceiveTrackingInfo", this.receiveLocationUpdateCallback);
     this.hub.on("ReceiveLianeUpdate", this.receiveLianeUpdate);
@@ -266,6 +218,34 @@ export class HubServiceClient extends AbstractHubService {
         this.logger.debug("HUB", "Connection closed without error");
       }
     });
+  }
+
+  private async receiveLatestMessages<TChatType extends ChatType>(chatType: TChatType, m: PaginatedResponse<MessageTypeOf<TChatType>>) {
+    if (!this.currentChat) {
+      this.logger.error("HUB", `Not connected to ${chatType} chat to receive latest messages`);
+      return;
+    }
+    if (this.currentChat.name === chatType) {
+      await this.currentChat.receiveLatestMessages(m as any);
+    }
+  }
+
+  private async receiveMessage<TChatType extends ChatType>(chatType: TChatType, conversationId: string, message: MessageTypeOf<TChatType>) {
+    if (!this.currentChat) {
+      this.logger.error("HUB", `Not connected to ${chatType} chat to receive message`);
+      return false;
+    }
+    if (this.currentChat.name === chatType) {
+      const received = await this.currentChat?.receiveMessage(conversationId, message as any);
+      if (!received) {
+        if (!this.unreadConversations.getValue().includes(conversationId)) {
+          this.unreadConversations.next([...this.unreadConversations.getValue(), conversationId]);
+          return false;
+        }
+      }
+      return received;
+    }
+    return false;
   }
 
   async start() {
@@ -305,18 +285,6 @@ export class HubServiceClient extends AbstractHubService {
     this.unreadNotifications.next([]);
   }
 
-  async readConversation(conversation: Ref<ConversationGroup>, timestamp: UTCDateTime) {
-    await this.hub.invoke("ReadConversation", conversation, timestamp);
-  }
-
-  async joinGroupChat(conversationId: Ref<ConversationGroup>) {
-    return this.hub.invoke<ConversationGroup>("JoinGroupChat", conversationId);
-  }
-
-  async sendToGroup(message: ChatMessage) {
-    await this.hub.invoke("SendToGroup", message, this.currentConversationId);
-  }
-
   async postEvent(lianeEvent: LianeEvent) {
     await this.hub.invoke("PostEvent", lianeEvent);
   }
@@ -338,6 +306,35 @@ export class HubServiceClient extends AbstractHubService {
       }
     };
   }
+
+  protected async connectToChat<TChatType extends ChatType>(
+    name: TChatType,
+    conversationRef: Ref<GroupTypeOf<TChatType>>,
+    onReceiveLatestMessages: OnLatestMessagesCallback<MessageTypeOf<TChatType>>,
+    onReceiveMessage: ConsumeMessage<MessageTypeOf<TChatType>>
+  ): Promise<Chat<TChatType>> {
+    if (this.currentChat) {
+      await this.currentChat.disconnect();
+    }
+
+    const currentChat = new Chat<TChatType>(this.hub, name, this.logger);
+    await currentChat.connect(conversationRef, onReceiveLatestMessages, onReceiveMessage);
+
+    // Remove from unread conversations
+    if (this.unreadConversations.getValue().includes(conversationRef)) {
+      this.unreadConversations.next(this.unreadConversations.getValue().filter(c => c !== conversationRef));
+    }
+    this.currentChat = currentChat as AbstractChat;
+
+    return currentChat;
+  }
+
+  protected receiveUnreadOverview = async (unread: UnreadOverview) => {
+    // Called when hub is started
+    this.logger.info("HUB", "unread", unread);
+    this.unreadConversations.next(unread.conversations);
+    this.unreadNotifications.next(unread.notifications);
+  };
 
   private async startAndRetry() {
     if (this.hub.state === "Connected") {

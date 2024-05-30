@@ -12,6 +12,7 @@ public interface ILianeService
   Task Delete(Ref<LianeRequest> id);
   Task<ImmutableList<LianeMatch>> List();
 
+  Task<Liane> Get(Ref<Liane> id);
   Task<Liane> JoinNew(Ref<LianeRequest> mine, Ref<LianeRequest> foreign);
   Task<Liane> Join(Ref<LianeRequest> mine, Ref<Liane> liane);
   Task<Liane> Update(Ref<Liane> id, LianeUpdate liane);
@@ -23,14 +24,3 @@ public interface ILianeService
 
   Task<ImmutableDictionary<Ref<Liane>, int>> GetUnreadLianes();
 }
-
-// TODO
-// Update liane (only title ??)
-// Update liane request
-// delete liane request
-// ReadConversation for liane message (via hub)
-// rajouter when: TimeRange; dans les Match
-// CoLianeMember résoudre la LianeRequest dans les matchs
-// Send notification on SendMessage
-
-// pb de match sur Roques ?

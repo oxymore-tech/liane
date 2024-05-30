@@ -3,6 +3,7 @@ using Liane.Api.Chat;
 using Liane.Api.Event;
 using Liane.Api.Trip;
 using Liane.Api.Auth;
+using Liane.Api.Community;
 using Liane.Api.Util.Pagination;
 
 namespace Liane.Api.Hub;
@@ -13,10 +14,12 @@ public interface IHubClient
 
   Task<bool> ReceiveNotification(Notification notification);
 
-  Task<bool> ReceiveMessage(string conversationId, ChatMessage message);
+  Task<bool> ReceiveGroupMessage(string conversationId, ChatMessage message);
+  Task ReceiveLatestGroupMessages(PaginatedResponse<ChatMessage> messages);
 
-  Task ReceiveLatestMessages(PaginatedResponse<ChatMessage> messages);
-
+  Task<bool> ReceiveLianeMessage(string conversationId, LianeMessage message);
+  Task ReceiveLatestLianeMessages(PaginatedResponse<LianeMessage> messages);
+  
   Task Me(FullUser user);
   
   Task ReceiveTrackingInfo(TrackingInfo update);

@@ -66,7 +66,7 @@ public sealed class HubServiceImpl : IHubService, IPushMiddleware, ILianeUpdateP
     {
       try
       {
-        var result = await hubContext.Clients.Client(connectionId).ReceiveMessage(conversation, message);
+        var result = await hubContext.Clients.Client(connectionId).ReceiveGroupMessage(conversation, message);
         if (result) return true;
         var sender = await userService.Get(message.CreatedBy!);
         var notification = new Notification.NewMessage(

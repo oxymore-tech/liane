@@ -1,4 +1,4 @@
-import { capitalize, ChatMessage, ConversationGroup, PaginatedResponse, Ref, User } from "@liane/common";
+import { capitalize, Chat, ChatMessage, PaginatedResponse, Ref, User } from "@liane/common";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, View } from "react-native";
 import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
@@ -74,7 +74,7 @@ export const ChatScreen = () => {
   const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [paginationCursor, setPaginationCursor] = useState<string>();
-  const [conversation, setConversation] = useState<ConversationGroup>();
+  const [chat, setChat] = useState<Chat<"Group">>();
   const [inputValue, setInputValue] = useState<string>("");
   const [error, setError] = useState<Error | undefined>(undefined);
   const [showMoreModal, setShowMoreModal] = useState(false);
@@ -82,25 +82,24 @@ export const ChatScreen = () => {
 
   const membersNames = useMemo(
     () =>
-      conversation
-        ? conversation.members
+      chat?.currentGroup
+        ? chat.currentGroup.members
             .filter(m => m.user.id !== user!.id)
             .map(m => m.user.pseudo)
             .join(", ")
         : "",
-    [conversation, user]
+    [chat, user]
   );
 
   const members: { [k: string]: User } | undefined = useMemo(
-    () => conversation?.members.reduce((a: { [k: string]: User }, b) => ((a[b.user.id!] = b.user), a), {}),
-    [conversation?.members]
+    () => chat?.currentGroup?.members.reduce((a: { [k: string]: User }, b) => ((a[b.user.id!] = b.user), a), {}),
+    [chat?.currentGroup?.members]
   );
 
   const appendMessage = (m: ChatMessage) => {
-    // console.log([m, ...messages]);
     setMessages(oldList => [m, ...oldList]);
     setInputValue("");
-    services.realTimeHub.readConversation(groupId, new Date().toISOString()).catch(e => console.warn(e));
+    chat?.readConversation(groupId, new Date().toISOString()).catch(e => console.warn(e));
   };
 
   const onReceiveLatestMessages = (m: PaginatedResponse<ChatMessage>) => {
@@ -109,9 +108,8 @@ export const ChatScreen = () => {
   };
 
   const fetchNextPage = async () => {
-    //console.log(paginationCursor);
     if (paginationCursor) {
-      const paginatedResult = await services.realTimeHub.list(groupId, { cursor: paginationCursor, limit: 15 });
+      const paginatedResult = await services.conversation.getMessages(groupId, { cursor: paginationCursor, limit: 15 });
       setMessages(oldList => {
         return [...oldList, ...paginatedResult.data];
       });
@@ -121,17 +119,12 @@ export const ChatScreen = () => {
 
   useEffect(() => {
     services.realTimeHub
-      .connectToChat(route.params.conversationId, onReceiveLatestMessages, appendMessage)
-      .then(conv => {
-        /* if (__DEV__) {
-          console.debug("Joined conversation", conv);
-        } */
-        setConversation(conv);
-      })
+      .connectToTripChat(route.params.conversationId, onReceiveLatestMessages, appendMessage)
+      .then(setChat)
       .catch(e => setError(e));
 
     return () => {
-      services.realTimeHub.disconnectFromChat(route.params.conversationId).catch(e => {
+      services.realTimeHub.disconnectFromChat().catch(e => {
         if (__DEV__) {
           console.warn(e);
         }
@@ -146,7 +139,7 @@ export const ChatScreen = () => {
         onPress={async () => {
           if (inputValue && inputValue.length > 0) {
             setIsSending(true);
-            await services.realTimeHub.send({ text: inputValue });
+            await chat?.send({ text: inputValue });
             setIsSending(false);
           }
         }}
@@ -156,10 +149,10 @@ export const ChatScreen = () => {
     </View>
   );
 
-  //console.debug(JSON.stringify(messages), conversation?.members);
+  //console.debug(JSON.stringify(messages), chat?.members);
   return (
     <View style={{ backgroundColor: AppColors.lightGrayBackground, justifyContent: "flex-end", flex: 1 }}>
-      {conversation && (
+      {chat && (
         <FlatList
           style={{ paddingHorizontal: 16, marginTop: insets.top + 72 }}
           data={messages}
@@ -177,7 +170,7 @@ export const ChatScreen = () => {
           onEndReached={() => fetchNextPage()}
         />
       )}
-      {!conversation && <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />}
+      {!chat && <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />}
       {error && (
         <Center style={{ flex: 1 }}>
           <AppText style={{ color: ContextualColors.redAlert.text }}>{error.message}</AppText>
@@ -196,7 +189,7 @@ export const ChatScreen = () => {
         <Row spacing={8}>
           <AppPressableIcon onPress={() => navigation.goBack()} name={"arrow-ios-back-outline"} color={AppColors.primaryColor} size={32} />
 
-          {conversation && (
+          {chat && (
             <View
               style={{
                 justifyContent: "center"
@@ -206,7 +199,7 @@ export const ChatScreen = () => {
           )}
         </Row>
         {/* TODO attachedLiane && <AttachedLianeOverview liane={attachedLiane} user={user!} />*/}
-        {conversation && <DebugIdView object={conversation} />}
+        {chat?.currentGroup && <DebugIdView object={chat?.currentGroup} />}
       </View>
 
       <KeyboardAvoidingView behavior={Platform.OS === "android" ? "height" : "padding"}>

@@ -34,9 +34,8 @@ public sealed class LianeServiceImpl(
   LianeRequestFetcher lianeRequestFetcher,
   LianeMatcher matcher,
   INotificationService notificationService,
-  IUserService userService) : ILianeService 
+  IUserService userService) : ILianeService
 {
-  
   public async Task<LianeRequest> Create(LianeRequest request)
   {
     var wayPoints = request.WayPoints.Distinct().ToImmutableList();
@@ -172,6 +171,16 @@ public sealed class LianeServiceImpl(
     var existingLiane = await lianeFetcher.FetchLiane(connection, lianeId, tx);
     tx.Commit();
     return existingLiane;
+  }
+
+  public async Task<Api.Community.Liane> Get(Ref<Api.Community.Liane> id)
+  {
+    using var connection = db.NewConnection();
+    using var tx = connection.BeginTransaction();
+    var userId = currentContext.CurrentUser().Id;
+    var lianeId = Guid.Parse(id);
+    await CheckIsMember(connection, lianeId, userId, tx);
+    return await lianeFetcher.FetchLiane(connection, lianeId);
   }
 
   public async Task<Api.Community.Liane> JoinNew(Ref<LianeRequest> mine, Ref<LianeRequest> foreign)

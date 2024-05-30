@@ -6,6 +6,7 @@ using Liane.Api.Event;
 using Liane.Api.Hub;
 using Liane.Api.Trip;
 using Liane.Api.Auth;
+using Liane.Api.Community;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Event;
@@ -19,30 +20,18 @@ using Task = System.Threading.Tasks.Task;
 namespace Liane.Web.Hubs;
 
 [Authorize(Policy = Startup.RequireAuthPolicy)]
-public sealed class ChatHub : Hub<IHubClient>
+public sealed class ChatHub(
+  ILogger<ChatHub> logger,
+  IChatService chatService,
+  ILianeService lianeService,
+  ICurrentContext currentContext,
+  IUserService userService,
+  IHubService hubService,
+  INotificationService notificationService,
+  EventDispatcher eventDispatcher,
+  ILianeUpdatePushService lianeUpdatePushService)
+  : Hub<IHubClient>
 {
-  private readonly ILogger<ChatHub> logger;
-  private readonly IChatService chatService;
-  private readonly ICurrentContext currentContext;
-  private readonly IUserService userService;
-  private readonly IHubService hubService;
-  private readonly INotificationService notificationService;
-  private readonly EventDispatcher eventDispatcher;
-  private readonly ILianeUpdatePushService lianeUpdatePushService;
-
-  public ChatHub(ILogger<ChatHub> logger, IChatService chatService, ICurrentContext currentContext, IUserService userService, IHubService hubService, INotificationService notificationService,
-    EventDispatcher eventDispatcher, ILianeUpdatePushService lianeUpdatePushService)
-  {
-    this.logger = logger;
-    this.chatService = chatService;
-    this.currentContext = currentContext;
-    this.userService = userService;
-    this.hubService = hubService;
-    this.notificationService = notificationService;
-    this.eventDispatcher = eventDispatcher;
-    this.lianeUpdatePushService = lianeUpdatePushService;
-  }
-
   public async Task PostEvent(LianeEvent lianeEvent)
   {
     await eventDispatcher.Dispatch(lianeEvent);
@@ -53,12 +42,33 @@ public sealed class ChatHub : Hub<IHubClient>
     await notificationService.Answer(notificationId, answer);
   }
 
+  public async Task SendToLiane(MessageContent lianeMessage, string lianeId)
+  {
+    var sent = await lianeService.SendMessage(lianeId, lianeMessage);
+    await Clients.Caller.ReceiveLianeMessage(lianeId, sent);
+  }
+
+  public async Task<Api.Community.Liane> JoinLianeChat(string lianeId)
+  {
+    var userId = currentContext.CurrentUser().Id;
+    var liane = await lianeService.Get(lianeId);
+    logger.LogInformation("User '{userId}' joined liane chat '{lianeId}'", userId, lianeId);
+    var caller = Clients.Caller;
+    _ = Task.Run(async () =>
+    {
+      var latestMessages = await lianeService.GetMessages(lianeId);
+      logger.LogInformation("Sending {count} liane messages", latestMessages.Data.Count);
+      await caller.ReceiveLatestLianeMessages(latestMessages);
+    });
+    return liane;
+  }
+  
   public async Task SendToGroup(ChatMessage message, string groupId)
   {
     var sent = await chatService.SaveMessageInGroup(message, groupId, currentContext.CurrentUser().Id);
     logger.LogInformation(sent.Text + " " + currentContext.CurrentUser().Id);
     // Send created message directly to the caller, the rest of the group will be handled by chat service
-    await Clients.Caller.ReceiveMessage(groupId, sent);
+    await Clients.Caller.ReceiveGroupMessage(groupId, sent);
   }
 
   public async Task<ConversationGroup> JoinGroupChat(string groupId)
@@ -74,15 +84,9 @@ public sealed class ChatHub : Hub<IHubClient>
     {
       var latestMessages = await chatService.GetGroupMessages(new Pagination(nowCursor), groupId);
       logger.LogInformation("Sending {count} messages", latestMessages.Data.Count);
-      await caller.ReceiveLatestMessages(latestMessages);
+      await caller.ReceiveLatestGroupMessages(latestMessages);
     });
     return updatedConversation;
-  }
-
-  public async Task ReadConversation(string convId, DateTime timestamp)
-  {
-    var userId = currentContext.CurrentUser().Id;
-    await chatService.ReadConversation(convId, userId, timestamp);
   }
 
   public override async Task OnConnectedAsync()
