@@ -18,7 +18,6 @@ public interface ILianeService
   Task<Liane> Join(Ref<LianeRequest> mine, Ref<Liane> liane);
   Task<Liane> Update(Ref<Liane> id, LianeUpdate liane);
   Task<bool> Leave(Ref<Liane> liane);
-  Task<Liane> Get(Ref<Liane> liane);
 
   Task<PaginatedResponse<LianeMessage>> GetMessages(Ref<Liane> liane) => GetMessages(liane, Pagination.Empty);
   Task<PaginatedResponse<LianeMessage>> GetMessages(Ref<Liane> liane, Pagination pagination);

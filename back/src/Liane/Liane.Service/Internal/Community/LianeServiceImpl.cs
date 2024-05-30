@@ -249,14 +249,6 @@ public sealed class LianeServiceImpl(
     return true;
   }
 
-  public async Task<Api.Community.Liane> Get(Ref<Api.Community.Liane> liane)
-  {
-    using var connection = db.NewConnection();
-    var query = Query.Select<LianeMessageDb>()
-      .Where(l => l.LianeId, ComparisonOperator.Eq, liane);
-    return await connection.QuerySingleAsync<Api.Community.Liane>(query);
-  }
-
   public async Task<LianeMessage> SendMessage(Ref<Api.Community.Liane> liane, MessageContent content)
   {
     using var connection = db.NewConnection();

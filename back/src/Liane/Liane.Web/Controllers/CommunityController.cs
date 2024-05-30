@@ -58,8 +58,7 @@ public sealed class CommunityController(ILianeService lianeService)
   }
 
   [HttpGet("liane/{id}")]
-  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Community.Liane))]
-  public Task<Api.Community.Liane> GetRequest(string id)
+  public Task<Api.Community.Liane> GetLiane(string id)
   {
     return lianeService.Get(id);
   }
