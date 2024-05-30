@@ -12,7 +12,6 @@ using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util;
 using Liane.Api.Util.Exception;
-using Liane.Api.Util.Http;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Postgis.Db;
@@ -347,13 +346,13 @@ public sealed class LianeServiceImpl(
     );
     return unread.ToImmutableDictionary(m => (Ref<Api.Community.Liane>)m.Item1.ToString(), m => m.Item2);
   }
-  
-  public async Task MarkAsRead(Ref<Api.Community.Liane> liane)
+
+  public async Task MarkAsRead(Ref<Api.Community.Liane> liane, DateTime timestamp)
   {
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
     var lianeId = Guid.Parse(liane.Id);
-    await MarkAsRead(connection, lianeId, tx, DateTime.UtcNow);
+    await MarkAsRead(connection, lianeId, tx, timestamp);
     tx.Commit();
   }
 

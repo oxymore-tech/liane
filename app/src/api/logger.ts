@@ -43,23 +43,31 @@ const namespaceLoggers = (() => {
   return Object.fromEntries(LoggerNamespaces.map(n => [n, rootLogger.extend(n)]));
 })();
 
+function getLogger(tag: LoggerNamespace) {
+  const namespaceLogger = namespaceLoggers[tag];
+  if (!namespaceLogger) {
+    throw new Error(`Logger namespace "${tag}" not declared`);
+  }
+  return namespaceLogger;
+}
+
 export class ReactNativeLogger implements CommonAppLogger<LoggerNamespace> {
   debug(tag: LoggerNamespace, ...args: any[]): void {
     if (__DEV__) {
-      namespaceLoggers[tag].debug(...args);
+      getLogger(tag).debug(...args);
     }
   }
 
   info(tag: LoggerNamespace, ...args: any[]): void {
-    namespaceLoggers[tag].info(...args);
+    getLogger(tag).info(...args);
   }
 
   warn(tag: LoggerNamespace, ...args: any[]): void {
-    namespaceLoggers[tag].warn(...args);
+    getLogger(tag).warn(...args);
   }
 
   error(tag: LoggerNamespace, ...args: any[]): void {
-    namespaceLoggers[tag].error(...args);
+    getLogger(tag).error(...args);
   }
 }
 
