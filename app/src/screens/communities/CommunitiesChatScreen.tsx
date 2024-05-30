@@ -138,7 +138,7 @@ export const CommunitiesChatScreen = () => {
       if (lianeTemp && lianeTemp.id) {
         try {
           const updatedLianeRequest = await services.community.sendMessage(lianeTemp.id, {
-            type: "text",
+            type: "Text",
             value: inputValue
           });
           setLiane(lianeTemp);
@@ -153,7 +153,7 @@ export const CommunitiesChatScreen = () => {
       if (lianeTemp && lianeTemp.id && inputValue && inputValue.length > 0) {
         try {
           const updatedLianeRequest = await chat?.send({
-            type: "text",
+            type: "Text",
             value: inputValue
           });
         } catch (error) {
@@ -207,12 +207,12 @@ export const CommunitiesChatScreen = () => {
       recurrence: me.lianeRequest.weekDays
     });
     await services.community.sendMessage(liane!.id!, {
-      type: "trip",
+      type: "Trip",
       value: created.id!
     });
     if (created.return) {
       await services.community.sendMessage(liane!.id!, {
-        type: "trip",
+        type: "Trip",
         value: created.return
       });
     }
