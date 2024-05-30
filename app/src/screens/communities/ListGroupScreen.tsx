@@ -12,7 +12,7 @@ import { SimpleModal } from "@/components/modal/SimpleModal";
 import { Logger } from "@maplibre/maplibre-react-native";
 import { AppLogger } from "@/api/logger";
 import { extractDays } from "@/util/hooks/days";
-import { CoLianeMatch, CoMatch, MatchGroup } from "@liane/common";
+import { CoLianeMatch, CoMatch, MatchGroup, RallyingPoint } from "@liane/common";
 import { extractWaypointFromTo } from "@/util/hooks/lianeRequest";
 
 export const ListGroupScreen = () => {
@@ -64,7 +64,9 @@ export const ListGroupScreen = () => {
           </AppText>
         </View>
         <View style={styles.headerSubContent}>
-          <AppText style={{ paddingLeft: 35, fontWeight: "bold", fontSize: 14, lineHeight: 27, color: AppColors.white }}>{`${from} ➔ ${to}`}</AppText>
+          <AppText style={{ paddingLeft: 35, fontWeight: "bold", fontSize: 14, lineHeight: 27, color: AppColors.white }}>{`${
+            (from as RallyingPoint).label
+          } ➔ ${(to as RallyingPoint).label}`}</AppText>
           <AppText
             style={{
               paddingLeft: 15,

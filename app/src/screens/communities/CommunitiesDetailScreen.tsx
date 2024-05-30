@@ -10,10 +10,11 @@ import { UserPicture } from "@/components/UserPicture";
 import { AppColors, ContextualColors } from "@/theme/colors";
 import { SimpleModal } from "@/components/modal/SimpleModal";
 import { AppLogger } from "@/api/logger";
-import { CoLianeMember, User } from "@liane/common";
+import { CoLianeMember, RallyingPoint, User } from "@liane/common";
 import { extractDays } from "@/util/hooks/days";
 import { extractDaysTimes, extractWaypointFromTo } from "@/util/hooks/lianeRequest";
 import { AppContext } from "@/components/context/ContextProvider";
+import Navigation from "@/components/context/Navigation.tsx";
 
 export const CommunitiesDetailScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesDetails">();
@@ -32,15 +33,15 @@ export const CommunitiesDetailScreen = () => {
       <View style={styles.memberContainer}>
         <View style={styles.memberInfo}>
           <View style={styles.avatarContainer}>
-            <UserPicture key={member.user.id} size={50} url={member.user.pictureUrl} id={member.user.id} />
+            <UserPicture key={member.user?.id} size={50} url={member.user?.pictureUrl} id={member.user?.id} />
           </View>
           <View style={styles.textContainer}>
-            <AppText style={styles.nameText}>{member.user.pseudo}</AppText>
-            <AppText style={styles.locationText}>{`${from} ➔ ${to}`}</AppText>
+            <AppText style={styles.nameText}>{member.user?.pseudo}</AppText>
+            <AppText style={styles.locationText}>{`${(from as RallyingPoint).label} ➔ ${(to as RallyingPoint).label}`}</AppText>
             <AppText style={styles.timeText}>{extractDaysTimes(member.lianeRequest)}</AppText>
           </View>
         </View>
-        <Pressable onPress={() => (member.user.id === user?.id ? setMyModalVisible(true) : openModalUser(member.user))}>
+        <Pressable onPress={() => (member.user?.id === user?.id ? setMyModalVisible(true) : openModalUser(member.user))}>
           <AppIcon name={"more-vertical"} />
         </Pressable>
       </View>
@@ -69,6 +70,7 @@ export const CommunitiesDetailScreen = () => {
       try {
         const result = await services.community.leave(group.id);
         AppLogger.debug("COMMUNITIES", "Lien quittée avec succès", result);
+        navigation.navigate("Communities");
       } catch (error) {
         AppLogger.debug("COMMUNITIES", "Au moment de quitter la liane, une erreur c'est produite", error);
       }

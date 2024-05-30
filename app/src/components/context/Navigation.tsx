@@ -207,6 +207,7 @@ function Navigation() {
         <Stack.Screen name="Publish" component={PublishScreen} options={{ headerShown: false, animation: "fade" }} />
         <Stack.Screen name="LianeDetail" component={LianeDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Chat" component={ChatScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Communities" component={CommunitiesScreen} options={{ headerShown: false }} />
         <Stack.Screen name="CommunitiesChat" component={CommunitiesChatScreen} options={{ headerShown: false }} />
         <Stack.Screen name="CommunitiesDetails" component={CommunitiesDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />

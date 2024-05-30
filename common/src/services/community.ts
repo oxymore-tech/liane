@@ -10,7 +10,7 @@ export type TimeConstraint = {
 
 export type CoLianeRequest = Entity & {
   name: string;
-  wayPoints: Ref<RallyingPoint>[];
+  wayPoints: RallyingPoint[];
   roundTrip: boolean;
   canDrive: boolean;
   weekDays: DayOfWeekFlag;

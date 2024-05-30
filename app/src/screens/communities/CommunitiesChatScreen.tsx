@@ -126,8 +126,8 @@ export const CommunitiesChatScreen = () => {
         }
       } else {
         const lianeRequest = (group as MatchSingle).lianeRequest;
-        if (request && request.id && lianeRequest) {
-          const coLiane = await services.community.joinNew(request.id, lianeRequest.toString());
+        if (request && request.id && lianeRequest && lianeRequest.id) {
+          const coLiane = await services.community.joinNew(request.id, lianeRequest.id);
           setGroup(undefined);
           setLiane(coLiane);
           lianeTemp = coLiane;
@@ -224,7 +224,7 @@ export const CommunitiesChatScreen = () => {
     </View>
   );
 
-  //console.debug(JSON.stringify(messages), conversation?.members);
+  console.debug("#################################", liane);
   return (
     <View style={{ backgroundColor: AppColors.lightGrayBackground, justifyContent: "flex-end", flex: 1 }}>
       {conversation && (
@@ -282,7 +282,7 @@ export const CommunitiesChatScreen = () => {
                 </AppText>
 
                 <AppText style={{ fontSize: 14, fontWeight: "400", flexShrink: 1, lineHeight: 16, color: AppColors.black }}>
-                  {liane.members?.map(item => item.user.pseudo).join(", ")}
+                  {liane?.members?.map(item => item.user?.pseudo).join(", ")}
                 </AppText>
               </View>
             )}
