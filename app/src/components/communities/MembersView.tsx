@@ -63,8 +63,6 @@ const MemberItem = ({ member }) => (
 );
 
 export const MembersView = () => {
-  console.log("rfeergergergergergregerger er gerg er");
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Membres (3)</Text>

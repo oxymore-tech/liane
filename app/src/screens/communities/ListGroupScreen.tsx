@@ -20,8 +20,6 @@ export const ListGroupScreen = () => {
   const groups = route.params.groups;
   const lianeRequest = route.params.lianeRequest;
 
-  console.log("GRRRRR", groups);
-
   const insets = useSafeAreaInsets();
   const [error, setError] = useState<Error | undefined>(undefined);
   const { to, from, steps } = useMemo(() => extractWaypointFromTo(lianeRequest?.wayPoints), [lianeRequest.wayPoints]);

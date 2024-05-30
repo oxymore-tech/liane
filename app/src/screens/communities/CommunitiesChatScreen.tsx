@@ -224,7 +224,6 @@ export const CommunitiesChatScreen = () => {
     </View>
   );
 
-  console.debug("#################################", liane);
   return (
     <View style={{ backgroundColor: AppColors.lightGrayBackground, justifyContent: "flex-end", flex: 1 }}>
       {conversation && (
