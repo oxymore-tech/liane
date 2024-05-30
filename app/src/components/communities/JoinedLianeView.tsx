@@ -57,8 +57,8 @@ const RenderGroupsView = ({ joinedLiane, unreadMessage }: GroupsViewProps) => {
             marginTop: 5,
             marginBottom: 15
           }}>
-          {joinedLiane.matches.map(match => (
-            <UserPicture key={match.user} size={24} url={null} id={match.user} style={{ marginLeft: -10 }} />
+          {joinedLiane.liane.members.map(member => (
+            <UserPicture key={member.user.id} size={24} url={member.user.pictureUrl} id={member.user.id} style={{ marginLeft: -10 }} />
           ))}
         </View>
       </View>
