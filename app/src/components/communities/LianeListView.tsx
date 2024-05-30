@@ -19,11 +19,9 @@ import { AppIcon } from "@/components/base/AppIcon";
 import { Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
-import { useObservable } from "@/util/hooks/subscription";
 import Eye from "@/assets/images/eye-fill.svg";
 import EyeOff from "@/assets/images/eye-off-fill.svg";
 import groups, { GroupeCovoiturage } from "../../util/Mock/groups";
-import { extractDays } from "@/util/hooks/days";
 import { JoinedLianeView } from "@/components/communities/JoinedLianeView";
 import { AppLogger } from "@/api/logger";
 import { extractDaysTimes, extractWaypointFromTo } from "@/util/hooks/lianeRequest";
@@ -50,7 +48,7 @@ export const LianeListView = ({ data, isFetching, onRefresh, reverseSort, loadMo
       refreshControl={<RefreshControl refreshing={isFetching || false} onRefresh={onRefresh} />}
       sections={sections}
       showsVerticalScrollIndicator={false}
-      renderItem={renderItem}
+      renderItem={props => renderItem({ ...props, onRefresh })}
       keyExtractor={item => item.lianeRequest.id!}
       onEndReachedThreshold={0.2}
       onEndReached={loadMore}
@@ -67,17 +65,14 @@ const convertToDateSections = (data: CoLianeMatch[], member: Ref<User>, reverseS
       } as TripSection)
   );
 
-const LianeRequestItem = ({ item }: { item: CoLianeMatch }) => {
+const LianeRequestItem = ({ item, onRefresh }: { item: CoLianeMatch; onRefresh: (() => void) | undefined }) => {
   const { services, user } = useContext(AppContext);
   const { navigation } = useAppNavigation();
   const unreadLianes = useMemo(async () => {
     return await services.community.getUnreadLianes();
   }, []);
 
-  /*const unread = useObservable(services.realTimeHub.unreadConversations, undefined);*/
-
-  console.log("################### item", item);
-  const { to, from, steps } = useMemo(() => extractWaypointFromTo(item.lianeRequest?.wayPoints), [item.lianeRequest.wayPoints]);
+  const { to, from } = useMemo(() => extractWaypointFromTo(item.lianeRequest?.wayPoints), [item.lianeRequest.wayPoints]);
 
   const deleteLiane = async () => {
     const lianeRequest = item.lianeRequest;
@@ -86,6 +81,9 @@ const LianeRequestItem = ({ item }: { item: CoLianeMatch }) => {
       try {
         const result = await services.community.delete(lianeRequest.id);
         AppLogger.debug("COMMUNITIES", "Suppression d'une liane avec succès", result);
+        if (onRefresh) {
+          onRefresh();
+        }
       } catch (error) {
         AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de la suppression d'une liane", error);
       }
@@ -236,17 +234,17 @@ const LianeRequestItem = ({ item }: { item: CoLianeMatch }) => {
   );
 };
 
-const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<CoLianeMatch, TripSection>) => {
+const renderItem = ({
+  item,
+  index,
+  section,
+  onRefresh
+}: SectionListRenderItemInfo<CoLianeMatch, TripSection> & { onRefresh: (() => void) | undefined }) => {
   return (
     <View style={[styles.item, styles.grayBorder, styles.itemLast]}>
-      <LianeRequestItem item={item} />
+      <LianeRequestItem item={item} onRefresh={onRefresh} />
     </View>
   );
-};
-
-const renderItem = ({ item, index, section }: SectionListRenderItemInfo<CoLianeMatch, TripSection>) => {
-  // @ts-ignore
-  return renderLianeItem({ item, index, section });
 };
 
 const renderSectionHeader = ({ section: {} }: { section: SectionListData<CoLianeMatch, TripSection> }) => <View style={styles.header} />;
