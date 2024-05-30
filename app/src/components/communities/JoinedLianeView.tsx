@@ -2,7 +2,6 @@ import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
-import { GroupeCovoiturage } from "@/util/Mock/groups";
 import { extractDays } from "@/util/hooks/days";
 import { AppColors } from "@/theme/colors";
 import { UserPicture } from "@/components/UserPicture";

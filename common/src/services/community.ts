@@ -77,6 +77,8 @@ export type TypedLianeMessage<T extends MessageContentText | MessageContentTrip>
 export interface CommunityService {
   list(): Promise<CoLianeMatch[]>;
 
+  getLiane(liane: string): Promise<CoLiane>;
+
   create(lianeRequest: CoLianeRequest): Promise<CoLianeRequest>;
 
   update(lianeRequestId: string, request: ResolvedLianeRequest): Promise<CoLianeRequest>;
@@ -143,5 +145,9 @@ export class CommunityServiceClient implements CommunityService {
 
   getUnreadLianes() {
     return this.http.get<Record<string, number>>("/community/liane/unread");
+  }
+
+  getLiane(liane: string) {
+    return this.http.get<CoLiane>(`/community/liane/${liane}`);
   }
 }

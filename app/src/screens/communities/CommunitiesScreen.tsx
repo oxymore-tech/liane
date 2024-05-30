@@ -14,7 +14,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppPressableIcon } from "@/components/base/AppPressable";
 import { useObservable } from "@/util/hooks/subscription";
 import { useFocusEffect } from "@react-navigation/native";
-import { LianeGeolocation } from "@/api/service/location.ts";
 
 const Header = () => {
   const { navigation } = useAppNavigation();
@@ -24,7 +23,6 @@ const Header = () => {
 
   return (
     <Row style={{ alignItems: "center" }} spacing={16}>
-      {/*<AppButton style={{ flex: 1 }} icon="plus-outline" kind="rounded" title="Créer une liane" onPress={() => navigation.navigate("Publish", {})} />*/}
       <Space />
       <View>
         <AppPressableIcon

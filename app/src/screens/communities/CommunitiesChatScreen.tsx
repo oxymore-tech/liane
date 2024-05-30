@@ -2,6 +2,7 @@ import {
   capitalize,
   ChatMessage,
   CoLiane,
+  CoLianeMatch,
   CoLianeRequest,
   CoMatch,
   ConversationGroup,
@@ -182,6 +183,17 @@ export const CommunitiesChatScreen = () => {
     setRequest(undefined);
     setError(undefined);
 
+    const fetchLiane = async (liane: string) => {
+      try {
+        const LianeData: CoLiane = await services.community.getLiane(liane);
+        setLiane(LianeData);
+        return LianeData;
+      } catch (error) {
+        AppLogger.debug("COMMUNITIES", "Au moment de récupérer la liane, une erreur c'est produite", error);
+      }
+    };
+
+    console.log("PARAMS", route.params);
     if (route.params.liane) {
       // Lorsqu'on arrive directement par une liane
       setLiane(route.params.liane);
@@ -195,8 +207,10 @@ export const CommunitiesChatScreen = () => {
       setRequest(route.params.request);
     }
     if (route.params.lianeId) {
+      console.log("lianeId", route.params.lianeId);
       // Lorsqu'on arrive par une notification
       //TODO recup Liane
+      fetchLiane(route.params.lianeId).then(r => undefined);
     }
   }, [route.params]);
 
@@ -236,7 +250,7 @@ export const CommunitiesChatScreen = () => {
     </View>
   );
 
-  console.log("LIANE", liane);
+  console.log("LIANE", liane, route.params);
 
   return (
     <View style={{ backgroundColor: AppColors.lightGrayBackground, justifyContent: "flex-end", flex: 1 }}>
