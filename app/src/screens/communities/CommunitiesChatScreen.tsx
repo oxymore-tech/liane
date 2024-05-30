@@ -136,6 +136,7 @@ export const CommunitiesChatScreen = () => {
             value: inputValue
           });
           setLiane(lianeTemp);
+          setInputValue("");
         } catch (error) {
           setError(new Error("Message non envoyé suite à une erreur"));
           AppLogger.debug("COMMUNITIES", "Une erreur est survenu lors de l'entrée dans une nouvelle liane", error);
