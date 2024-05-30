@@ -199,9 +199,10 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     }
 
     // jaybee disable its liane request
+    var disabledJayBeeLianeRequest = lianeJayBee with { IsEnabled = false };
     {
       currentContext.SetCurrentUser(jayBee);
-      await tested.Update(lianeJayBee.Id, lianeJayBee with { IsEnabled = false });
+      await tested.Update(lianeJayBee.Id, disabledJayBeeLianeRequest);
     }
 
     // mathilde disable its liane request
@@ -214,12 +215,12 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     {
       Members = joinedLiane.Members.Select(m =>
       {
-        if (m.User != jayBee.Id)
+        if (m.User.Id == jayBee.Id)
         {
-          return m;
+          return m with { LianeRequest = disabledJayBeeLianeRequest };
         }
 
-        return m with { LianeRequest = m.LianeRequest.Value! with { IsEnabled = false } };
+        return m;
       }).ToImmutableList()
     };
 
@@ -231,7 +232,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       list[0].JoinedLianes
         .AssertDeepEqual(
           new Match.Group("Pain", joinedLianeUdated,
-            ImmutableList.Create(new Match.Single("Pain", lianeJayBee with { IsEnabled = false }, jayBee.Id, DayOfWeekFlag.All, default, LabeledPositions.QuezacParking, LabeledPositions.Mende,
+            ImmutableList.Create(new Match.Single("Pain", disabledJayBeeLianeRequest, jayBee.Id, DayOfWeekFlag.All, default, LabeledPositions.QuezacParking, LabeledPositions.Mende,
               0.77242357f)),
             DayOfWeekFlag.All, default, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)
         );
