@@ -65,8 +65,7 @@ public sealed class ChatHub(
   
   public async Task ReadLiane(string lianeId, DateTime timestamp)
   {
-    var userId = currentContext.CurrentUser().Id;
-    //await lianeService.ReadConversation(convId, userId, timestamp);
+    await lianeService.ReadConversation(lianeId, timestamp);
   }
 
   public async Task SendToGroup(ChatMessage message, string groupId)

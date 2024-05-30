@@ -339,6 +339,15 @@ public sealed class LianeServiceImpl(
     );
     return unread.ToImmutableDictionary(m => (Ref<Api.Community.Liane>)m.Item1.ToString(), m => m.Item2);
   }
+  
+  public async Task MarkAsRead(Ref<Api.Community.Liane> liane)
+  {
+    using var connection = db.NewConnection();
+    using var tx = connection.BeginTransaction();
+    var lianeId = Guid.Parse(liane.Id);
+    await MarkAsRead(connection, lianeId, tx);
+    tx.Commit();
+  }
 
   private async Task<LianeMemberDb> MarkAsRead(IDbConnection connection, Guid lianeId, IDbTransaction tx)
   {
