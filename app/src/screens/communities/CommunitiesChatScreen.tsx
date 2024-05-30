@@ -343,7 +343,12 @@ export const CommunitiesChatScreen = () => {
         }}>
         <Row spacing={8} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
           <Row>
-            <AppPressableIcon onPress={() => navigation.goBack()} name={"arrow-ios-back-outline"} color={AppColors.primaryColor} size={32} />
+            <AppPressableIcon
+              onPress={() => (group ? navigation.goBack() : navigation.navigate("Communities"))}
+              name={"arrow-ios-back-outline"}
+              color={AppColors.primaryColor}
+              size={32}
+            />
 
             {liane && (
               <View
