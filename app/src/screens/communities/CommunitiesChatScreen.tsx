@@ -284,7 +284,7 @@ export const CommunitiesChatScreen = () => {
       <AppPressableIcon
         style={{ alignSelf: "flex-end" }}
         onPress={async () => {
-          await sendMessage(inputValue);
+          await sendMessage(inputValue).then(() => setInputValue(""));
         }}
         iconTransform={[{ rotate: "90deg" }, { translateY: 6 }]}
         name={"navigation-outline"}
@@ -307,12 +307,14 @@ export const CommunitiesChatScreen = () => {
                   <TripSurveyView survey={item as TypedLianeMessage<MessageContentTrip>} coLiane={liane!} />
                 </View>
               ) : (
-                <MessageBubble
-                  message={item}
-                  sender={members[item.createdBy!]}
-                  isSender={item.createdBy === user?.id}
-                  previousSender={index < messages.length - 1 ? messages[index + 1].createdBy : undefined}
-                />
+                !!members[item.createdBy!] && (
+                  <MessageBubble
+                    message={item}
+                    sender={members[item.createdBy!]}
+                    isSender={item.createdBy === user?.id}
+                    previousSender={index < messages.length - 1 ? messages[index + 1].createdBy : undefined}
+                  />
+                )
               )
             ) : null
           }

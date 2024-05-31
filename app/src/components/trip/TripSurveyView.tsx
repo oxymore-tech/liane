@@ -63,9 +63,6 @@ export const TripSurveyView = ({ survey, coLiane }: { survey: TypedLianeMessage<
     }
   });
 
-  if (trip.isError) {
-    console.error("Request error", JSON.stringify(trip.error));
-  }
   return (
     <View style={{ backgroundColor: AppColors.backgroundColor, borderRadius: 16, padding: 8 }}>
       {trip.isLoading && <ActivityIndicator />}
