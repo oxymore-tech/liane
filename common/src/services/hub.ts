@@ -155,7 +155,7 @@ export abstract class AbstractHubService implements HubService {
 }
 
 export class HubServiceClient extends AbstractHubService {
-  private hub: HubConnection;
+  private readonly hub: HubConnection;
 
   private isStarted = false;
   constructor(
@@ -231,8 +231,6 @@ export class HubServiceClient extends AbstractHubService {
   }
 
   private async receiveMessage<TChatType extends ChatType>(chatType: TChatType, conversationId: string, message: MessageTypeOf<TChatType>) {
-    console.log("############## receiveMessage", message);
-
     if (!this.currentChat) {
       this.logger.error("HUB", `Not connected to ${chatType} chat to receive message`);
       return false;
@@ -274,7 +272,7 @@ export class HubServiceClient extends AbstractHubService {
 
   async stop() {
     this.logger.debug("HUB", "stop");
-    await this.hub.stop().catch(err => console.warn(err));
+    await this.hub.stop().catch(err => this.logger.warn("HUB", err));
     this.isStarted = false;
   }
 

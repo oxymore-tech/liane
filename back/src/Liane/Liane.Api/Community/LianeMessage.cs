@@ -19,6 +19,14 @@ public abstract record MessageContent
   {
   }
 
+  public override string ToString() =>
+    this switch
+    {
+      Text text => text.Value,
+      Trip => "Nouveau trajet",
+      _ => throw new ArgumentOutOfRangeException()
+    };
+
   public static implicit operator MessageContent(string value) => new Text(value);
 
   public sealed record Text(string Value) : MessageContent;

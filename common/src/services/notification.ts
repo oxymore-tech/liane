@@ -3,7 +3,7 @@ import { BehaviorSubject, map, Observable, SubscriptionLike } from "rxjs";
 import { LianeEvent } from "../event";
 import { HttpClient } from "./http";
 import { IUnion } from "../union";
-import { CoLiane } from "./community";
+import { CoLiane, MessageContent } from "./community";
 
 export type Notification = Info | Event | NewMessage | LianeMessage;
 
@@ -38,6 +38,7 @@ export type NewMessage = Readonly<{
   AbstractNotification<"NewMessage">;
 
 export type LianeMessage = AbstractNotification<"LianeMessage"> & {
+  content: MessageContent;
   liane: Ref<CoLiane>;
 };
 

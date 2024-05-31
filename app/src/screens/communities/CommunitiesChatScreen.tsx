@@ -170,10 +170,10 @@ export const CommunitiesChatScreen = () => {
   };
 
   const appendMessage = (m: LianeMessage) => {
-    // console.log([m, ...messages]);
     setMessages(oldList => [m, ...oldList]);
-    setInputValue("");
-    liane && liane.id && chat && chat.readConversation(liane.id, new Date().toISOString()).catch(e => console.warn(e));
+    if (liane?.id && chat) {
+      chat.readConversation(liane.id, new Date().toISOString()).catch(e => console.warn(e));
+    }
   };
 
   const onReceiveLatestMessages = (m: PaginatedResponse<LianeMessage>) => {
@@ -255,20 +255,16 @@ export const CommunitiesChatScreen = () => {
   }, [route.params]);
 
   useEffect(() => {
-    console.log("CONNECT TRY", liane?.id, liane);
     if (liane && liane.id) {
       services.realTimeHub
         .connectToLianeChat(liane.id, onReceiveLatestMessages, appendMessage)
         .then(conv => {
-          console.log("HERE WE GO", conv);
-
           /* if (__DEV__) {
             console.debug("Joined chat", conv);
           } */
           setchat(conv);
         })
         .catch(e => {
-          console.log("ERRROOROROROROROROOR", e);
           setError(e);
         });
     }

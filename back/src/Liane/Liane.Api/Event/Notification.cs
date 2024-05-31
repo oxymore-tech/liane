@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Immutable;
 using Liane.Api.Chat;
+using Liane.Api.Community;
 using Liane.Api.Routing;
 using Liane.Api.Util.Ref;
 using MongoDB.Bson.Serialization.Attributes;
@@ -71,6 +72,7 @@ public abstract record Notification : IEntity<string>
     ImmutableHashSet<Answer> Answers,
     string Title,
     string Message,
+    MessageContent Content,
     Ref<Community.Liane> Liane,
     DateTime? SeenAt = null
   ) : Notification

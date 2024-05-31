@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Chat;
+using Liane.Api.Community;
 using Liane.Api.Event;
 using Liane.Api.Util.Ref;
 
@@ -23,6 +24,32 @@ public sealed class PushServiceImpl : IPushService
     foreach (var pushService in pushMiddlewares)
     {
       if (await pushService.SendChatMessage(receiver, conversation, message))
+      {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  public async Task<bool> SendLianeMessage(Ref<Api.Auth.User> receiver, Ref<Api.Community.Liane> conversation, LianeMessage message)
+  {
+    foreach (var pushService in pushMiddlewares)
+    {
+      if (await pushService.SendLianeMessage(receiver, conversation, message))
+      {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  public async Task<bool> SendChatMessage(Ref<Api.Auth.User> receiver, Ref<Api.Community.Liane> conversation, LianeMessage message)
+  {
+    foreach (var pushService in pushMiddlewares)
+    {
+      if (await pushService.SendLianeMessage(receiver, conversation, message))
       {
         return true;
       }

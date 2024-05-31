@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Text.Json;
 using System.Threading.Tasks;
 using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
 using Google.Apis.Auth.OAuth2;
-using Liane.Api.Chat;
-using Liane.Api.Event;
 using Liane.Api.Auth;
+using Liane.Api.Chat;
+using Liane.Api.Community;
+using Liane.Api.Event;
 using Liane.Api.Util.Ref;
 using Microsoft.Extensions.Logging;
 using Notification = Liane.Api.Event.Notification;
@@ -19,12 +19,10 @@ public sealed class FirebaseMessagingImpl : IPushMiddleware
 {
   private readonly IUserService userService;
   private readonly ILogger<FirebaseMessagingImpl> logger;
-  private readonly JsonSerializerOptions jsonSerializerOptions;
 
-  public FirebaseMessagingImpl(FirebaseSettings firebaseSettings, ILogger<FirebaseMessagingImpl> logger, JsonSerializerOptions jsonSerializerOptions, IUserService userService)
+  public FirebaseMessagingImpl(FirebaseSettings firebaseSettings, ILogger<FirebaseMessagingImpl> logger, IUserService userService)
   {
     this.logger = logger;
-    this.jsonSerializerOptions = jsonSerializerOptions;
     this.userService = userService;
     if (firebaseSettings.ServiceAccountFile is null)
     {
@@ -74,7 +72,7 @@ public sealed class FirebaseMessagingImpl : IPushMiddleware
       return false;
     }
 
-    var sender = await userService.Get(message.CreatedBy!);
+    var sender = await userService.Get(message.CreatedBy);
     var notification = new Notification.NewMessage(
       null,
       sender,
@@ -98,13 +96,48 @@ public sealed class FirebaseMessagingImpl : IPushMiddleware
     return false;
   }
 
-  private Message GetFirebaseMessage(Notification notification)
+  public async Task<bool> SendLianeMessage(Ref<Api.Auth.User> receiver, Ref<Api.Community.Liane> conversation, LianeMessage message)
+  {
+    var receiverUser = await userService.GetFullUser(receiver);
+    if (receiverUser.PushToken is null)
+    {
+      logger.LogWarning("Unable to send push notification to user {receiver} : no push token", receiver.Id);
+      return false;
+    }
+
+    var sender = await userService.Get(message.CreatedBy);
+    var notification = new Notification.LianeMessage(
+      null,
+      sender,
+      message.CreatedAt!.Value,
+      ImmutableList.Create(new Recipient(receiver)),
+      ImmutableHashSet<Answer>.Empty,
+      sender.Pseudo,
+      message.Content.ToString(),
+      message.Content,
+      conversation.Id);
+
+    try
+    {
+      await Send(receiverUser.PushToken, notification);
+      return true;
+    }
+    catch (FirebaseMessagingException e)
+    {
+      logger.LogWarning(e, "Unable to send push notification using firebase to user {receiver}", receiver.Id);
+    }
+
+    return false;
+  }
+
+  private static Message GetFirebaseMessage(Notification notification)
   {
     var data = new Dictionary<string, string>();
     if (notification.Uri is not null)
     {
       data.Add("uri", notification.Uri);
     }
+
     return new Message
     {
       Notification = new FirebaseAdmin.Messaging.Notification
@@ -117,7 +150,7 @@ public sealed class FirebaseMessagingImpl : IPushMiddleware
     };
   }
 
-  private Task<string> Send(string deviceToken, Notification notification)
+  private static Task<string> Send(string deviceToken, Notification notification)
   {
     if (FirebaseMessaging.DefaultInstance is null)
     {
@@ -128,11 +161,5 @@ public sealed class FirebaseMessagingImpl : IPushMiddleware
     firebaseMessage.Token = deviceToken;
 
     return FirebaseMessaging.DefaultInstance.SendAsync(firebaseMessage);
-  }
-
-  private IReadOnlyDictionary<string, string> BuildPayLoad(Notification payload)
-  {
-    var jsonPayload = JsonSerializer.Serialize(payload, jsonSerializerOptions);
-    return new Dictionary<string, string> { { "jsonPayload", jsonPayload } };
   }
 }

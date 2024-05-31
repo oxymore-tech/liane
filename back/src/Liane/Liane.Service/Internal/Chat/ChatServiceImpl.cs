@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using Liane.Api.Chat;
 using Liane.Api.Auth;
+using Liane.Api.Chat;
 using Liane.Api.Util;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
@@ -16,18 +16,10 @@ using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Chat;
 
-public sealed class ChatServiceImpl : MongoCrudEntityService<ConversationGroup>, IChatService
+public sealed class ChatServiceImpl(IMongoDatabase mongo, ICurrentContext currentContext, IUserService userService, IPushService pushService)
+  : MongoCrudEntityService<ConversationGroup>(mongo,
+    currentContext), IChatService
 {
-  private readonly IUserService userService;
-  private readonly IPushService pushService;
-
-  public ChatServiceImpl(IMongoDatabase mongo, ICurrentContext currentContext, IUserService userService, IPushService pushService) : base(mongo,
-    currentContext)
-  {
-    this.userService = userService;
-    this.pushService = pushService;
-  }
-
   public async Task AddMember(Ref<ConversationGroup> id, Ref<Api.Auth.User> user)
   {
     await Mongo.GetCollection<ConversationGroup>()
