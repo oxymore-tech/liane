@@ -119,8 +119,6 @@ const NoLiane = () => {
   );
 };
 
-export const LianePastQueryKey = "getPastTrips";
-
 const refetch = (queriesData: UseQueryResult[]) => {
   if (queriesData[0].error) {
     queriesData[0].refetch();

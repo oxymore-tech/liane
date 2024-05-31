@@ -107,7 +107,7 @@ export const CommunitiesChatScreen = () => {
     [chat?.currentGroup?.members, liane]
   );
 
-  const sendMessage = async (inputValue: string) => {
+  const sendMessage = async (value: string) => {
     let lianeTemp = liane;
     setIsSending(true);
 
@@ -139,26 +139,26 @@ export const CommunitiesChatScreen = () => {
         try {
           const updatedLianeRequest = await services.community.sendMessage(lianeTemp.id, {
             type: "Text",
-            value: inputValue
+            value: value
           });
           setLiane(lianeTemp);
           setInputValue("");
-        } catch (error) {
+        } catch (e) {
           setError(new Error("Message non envoyé suite à une erreur"));
-          AppLogger.debug("COMMUNITIES", "Une erreur est survenu lors de l'entrée dans une nouvelle liane", error);
+          AppLogger.debug("COMMUNITIES", "Une erreur est survenu lors de l'entrée dans une nouvelle liane", e);
           setIsSending(false);
         }
       }
     } else {
-      if (lianeTemp && lianeTemp.id && inputValue && inputValue.length > 0) {
+      if (lianeTemp && lianeTemp.id && value && value.length > 0) {
         try {
           const updatedLianeRequest = await chat?.send({
             type: "Text",
-            value: inputValue
+            value: value
           });
-        } catch (error) {
+        } catch (e) {
           setError(new Error("Message non envoyé suite à une erreur"));
-          AppLogger.debug("COMMUNITIES", "Une erreur est survenu lors de l'entrée dans une nouvelle liane", error);
+          AppLogger.debug("COMMUNITIES", "Une erreur est survenu lors de l'entrée dans une nouvelle liane", e);
           setIsSending(false);
         }
       } else {
@@ -224,13 +224,13 @@ export const CommunitiesChatScreen = () => {
     setRequest(undefined);
     setError(undefined);
 
-    const fetchLiane = async (liane: string) => {
+    const fetchLiane = async (id: string) => {
       try {
-        const LianeData: CoLiane = await services.community.getLiane(liane);
-        setLiane(LianeData);
-        return LianeData;
-      } catch (error) {
-        AppLogger.debug("COMMUNITIES", "Au moment de récupérer la liane, une erreur c'est produite", error);
+        const l: CoLiane = await services.community.getLiane(id);
+        setLiane(l);
+        return l;
+      } catch (e) {
+        AppLogger.debug("COMMUNITIES", "Au moment de récupérer la liane, une erreur c'est produite", e);
       }
     };
 
@@ -343,12 +343,7 @@ export const CommunitiesChatScreen = () => {
         }}>
         <Row spacing={8} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
           <Row>
-            <AppPressableIcon
-              onPress={() => (group ? navigation.goBack() : navigation.navigate("Communities"))}
-              name={"arrow-ios-back-outline"}
-              color={AppColors.primaryColor}
-              size={32}
-            />
+            <AppPressableIcon onPress={() => navigation.goBack()} name={"arrow-ios-back-outline"} color={AppColors.primaryColor} size={32} />
 
             {liane && (
               <View
