@@ -6,10 +6,9 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using GeoJSON.Text.Feature;
-using GeoJSON.Text.Geometry;
+using Liane.Api.Auth;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
-using Liane.Api.Auth;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Trip;
@@ -22,6 +21,7 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using MongoDB.Driver.GeoJsonObjectModel;
 using NUnit.Framework;
+using Point = GeoJSON.Text.Geometry.Point;
 
 namespace Liane.Test.Integration;
 
@@ -42,7 +42,7 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
       var point = (f.Geometry as Point)!;
       var time = f.Properties["timestamp"].ToString()!;
       var user = f.Properties["user"].ToString()!;
-      return (timestamp: DateTime.Parse(time), coordinate: new LatLng(point.Coordinates.Latitude, point.Coordinates.Longitude), user: user);
+      return (timestamp: DateTime.Parse(time), coordinate: new LatLng(point.Coordinates.Latitude, point.Coordinates.Longitude), user);
     });
     foreach (var p in pings.OrderBy(p => p.timestamp))
     {
@@ -117,7 +117,7 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
     var bson = BsonDocument.Parse(AssertExtensions.ReadTestResource("Geolocation/liane-pings-case-1.json"));
     var lianeDb = BsonSerializer.Deserialize<LianeDb>(bson);
     var userIds = lianeDb.Members.Select((m, i) => (m, i)).ToDictionary(m => m.m.User, m => Fakers.FakeDbUsers[m.i].Id);
-    lianeDb = lianeDb with { Members = lianeDb.Members.Select((m, i) => m with { User = userIds[m.User] }).ToImmutableList() };
+    lianeDb = lianeDb with { Members = lianeDb.Members.Select((m, _) => m with { User = userIds[m.User] }).ToImmutableList() };
     await db.GetCollection<LianeDb>().InsertOneAsync(lianeDb);
     var liane = await tripService.Get(lianeDb.Id);
     var tracker = await lianeTrackerService.Start(liane, () => { finished = true; });
@@ -142,7 +142,7 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
 
     // check that next point is Quezac (the car is going towards Quezac)
     var actual = tracker.GetTrackingInfo();
-    Assert.AreEqual("Quezac_Parking", actual.Car.NextPoint.Id);
+    Assert.AreEqual("Quezac_Parking", actual.Car?.NextPoint.Id);
   }
 
   [Test]
@@ -153,8 +153,8 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
 
     // check that next point is Quezac (the car is going towards Quezac)
     var actual = tracker.GetTrackingInfo();
-    Assert.AreEqual("Quezac_Parking", actual.Car.NextPoint.Id);
-    Assert.Less(Math.Abs(actual.Car.Delay - 562), 10); // Check difference with expected value is less than 10 seconds
+    Assert.AreEqual("Quezac_Parking", actual.Car?.NextPoint.Id);
+    Assert.Less(Math.Abs(actual.Car!.Delay - 562), 10); // Check difference with expected value is less than 10 seconds
     Assert.AreEqual(DateTime.Parse("2023-12-05T07:37:34.113Z").ToUniversalTime(), actual.Car.At);
   }
 
@@ -167,8 +167,8 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
     var actual = tracker.GetTrackingInfo();
 
     // check that next point is Mende 
-    Assert.AreEqual("Mende", actual.Car.NextPoint.Id);
-    Assert.Less(Math.Abs(actual.Car.Delay - 1450), 10); // Check difference with expected value is less than 10 seconds
+    Assert.AreEqual("Mende", actual.Car?.NextPoint.Id);
+    Assert.Less(Math.Abs(actual.Car!.Delay - 1450), 10); // Check difference with expected value is less than 10 seconds
   }
 
   [Test]
@@ -178,7 +178,7 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
 
     var actual = tracker.GetTrackingInfo();
     // Check who's in the car
-    CollectionAssert.AreEquivalent(ImmutableList.Create(tracker.Trip.Driver.User.Id), actual.Car.Members.Select(m => m.Id));
+    CollectionAssert.AreEquivalent(ImmutableList.Create(tracker.Trip.Driver.User.Id), actual.Car?.Members.Select(m => m.Id));
   }
 
   [Test]
@@ -188,7 +188,7 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
 
     var actual = tracker.GetTrackingInfo();
     // Check who's in the car
-    CollectionAssert.AreEquivalent(ImmutableList.Create(tracker.Trip.Driver.User.Id), actual.Car.Members.Select(m => m.Id));
+    CollectionAssert.AreEquivalent(ImmutableList.Create(tracker.Trip.Driver.User.Id), actual.Car?.Members.Select(m => m.Id));
     // Check we do have location for the other member
     Assert.AreEqual(1, actual.OtherMembers.Count);
     Assert.AreNotEqual(tracker.Trip.Driver.User.Id, actual.OtherMembers.Keys.First());
@@ -201,12 +201,12 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
 
     var actual = tracker.GetTrackingInfo();
     // Check who's in the car
-    CollectionAssert.AreEquivalent(tracker.Trip.Members.Select(m => m.User.Id), actual.Car.Members.Select(m => m.Id));
+    CollectionAssert.AreEquivalent(tracker.Trip.Members.Select(m => m.User.Id), actual.Car?.Members.Select(m => m.Id));
     // Check car's current location
     var expectedLocation = tracker.GetCurrentMemberLocation(
       tracker.Trip.Members.First(m => m.User != tracker.Trip.Driver.User
       ).User)?.Location;
-    Assert.Less(1, actual.Car.Position.Distance(expectedLocation!.Value));
+    Assert.Less(1, actual.Car?.Position.Distance(expectedLocation!.Value));
   }
 
   private async Task<(LianeTracker, ImmutableList<UserPing>, ImmutableDictionary<Ref<User>, Ref<User>>, Api.Trip.Trip)> SetupTracker(string file)
@@ -236,6 +236,18 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
     // Send first few pings outside of planned route
     var sublist = (at is null ? pings : pings.TakeWhile(p => p.At.ToUniversalTime() < DateTime.Parse(at).ToUniversalTime())).ToList();
 
+    var startAt = sublist.First().At;
+    var kalmanFilter = new KalmanFilter(0, 0, 0);
+    foreach (var p in sublist)
+    {
+      if (p.Coordinate is null)
+      {
+        continue;
+      }
+
+      kalmanFilter.Update(p.Coordinate.Value.Lng, p.Coordinate.Value.Lat, (p.At - startAt).TotalMilliseconds);
+    }
+    
     var index = 0;
     var geoJson = new List<GeoJsonFeature<GeoJson2DGeographicCoordinates>>();
     foreach (var p in sublist)
