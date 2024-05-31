@@ -8,24 +8,21 @@ import {
   useRoute
 } from "@react-navigation/native";
 import {
-  JoinLianeRequestDetailed,
-  Liane,
-  Event,
-  Notification,
-  JoinRequest,
-  User,
-  UnionUtils,
-  MatchGroup,
-  CoMatch,
-  CoLianeRequest,
   CoLiane,
-  LianeRequest,
-  ResolvedLianeRequest
+  CoLianeRequest,
+  CoMatch,
+  Event,
+  JoinLianeRequestDetailed,
+  JoinRequest,
+  Liane,
+  Notification,
+  ResolvedLianeRequest,
+  UnionUtils,
+  User
 } from "@liane/common";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack/src/types";
 import { InternalLianeRequest } from "@/screens/publish/StateMachine";
 import { checkInitialNotification } from "@/api/service/notification";
-import { GroupeCovoiturage } from "@/util/Mock/groups";
 
 export const HOME_TRIPS = "Mes trajets";
 export type NavigationParamList = {
