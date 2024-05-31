@@ -207,17 +207,17 @@ export const CommunitiesChatScreen = () => {
       geolocationLevel: geolocationLevel || "None",
       recurrence: me.lianeRequest.weekDays
     });
-    const m = await services.community.sendMessage(liane!.id!, {
+    const goMessage = await services.community.sendMessage(liane!.id!, {
       type: "Trip",
       value: created.id!
     });
-    appendMessage(m);
+    appendMessage(goMessage);
     if (created.return) {
-      await services.community.sendMessage(liane!.id!, {
+      const returnMessage = await services.community.sendMessage(liane!.id!, {
         type: "Trip",
         value: created.return
       });
-      appendMessage(m);
+      appendMessage(returnMessage);
     }
   };
 
