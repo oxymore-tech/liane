@@ -93,6 +93,8 @@ public sealed class LabeledPositions
     "Balsièges", null, true);
 
   public static readonly RallyingPoint LO = new("custom:001", "Living Objects", Positions.LO, LocationType.Parking, "1 impasse Marcel Chalard", "31000", "Toulouse", 10, true);
+  public static readonly RallyingPoint ArdecheBeage = new("mairie:07026", "Le Beage", Positions.ArdecheLeBeage, LocationType.TownHall, "Le Village", "07630", "Le Béage", 10, true);
+  public static readonly RallyingPoint ArdecheBoulodrome = new("bnlc:07127-C-001", "Boulodrome", Positions.ArdecheBoulodrome, LocationType.Parking, "33 Avenue Centrale. 07380 Lalevade-d'Ardéche", "07380", "Lalevade-d'Ardéche", 10, true);
 
   public static readonly IImmutableSet<RallyingPoint> RallyingPoints = ImmutableHashSet.Create(
     Mende,
@@ -133,6 +135,8 @@ public sealed class LabeledPositions
     MartresTolosane,
     LO,
     Montbrun,
-    Choizal
+    Choizal,
+    ArdecheBeage,
+    ArdecheBoulodrome
   );
 }
