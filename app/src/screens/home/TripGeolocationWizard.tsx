@@ -1,6 +1,6 @@
 import { ActivityIndicator, Alert, ColorValue, Platform, StyleSheet, Switch, View } from "react-native";
 import { Center, Column, Row, Space } from "@/components/base/AppLayout";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
@@ -9,7 +9,6 @@ import { useAppNavigation } from "@/components/context/routing";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { LianeGeolocation } from "@/api/service/location";
 import { useAppState } from "@react-native-community/hooks";
-import { AppContext } from "@/components/context/ContextProvider";
 import { AppLogger } from "@/api/logger";
 import { AppStorage } from "@/api/storage";
 import { GeolocationLevel } from "@liane/common";
@@ -200,7 +199,6 @@ const Page1 = (props: { next: () => void; showAs: "driver" | "passenger" }) => (
 
 const Page3 = (props: { next: () => void; prev: () => void }) => {
   const { route } = useAppNavigation<"TripGeolocationWizard">();
-  const { services } = useContext(AppContext);
   const [loading, setLoading] = useState(false);
   const [trackedLevel, setTrackedLevel] = useState<GeolocationLevel | null>(null);
   useEffect(() => {
@@ -212,7 +210,7 @@ const Page3 = (props: { next: () => void; prev: () => void }) => {
   const confirm = async () => {
     if (route.params?.lianeId) {
       setLoading(true);
-      await services.liane.setTracked(route.params.lianeId, trackedLevel);
+      await AppStorage.saveSetting("geolocation", trackedLevel);
     }
     props.next();
     setLoading(false);
