@@ -5,7 +5,7 @@ import { HttpClient } from "./http";
 import { IUnion } from "../union";
 import { CoLiane, MessageContent } from "./community";
 
-export type Notification = Info | Event | NewMessage | LianeMessage;
+export type Notification = Info | Event | NewMessage | NewLianeMessage;
 
 export enum Answer {
   Accept = "Accept",
@@ -17,18 +17,16 @@ export type Recipient = Readonly<{
   seenAt?: UTCDateTime;
 }>;
 
-type AbstractNotification<Key extends string> = Readonly<
-  {
-    id?: string;
-    createdBy: Ref<User>;
-    createdAt: UTCDateTime;
-    recipients: Recipient[];
-    answers: Answer[];
-    title: string;
-    message: string;
-    uri?: string;
-  } & IUnion<Key>
->;
+type AbstractNotification<Key extends string> = {
+  id?: string;
+  createdBy: Ref<User>;
+  createdAt: UTCDateTime;
+  recipients: Recipient[];
+  answers: Answer[];
+  title: string;
+  message: string;
+  uri?: string;
+} & IUnion<Key>;
 
 export type Info = AbstractNotification<"Info">;
 
@@ -37,7 +35,7 @@ export type NewMessage = Readonly<{
 }> &
   AbstractNotification<"NewMessage">;
 
-export type LianeMessage = AbstractNotification<"LianeMessage"> & {
+export type NewLianeMessage = AbstractNotification<"LianeMessage"> & {
   content: MessageContent;
   liane: Ref<CoLiane>;
 };

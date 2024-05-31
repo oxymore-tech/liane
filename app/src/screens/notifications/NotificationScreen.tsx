@@ -7,11 +7,11 @@ import { Center } from "@/components/base/AppLayout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
-import { Notification } from "@liane/common";
 import { NotificationItem } from "@/screens/notifications/NotificationItem";
 import { AppStyles } from "@/theme/styles";
 import { useQueryUpdater } from "@/components/context/QueryUpdateProvider";
 import { AppLogger } from "@/api/logger";
+import { Notification } from "@liane/common";
 
 export const NotificationQueryKey = "notification";
 
@@ -28,7 +28,6 @@ const NotificationScreen = WithFetchPaginatedResponse<Notification>(
     const insets = useSafeAreaInsets();
     const { navigation } = useAppNavigation();
     const { services, user } = useContext(AppContext);
-    console.log("@@@@@@@@@@@@@@@@@@@@@@@@@ DATA", data);
 
     const queryUpdater = useQueryUpdater();
     services.realTimeHub.subscribeToNotifications(async (_: Notification) => {
@@ -45,14 +44,14 @@ const NotificationScreen = WithFetchPaginatedResponse<Notification>(
             // Update local seen state
             queryUpdater.readNotifications(user!.id!);
           })
-          .catch(e => console.error("NOTIFICATIONS", "Cannot read notifications", e));
+          .catch(e => AppLogger.error("NOTIFICATIONS", "Cannot read notifications", e));
         services.notification
           .closeNotification()
           .then(() => {
             // Update notification state
             AppLogger.debug("NOTIFICATIONS", "Notifications readed");
           })
-          .catch(e => console.error("NOTIFICATIONS", "Cannot read notifications", e));
+          .catch((e: any) => AppLogger.error("NOTIFICATIONS", "Cannot read notifications", e));
       });
       return () => unsubscribe();
     }, [services, navigation, queryUpdater, user?.id, data.length, user]);
