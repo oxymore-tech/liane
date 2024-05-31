@@ -29,7 +29,12 @@ public sealed class LianeFetcher(LianeRequestFetcher lianeRequestFetcher, IUserS
   public async Task<ImmutableList<Api.Community.Liane>> FetchLianes(IDbConnection connection, IEnumerable<Guid> lianeFilter, IDbTransaction? tx = null)
   {
     var lianeDbs = await connection.QueryAsync(Query.Select<LianeDb>().Where(Filter<LianeDb>.Where(l => l.Id, ComparisonOperator.In, lianeFilter)), tx);
-    var memberDbs = (await connection.QueryAsync(Query.Select<LianeMemberDb>().Where(Filter<LianeMemberDb>.Where(m => m.LianeId, ComparisonOperator.In, lianeFilter)), tx))
+    var memberDbs = (await connection.QueryAsync(
+        Query.Select<LianeMemberDb>()
+        .Where(Filter<LianeMemberDb>.Where(m => m.LianeId, ComparisonOperator.In, lianeFilter))
+        .OrderBy(m => m.JoinedAt)
+        .OrderBy(m => m.UserId)
+        , tx))
       .GroupBy(lm => lm.LianeId)
       .ToImmutableDictionary(g => g.Key, g => g.ToImmutableList());
     var lianeRequestFilter = memberDbs.Values.SelectMany(l => l.Select(m => m.LianeRequestId)).ToImmutableList();
