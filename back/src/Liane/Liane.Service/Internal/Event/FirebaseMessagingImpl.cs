@@ -113,7 +113,7 @@ public sealed class FirebaseMessagingImpl : IPushMiddleware
       ImmutableList.Create(new Recipient(receiver)),
       ImmutableHashSet<Answer>.Empty,
       sender.Pseudo,
-      message.Content.ToString(),
+      message.Content.AsText(),
       message.Content,
       conversation.Id);
 

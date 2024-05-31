@@ -19,7 +19,7 @@ public abstract record MessageContent
   {
   }
 
-  public override string ToString() =>
+  public string AsText() =>
     this switch
     {
       Text text => text.Value,

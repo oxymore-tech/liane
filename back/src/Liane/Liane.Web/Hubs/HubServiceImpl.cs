@@ -102,7 +102,7 @@ public sealed class HubServiceImpl(
           ImmutableList.Create(new Recipient(receiver)),
           ImmutableHashSet<Answer>.Empty,
           sender.Pseudo,
-          message.Content.ToString(),
+          message.Content.AsText(),
           message.Content,
           conversation.Id);
         return await SendNotification(receiver, notification);
