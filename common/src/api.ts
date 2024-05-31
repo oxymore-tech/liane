@@ -121,13 +121,13 @@ export type Liane = Entity &
 
 export type LianeState = "NotStarted" | "Finished" | "Started" | "Canceled" | "Archived";
 export type GeolocationLevel = "None" | "Hidden" | "Shared";
-export type WayPoint = Readonly<{
+export type WayPoint = {
   rallyingPoint: RallyingPoint;
   duration: TimeInSeconds;
   distance: number;
   eta: UTCDateTime;
   effectiveTime?: UTCDateTime;
-}>;
+};
 
 export type LianeMember = Readonly<{
   user: User;

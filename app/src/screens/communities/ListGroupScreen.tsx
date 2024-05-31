@@ -1,18 +1,14 @@
 import React, { useMemo, useState } from "react";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Center, Column, Row } from "@/components/base/AppLayout";
+import { Center } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { useAppNavigation } from "@/components/context/routing";
-import { AppPressableIcon, AppPressableOverlay } from "@/components/base/AppPressable";
+import { AppPressableIcon } from "@/components/base/AppPressable";
 import { AppIcon } from "@/components/base/AppIcon";
-import { UserPicture } from "@/components/UserPicture";
 import { AppColors, ContextualColors } from "@/theme/colors";
-import { SimpleModal } from "@/components/modal/SimpleModal";
-import { Logger } from "@maplibre/maplibre-react-native";
-import { AppLogger } from "@/api/logger";
 import { extractDays } from "@/util/hooks/days";
-import { CoLianeMatch, CoMatch, MatchGroup, RallyingPoint } from "@liane/common";
+import { CoMatch, MatchGroup, RallyingPoint } from "@liane/common";
 import { extractWaypointFromTo } from "@/util/hooks/lianeRequest";
 
 export const ListGroupScreen = () => {
@@ -36,7 +32,7 @@ export const ListGroupScreen = () => {
             <AppText style={styles.nameText}>{`${group.pickup.label} ➔ ${group.deposit.label}`}</AppText>
             <AppText style={styles.locationText}>{`${extractDays(group.weekDays)}`}</AppText>
             <AppText style={styles.timeText}>{`${(group as MatchGroup).matches?.length ?? 1} membre${
-              (group as MatchGroup).matches?.length ? "s" : ""
+              (group as MatchGroup).matches?.length > 1 ? "s" : ""
             }`}</AppText>
           </View>
         </View>
@@ -62,9 +58,13 @@ export const ListGroupScreen = () => {
           </AppText>
         </View>
         <View style={styles.headerSubContent}>
-          <AppText style={{ paddingLeft: 35, fontWeight: "bold", fontSize: 14, lineHeight: 27, color: AppColors.white }}>{`${
-            (from as RallyingPoint).label
-          } ➔ ${(to as RallyingPoint).label}`}</AppText>
+          <AppText
+            style={{
+              fontWeight: "bold",
+              fontSize: 14,
+              lineHeight: 27,
+              color: AppColors.white
+            }}>{`${from.label} ➔ ${to.label}`}</AppText>
           <AppText
             style={{
               paddingLeft: 15,
@@ -102,7 +102,6 @@ const styles = StyleSheet.create({
   headerContent: {
     flex: 1,
     flexDirection: "row",
-    width: "100%",
     paddingHorizontal: 16,
     paddingVertical: 16,
     alignItems: "center"
@@ -110,15 +109,15 @@ const styles = StyleSheet.create({
   headerSubContent: {
     flex: 1,
     flexDirection: "row",
-    width: "100%",
+    paddingHorizontal: 20,
     backgroundColor: AppColors.primaryColor,
-    paddingHorizontal: 16,
     paddingVertical: 2,
-    alignItems: "center"
+    alignItems: "center",
+    justifyContent: "space-between"
   },
   groupName: {
     fontSize: 24,
-    fontWeight: "600",
+    fontWeight: "bold",
     flexShrink: 1,
     lineHeight: 27,
     textAlign: "center",
@@ -170,7 +169,7 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     marginBottom: 10,
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "bold",
     flexShrink: 1,
     lineHeight: 24
   },
@@ -197,13 +196,13 @@ const styles = StyleSheet.create({
     flex: 1
   },
   nameText: {
-    fontSize: 20,
-    fontWeight: "600",
+    fontSize: 16,
+    fontWeight: "bold",
     lineHeight: 24
   },
   locationText: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "bold",
     lineHeight: 27,
     color: AppColors.black
   },

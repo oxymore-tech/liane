@@ -36,7 +36,7 @@ import { AppStyles } from "@/theme/styles";
 import { DayOfWeekFlag, TimeConstraint, TimeOnly } from "@liane/common";
 import { PageHeader } from "@/components/context/Navigation";
 import { AppModalNavigationContext } from "@/components/AppModalNavigationProvider";
-import { HOME_TRIPS, useAppNavigation } from "@/components/context/routing";
+import { useAppNavigation } from "@/components/context/routing";
 import { AppLocalization } from "@/api/i18n";
 import { AppTextInput } from "@/components/base/AppTextInput.tsx";
 import { TimeWheelPicker } from "@/components/TimeWheelPicker.tsx";
@@ -93,7 +93,7 @@ export const PublishScreen = () => {
       if (shouldShow) {
         showTutorial("driver", state.context.created!.id);
       } else {
-        navigation.navigate(HOME_TRIPS);
+        navigation.navigate("Communities");
       }
     });
   }, [machine, navigation, shouldShow, showTutorial, state.context.created, state.done]);

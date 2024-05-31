@@ -10,7 +10,7 @@ import { UserPicture } from "@/components/UserPicture";
 import { AppColors, ContextualColors } from "@/theme/colors";
 import { SimpleModal } from "@/components/modal/SimpleModal";
 import { AppLogger } from "@/api/logger";
-import { CoLianeMember, RallyingPoint, User } from "@liane/common";
+import { CoLianeMember, User } from "@liane/common";
 import { extractDaysTimes, extractWaypointFromTo } from "@/util/hooks/lianeRequest";
 import { AppContext } from "@/components/context/ContextProvider";
 
@@ -35,7 +35,7 @@ export const CommunitiesDetailScreen = () => {
           </View>
           <View style={styles.textContainer}>
             <AppText style={styles.nameText}>{member.user?.pseudo}</AppText>
-            <AppText style={styles.locationText}>{`${(from as RallyingPoint).label} ➔ ${(to as RallyingPoint).label}`}</AppText>
+            <AppText style={styles.locationText}>{`${from.label} ➔ ${to.label}`}</AppText>
             <AppText style={styles.timeText}>{extractDaysTimes(member.lianeRequest)}</AppText>
           </View>
         </View>
@@ -69,8 +69,8 @@ export const CommunitiesDetailScreen = () => {
         const result = await services.community.leave(group.id);
         AppLogger.debug("COMMUNITIES", "Lien quittée avec succès", result);
         navigation.navigate("Communities");
-      } catch (error) {
-        AppLogger.debug("COMMUNITIES", "Au moment de quitter la liane, une erreur c'est produite", error);
+      } catch (e) {
+        AppLogger.debug("COMMUNITIES", "Au moment de quitter la liane, une erreur c'est produite", e);
       }
     } else {
       AppLogger.debug("COMMUNITIES", "Pas de liane ID lors de la tentative de départ de la liane", group);
@@ -87,8 +87,8 @@ export const CommunitiesDetailScreen = () => {
       try {
         const updatedLianeRequest = await services.community.updateLiane(liane.id, liane);
         AppLogger.debug("COMMUNITIES", "Mise a jour de la liane fait avec succès", updatedLianeRequest);
-      } catch (error) {
-        AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de la modification de la liane", error);
+      } catch (e) {
+        AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de la modification de la liane", e);
       }
     } else {
       AppLogger.debug("COMMUNITIES", "Pas de liane lors de la modification de ses paramètres", group);
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   },
   groupName: {
     fontSize: 24,
-    fontWeight: "600",
+    fontWeight: "bold",
     flexShrink: 1,
     lineHeight: 27,
     textAlign: "center",
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     marginBottom: 10,
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "bold",
     flexShrink: 1,
     lineHeight: 24
   },
@@ -259,12 +259,12 @@ const styles = StyleSheet.create({
   },
   nameText: {
     fontSize: 20,
-    fontWeight: "600",
+    fontWeight: "bold",
     lineHeight: 24
   },
   locationText: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "bold",
     lineHeight: 27,
     color: AppColors.black
   },

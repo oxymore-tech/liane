@@ -49,8 +49,7 @@ export const CommunitiesScreen = () => {
     {
       queryKey: LianeQueryKey,
       queryFn: async () => {
-        const coLianes = await services.community.list();
-        return coLianes;
+        return await services.community.list();
       }
     }
   ]);

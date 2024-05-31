@@ -1,6 +1,5 @@
 import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { extractDays } from "@/util/hooks/days";
 import { AppColors } from "@/theme/colors";
@@ -15,54 +14,53 @@ export interface GroupsViewProps {
 
 const RenderGroupsView = ({ joinedLiane, unreadMessage }: GroupsViewProps) => {
   return (
-    <Row style={{ alignItems: "center", paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: AppColors.grayBackground }} spacing={8}>
-      <View style={{ flexGrow: 1, flexShrink: 1 }}>
-        <View style={{ flex: 1, flexDirection: "row" }}>
+    <View style={{ flexGrow: 1, flexShrink: 1 }}>
+      <View style={{ flex: 1, flexDirection: "row" }}>
+        {joinedLiane.name.trim() !== "" && (
           <AppText
             style={{
               fontSize: 18,
-              fontWeight: "600",
+              fontWeight: "bold",
               flexShrink: 1,
               lineHeight: 27,
               color: "black"
             }}>
             {joinedLiane.name}
           </AppText>
-          {unreadMessage && (
-            <View style={styles.notificationDotContainer}>
-              <View style={styles.notificationDot} />
-            </View>
-          )}
-        </View>
-        <AppText
-          style={{
-            fontSize: 14,
-            fontWeight: "600",
-            flexShrink: 1,
-            lineHeight: 27,
-            color: "black"
-          }}>{`${joinedLiane.pickup.label} ➔ ${joinedLiane.deposit.label}`}</AppText>
-        <AppText
-          style={{
-            fontSize: 14,
-            fontWeight: "400",
-            flexShrink: 1,
-            lineHeight: 16
-          }}>{`${extractDays(joinedLiane.weekDays)}`}</AppText>
-        <View
-          style={{
-            flex: 1,
-            flexDirection: "row",
-            marginLeft: 8,
-            marginTop: 5,
-            marginBottom: 15
-          }}>
-          {joinedLiane.liane.members.map(member => (
-            <UserPicture key={member.user.id} size={24} url={member.user.pictureUrl} id={member.user.id} style={{ marginLeft: -10 }} />
-          ))}
-        </View>
+        )}
+        {unreadMessage && (
+          <View style={styles.notificationDotContainer}>
+            <View style={styles.notificationDot} />
+          </View>
+        )}
       </View>
-    </Row>
+      <AppText
+        style={{
+          fontSize: 14,
+          fontWeight: "bold",
+          flexShrink: 1,
+          lineHeight: 27,
+          color: "black"
+        }}>{`${joinedLiane.pickup.label} ➔ ${joinedLiane.deposit.label}`}</AppText>
+      <AppText
+        style={{
+          fontSize: 14,
+          fontWeight: "400",
+          flexShrink: 1,
+          lineHeight: 16
+        }}>{`${extractDays(joinedLiane.weekDays)}`}</AppText>
+      <View
+        style={{
+          flex: 1,
+          flexDirection: "row",
+          marginLeft: 8,
+          marginTop: 5
+        }}>
+        {joinedLiane.liane.members.map(member => (
+          <UserPicture key={member.user.id} size={24} url={member.user.pictureUrl} id={member.user.id} style={{ marginLeft: -10 }} />
+        ))}
+      </View>
+    </View>
   );
 };
 
@@ -84,15 +82,14 @@ const styles = StyleSheet.create({
   },
   groupName: {
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: "bold",
     flexShrink: 1,
     lineHeight: 27,
     color: "black"
   },
   notificationDotContainer: {
     justifyContent: "center",
-    alignItems: "center",
-    marginLeft: 8 // Espace entre le texte et le point de notification
+    alignItems: "center"
   },
   notificationDot: {
     width: 8,
