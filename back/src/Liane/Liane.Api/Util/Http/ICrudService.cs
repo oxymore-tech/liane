@@ -12,6 +12,18 @@ public interface IResourceResolverService<TOut> where TOut : class, IIdentity
   /// </summary>
   Task<TOut> Get(Ref<TOut> reference);
 
+  async Task<TOut?> TryGet(Ref<TOut> reference)
+  {
+    try
+    {
+      return await Get(reference);
+    }
+    catch
+    {
+      return null;
+    }
+  }
+
   Task<ImmutableDictionary<string, TOut>> GetMany(ImmutableList<Ref<TOut>> references);
 }
 

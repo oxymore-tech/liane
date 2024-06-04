@@ -510,7 +510,7 @@ public sealed class TripServiceImpl(
       return new WayPoint(rallyingPoint, w.Duration, w.Distance, w.Eta);
     });
     var users = await liane.Members.SelectAsync(async m => m with { User = await userService.Get(m.User) });
-    var recurrence = liane.Recurrence is null ? null : await lianeRecurrenceService.Get(liane.Recurrence);
+    var recurrence = liane.Recurrence is null ? null : await lianeRecurrenceService.TryGet(liane.Recurrence);
     return new Api.Trip.Trip(liane.Id, liane.CreatedBy!, liane.CreatedAt, liane.DepartureTime, liane.Return, wayPoints, users, liane.Driver, liane.State, liane.Conversation,
       recurrence.GetOrDefault(r => new Recurrence(r.Id!, r.Days)));
   }
