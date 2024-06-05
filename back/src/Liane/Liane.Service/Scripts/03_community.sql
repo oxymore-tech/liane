@@ -69,7 +69,7 @@ CREATE TABLE time_constraint
   week_days        VARCHAR(7)  NOT NULL
 );
 
-CREATE OR REPLACE FUNCTION nearest_rp(p geometry(Point, 4326), radius float DEFAULT 1000)
+CREATE OR REPLACE FUNCTION nearest_rp(p geometry(Point, 4326), radius float DEFAULT 100000)
   RETURNS VARCHAR(24)
   immutable
   strict

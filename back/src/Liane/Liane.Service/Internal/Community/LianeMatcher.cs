@@ -152,6 +152,11 @@ public sealed class LianeMatcher(
       return null;
     }
 
+    if (match.PickupPoint is null || match.DepositPoint is null)
+    {
+      return null;
+    }
+
     return new Match.Single(
       match.Name,
       lianeRequest,
@@ -199,8 +204,8 @@ internal sealed record LianeRawMatch(
   DayOfWeekFlag WeekDays,
   LatLng Pickup,
   LatLng Deposit,
-  Ref<RallyingPoint> PickupPoint,
-  Ref<RallyingPoint> DepositPoint,
+  Ref<RallyingPoint>? PickupPoint,
+  Ref<RallyingPoint>? DepositPoint,
   Guid[]? Lianes
 );
 
