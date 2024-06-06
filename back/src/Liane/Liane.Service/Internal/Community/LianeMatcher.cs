@@ -33,7 +33,7 @@ public sealed class LianeMatcher(
     var lianes = (await fetcher.FetchLianes(connection, allLianes))
       .ToImmutableDictionary(l => Guid.Parse(l.Id));
     var fetchLianeRequests = (await lianeRequestFetcher.FetchLianeRequests(connection, rawMatches.Select(m => m.LianeRequest)))
-      .ToImmutableDictionary(r => r.Id);
+      .ToImmutableDictionary(r => r.Id!.Value);
     return await rawMatches
       .GroupByAsync(m => m.From, async g =>
       {

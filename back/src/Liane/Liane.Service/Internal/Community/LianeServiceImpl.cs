@@ -50,7 +50,7 @@ public sealed class LianeServiceImpl(
     using var tx = connection.BeginTransaction();
 
     var userId = currentContext.CurrentUser().Id;
-    var id = Uuid7.Guid();
+    var id = request.Id ?? Uuid7.Guid();
 
     await connection.InsertMultipleAsync(request.TimeConstraints.Select(c => new TimeConstraintDb(id, c.When.Start, c.When.End, c.At, c.WeekDays)), tx);
 
@@ -62,9 +62,13 @@ public sealed class LianeServiceImpl(
 
     var now = DateTime.UtcNow;
     var lianeRequestDb = new LianeRequestDb(id, request.Name, wayPointsArray, request.RoundTrip, request.CanDrive, request.WeekDays, request.IsEnabled, userId, now);
-    await connection.InsertAsync(lianeRequestDb, tx);
 
-    var created = await lianeRequestFetcher.FetchLianeRequest(connection, id, tx);
+    var query = Query.Insert(lianeRequestDb)
+      .UpdateOnConflict(r => r.WayPoints, r => r.CreatedBy)
+      .ReturnsId(r => r.Id);
+    var createdId = await connection.InsertAsync(query, tx);
+
+    var created = await lianeRequestFetcher.FetchLianeRequest(connection, createdId, tx);
 
     tx.Commit();
     return created;
@@ -83,11 +87,11 @@ public sealed class LianeServiceImpl(
       .GroupBy(m => m.LianeRequestId)
       .ToImmutableDictionary(m => m.Key, g => g.Select(l => l.LianeId).ToImmutableHashSet());
 
-    var matches = await matcher.FindMatches(connection, lianeRequests.Select(r => r.Id), joinedLianeIds);
+    var matches = await matcher.FindMatches(connection, lianeRequests.Select(r => r.Id!.Value), joinedLianeIds);
 
     return lianeRequests.Select(r =>
     {
-      var result = matches.GetValueOrDefault(r.Id, LianeMatcherResult.Empty);
+      var result = matches.GetValueOrDefault(r.Id!.Value, LianeMatcherResult.Empty);
       return new LianeMatch(
         r,
         result.JoindedLianes,

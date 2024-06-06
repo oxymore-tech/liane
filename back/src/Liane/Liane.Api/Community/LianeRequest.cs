@@ -8,7 +8,7 @@ using Liane.Api.Util.Ref;
 namespace Liane.Api.Community;
 
 public sealed record LianeRequest(
-  Guid Id,
+  Guid? Id,
   string Name,
   ImmutableList<Ref<RallyingPoint>> WayPoints,
   bool RoundTrip,
@@ -18,7 +18,7 @@ public sealed record LianeRequest(
   bool IsEnabled,
   Ref<User>? CreatedBy,
   DateTime? CreatedAt
-) : IEntity<Guid>
+) : IEntity<Guid?>
 {
   public TimeRange When => TimeConstraints.Select(tc => tc.When).FirstOrDefault();
 }
