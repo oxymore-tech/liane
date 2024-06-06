@@ -31,7 +31,6 @@ public sealed class LianeController(
   : ControllerBase
 {
   [HttpGet("{id}")]
-  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Trip))]
   public async Task<Trip> Get([FromRoute] string id)
   {
     var current = currentContext.CurrentResource<Trip>();

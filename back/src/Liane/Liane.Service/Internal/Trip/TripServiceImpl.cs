@@ -24,6 +24,10 @@ using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using LianeMatch = Liane.Api.Trip.LianeMatch;
+using LianeMember = Liane.Api.Trip.LianeMember;
+using LianeRequest = Liane.Api.Trip.LianeRequest;
+using Match = Liane.Api.Trip.Match;
 
 namespace Liane.Service.Internal.Trip;
 
@@ -137,7 +141,7 @@ public sealed class TripServiceImpl(
     }
 
     await userStatService.IncrementTotalCreatedTrips(createdBy);
-    await rallyingPointService.UpdateStats(new []{entity.From, entity.To}, entity.ReturnTime ?? entity.DepartureTime, entity.ReturnTime is null ? 1 : 2);
+    await rallyingPointService.UpdateStats(new[] { entity.From, entity.To }, entity.ReturnTime ?? entity.DepartureTime, entity.ReturnTime is null ? 1 : 2);
     return await Get(created.Id);
   }
 
@@ -160,9 +164,14 @@ public sealed class TripServiceImpl(
 
   public async Task<Api.Trip.Trip> GetForCurrentUser(Ref<Api.Trip.Trip> l, Ref<Api.Auth.User>? user = null)
   {
-    var target = user ?? currentContext.CurrentUser().Id;
+    var userId = user ?? currentContext.CurrentUser().Id;
     var liane = await Get(l);
-    var member = liane.Members.Find(m => m.User.Id == target)!;
+    var member = liane.Members.Find(m => m.User.Id == userId);
+    if (member is null)
+    {
+      return liane;
+    }
+
     return liane with { State = GetUserState(liane, member) };
   }
 
@@ -313,10 +322,10 @@ public sealed class TripServiceImpl(
     }
 
     var updated = await Update(liane, updateDef);
-    
+
     var pointsToUpdate = new[] { newMember.From, newMember.To }.Where(r => toUpdate.WayPoints.Find(w => w.RallyingPoint.Id == r.Id) is null).ToImmutableList();
-    if(pointsToUpdate.Any()) await rallyingPointService.UpdateStats(pointsToUpdate, updated.DepartureTime);
-    
+    if (pointsToUpdate.Any()) await rallyingPointService.UpdateStats(pointsToUpdate, updated.DepartureTime);
+
     var updatedLiane = await MapEntity(updated);
     await postgisService.UpdateGeometry(updatedLiane);
     await PushUpdate(updated);
@@ -778,8 +787,7 @@ public sealed class TripServiceImpl(
     await PushUpdate(updated);
   }
 
-
-  LianeState GetUserState(Api.Trip.Trip trip, LianeMember member)
+  private LianeState GetUserState(Api.Trip.Trip trip, LianeMember member)
   {
     if (member.Cancellation is not null) return LianeState.Canceled;
 
