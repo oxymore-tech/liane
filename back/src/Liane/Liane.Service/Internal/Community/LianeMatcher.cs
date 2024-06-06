@@ -23,7 +23,7 @@ public sealed class LianeMatcher(
   public async Task<ImmutableDictionary<Guid, LianeMatcherResult>> FindMatches(
     IDbConnection connection,
     IEnumerable<Guid> lianeRequestsId,
-    ImmutableDictionary<Guid, ImmutableHashSet<Guid>> joinedLianeIds)
+    ImmutableHashSet<Guid> joinedLianeIds)
   {
     var rawMatches = (await FindRawMatches(connection, lianeRequestsId))
       .ToImmutableList();
@@ -35,12 +35,8 @@ public sealed class LianeMatcher(
     var fetchLianeRequests = (await lianeRequestFetcher.FetchLianeRequests(connection, rawMatches.Select(m => m.LianeRequest)))
       .ToImmutableDictionary(r => r.Id!.Value);
     return await rawMatches
-      .GroupByAsync(m => m.From, async g =>
-      {
-        var joinedLianesIds = joinedLianeIds.GetValueOrDefault(g.Key, ImmutableHashSet<Guid>.Empty);
-        return (await GroupMatchByLiane(g, fetchLianeRequests, joinedLianesIds, lianes))
-          .Split(joinedLianesIds);
-      });
+      .GroupByAsync(m => m.From, async g => (await GroupMatchByLiane(g, fetchLianeRequests, joinedLianeIds, lianes))
+        .Split(joinedLianeIds));
   }
 
   /// <summary>

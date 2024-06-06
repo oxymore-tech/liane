@@ -84,8 +84,8 @@ public sealed class LianeServiceImpl(
     var joinedLianeIds = (await connection.QueryAsync(Query.Select<LianeMemberDb>()
         .Where(Filter<LianeMemberDb>.Where(m => m.UserId, ComparisonOperator.Eq, userId))
         .OrderBy(r => r.JoinedAt)))
-      .GroupBy(m => m.LianeRequestId)
-      .ToImmutableDictionary(m => m.Key, g => g.Select(l => l.LianeId).ToImmutableHashSet());
+      .Select(m => m.LianeId)
+      .ToImmutableHashSet();
 
     var matches = await matcher.FindMatches(connection, lianeRequests.Select(r => r.Id!.Value), joinedLianeIds);
 
