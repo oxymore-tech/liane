@@ -1,9 +1,11 @@
 import {
+  addSeconds,
   capitalize,
   Chat,
   CoLiane,
   CoLianeRequest,
   CoMatch,
+  DayOfWeekFlag,
   LianeMessage,
   MatchGroup,
   MatchSingle,
@@ -16,7 +18,7 @@ import {
   User
 } from "@liane/common";
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from "react-native";
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Center, Column, Row } from "@/components/base/AppLayout";
@@ -35,6 +37,7 @@ import { AppLogger } from "@/api/logger";
 import { SimpleModal } from "@/components/modal/SimpleModal.tsx";
 import { AppStorage } from "@/api/storage.ts";
 import { TripSurveyView } from "@/components/trip/TripSurveyView.tsx";
+import { TimeWheelPicker } from "@/components/TimeWheelPicker.tsx";
 
 const MessageBubble = ({
   message,
@@ -192,20 +195,39 @@ export const CommunitiesChatScreen = () => {
     }
   };
 
-  const launchTrip = async (roundTrip: boolean) => {
+  if (liane) {
+    const me = liane.members.find(m => m.user.id === user!.id)!;
+    const todayIndex = (new Date().getDay() + 6) % 7;
+    const x = me.lianeRequest.weekDays.substring(todayIndex).concat(me.lianeRequest.weekDays.substring(0, todayIndex)).indexOf("1");
+    console.log(todayIndex, x, me.lianeRequest.weekDays);
+  }
+  const me = useMemo(() => liane?.members.find(m => m.user.id === user!.id), [liane?.members, user]);
+
+  const nextDayIndex = useMemo(() => {
+    const todayIndex = (new Date().getDay() + 6) % 7;
+    if (!me) {
+      return todayIndex;
+    } else {
+      return todayIndex + me.lianeRequest.weekDays.substring(todayIndex).concat(me.lianeRequest.weekDays.substring(0, todayIndex)).indexOf("1");
+    }
+  }, [me]);
+  const launchTrip = async (time: [Date, Date | undefined]) => {
     setTripModalVisible(false);
-    const coliane = liane!;
-    const me = coliane.members.find(m => m.user.id === user!.id)!;
     const geolocationLevel = await AppStorage.getSetting("geolocation");
+    const todayIndex = (time[0].getDay() + 6) % 7;
+    const addDays = (nextDayIndex - todayIndex + 7) % 7;
+    const departureTime = addSeconds(time[0], addDays * 3600 * 24).toISOString();
+    const returnTime = time[1] ? addSeconds(time[1], addDays * 3600 * 24).toISOString() : undefined;
+    console.log(time[0], nextDayIndex, todayIndex, addDays, departureTime);
 
     const created = await services.liane.post({
-      departureTime: new Date().toISOString(),
-      returnTime: roundTrip ? undefined : undefined, //TODO
-      from: me.lianeRequest.wayPoints[0].id!,
-      to: me.lianeRequest.wayPoints[1].id!,
-      availableSeats: me.lianeRequest.canDrive ? 1 : -1,
+      departureTime,
+      returnTime,
+      from: me!.lianeRequest.wayPoints[0].id!,
+      to: me!.lianeRequest.wayPoints[1].id!,
+      availableSeats: me!.lianeRequest.canDrive ? 1 : -1,
       geolocationLevel: geolocationLevel || "None",
-      recurrence: me.lianeRequest.weekDays
+      recurrence: "0000000"
     });
     const goMessage = await services.community.sendMessage(liane!.id!, {
       type: "Trip",
@@ -437,21 +459,116 @@ export const CommunitiesChatScreen = () => {
             />
           </Row>
         </View>
-        <SimpleModal visible={tripModalVisible} setVisible={setTripModalVisible} backgroundColor={AppColors.white} hideClose>
-          <Column spacing={8}>
-            <AppText style={styles.modalText}>Proposer...</AppText>
-            <Pressable style={{ flexDirection: "row", marginHorizontal: 16, paddingVertical: 8 }} onPress={() => launchTrip(false)}>
-              <AppIcon name={"car"} />
-              <AppText style={[{ marginLeft: 5 }, styles.modalText]}>Trajet aller-simple</AppText>
-            </Pressable>
-            <Pressable style={{ flexDirection: "row", marginHorizontal: 16, paddingVertical: 8 }} onPress={() => launchTrip(true)}>
-              <AppIcon name={"car"} />
-              <AppText style={[{ marginLeft: 5 }, styles.modalText]}>Trajet aller-retour</AppText>
-            </Pressable>
-          </Column>
-        </SimpleModal>
+
+        {!!me && (
+          <LaunchTripModal
+            nextDayIndex={nextDayIndex}
+            weekdays={me!.lianeRequest.weekDays}
+            tripModalVisible={tripModalVisible}
+            setTripModalVisible={setTripModalVisible}
+            launchTrip={launchTrip}
+          />
+        )}
       </KeyboardAvoidingView>
     </View>
+  );
+};
+
+const LaunchTripModal = ({
+  tripModalVisible,
+  setTripModalVisible,
+  launchTrip,
+  weekdays,
+  nextDayIndex
+}: {
+  weekdays: DayOfWeekFlag;
+  tripModalVisible: boolean;
+  setTripModalVisible: (v: boolean) => void;
+  launchTrip: (d: [Date, Date | undefined]) => void;
+  nextDayIndex: number;
+}) => {
+  const [launchTripStep, setLaunchTripStep] = useState(0);
+  const [selectedTime, setSelectedTime] = useState<[Date, Date | undefined]>([new Date(), undefined]);
+
+  const launch = () => {
+    launchTrip(selectedTime);
+  };
+  console.log(weekdays);
+  return (
+    <SimpleModal visible={tripModalVisible} setVisible={setTripModalVisible} backgroundColor={AppColors.white} hideClose>
+      <Column spacing={8}>
+        <AppText style={styles.modalText}>Proposer le trajet...</AppText>
+        <View>
+          <Row spacing={6}>
+            {AppLocalization.daysList.map((day: string, index: number) => (
+              <View
+                key={index}
+                style={{
+                  width: index === nextDayIndex ? 28 : 24,
+                  height: index === nextDayIndex ? 28 : 24,
+                  borderRadius: 24,
+                  borderWidth: 1,
+                  borderColor: weekdays.charAt(index) === "1" ? AppColors.primaryColor : "transparent",
+                  backgroundColor: index === nextDayIndex ? AppColors.primaryColor : AppColors.lightGrayBackground,
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}>
+                <Text style={[{ fontSize: 14 }]}>{day.substring(0, 2)}</Text>
+              </View>
+            ))}
+          </Row>
+        </View>
+        {launchTripStep === 0 && (
+          <>
+            <Pressable
+              style={{ flexDirection: "row", marginHorizontal: 16, paddingVertical: 8 }}
+              onPress={() => {
+                setLaunchTripStep(1);
+              }}>
+              <AppIcon name={"car"} />
+              <AppText style={[{ marginLeft: 5 }, styles.modalText]}>Aller-simple</AppText>
+            </Pressable>
+            <Pressable style={{ flexDirection: "row", marginHorizontal: 16, paddingVertical: 8 }} onPress={() => setLaunchTripStep(2)}>
+              <AppIcon name={"car"} />
+              <AppText style={[{ marginLeft: 5 }, styles.modalText]}>Aller-retour</AppText>
+            </Pressable>
+          </>
+        )}
+        {launchTripStep === 1 && (
+          <Column spacing={8}>
+            <AppText style={styles.modalText}>Aller-simple, départ à :</AppText>
+            <Center>
+              <TimeWheelPicker onChange={d => setSelectedTime([d, undefined])} />
+            </Center>
+            <Row style={{ justifyContent: "flex-end" }}>
+              <AppPressableIcon name={"checkmark-outline"} onPress={launch} />
+            </Row>
+          </Column>
+        )}
+        {launchTripStep === 2 && (
+          <Column spacing={8}>
+            <AppText style={styles.modalText}>Aller-retour</AppText>
+            <Row spacing={8} style={{ justifyContent: "space-evenly" }}>
+              <Column>
+                <AppText style={styles.modalText}>Départ à :</AppText>
+                <Center>
+                  <TimeWheelPicker onChange={d => setSelectedTime(v => [d, v[1]])} />
+                </Center>
+              </Column>
+              <Column>
+                <AppText style={styles.modalText}>Retour à :</AppText>
+                <Center>
+                  <TimeWheelPicker onChange={d => setSelectedTime(v => [v[0], d])} />
+                </Center>
+              </Column>
+            </Row>
+            <Row style={{ justifyContent: "flex-end" }}>
+              <AppPressableIcon name={"checkmark-outline"} onPress={launch} />
+            </Row>
+          </Column>
+        )}
+      </Column>
+    </SimpleModal>
   );
 };
 

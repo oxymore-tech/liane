@@ -70,7 +70,7 @@ export const TripSurveyView = ({ survey, coLiane }: { survey: TypedLianeMessage<
       {!!trip.data && (
         <>
           <AppText style={{ fontWeight: "600", color: AppColorPalettes.gray[500], fontSize: 16 }}>
-            {trip.data?.createdBy?.user.pseudo} relance le trajet pour{" "}
+            {trip.data?.createdBy?.user.pseudo} propose le trajet pour{" "}
           </AppText>
           <AppText style={{ fontWeight: "bold", fontSize: 18 }}>{date}</AppText>
           <LoadedTripSurveyView coLiane={coLiane} trip={trip.data.liane} />
@@ -86,12 +86,12 @@ export const TripSurveyView = ({ survey, coLiane }: { survey: TypedLianeMessage<
                   <AppText style={{ color: AppColors.white, fontWeight: "bold", fontSize: 18 }}>Participer</AppText>
                 </Row>
               </AppPressableOverlay>
-              <AppPressableOverlay
+              {/*   <AppPressableOverlay
                 backgroundStyle={{ backgroundColor: AppColors.lightGrayBackground, borderRadius: 8 }}
                 style={{ paddingHorizontal: 12, paddingVertical: 6 }}
                 onPress={() => {}}>
                 <AppIcon name={"thumb-down"} size={28} />
-              </AppPressableOverlay>
+              </AppPressableOverlay>*/}
             </Row>
           )}
         </>
