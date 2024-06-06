@@ -54,7 +54,7 @@ public sealed class TripServiceImpl(
   {
     var createdBy = owner ?? currentContext.CurrentUser().Id;
     var createdAt = DateTime.UtcNow;
-    if (entity.Recurrence is null)
+    if (entity.Recurrence is null || entity.Recurrence.Value.IsEmpty())
     {
       return await CreateWithReturn(entity, createdBy, createdAt, null);
     }

@@ -99,7 +99,7 @@ export type LianeRequest = Identity &
     availableSeats: number;
     from: Ref<RallyingPoint>;
     to: Ref<RallyingPoint>;
-    recurrence: DayOfWeekFlag | null;
+    recurrence?: DayOfWeekFlag;
     geolocationLevel: GeolocationLevel;
     // shareWith: Ref<User>[];
   }>;

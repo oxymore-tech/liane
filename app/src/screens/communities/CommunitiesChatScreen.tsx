@@ -226,8 +226,7 @@ export const CommunitiesChatScreen = () => {
       from: me!.lianeRequest.wayPoints[0].id!,
       to: me!.lianeRequest.wayPoints[1].id!,
       availableSeats: me!.lianeRequest.canDrive ? 1 : -1,
-      geolocationLevel: geolocationLevel || "None",
-      recurrence: "0000000"
+      geolocationLevel: geolocationLevel || "None"
     });
     const goMessage = await services.community.sendMessage(liane!.id!, {
       type: "Trip",
