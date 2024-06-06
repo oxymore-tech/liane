@@ -211,6 +211,15 @@ export const CommunitiesChatScreen = () => {
       return todayIndex + me.lianeRequest.weekDays.substring(todayIndex).concat(me.lianeRequest.weekDays.substring(0, todayIndex)).indexOf("1");
     }
   }, [me]);
+  const startDate = useMemo(() => {
+    const d = new Date();
+    if (!me || me.lianeRequest.timeConstraints.length === 0) {
+      return d;
+    }
+    const c = me.lianeRequest.timeConstraints[0].when.start;
+    d.setHours(c.hour, c.minute);
+    return d;
+  }, [me]);
   const launchTrip = async (time: [Date, Date | undefined]) => {
     setTripModalVisible(false);
     const geolocationLevel = await AppStorage.getSetting("geolocation");
@@ -466,6 +475,7 @@ export const CommunitiesChatScreen = () => {
             tripModalVisible={tripModalVisible}
             setTripModalVisible={setTripModalVisible}
             launchTrip={launchTrip}
+            initialDate={startDate}
           />
         )}
       </KeyboardAvoidingView>
@@ -478,8 +488,10 @@ const LaunchTripModal = ({
   setTripModalVisible,
   launchTrip,
   weekdays,
-  nextDayIndex
+  nextDayIndex,
+  initialDate
 }: {
+  initialDate: Date;
   weekdays: DayOfWeekFlag;
   tripModalVisible: boolean;
   setTripModalVisible: (v: boolean) => void;
@@ -537,7 +549,7 @@ const LaunchTripModal = ({
           <Column spacing={8}>
             <AppText style={styles.modalText}>Aller-simple, départ à :</AppText>
             <Center>
-              <TimeWheelPicker onChange={d => setSelectedTime([d, undefined])} />
+              <TimeWheelPicker date={initialDate} minuteStep={5} onChange={d => setSelectedTime([d, undefined])} />
             </Center>
             <Row style={{ justifyContent: "flex-end" }}>
               <AppPressableIcon name={"checkmark-outline"} onPress={launch} />
@@ -551,13 +563,13 @@ const LaunchTripModal = ({
               <Column>
                 <AppText style={styles.modalText}>Départ à :</AppText>
                 <Center>
-                  <TimeWheelPicker onChange={d => setSelectedTime(v => [d, v[1]])} />
+                  <TimeWheelPicker date={initialDate} minuteStep={5} onChange={d => setSelectedTime(v => [d, v[1]])} />
                 </Center>
               </Column>
               <Column>
                 <AppText style={styles.modalText}>Retour à :</AppText>
                 <Center>
-                  <TimeWheelPicker onChange={d => setSelectedTime(v => [v[0], d])} />
+                  <TimeWheelPicker minuteStep={5} onChange={d => setSelectedTime(v => [v[0], d])} />
                 </Center>
               </Column>
             </Row>
