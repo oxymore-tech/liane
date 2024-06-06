@@ -2,7 +2,7 @@ import { ActivityIndicator, View } from "react-native";
 import { AppText } from "@/components/base/AppText.tsx";
 import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors.ts";
 import { AppLocalization } from "@/api/i18n.ts";
-import { capitalize, CoLiane, Liane, LianeMessage, TripMessage } from "@liane/common";
+import { capitalize, CoLiane, JoinLianeRequestDetailed, Liane, LianeMessage, LianeState, TripMessage } from "@liane/common";
 import React, { useCallback, useContext, useMemo } from "react";
 import { Column, Row } from "@/components/base/AppLayout.tsx";
 import { UserPicture } from "@/components/UserPicture.tsx";
@@ -46,6 +46,10 @@ const LoadedTripSurveyView = ({ coLiane, trip }: { coLiane: CoLiane; trip: Liane
   );
 };
 
+function isActive(liane: Liane): boolean {
+  return liane.state === "Started" || liane.state === "NotStarted";
+}
+
 export const TripSurveyView = ({ survey, coLiane }: { survey: LianeMessage<TripMessage>; coLiane: CoLiane }) => {
   const date = useMemo(() => {
     return capitalize(AppLocalization.formatMonthDay(new Date(survey.createdAt!)));
@@ -84,9 +88,7 @@ export const TripSurveyView = ({ survey, coLiane }: { survey: LianeMessage<TripM
     }
 
     const geolocationLevel = await AppStorage.getSetting("geolocation");
-    const query = { liane: coLiane.id!, trip: trip.data.liane.id!, geolocationLevel };
-    console.log("Joining trip", query);
-    await services.community.joinTrip(query);
+    await services.community.joinTrip({ liane: coLiane.id!, trip: trip.data.liane.id!, geolocationLevel });
     await queryClient.invalidateQueries(JoinRequestsQueryKey);
   }, [queryClient, coLiane.id, services.community, trip.data]);
 
@@ -101,31 +103,50 @@ export const TripSurveyView = ({ survey, coLiane }: { survey: LianeMessage<TripM
           </AppText>
           <AppText style={{ fontWeight: "bold", fontSize: 18 }}>{date}</AppText>
           <LoadedTripSurveyView coLiane={coLiane} trip={trip.data.liane} />
-          {trip.data.isMember && <AppText style={{ fontStyle: "italic", color: AppColorPalettes.gray[500] }}>En attente de membres</AppText>}
-          {!trip.data.isMember && joinRequest.data && (
-            <AppText style={{ fontStyle: "italic", color: AppColorPalettes.gray[500] }}>Demande en attente</AppText>
-          )}
-          {!trip.data.isMember && !joinRequest.data && (
-            <Row spacing={6}>
-              <AppPressableOverlay
-                backgroundStyle={{ backgroundColor: AppColors.primaryColor, borderRadius: 8 }}
-                style={{ paddingHorizontal: 12, paddingVertical: 6 }}
-                onPress={handleJoinTrip}>
-                <Row style={{ alignItems: "center" }} spacing={6}>
-                  <AppIcon name={"thumb-up"} color={AppColors.white} size={28} />
-                  <AppText style={{ color: AppColors.white, fontWeight: "bold", fontSize: 18 }}>Participer</AppText>
-                </Row>
-              </AppPressableOverlay>
-              {/*   <AppPressableOverlay
-                backgroundStyle={{ backgroundColor: AppColors.lightGrayBackground, borderRadius: 8 }}
-                style={{ paddingHorizontal: 12, paddingVertical: 6 }}
-                onPress={() => {}}>
-                <AppIcon name={"thumb-down"} size={28} />
-              </AppPressableOverlay>*/}
-            </Row>
+
+          {isActive(trip.data.liane) ? (
+            <ActiveView isMember={trip.data.isMember} joinRequest={joinRequest.data} handleJoinTrip={handleJoinTrip} />
+          ) : (
+            <InactiveView state={trip.data.liane.state} />
           )}
         </>
       )}
     </View>
+  );
+};
+
+type InactiveViewProps = { state: LianeState };
+
+const InactiveView = ({ state }: InactiveViewProps) => {
+  if (state === "Finished") {
+    return <AppText style={{ fontStyle: "italic", color: AppColorPalettes.gray[500] }}>Trajet terminé</AppText>;
+  }
+  if (state === "Canceled") {
+    return <AppText style={{ fontStyle: "italic", color: AppColorPalettes.gray[500] }}>Trajet annulé</AppText>;
+  }
+  return <AppText style={{ fontStyle: "italic", color: AppColorPalettes.gray[500] }}>Trajet archivé</AppText>;
+};
+
+type ActiveViewProps = { isMember: boolean; joinRequest?: JoinLianeRequestDetailed; handleJoinTrip: () => void };
+
+const ActiveView = ({ isMember, joinRequest, handleJoinTrip }: ActiveViewProps) => {
+  return (
+    <>
+      {isMember && <AppText style={{ fontStyle: "italic", color: AppColorPalettes.gray[500] }}>En attente de membres</AppText>}
+      {!isMember && joinRequest && <AppText style={{ fontStyle: "italic", color: AppColorPalettes.gray[500] }}>Demande en attente</AppText>}
+      {!isMember && !joinRequest && (
+        <Row spacing={6}>
+          <AppPressableOverlay
+            backgroundStyle={{ backgroundColor: AppColors.primaryColor, borderRadius: 8 }}
+            style={{ paddingHorizontal: 12, paddingVertical: 6 }}
+            onPress={handleJoinTrip}>
+            <Row style={{ alignItems: "center" }} spacing={6}>
+              <AppIcon name={"thumb-up"} color={AppColors.white} size={28} />
+              <AppText style={{ color: AppColors.white, fontWeight: "bold", fontSize: 18 }}>Participer</AppText>
+            </Row>
+          </AppPressableOverlay>
+        </Row>
+      )}
+    </>
   );
 };
