@@ -11,17 +11,8 @@ namespace Liane.Web.Controllers;
 [Route("api/event")]
 [ApiController]
 [RequiresAuth]
-public sealed class EventController : ControllerBase
+public sealed class EventController(ILianeRequestService lianeRequestService, EventDispatcher eventDispatcher) : ControllerBase
 {
-  private readonly EventDispatcher eventDispatcher;
-  private readonly ILianeRequestService lianeRequestService;
-
-  public EventController(ILianeRequestService lianeRequestService, EventDispatcher eventDispatcher)
-  {
-    this.lianeRequestService = lianeRequestService;
-    this.eventDispatcher = eventDispatcher;
-  }
-
   [HttpPost("join_request")]
   [DebugRequest]
   public async Task<IActionResult> Create([FromBody] LianeEvent.JoinRequest lianeEvent)
@@ -29,7 +20,7 @@ public sealed class EventController : ControllerBase
     await eventDispatcher.Dispatch(lianeEvent);
     return NoContent();
   }
-  
+
   [HttpPost("member_ping")]
   public async Task<IActionResult> Create([FromBody] LianeEvent.MemberPing lianeEvent)
   {

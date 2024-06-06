@@ -178,7 +178,7 @@ public sealed class AuthServiceImpl : IAuthService
       IssuerSigningKey = signinKey,
       ValidIssuer = authSettings.Issuer,
       ValidAudience = authSettings.Audience,
-      ValidateLifetime = true,
+      ValidateLifetime = authSettings.ValidateLifetime,
       ClockSkew = TimeSpan.Zero
     };
     try

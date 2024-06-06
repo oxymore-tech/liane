@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Community;
@@ -27,56 +28,62 @@ public sealed class CommunityController(ILianeService lianeService)
     return await lianeService.Create(request);
   }
 
-  [HttpPost("liane/request/{id}")]
-  public Task UpdateRequest(string id, [FromBody] LianeRequest request)
+  [HttpPost("liane/request/{id:guid}")]
+  public Task UpdateRequest(Guid id, [FromBody] LianeRequest request)
   {
     return lianeService.Update(id, request);
   }
 
-  [HttpDelete("liane/request/{id}")]
-  public Task DeleteRequest(string id)
+  [HttpDelete("liane/request/{id:guid}")]
+  public Task DeleteRequest(Guid id)
   {
     return lianeService.Delete(id);
   }
 
-  [HttpPost("liane/{id}/join_new/{lianeRequest}")]
-  public Task<Api.Community.Liane> JoinNew(string id, string lianeRequest)
+  [HttpPost("liane/{id:guid}/join_new/{lianeRequest:guid}")]
+  public Task<Api.Community.Liane> JoinNew(Guid id, Guid lianeRequest)
   {
     return lianeService.JoinNew(id, lianeRequest);
   }
 
-  [HttpPost("liane/{id}/join/{liane}")]
-  public Task<Api.Community.Liane> Join(string id, string liane)
+  [HttpPost("liane/{id:guid}/join/{liane:guid}")]
+  public Task<Api.Community.Liane> Join(Guid id, Guid liane)
   {
     return lianeService.Join(id, liane);
   }
 
-  [HttpPost("liane/{id}")]
-  public Task Update(string id, [FromBody] LianeUpdate lianeUpdate)
+  [HttpPost("liane/join_trip")]
+  public Task JoinTrip([FromBody] JoinTripQuery query)
+  {
+    return lianeService.JoinTrip(query);
+  }
+
+  [HttpPost("liane/{id:guid}")]
+  public Task Update(Guid id, [FromBody] LianeUpdate lianeUpdate)
   {
     return lianeService.Update(id, lianeUpdate);
   }
 
-  [HttpGet("liane/{id}")]
-  public Task<Api.Community.Liane> GetLiane(string id)
+  [HttpGet("liane/{id:guid}")]
+  public Task<Api.Community.Liane> GetLiane(Guid id)
   {
     return lianeService.Get(id);
   }
 
-  [HttpPost("liane/{id}/leave")]
-  public Task<bool> Leave(string id)
+  [HttpPost("liane/{id:guid}/leave")]
+  public Task<bool> Leave(Guid id)
   {
     return lianeService.Leave(id);
   }
 
-  [HttpGet("liane/{id}/message")]
-  public Task<PaginatedResponse<LianeMessage>> GetMessages(string id, [FromQuery] Pagination pagination)
+  [HttpGet("liane/{id:guid}/message")]
+  public Task<PaginatedResponse<LianeMessage>> GetMessages(Guid id, [FromQuery] Pagination pagination)
   {
     return lianeService.GetMessages(id, pagination);
   }
 
-  [HttpPost("liane/{id}/message")]
-  public Task<LianeMessage> SendMessage(string id, [FromBody] MessageContent content)
+  [HttpPost("liane/{id:guid}/message")]
+  public Task<LianeMessage> SendMessage(Guid id, [FromBody] MessageContent content)
   {
     return lianeService.SendMessage(id, content);
   }

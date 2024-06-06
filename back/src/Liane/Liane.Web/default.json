@@ -15,7 +15,8 @@
   "Auth": {
     "Validity": "0.08:00:00",
     "Issuer": "Liane",
-    "Audience": "Liane"
+    "Audience": "Liane",
+    "ValidateLifetime": true
   },
   "Generator": {
     "IsEnabled": false

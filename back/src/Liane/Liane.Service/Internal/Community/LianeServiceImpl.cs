@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Dapper;
 using GeoJSON.Text.Geometry;
 using Liane.Api.Community;
+using Liane.Api.Event;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util;
@@ -31,7 +32,9 @@ public sealed class LianeServiceImpl(
   LianeFetcher lianeFetcher,
   LianeRequestFetcher lianeRequestFetcher,
   LianeMatcher matcher,
-  IPushService pushService) : ILianeService
+  IPushService pushService,
+  ITripService tripService,
+  EventDispatcher eventDispatcher) : ILianeService
 {
   public async Task<LianeRequest> Create(LianeRequest request)
   {
@@ -204,6 +207,27 @@ public sealed class LianeServiceImpl(
     var createdLiane = await lianeFetcher.FetchLiane(connection, lianeId, tx);
     tx.Commit();
     return createdLiane;
+  }
+
+  public async Task JoinTrip(JoinTripQuery query)
+  {
+    using var connection = db.NewConnection();
+    using var tx = connection.BeginTransaction();
+    var userId = currentContext.CurrentUser().Id;
+    var lianeId = Guid.Parse(query.Liane);
+    var member = await CheckIsMember(connection, lianeId, userId, tx);
+    var lianeRequest = await lianeRequestFetcher.FetchLianeRequest(connection, member.LianeRequestId, tx);
+
+    var from = await lianeRequest.WayPoints[0].Resolve(rallyingPointService.Get);
+    var to = await lianeRequest.WayPoints[^1].Resolve(rallyingPointService.Get);
+
+    var match = await tripService.GetNewTrip(query.Trip, from, to, false);
+    if (match is null)
+    {
+      return;
+    }
+
+    await eventDispatcher.Dispatch(new LianeEvent.JoinRequest(query.Trip, match.Pickup, match.Deposit, -1, false, "Je souhaites rejoindre le trajet", query.GeolocationLevel ?? GeolocationLevel.None));
   }
 
   public async Task<Api.Community.Liane> Update(Ref<Api.Community.Liane> id, LianeUpdate liane)
