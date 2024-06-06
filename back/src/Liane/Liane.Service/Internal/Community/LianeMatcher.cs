@@ -51,38 +51,35 @@ public sealed class LianeMatcher(
   private static async Task<IEnumerable<LianeRawMatch>> FindRawMatches(IDbConnection connection, IEnumerable<Guid> lianeRequests, IDbTransaction? tx = null)
   {
     return await connection.QueryAsync<LianeRawMatch>("""
-                                                              SELECT liane_request_a.id AS "from",
-                                                                     liane_request_b.id AS liane_request,
-                                                                     liane_request_b.name AS name,
-                                                                     liane_request_b.created_by AS "user",
-                                                                     liane_request_b.way_points AS way_points,
-                                                                     liane_request_b.is_enabled AS is_enabled,
-                                                                     st_length(intersection) / a_length AS score,
-                                                                     matching_weekdays(liane_request_a.week_days, liane_request_b.week_days) AS week_days,
-                                                                     st_startpoint(intersection) AS pickup,
-                                                                     st_endpoint(intersection) AS deposit,
-                                                                     nearest_rp(st_startpoint(intersection)) AS pickup_point,
-                                                                     nearest_rp(st_endpoint(intersection)) AS deposit_point,
-                                                                     (SELECT array_agg(liane_id) FROM liane_member WHERE liane_request_id = liane_request_b.id) AS lianes
-                                                              FROM (
-                                                                      SELECT a.way_points AS a,
-                                                                             b.way_points AS b,
-                                                                             st_linemerge(st_intersection(a.geometry, b.geometry)) intersection,
-                                                                             st_length(a.geometry) AS a_length
-                                                                      FROM route a
-                                                                        INNER JOIN route b ON st_intersects(a.geometry, b.geometry)
-                                                                  ) AS matches
-                                                              INNER JOIN liane_request liane_request_a ON
-                                                                liane_request_a.way_points = a
-                                                              INNER JOIN liane_request liane_request_b ON
-                                                                liane_request_b.way_points = b AND liane_request_b.created_by != liane_request_a.created_by
-                                                              LEFT JOIN liane_member ON
-                                                                liane_request_id = liane_request_b.id
-                                                              WHERE
-                                                                matching_weekdays(liane_request_a.week_days, liane_request_b.week_days)::integer != 0
-                                                                AND st_length(intersection) / a_length > 0.3
-                                                                AND liane_request_a.id = ANY(@liane_requests)
-                                                              ORDER BY st_length(intersection) / a_length DESC, liane_request_a.id
+                                                      SELECT liane_request_match.id AS "from",
+                                                             liane_request_b.id AS liane_request,
+                                                             liane_request_b.name AS name,
+                                                             liane_request_b.created_by AS "user",
+                                                             liane_request_b.way_points AS way_points,
+                                                             liane_request_b.is_enabled AS is_enabled,
+                                                             st_length(intersection) / a_length AS score,
+                                                             matching_weekdays(liane_request_match.week_days, liane_request_b.week_days) AS week_days,
+                                                             st_startpoint(intersection) AS pickup,
+                                                             st_endpoint(intersection) AS deposit,
+                                                             nearest_rp(st_startpoint(intersection)) AS pickup_point,
+                                                             nearest_rp(st_endpoint(intersection)) AS deposit_point,
+                                                             (SELECT array_agg(DISTINCT liane_id) FROM liane_member WHERE liane_request_id = liane_request_b.id) AS lianes
+                                                      FROM (SELECT liane_request.id,
+                                                                   liane_request.created_by,
+                                                                   liane_request.week_days,
+                                                                   a.way_points          AS                              a,
+                                                                   b.way_points          AS                              b,
+                                                                   st_linemerge(st_intersection(a.geometry, b.geometry)) intersection,
+                                                                   st_length(a.geometry) AS                              a_length
+                                                            FROM liane_request
+                                                                     INNER JOIN route a ON a.way_points = liane_request.way_points
+                                                                     INNER JOIN route b ON st_intersects(a.geometry, b.geometry)
+                                                            WHERE liane_request.id = ANY(@liane_requests)) AS liane_request_match
+                                                               INNER JOIN liane_request liane_request_b ON
+                                                          liane_request_b.way_points = b AND liane_request_b.created_by != liane_request_match.created_by
+                                                      WHERE matching_weekdays(liane_request_match.week_days, liane_request_b.week_days)::integer != 0
+                                                        AND st_length(intersection) / a_length > 0.3
+                                                      ORDER BY st_length(intersection) / a_length DESC, "from"
                                                       """,
       new { liane_requests = lianeRequests.ToArray() },
       tx
@@ -125,6 +122,7 @@ public sealed class LianeMatcher(
           first.Deposit,
           first.Score));
       }))
+    .Distinct()
     .OrderByDescending(m => m.Score)
     .ThenByDescending(m => m switch
     {

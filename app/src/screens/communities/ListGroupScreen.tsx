@@ -8,7 +8,7 @@ import { AppPressableIcon } from "@/components/base/AppPressable";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppColors, ContextualColors } from "@/theme/colors";
 import { extractDays } from "@/util/hooks/days";
-import { CoMatch, MatchGroup, RallyingPoint } from "@liane/common";
+import { CoMatch, MatchGroup } from "@liane/common";
 import { extractWaypointFromTo } from "@/util/hooks/lianeRequest";
 
 export const ListGroupScreen = () => {
@@ -18,30 +18,11 @@ export const ListGroupScreen = () => {
 
   const insets = useSafeAreaInsets();
   const [error, setError] = useState<Error | undefined>(undefined);
-  const { to, from, steps } = useMemo(() => extractWaypointFromTo(lianeRequest?.wayPoints), [lianeRequest.wayPoints]);
+  const { to, from } = useMemo(() => extractWaypointFromTo(lianeRequest?.wayPoints), [lianeRequest.wayPoints]);
   const daysReccurence = extractDays(lianeRequest.weekDays);
   const localeTime = lianeRequest?.timeConstraints[0]
     ? `${lianeRequest?.timeConstraints[0]?.when?.start?.hour}h${lianeRequest?.timeConstraints[0]?.when?.start?.minute}`
     : "";
-
-  const GroupItem = ({ group }: { group: CoMatch }) => (
-    <Pressable onPress={() => navigation.navigate("CommunitiesChat", { group: group, request: lianeRequest })}>
-      <View style={styles.memberContainer}>
-        <View style={styles.memberInfo}>
-          <View style={styles.textContainer}>
-            <AppText style={styles.nameText}>{`${group.pickup.label} ➔ ${group.deposit.label}`}</AppText>
-            <AppText style={styles.locationText}>{`${extractDays(group.weekDays)}`}</AppText>
-            <AppText style={styles.timeText}>{`${(group as MatchGroup).matches?.length ?? 1} membre${
-              (group as MatchGroup).matches?.length > 1 ? "s" : ""
-            }`}</AppText>
-          </View>
-        </View>
-        <View style={{ paddingRight: 10 }}>
-          <AppIcon name={"arrow-right"} />
-        </View>
-      </View>
-    </Pressable>
-  );
 
   return (
     <View style={styles.mainContainer}>
@@ -76,11 +57,40 @@ export const ListGroupScreen = () => {
         </View>
       </View>
       <View style={styles.membersContainer}>
-        <FlatList data={groups} renderItem={({ item }) => <GroupItem group={item} />} />
+        <FlatList
+          data={groups}
+          renderItem={({ item }) => (
+            <GroupItem group={item} onPress={() => navigation.navigate("CommunitiesChat", { group: item, request: lianeRequest })} />
+          )}
+        />
       </View>
     </View>
   );
 };
+
+type GroupItemProps = {
+  group: CoMatch;
+  onPress: () => void;
+};
+
+const GroupItem = ({ group, onPress }: GroupItemProps) => (
+  <Pressable onPress={onPress}>
+    <View style={styles.memberContainer}>
+      <View style={styles.memberInfo}>
+        <View style={styles.textContainer}>
+          <AppText style={styles.nameText}>{`${group.pickup.label} ➔ ${group.deposit.label}`}</AppText>
+          <AppText style={styles.locationText}>{`${extractDays(group.weekDays)}`}</AppText>
+          <AppText style={styles.timeText}>{`${(group as MatchGroup).matches?.length ?? 1} membre${
+            (group as MatchGroup).matches?.length > 1 ? "s" : ""
+          }`}</AppText>
+        </View>
+      </View>
+      <View style={{ paddingRight: 10 }}>
+        <AppIcon name={"arrow-right"} />
+      </View>
+    </View>
+  </Pressable>
+);
 
 const styles = StyleSheet.create({
   mainContainer: {
