@@ -2,16 +2,17 @@ import { ActivityIndicator, View } from "react-native";
 import { AppText } from "@/components/base/AppText.tsx";
 import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors.ts";
 import { AppLocalization } from "@/api/i18n.ts";
-import { capitalize, CoLiane, Liane, MessageContentTrip, TypedLianeMessage } from "@liane/common";
-import React, { useContext, useMemo } from "react";
+import { capitalize, CoLiane, Liane, LianeMessage, TripMessage } from "@liane/common";
+import React, { useCallback, useContext, useMemo } from "react";
 import { Column, Row } from "@/components/base/AppLayout.tsx";
 import { UserPicture } from "@/components/UserPicture.tsx";
 import { AppIcon } from "@/components/base/AppIcon.tsx";
 import { AppPressableOverlay } from "@/components/base/AppPressable.tsx";
 import { WayPointView } from "@/components/trip/WayPointsView.tsx";
-import { useQuery } from "react-query";
-import { LianeDetailQueryKey } from "@/screens/user/MyTripsScreen.tsx";
+import { useQuery, useQueryClient } from "react-query";
+import { JoinRequestsQueryKey, LianeDetailQueryKey } from "@/screens/user/MyTripsScreen.tsx";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
+import { AppStorage } from "@/api/storage.ts";
 
 const LoadedTripSurveyView = ({ coLiane, trip }: { coLiane: CoLiane; trip: Liane }) => {
   const members = useMemo(() => {
@@ -44,7 +45,8 @@ const LoadedTripSurveyView = ({ coLiane, trip }: { coLiane: CoLiane; trip: Liane
     </>
   );
 };
-export const TripSurveyView = ({ survey, coLiane }: { survey: TypedLianeMessage<MessageContentTrip>; coLiane: CoLiane }) => {
+
+export const TripSurveyView = ({ survey, coLiane }: { survey: LianeMessage<TripMessage>; coLiane: CoLiane }) => {
   const date = useMemo(() => {
     return capitalize(AppLocalization.formatMonthDay(new Date(survey.createdAt!)));
   }, [survey.createdAt]);
@@ -63,24 +65,52 @@ export const TripSurveyView = ({ survey, coLiane }: { survey: TypedLianeMessage<
     }
   });
 
+  const joinRequest = useQuery({
+    queryKey: JoinRequestsQueryKey,
+    queryFn: async () => {
+      const joinRequests = (await services.liane.listJoinRequests()).data;
+      return joinRequests.find(j => j.targetTrip.id === survey.content.value);
+    }
+  });
+
+  const queryClient = useQueryClient();
+
+  const handleJoinTrip = useCallback(async () => {
+    if (!trip.data) {
+      return;
+    }
+    if (trip.data.isMember) {
+      return;
+    }
+
+    const geolocationLevel = await AppStorage.getSetting("geolocation");
+    const query = { liane: coLiane.id!, trip: trip.data.liane.id!, geolocationLevel };
+    console.log("Joining trip", query);
+    await services.community.joinTrip(query);
+    await queryClient.invalidateQueries(JoinRequestsQueryKey);
+  }, [queryClient, coLiane.id, services.community, trip.data]);
+
   return (
     <View style={{ backgroundColor: AppColors.backgroundColor, borderRadius: 16, padding: 8 }}>
-      {trip.isLoading && <ActivityIndicator />}
+      {(trip.isLoading || joinRequest.isLoading) && <ActivityIndicator />}
       {trip.isError && <AppText>Erreur de chargement</AppText>}
       {!!trip.data && (
         <>
-          <AppText style={{ fontWeight: "600", color: AppColorPalettes.gray[500], fontSize: 16 }}>
+          <AppText style={{ fontWeight: "bold", color: AppColorPalettes.gray[500], fontSize: 16 }}>
             {trip.data?.createdBy?.user.pseudo} propose le trajet pour{" "}
           </AppText>
           <AppText style={{ fontWeight: "bold", fontSize: 18 }}>{date}</AppText>
           <LoadedTripSurveyView coLiane={coLiane} trip={trip.data.liane} />
           {trip.data.isMember && <AppText style={{ fontStyle: "italic", color: AppColorPalettes.gray[500] }}>En attente de membres</AppText>}
-          {!trip.data.isMember && (
+          {!trip.data.isMember && joinRequest.data && (
+            <AppText style={{ fontStyle: "italic", color: AppColorPalettes.gray[500] }}>Demande en attente</AppText>
+          )}
+          {!trip.data.isMember && !joinRequest.data && (
             <Row spacing={6}>
               <AppPressableOverlay
                 backgroundStyle={{ backgroundColor: AppColors.primaryColor, borderRadius: 8 }}
                 style={{ paddingHorizontal: 12, paddingVertical: 6 }}
-                onPress={() => {}}>
+                onPress={handleJoinTrip}>
                 <Row style={{ alignItems: "center" }} spacing={6}>
                   <AppIcon name={"thumb-up"} color={AppColors.white} size={28} />
                   <AppText style={{ color: AppColors.white, fontWeight: "bold", fontSize: 18 }}>Participer</AppText>

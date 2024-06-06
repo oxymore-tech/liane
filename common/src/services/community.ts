@@ -1,4 +1,15 @@
-import { DayOfWeekFlag, Entity, Liane, PaginatedRequestParams, PaginatedResponse, RallyingPoint, Ref, User, UTCDateTime } from "../api";
+import {
+  DayOfWeekFlag,
+  Entity,
+  GeolocationLevel,
+  Liane,
+  PaginatedRequestParams,
+  PaginatedResponse,
+  RallyingPoint,
+  Ref,
+  User,
+  UTCDateTime
+} from "../api";
 import { HttpClient } from "./http";
 import { TimeRange } from "./time";
 import { IUnion } from "../union";
@@ -65,14 +76,15 @@ export type CoLianeMember = {
   lastReadAt?: UTCDateTime;
 };
 
+export type JoinTripQuery = { liane: Ref<CoLiane>; trip: Ref<Liane>; geolocationLevel?: GeolocationLevel };
+
 export type CoMatch = MatchSingle | MatchGroup;
 
-export type MessageContentText = { value: string } & IUnion<"Text">;
-export type MessageContentTrip = { value: Ref<Liane> } & IUnion<"Trip">;
-export type MessageContent = MessageContentText | MessageContentTrip;
+export type TextMessage = { value: string } & IUnion<"Text">;
+export type TripMessage = { value: Ref<Liane> } & IUnion<"Trip">;
+export type MessageContent = TextMessage | TripMessage;
 
-export type LianeMessage = Entity & { content: MessageContent };
-export type TypedLianeMessage<T extends MessageContentText | MessageContentTrip> = LianeMessage & { content: T };
+export type LianeMessage<T extends MessageContent = MessageContent> = Entity & { content: T };
 
 export interface CommunityService {
   list(): Promise<CoLianeMatch[]>;
@@ -88,6 +100,8 @@ export interface CommunityService {
   joinNew(lianeRequestId: string, foreignLianeRequest: string): Promise<CoLiane>;
 
   join(lianeRequestId: string, liane: string): Promise<CoLiane>;
+
+  joinTrip(query: JoinTripQuery): Promise<void>;
 
   updateLiane(lianeRequestId: string, request: CoLianeUpdate): Promise<CoLianeUpdate>;
 
@@ -125,6 +139,10 @@ export class CommunityServiceClient implements CommunityService {
 
   join(id: string, liane: string) {
     return this.http.postAs<CoLiane>(`/community/liane/${id}/join/${liane}`);
+  }
+
+  async joinTrip(query: JoinTripQuery) {
+    await this.http.post("/community/liane/join_trip", { body: query });
   }
 
   updateLiane(lianeId: string, request: CoLianeUpdate) {

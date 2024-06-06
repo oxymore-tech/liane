@@ -46,7 +46,6 @@ export const HomeBottomSheetContainer = (
       machine.off(transitionListener);
     };
   }, []);
-  //console.log(Platform.OS, h, insets, StatusBar.currentHeight, bottomSpace);
 
   if (props.display === "none") {
     return <View />;

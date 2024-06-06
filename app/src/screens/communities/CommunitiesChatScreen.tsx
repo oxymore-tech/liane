@@ -9,12 +9,10 @@ import {
   LianeMessage,
   MatchGroup,
   MatchSingle,
-  MessageContentTrip,
   PaginatedResponse,
   Ref,
   ResolvedLianeRequest,
-  TypedLianeMessage,
-  UnionUtils,
+  TripMessage,
   User
 } from "@liane/common";
 import React, { useContext, useEffect, useMemo, useState } from "react";
@@ -105,9 +103,13 @@ export const CommunitiesChatScreen = () => {
   const [request, setRequest] = useState<CoLianeRequest | ResolvedLianeRequest | undefined>(undefined);
   const [tripModalVisible, setTripModalVisible] = useState(false);
 
-  const members: { [k: string]: User } | undefined = useMemo(
-    () => chat?.currentGroup?.members?.reduce((a: { [k: string]: User }, b) => ((a[b.user.id!] = b.user), a), {}),
-    [chat?.currentGroup?.members, liane]
+  const members = useMemo(
+    () =>
+      chat?.currentGroup?.members?.reduce((acc, b) => {
+        acc[b.user.id!] = b.user;
+        return acc;
+      }, {} as { [k: string]: User }),
+    [chat?.currentGroup?.members]
   );
 
   const sendMessage = async (value: string) => {
@@ -140,7 +142,7 @@ export const CommunitiesChatScreen = () => {
 
       if (lianeTemp && lianeTemp.id) {
         try {
-          const updatedLianeRequest = await services.community.sendMessage(lianeTemp.id, {
+          await services.community.sendMessage(lianeTemp.id, {
             type: "Text",
             value: value
           });
@@ -155,7 +157,7 @@ export const CommunitiesChatScreen = () => {
     } else {
       if (lianeTemp && lianeTemp.id && value && value.length > 0) {
         try {
-          const updatedLianeRequest = await chat?.send({
+          await chat?.send({
             type: "Text",
             value: value
           });
@@ -195,12 +197,12 @@ export const CommunitiesChatScreen = () => {
     }
   };
 
-  if (liane) {
-    const me = liane.members.find(m => m.user.id === user!.id)!;
-    const todayIndex = (new Date().getDay() + 6) % 7;
-    const x = me.lianeRequest.weekDays.substring(todayIndex).concat(me.lianeRequest.weekDays.substring(0, todayIndex)).indexOf("1");
-    console.log(todayIndex, x, me.lianeRequest.weekDays);
-  }
+  // if (liane) {
+  //   const me = liane.members.find(m => m.user.id === user!.id)!;
+  //   const todayIndex = (new Date().getDay() + 6) % 7;
+  //   const x = me.lianeRequest.weekDays.substring(todayIndex).concat(me.lianeRequest.weekDays.substring(0, todayIndex)).indexOf("1");
+  //   console.log(todayIndex, x, me.lianeRequest.weekDays);
+  // }
   const me = useMemo(() => liane?.members.find(m => m.user.id === user!.id), [liane?.members, user]);
 
   const nextDayIndex = useMemo(() => {
@@ -227,7 +229,7 @@ export const CommunitiesChatScreen = () => {
     const addDays = (nextDayIndex - todayIndex + 7) % 7;
     const departureTime = addSeconds(time[0], addDays * 3600 * 24).toISOString();
     const returnTime = time[1] ? addSeconds(time[1], addDays * 3600 * 24).toISOString() : undefined;
-    console.log(time[0], nextDayIndex, todayIndex, addDays, departureTime);
+    //console.log(time[0], nextDayIndex, todayIndex, addDays, departureTime);
 
     const created = await services.liane.post({
       departureTime,
@@ -267,7 +269,7 @@ export const CommunitiesChatScreen = () => {
       }
     };
 
-    console.log("PARAMS", route.params);
+    // console.log("PARAMS", route.params);
     if (route.params.liane) {
       // Lorsqu'on arrive directement par une liane
       setLiane(route.params.liane);
@@ -285,7 +287,7 @@ export const CommunitiesChatScreen = () => {
       //TODO recup Liane
       fetchLiane(route.params.lianeId).then();
     }
-  }, [route.params]);
+  }, [route.params, services.community]);
 
   useEffect(() => {
     if (liane && liane.id) {
@@ -310,6 +312,7 @@ export const CommunitiesChatScreen = () => {
         });
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [liane, services.realTimeHub]);
 
   const sendButton = (
@@ -325,7 +328,7 @@ export const CommunitiesChatScreen = () => {
     </View>
   );
 
-  console.debug(JSON.stringify(messages));
+  // console.debug(JSON.stringify(messages));
   return (
     <View style={{ backgroundColor: AppColors.lightGrayBackground, justifyContent: "flex-end", flex: 1 }}>
       {chat && (
@@ -335,9 +338,9 @@ export const CommunitiesChatScreen = () => {
           keyExtractor={m => m.id!}
           renderItem={({ item, index }) =>
             members ? (
-              UnionUtils.isInstanceOf(item.content, "Trip") && !!liane ? (
+              item.content.type === "Trip" && !!liane ? (
                 <View style={{ marginHorizontal: 24, marginVertical: 16 }}>
-                  <TripSurveyView survey={item as TypedLianeMessage<MessageContentTrip>} coLiane={liane!} />
+                  <TripSurveyView survey={item as LianeMessage<TripMessage>} coLiane={liane!} />
                 </View>
               ) : (
                 !!members[item.createdBy!] && (
@@ -504,7 +507,6 @@ const LaunchTripModal = ({
   const launch = () => {
     launchTrip(selectedTime);
   };
-  console.log(weekdays);
   return (
     <SimpleModal visible={tripModalVisible} setVisible={setTripModalVisible} backgroundColor={AppColors.white} hideClose>
       <Column spacing={8}>

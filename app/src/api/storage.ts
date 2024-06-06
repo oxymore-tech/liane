@@ -6,7 +6,7 @@ import { AppStorage as CommonAppStorage, AuthResponse, AuthUser, FullUser, Geolo
 export type AppSettings = Readonly<{
   "map.lianeTrafficAsWidth": boolean;
   "map.lianeTrafficAsColor": boolean;
-  geolocation: GeolocationLevel | null;
+  geolocation?: GeolocationLevel;
 }>;
 
 export class ReactNativeStorage implements CommonAppStorage {
@@ -139,15 +139,15 @@ export class ReactNativeStorage implements CommonAppStorage {
   }
 
   getSettings() {
-    return this.retrieveAsync<AppSettings>("settings", { "map.lianeTrafficAsWidth": false, "map.lianeTrafficAsColor": false, geolocation: null });
+    return this.retrieveAsync<AppSettings>("settings", {
+      "map.lianeTrafficAsWidth": false,
+      "map.lianeTrafficAsColor": false,
+      geolocation: undefined
+    });
   }
 
-  async getSetting<T extends keyof AppSettings>(name: T): Promise<AppSettings[T]> {
-    const setting = (await this.getSettings())?.[name];
-    if (setting === undefined) {
-      throw new Error("Setting not found: " + name);
-    }
-    return setting;
+  async getSetting<T extends keyof AppSettings>(name: T): Promise<AppSettings[T] | undefined> {
+    return (await this.getSettings())?.[name];
   }
 
   async saveSetting<T extends keyof AppSettings>(name: T, value: AppSettings[T]) {

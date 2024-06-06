@@ -15,14 +15,14 @@ const geolocationValues = {
   Hidden: "Activée (position masquée)"
 } as const;
 export const SettingsScreen = () => {
-  const [geoloc, setGeoloc] = useState<GeolocationLevel | null>(null);
+  const [geoloc, setGeoloc] = useState<GeolocationLevel>();
   const { navigation } = useAppNavigation();
   const focused = useIsFocused();
   useEffect(() => {
     if (!focused) {
       return;
     }
-    AppStorage.getSetting("geolocation").then(s => setGeoloc(s));
+    AppStorage.getSetting("geolocation").then(setGeoloc);
   }, [focused]);
   return (
     <View style={styles.container}>
@@ -35,7 +35,7 @@ export const SettingsScreen = () => {
         <AppPressableOverlay
           style={{ paddingHorizontal: 24 }}
           onPress={() => {
-            AppStorage.saveSetting("geolocation", null).then(() =>
+            AppStorage.saveSetting("geolocation", undefined).then(() =>
               navigation.navigate("TripGeolocationWizard", { showAs: null, lianeId: undefined })
             );
           }}>

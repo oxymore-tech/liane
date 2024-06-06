@@ -16,10 +16,23 @@ namespace Liane.Service.Internal.Community;
 
 public sealed class LianeMatcher(
   LianeRequestFetcher lianeRequestFetcher,
-  LianeFetcher fetcher,
+  LianeFetcher lianeFetcher,
   IRallyingPointService rallyingPointService
 )
 {
+  public async Task<Match.Single?> FindMatchesBetween(IDbConnection connection,
+    Guid a, Guid b, IDbTransaction? tx = null)
+  {
+    var lianeRawMatches = await FindRawMatches(connection, new[] { a }, tx);
+    var lianeRawMatch = lianeRawMatches.FirstOrDefault(m => m.LianeRequest == b);
+    if (lianeRawMatch is null)
+    {
+      return null;
+    }
+
+    return await ToSingleMatch(async id => await lianeRequestFetcher.FetchLianeRequest(connection, id, tx), lianeRawMatch);
+  }
+
   public async Task<ImmutableDictionary<Guid, LianeMatcherResult>> FindMatches(
     IDbConnection connection,
     IEnumerable<Guid> lianeRequestsId,
@@ -30,7 +43,7 @@ public sealed class LianeMatcher(
     var allLianes = rawMatches.FilterSelect(r => r.Lianes)
       .SelectMany(r => r)
       .Distinct();
-    var lianes = (await fetcher.FetchLianes(connection, allLianes))
+    var lianes = (await lianeFetcher.FetchLianes(connection, allLianes))
       .ToImmutableDictionary(l => Guid.Parse(l.Id));
     var fetchLianeRequests = (await lianeRequestFetcher.FetchLianeRequests(connection, rawMatches.Select(m => m.LianeRequest)))
       .ToImmutableDictionary(r => r.Id!.Value);
@@ -122,7 +135,6 @@ public sealed class LianeMatcher(
           first.Deposit,
           first.Score));
       }))
-    .Distinct()
     .OrderByDescending(m => m.Score)
     .ThenByDescending(m => m switch
     {
@@ -138,9 +150,12 @@ public sealed class LianeMatcher(
     })
     .ToImmutableList();
 
-  private async Task<Match.Single?> ToSingleMatch(ImmutableDictionary<Guid, LianeRequest> fetchLianeRequests, LianeRawMatch match)
+  private Task<Match.Single?> ToSingleMatch(ImmutableDictionary<Guid, LianeRequest> fetcher, LianeRawMatch match)
+    => ToSingleMatch(i => Task.FromResult(fetcher.GetValueOrDefault(i)), match);
+
+  private async Task<Match.Single?> ToSingleMatch(Func<Guid, Task<LianeRequest?>> fetcher, LianeRawMatch match)
   {
-    var lianeRequest = fetchLianeRequests.GetValueOrDefault(match.LianeRequest);
+    var lianeRequest = await fetcher(match.LianeRequest);
     if (lianeRequest is null)
     {
       return null;

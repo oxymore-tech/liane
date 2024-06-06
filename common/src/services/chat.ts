@@ -72,7 +72,6 @@ export class Chat<TChatType extends ChatType> {
     this.logger.info("CHAT", "received : msg", convId, message, this.currentGroup?.id);
 
     if (this.currentGroup?.id === convId && this.onReceiveMessageCallback) {
-      console.log("onReceiveMessageCallback", message);
       this.onReceiveMessageCallback(message);
       return true;
     }

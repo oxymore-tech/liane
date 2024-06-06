@@ -29,7 +29,6 @@ export const TripGeolocationWizard = WithFullscreenModal(
         const allowed = permission !== GeolocationPermission.Denied;
         AppStorage.getSetting("geolocation")
           .then(setting => {
-            //console.log("setting", setting);
             if (setting) {
               const settingAllowed = setting !== "None";
               setPage(!allowed && settingAllowed ? 1 : 2);
@@ -79,7 +78,7 @@ export const TripGeolocationWizard = WithFullscreenModal(
           <Page3
             next={endTutorial}
             prev={() => {
-              AppStorage.saveSetting("geolocation", null).then(prev);
+              AppStorage.saveSetting("geolocation", undefined).then(prev);
             }}
           />
         )}
@@ -200,7 +199,7 @@ const Page1 = (props: { next: () => void; showAs: "driver" | "passenger" }) => (
 const Page3 = (props: { next: () => void; prev: () => void }) => {
   const { route } = useAppNavigation<"TripGeolocationWizard">();
   const [loading, setLoading] = useState(false);
-  const [trackedLevel, setTrackedLevel] = useState<GeolocationLevel | null>(null);
+  const [trackedLevel, setTrackedLevel] = useState<GeolocationLevel>();
   useEffect(() => {
     AppStorage.getSetting("geolocation").then(setTrackedLevel);
   }, []);

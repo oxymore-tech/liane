@@ -68,7 +68,6 @@ export function NewRallyingPointRequestScreen() {
   const [showConfirmation, setShowConfirmation] = useState(false);
 
   const onSubmit: SubmitHandler<FormValues> = async data => {
-    console.log("xc");
     AppLogger.debug("RALLYING_POINT", "Submitting...");
     setLoading(true);
     try {

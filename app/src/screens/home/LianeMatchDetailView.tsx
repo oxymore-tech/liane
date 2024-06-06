@@ -169,7 +169,6 @@ export const LianeMatchDetailView = () => {
     setStep(firstEdit ? step + 1 : 3);
   }, [firstEdit, step]);
   useEffect(() => {
-    //console.log(step, isSeatsStep, isReturnStep);
     if (step === 1 && !isSeatsStep) {
       nextStep();
     } else if (step === 2 && !isReturnStep) {

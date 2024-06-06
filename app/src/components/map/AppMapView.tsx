@@ -114,7 +114,6 @@ const AppMapView = forwardRef(
           const b = await mapRef.current?.getVisibleBounds()!;
           const ne = await mapRef.current?.getPointInView(b[0])!;
           const sw = await mapRef.current?.getPointInView(b[1])!;
-          //console.log(ne, sw);
           return mapRef.current?.queryRenderedFeaturesInRect([sw[1] * scale, ne[0] * scale, 0, 0], filter, layersId);
         }
       },

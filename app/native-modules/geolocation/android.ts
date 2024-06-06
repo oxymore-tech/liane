@@ -125,7 +125,6 @@ export class AndroidService implements LianeGeolocation {
       const status = await request(
         this.Platform.Version === 29 ? PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION : PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION
       );
-      //console.log(status);
       if (status === "granted") {
         return true;
       } else {

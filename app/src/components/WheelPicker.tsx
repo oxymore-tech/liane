@@ -112,7 +112,6 @@ export const WheelPicker: React.FC<Props> = ({
     let index = Math.floor(Math.floor(offsetY) / itemHeight);
 
     if (index <= 0 && offsetY <= 0) {
-      // console.log("shouldT", options.length, oldVal.current, index);
       oldVal.current = options.length;
       flatListRef.current?.scrollToOffset({
         animated: false,
@@ -149,9 +148,7 @@ export const WheelPicker: React.FC<Props> = ({
    * This ensures that what the user sees as selected in the picker always corresponds to the value state.
    */
   useEffect(() => {
-    // console.log(selectedIndex, oldVal.current, "->", options.length);
     if (selectedIndex !== oldVal.current) {
-      // console.log("o");
       flatListRef.current?.scrollToIndex({
         index: selectedIndex,
         animated: true

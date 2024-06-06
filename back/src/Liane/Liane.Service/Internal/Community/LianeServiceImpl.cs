@@ -216,12 +216,10 @@ public sealed class LianeServiceImpl(
     var userId = currentContext.CurrentUser().Id;
     var lianeId = Guid.Parse(query.Liane);
     var member = await CheckIsMember(connection, lianeId, userId, tx);
-    var lianeRequest = await lianeRequestFetcher.FetchLianeRequest(connection, member.LianeRequestId, tx);
+    var trip = await tripService.Get(query.Trip);
+    var driver = await CheckIsMember(connection, lianeId, trip.Driver.User, tx);
 
-    var from = await lianeRequest.WayPoints[0].Resolve(rallyingPointService.Get);
-    var to = await lianeRequest.WayPoints[^1].Resolve(rallyingPointService.Get);
-
-    var match = await tripService.GetNewTrip(query.Trip, from, to, false);
+    var match = await matcher.FindMatchesBetween(connection, member.LianeRequestId, driver.LianeRequestId, tx);
     if (match is null)
     {
       return;

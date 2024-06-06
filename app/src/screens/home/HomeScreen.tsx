@@ -99,7 +99,6 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
                   return true;
                 }}
                 onSelectFeature={placeFeature => {
-                  console.log("place selected", JSON.stringify(placeFeature));
                   if (placeFeature.bbox) {
                     appMapRef.current?.fitBounds(
                       getBoundingBox(

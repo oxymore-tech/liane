@@ -122,9 +122,6 @@ export const PublishScreenView = () => {
   const isOverviewStep = state.matches("overview");
   const isSubmittingStep = state.matches("submitting");
 
-  //console.log("[PublishScreen] State Value:", state.value);
-  //console.log("[PublishScreen] State Request:", state.context.request);
-
   const step = useSharedValue(0);
   const { width } = useWindowDimensions();
   const stepperIndicatorStyle = useAnimatedStyle(() => {

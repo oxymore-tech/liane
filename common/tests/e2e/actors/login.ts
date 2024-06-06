@@ -47,7 +47,6 @@ export class LoginActor {
     service.onTransition(state => {
       states.push(state.value);
       const stateStrings = state.toStrings();
-      console.log(stateStrings);
       if (state.matches("done")) {
         onDone(state.context);
       } else if (stateStrings[stateStrings.length - 1].endsWith("failure")) {
