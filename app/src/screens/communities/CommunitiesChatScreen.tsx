@@ -198,7 +198,6 @@ export const CommunitiesChatScreen = () => {
     }
   };
 
-
   const me = useMemo(() => liane?.members.find(m => m.user.id === user!.id), [liane?.members, user]);
 
   const nextDayIndex = useMemo(() => {
@@ -229,7 +228,7 @@ export const CommunitiesChatScreen = () => {
       to: me!.lianeRequest.wayPoints[1].id!,
       availableSeats: me!.lianeRequest.canDrive ? 1 : -1,
       geolocationLevel: geolocationLevel || "None",
-      recurrence: null
+      recurrence: undefined
     });
     const goMessage = await services.community.sendMessage(liane!.id!, {
       type: "Trip",
@@ -495,6 +494,7 @@ const LaunchTripModal = ({
 }) => {
   const [launchTripStep, setLaunchTripStep] = useState(0);
   const [selectedTime, setSelectedTime] = useState<[Date, Date | undefined]>([new Date(), undefined]);
+  // @ts-ignore
   const [selectedDay, setSelectedDay] = useState<DayOfWeekFlag>("0000000".substring(0, nextDayIndex) + "1" + "0000000".substring(nextDayIndex + 1));
 
   const launch = () => {
