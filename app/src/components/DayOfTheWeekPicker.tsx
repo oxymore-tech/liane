@@ -14,27 +14,46 @@ export const DayOfTheWeekPicker = ({
   onChangeDays,
   fontSize,
   daysSize,
-  borderBottomDisplayed = false
+  enabledDays,
+  borderBottomDisplayed = false,
+  singleOptionMode = false
 }: {
   selectedDays: DayOfWeekFlag | null;
   onChangeDays: (daysOfTheWeek: DayOfWeekFlag) => void;
   fontSize?: number;
   daysSize?: number;
   borderBottomDisplayed?: boolean;
+  enabledDays?: DayOfWeekFlag;
+  singleOptionMode?: boolean;
 }) => {
   const selectedDaysString = selectedDays ?? "0000000";
   const size = daysSize ?? 35;
+  const selectDate = (dayIndex: number) => {
+    // Set default value if selectedDays are null
+    const currentSelectedDays = selectedDays ?? "0000000";
+    let newSelectedDays = "";
+
+    AppLocalization.daysList.forEach((_day: string, index: number) => {
+      // Replace selected day at selected index
+      newSelectedDays +=
+        index === dayIndex ? replaceSelectedDay(currentSelectedDays.charAt(index)) : singleOptionMode ? "0" : currentSelectedDays.charAt(index);
+    });
+
+    onChangeDays(newSelectedDays as DayOfWeekFlag);
+  };
   return (
     <View>
       <Row style={styles.rowContainer} spacing={6}>
         {AppLocalization.daysList.map((day: string, index: number) => (
           <AppPressableOverlay
+            disabled={enabledDays?.charAt(index) === "0"}
             key={index}
-            onPress={() => selectDate(index, onChangeDays, selectedDaysString)}
+            onPress={() => selectDate(index)}
             backgroundStyle={[
               styles.dayContainer,
               selectedDaysString?.charAt(index) === "1" ? styles.daySelectedContainer : null,
-              { borderRadius: size }
+              { borderRadius: size },
+              !!enabledDays && enabledDays.charAt(index) === "0" ? { borderColor: AppColorPalettes.gray[300] } : {}
             ]}
             style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
             <Text
@@ -51,19 +70,6 @@ export const DayOfTheWeekPicker = ({
       {borderBottomDisplayed && <View style={styles.containerBorderStyle} />}
     </View>
   );
-};
-
-const selectDate = (dayIndex: number, onChangeDays: (daysOfTheWeek: DayOfWeekFlag) => void, selectedDays: DayOfWeekFlag) => {
-  // Set default value if selectedDays are null
-  const currentSelectedDays = selectedDays ?? "0000000";
-  let newSelectedDays = "";
-
-  AppLocalization.daysList.forEach((_day: string, index: number) => {
-    // Replace selected day at selected index
-    newSelectedDays += index === dayIndex ? replaceSelectedDay(currentSelectedDays.charAt(index)) : currentSelectedDays.charAt(index);
-  });
-
-  onChangeDays(newSelectedDays as DayOfWeekFlag);
 };
 
 const replaceSelectedDay = (selectedDay: string) => {

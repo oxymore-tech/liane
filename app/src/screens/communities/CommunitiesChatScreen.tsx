@@ -16,7 +16,7 @@ import {
   User
 } from "@liane/common";
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Center, Column, Row } from "@/components/base/AppLayout";
@@ -36,6 +36,7 @@ import { SimpleModal } from "@/components/modal/SimpleModal.tsx";
 import { AppStorage } from "@/api/storage.ts";
 import { TripSurveyView } from "@/components/trip/TripSurveyView.tsx";
 import { TimeWheelPicker } from "@/components/TimeWheelPicker.tsx";
+import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker.tsx";
 
 const MessageBubble = ({
   message,
@@ -197,12 +198,7 @@ export const CommunitiesChatScreen = () => {
     }
   };
 
-  // if (liane) {
-  //   const me = liane.members.find(m => m.user.id === user!.id)!;
-  //   const todayIndex = (new Date().getDay() + 6) % 7;
-  //   const x = me.lianeRequest.weekDays.substring(todayIndex).concat(me.lianeRequest.weekDays.substring(0, todayIndex)).indexOf("1");
-  //   console.log(todayIndex, x, me.lianeRequest.weekDays);
-  // }
+
   const me = useMemo(() => liane?.members.find(m => m.user.id === user!.id), [liane?.members, user]);
 
   const nextDayIndex = useMemo(() => {
@@ -225,19 +221,15 @@ export const CommunitiesChatScreen = () => {
   const launchTrip = async (time: [Date, Date | undefined]) => {
     setTripModalVisible(false);
     const geolocationLevel = await AppStorage.getSetting("geolocation");
-    const todayIndex = (time[0].getDay() + 6) % 7;
-    const addDays = (nextDayIndex - todayIndex + 7) % 7;
-    const departureTime = addSeconds(time[0], addDays * 3600 * 24).toISOString();
-    const returnTime = time[1] ? addSeconds(time[1], addDays * 3600 * 24).toISOString() : undefined;
-    //console.log(time[0], nextDayIndex, todayIndex, addDays, departureTime);
 
     const created = await services.liane.post({
-      departureTime,
-      returnTime,
+      departureTime: time[0].toISOString(),
+      returnTime: time[1]?.toISOString(),
       from: me!.lianeRequest.wayPoints[0].id!,
       to: me!.lianeRequest.wayPoints[1].id!,
       availableSeats: me!.lianeRequest.canDrive ? 1 : -1,
-      geolocationLevel: geolocationLevel || "None"
+      geolocationLevel: geolocationLevel || "None",
+      recurrence: null
     });
     const goMessage = await services.community.sendMessage(liane!.id!, {
       type: "Trip",
@@ -503,34 +495,25 @@ const LaunchTripModal = ({
 }) => {
   const [launchTripStep, setLaunchTripStep] = useState(0);
   const [selectedTime, setSelectedTime] = useState<[Date, Date | undefined]>([new Date(), undefined]);
+  const [selectedDay, setSelectedDay] = useState<DayOfWeekFlag>("0000000".substring(0, nextDayIndex) + "1" + "0000000".substring(nextDayIndex + 1));
 
   const launch = () => {
-    launchTrip(selectedTime);
+    const todayIndex = (selectedTime[0].getDay() + 6) % 7;
+    let addDays = (selectedDay.indexOf("1") - todayIndex + 7) % 7;
+    if (addDays === 0) {
+      addDays = 7;
+    }
+    const departureTime = addSeconds(selectedTime[0], addDays * 3600 * 24);
+    const returnTime = selectedTime[1] ? addSeconds(selectedTime[1], addDays * 3600 * 24) : undefined;
+    console.log(todayIndex, addDays, departureTime, returnTime);
+    launchTrip([departureTime, returnTime]);
   };
+
   return (
     <SimpleModal visible={tripModalVisible} setVisible={setTripModalVisible} backgroundColor={AppColors.white} hideClose>
       <Column spacing={8}>
         <AppText style={styles.modalText}>Proposer le trajet...</AppText>
-        <View>
-          <Row spacing={6}>
-            {AppLocalization.daysList.map((day: string, index: number) => (
-              <View
-                key={index}
-                style={{
-                  width: index === nextDayIndex ? 28 : 24,
-                  height: index === nextDayIndex ? 28 : 24,
-                  borderRadius: 24,
-                  borderWidth: 1,
-                  borderColor: weekdays.charAt(index) === "1" ? AppColors.primaryColor : "transparent",
-                  backgroundColor: index === nextDayIndex ? AppColors.primaryColor : AppColors.lightGrayBackground,
-                  alignItems: "center",
-                  justifyContent: "center"
-                }}>
-                <Text style={[{ fontSize: 14 }]}>{day.substring(0, 2)}</Text>
-              </View>
-            ))}
-          </Row>
-        </View>
+
         {launchTripStep === 0 && (
           <>
             <Pressable
@@ -549,7 +532,13 @@ const LaunchTripModal = ({
         )}
         {launchTripStep === 1 && (
           <Column spacing={8}>
-            <AppText style={styles.modalText}>Aller-simple, départ à :</AppText>
+            <AppText style={styles.modalText}>Aller-simple</AppText>
+            <View>
+              <Row spacing={6}>
+                <DayOfTheWeekPicker selectedDays={selectedDay} onChangeDays={setSelectedDay} enabledDays={weekdays} singleOptionMode={true} />
+              </Row>
+            </View>
+            <AppText style={styles.modalText}>Départ à :</AppText>
             <Center>
               <TimeWheelPicker date={initialDate} minuteStep={5} onChange={d => setSelectedTime([d, undefined])} />
             </Center>
@@ -561,6 +550,11 @@ const LaunchTripModal = ({
         {launchTripStep === 2 && (
           <Column spacing={8}>
             <AppText style={styles.modalText}>Aller-retour</AppText>
+            <View>
+              <Row spacing={6}>
+                <DayOfTheWeekPicker selectedDays={selectedDay} onChangeDays={setSelectedDay} enabledDays={weekdays} singleOptionMode={true} />
+              </Row>
+            </View>
             <Row spacing={8} style={{ justifyContent: "space-evenly" }}>
               <Column>
                 <AppText style={styles.modalText}>Départ à :</AppText>
