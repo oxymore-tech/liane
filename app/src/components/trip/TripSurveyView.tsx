@@ -10,7 +10,7 @@ import { AppIcon } from "@/components/base/AppIcon.tsx";
 import { AppPressableOverlay } from "@/components/base/AppPressable.tsx";
 import { WayPointView } from "@/components/trip/WayPointsView.tsx";
 import { useQuery, useQueryClient } from "react-query";
-import { JoinRequestsQueryKey, LianeDetailQueryKey } from "@/screens/user/MyTripsScreen.tsx";
+import { JoinRequestDetailQueryKey, LianeDetailQueryKey } from "@/screens/user/MyTripsScreen.tsx";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
 import { AppStorage } from "@/api/storage.ts";
 
@@ -60,21 +60,13 @@ export const TripSurveyView = ({ survey, coLiane }: { survey: LianeMessage<TripM
   const trip = useQuery(LianeDetailQueryKey(survey.content.value), async () => {
     const liane = await services.liane.get(survey.content.value);
     const createdBy = liane.members.find(m => m.user.id === survey.createdBy);
-    if (liane.members.some(m => m.user.id === user!.id)) {
-      // User is already a member of the trip
-      return { liane, isMember: true, createdBy };
-    } else {
-      // TODO compute liane's version if user joins the trip
-      return { liane, isMember: false, createdBy };
-    }
+    const isMember = liane.members.some(m => m.user.id === user!.id);
+    return { liane, isMember, createdBy };
   });
 
-  const joinRequest = useQuery({
-    queryKey: JoinRequestsQueryKey,
-    queryFn: async () => {
-      const joinRequests = (await services.liane.listJoinRequests()).data;
-      return joinRequests.find(j => j.targetTrip.id === survey.content.value);
-    }
+  const joinRequest = useQuery(JoinRequestDetailQueryKey(survey.content.value), async () => {
+    const joinRequests = (await services.liane.listJoinRequests()).data;
+    return joinRequests.find(j => j.targetTrip.id === survey.content.value);
   });
 
   const queryClient = useQueryClient();
@@ -89,8 +81,11 @@ export const TripSurveyView = ({ survey, coLiane }: { survey: LianeMessage<TripM
 
     const geolocationLevel = await AppStorage.getSetting("geolocation");
     await services.community.joinTrip({ liane: coLiane.id!, trip: trip.data.liane.id!, geolocationLevel });
-    await queryClient.invalidateQueries(JoinRequestsQueryKey);
-  }, [queryClient, coLiane.id, services.community, trip.data]);
+    await queryClient.invalidateQueries(JoinRequestDetailQueryKey(survey.content.value));
+    await queryClient.invalidateQueries(LianeDetailQueryKey(survey.content.value));
+  }, [trip.data, services.community, coLiane.id, queryClient, survey.content.value]);
+
+  const driver = trip.data?.createdBy?.user.pseudo;
 
   return (
     <View style={{ backgroundColor: AppColors.backgroundColor, borderRadius: 16, padding: 8 }}>
@@ -99,13 +94,13 @@ export const TripSurveyView = ({ survey, coLiane }: { survey: LianeMessage<TripM
       {!!trip.data && (
         <>
           <AppText style={{ fontWeight: "bold", color: AppColorPalettes.gray[500], fontSize: 16 }}>
-            {trip.data?.createdBy?.user.pseudo} propose le trajet pour{" "}
+            {driver ? `${driver} propose le trajet pour ` : `Trajet proposé pour `}
           </AppText>
           <AppText style={{ fontWeight: "bold", fontSize: 18 }}>{date}</AppText>
           <LoadedTripSurveyView coLiane={coLiane} trip={trip.data.liane} />
 
           {isActive(trip.data.liane) ? (
-            <ActiveView isMember={trip.data.isMember} joinRequest={joinRequest.data} handleJoinTrip={handleJoinTrip} />
+            <ActiveView state={trip.data.liane.state} isMember={trip.data.isMember} joinRequest={joinRequest.data} handleJoinTrip={handleJoinTrip} />
           ) : (
             <InactiveView state={trip.data.liane.state} />
           )}
@@ -117,23 +112,37 @@ export const TripSurveyView = ({ survey, coLiane }: { survey: LianeMessage<TripM
 
 type InactiveViewProps = { state: LianeState };
 
-const InactiveView = ({ state }: InactiveViewProps) => {
-  if (state === "Finished") {
-    return <AppText style={{ fontStyle: "italic", color: AppColorPalettes.gray[500] }}>Trajet terminé</AppText>;
+function getStatusText(state: LianeState) {
+  if (state === "NotStarted") {
+    return "Trajet non démarré";
+  }
+  if (state === "Started") {
+    return "Trajet en cours";
   }
   if (state === "Canceled") {
-    return <AppText style={{ fontStyle: "italic", color: AppColorPalettes.gray[500] }}>Trajet annulé</AppText>;
+    return "Trajet annulé";
   }
-  return <AppText style={{ fontStyle: "italic", color: AppColorPalettes.gray[500] }}>Trajet archivé</AppText>;
+  if (state === "Finished") {
+    return "Trajet terminé";
+  }
+  return "Trajet archivé";
+}
+
+const InactiveView = ({ state }: InactiveViewProps) => {
+  return <AppText style={{ fontStyle: "italic", color: AppColorPalettes.gray[500] }}>{getStatusText(state)}</AppText>;
 };
 
-type ActiveViewProps = { isMember: boolean; joinRequest?: JoinLianeRequestDetailed; handleJoinTrip: () => void };
+type ActiveViewProps = { state: LianeState; isMember: boolean; joinRequest?: JoinLianeRequestDetailed; handleJoinTrip: () => void };
 
-const ActiveView = ({ isMember, joinRequest, handleJoinTrip }: ActiveViewProps) => {
+const ActiveView = ({ state, isMember, joinRequest, handleJoinTrip }: ActiveViewProps) => {
   return (
     <>
-      {isMember && <AppText style={{ fontStyle: "italic", color: AppColorPalettes.gray[500] }}>En attente de membres</AppText>}
-      {!isMember && joinRequest && <AppText style={{ fontStyle: "italic", color: AppColorPalettes.gray[500] }}>Demande en attente</AppText>}
+      {isMember && <AppText style={{ fontStyle: "italic", color: AppColorPalettes.gray[500] }}>{}</AppText>}
+      {!isMember && joinRequest && (
+        <AppText style={{ fontStyle: "italic", color: AppColorPalettes.gray[500] }}>
+          {state === "Started" ? "Trajet en cours" : "Demande en attente"}
+        </AppText>
+      )}
       {!isMember && !joinRequest && (
         <Row spacing={6}>
           <AppPressableOverlay
