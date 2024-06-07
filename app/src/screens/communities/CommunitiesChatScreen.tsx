@@ -200,6 +200,8 @@ export const CommunitiesChatScreen = () => {
 
   const me = useMemo(() => liane?.members.find(m => m.user.id === user!.id), [liane?.members, user]);
 
+  const name = !liane?.name && me ? `${me.lianeRequest.wayPoints[0].label}  ➔ ${me.lianeRequest.wayPoints[1].label}` : liane?.name;
+
   const nextDayIndex = useMemo(() => {
     const todayIndex = (new Date().getDay() + 6) % 7;
     if (!me) {
@@ -320,6 +322,7 @@ export const CommunitiesChatScreen = () => {
   );
 
   // console.debug(JSON.stringify(messages));
+  console.log(group?.name, liane?.name);
   return (
     <View style={{ backgroundColor: AppColors.lightGrayBackground, justifyContent: "flex-end", flex: 1 }}>
       {chat && (
@@ -370,7 +373,7 @@ export const CommunitiesChatScreen = () => {
           <Row>
             <AppPressableIcon onPress={() => navigation.goBack()} name={"arrow-ios-back-outline"} color={AppColors.primaryColor} size={32} />
 
-            {liane && (
+            {!!liane && (
               <View
                 style={{
                   justifyContent: "center"
@@ -383,7 +386,7 @@ export const CommunitiesChatScreen = () => {
                     lineHeight: 27,
                     color: AppColors.primaryColor
                   }}>
-                  {liane?.name}
+                  {name}
                 </AppText>
 
                 <AppText style={{ fontSize: 14, fontWeight: "400", flexShrink: 1, lineHeight: 16, color: AppColors.black }}>
