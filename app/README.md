@@ -99,3 +99,28 @@ To learn more about React Native, take a look at the following resources:
 - [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
 - [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
 - [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+
+
+
+# Stream IOS phone on linux
+
+
+```bash
+# Installer uxplay
+# pour que uxplay marche il faut que gstreamer soit à la version 1.22.x (max). Au le stream ne marche pas.
+sudo manjaro-downgrade gst-plugins-ugly gst-plugins-good gst-plugins-base gst-plugins-bad-libs  gst-libav gst-plugins-base-libs gstreamer gst-plugins-bad
+```
+
+```bash
+# l'iphone et le PC doivent être sur le même réseau WIFI
+uxplay -vsync no -avdec
+# puis sur l'iphone, dans le menu du haut (faire glisser) selectionner le partage d'écran et sélectionner uxplay@nom-du-pc
+```
+
+# Stream ANDROID phone on linux
+
+```bash
+# brancher le telephone en USB
+scrcopy
+```
+
