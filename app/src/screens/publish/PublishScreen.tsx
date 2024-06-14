@@ -320,7 +320,7 @@ export const PublishScreenView = () => {
 };
 
 const DaysStepView = ({ editable, onChange, initialValue, onRequestEdit }: StepProps<{ recurrence: DayOfWeekFlag | null | undefined }>) => {
-  const [daysOfTheWeek, setDaysOfTheWeek] = useState<DayOfWeekFlag>(initialValue?.recurrence ?? "1111111");
+  const [daysOfTheWeek, setDaysOfTheWeek] = useState<DayOfWeekFlag>(initialValue?.recurrence ?? "0000000");
 
   const daysMessage = useMemo(() => {
     if (daysOfTheWeek === "0000000") {

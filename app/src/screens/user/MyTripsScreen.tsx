@@ -139,7 +139,7 @@ const MyTripsScreen = () => {
       <Column style={[styles.headerContainer, { paddingTop: insets.top }]} spacing={16}>
         <Header />
         <AppTabs
-          items={["Lianes à venir", "Lianes passées"]}
+          items={["Trajets à venir", "Trajets passés"]}
           onSelect={setSelectedTab}
           selectedIndex={selectedTab}
           isSelectable={() => true}

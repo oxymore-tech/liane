@@ -56,14 +56,14 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
 
     if (currentUserIsMember && (liane.state === "Finished" || liane.state === "Archived")) {
       buttonList.push({
-        text: "Relancer la liane",
+        text: "Relancer le trajet",
         action: () => relaunchLiane(navigation, match)
       });
     }
 
     if (currentUserIsOwner && liane.state === "NotStarted" && liane.members.length > 1) {
       buttonList.push({
-        text: "Annuler cette liane",
+        text: "Annuler ce trajet",
         action: () => cancelLiane(navigation, services, queryClient, liane),
         danger: true
       });
@@ -79,7 +79,7 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
 
     if (currentUserIsMember && liane.state === "NotStarted" && !currentUserIsOwner) {
       buttonList.push({
-        text: "Quitter la liane",
+        text: "Quitter le trajet",
         action: () => leaveLiane(navigation, services, queryClient, liane),
         danger: true
       });
@@ -87,7 +87,7 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
 
     if (currentUserIsOwner && liane.state === "NotStarted" && liane.members.length === 1) {
       buttonList.push({
-        text: "Supprimer la liane",
+        text: "Supprimer le trajet",
         action: () => deleteLiane(navigation, services, queryClient, liane),
         danger: true
       });
@@ -111,7 +111,7 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
           color={defaultTextColor(AppColors.primaryColor)}
           onPress={() => setEditOptionsModalVisible(true)}
           backgroundColor={AppColors.primaryColor}
-          text={"Modifier la liane"}
+          text={"Modifier le trajet"}
         />
       )}
       {liane.state === "NotStarted" && currentUserIsMember && !currentUserIsDriver && (
@@ -121,7 +121,7 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
             leaveLiane(navigation, services, queryClient, liane);
           }}
           backgroundColor={ContextualColors.redAlert.bg}
-          text={"Quitter la liane"}
+          text={"Quitter le trajet"}
         />
       )}
       {request && !currentUserIsMember && (
@@ -155,7 +155,7 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
             }
           }}
           backgroundColor={AppColors.primaryColor}
-          text={"Relancer la liane"}
+          text={"Relancer le trajet"}
         />
       )}
 
@@ -296,7 +296,7 @@ const deleteLiane = (
   queryClient: QueryClient,
   liane: Liane
 ) => {
-  Alert.alert("Supprimer l'annonce", "Voulez-vous vraiment supprimer cette liane ?", [
+  Alert.alert("Supprimer l'annonce", "Voulez-vous vraiment supprimer ce trajet ?", [
     {
       text: "Annuler",
       onPress: () => {},
@@ -368,7 +368,7 @@ const leaveLiane = (
   queryClient: QueryClient,
   liane: Liane
 ) => {
-  Alert.alert("Quitter la liane", "Voulez-vous vraiment quitter cette liane ?", [
+  Alert.alert("Quitter le trajet", "Voulez-vous vraiment quitter ce trajet ?", [
     {
       text: "Annuler",
       onPress: () => {},
