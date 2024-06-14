@@ -214,8 +214,8 @@ const styles = StyleSheet.create({
   }
 });
 
-export const LianeQueryKey = "getLianes";
-export const LianeDetailQueryKey = (id: Ref<Liane>) => ["liane", id];
-export const JoinRequestsQueryKey = "getJoinRequests";
+export const LianeQueryKey = "trip";
+export const LianeDetailQueryKey = (id: Ref<Liane>) => ["trip", id];
+export const JoinRequestsQueryKey = "join_request";
 export const JoinRequestDetailQueryKey = (id: Ref<Liane>) => ["join_request", id];
 export default MyTripsScreen;

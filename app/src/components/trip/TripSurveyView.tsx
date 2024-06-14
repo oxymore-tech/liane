@@ -10,7 +10,7 @@ import { AppIcon } from "@/components/base/AppIcon.tsx";
 import { AppPressableOverlay } from "@/components/base/AppPressable.tsx";
 import { WayPointView } from "@/components/trip/WayPointsView.tsx";
 import { useQuery, useQueryClient } from "react-query";
-import { JoinRequestDetailQueryKey, LianeDetailQueryKey } from "@/screens/user/MyTripsScreen.tsx";
+import { JoinRequestDetailQueryKey, JoinRequestsQueryKey, LianeDetailQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen.tsx";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
 import { AppStorage } from "@/api/storage.ts";
 
@@ -57,12 +57,16 @@ export const TripSurveyView = ({ survey, coLiane }: { survey: LianeMessage<TripM
 
   const { services, user } = useContext(AppContext);
 
-  const trip = useQuery(LianeDetailQueryKey(survey.content.value), async () => {
-    const liane = await services.liane.get(survey.content.value);
-    const createdBy = liane.members.find(m => m.user.id === survey.createdBy);
-    const isMember = liane.members.some(m => m.user.id === user!.id);
-    return { liane, isMember, createdBy };
-  });
+  const trip = useQuery(LianeDetailQueryKey(survey.content.value), () => services.liane.get(survey.content.value));
+
+  const { isMember, createdBy } = useMemo(() => {
+    if (!trip.data) {
+      return { isMember: false, createdBy: undefined };
+    }
+    const c = trip.data.members.find(m => m.user.id === survey.createdBy);
+    const me = trip.data.members.some(m => m.user.id === user!.id);
+    return { isMember: me, createdBy: c };
+  }, [survey.createdBy, trip.data, user]);
 
   const joinRequest = useQuery(JoinRequestDetailQueryKey(survey.content.value), async () => {
     const joinRequests = (await services.liane.listJoinRequests()).data;
@@ -75,17 +79,19 @@ export const TripSurveyView = ({ survey, coLiane }: { survey: LianeMessage<TripM
     if (!trip.data) {
       return;
     }
-    if (trip.data.isMember) {
+    if (isMember) {
       return;
     }
 
     const geolocationLevel = await AppStorage.getSetting("geolocation");
-    await services.community.joinTrip({ liane: coLiane.id!, trip: trip.data.liane.id!, geolocationLevel });
+    await services.community.joinTrip({ liane: coLiane.id!, trip: trip.data.id!, geolocationLevel });
     await queryClient.invalidateQueries(JoinRequestDetailQueryKey(survey.content.value));
     await queryClient.invalidateQueries(LianeDetailQueryKey(survey.content.value));
-  }, [trip.data, services.community, coLiane.id, queryClient, survey.content.value]);
+    await queryClient.invalidateQueries(LianeQueryKey);
+    await queryClient.invalidateQueries(JoinRequestsQueryKey);
+  }, [trip.data, isMember, services.community, coLiane.id, queryClient, survey.content.value]);
 
-  const driver = trip.data?.createdBy?.user.pseudo;
+  const driver = createdBy?.user.pseudo;
 
   return (
     <View style={{ backgroundColor: AppColors.backgroundColor, borderRadius: 16, padding: 8 }}>
@@ -97,12 +103,12 @@ export const TripSurveyView = ({ survey, coLiane }: { survey: LianeMessage<TripM
             {driver ? `${driver} propose le trajet pour ` : `Trajet proposé pour `}
           </AppText>
           <AppText style={{ fontWeight: "bold", fontSize: 18 }}>{date}</AppText>
-          <LoadedTripSurveyView coLiane={coLiane} trip={trip.data.liane} />
+          <LoadedTripSurveyView coLiane={coLiane} trip={trip.data} />
 
-          {isActive(trip.data.liane) ? (
-            <ActiveView state={trip.data.liane.state} isMember={trip.data.isMember} joinRequest={joinRequest.data} handleJoinTrip={handleJoinTrip} />
+          {isActive(trip.data) ? (
+            <ActiveView state={trip.data.state} isMember={isMember} joinRequest={joinRequest.data} handleJoinTrip={handleJoinTrip} />
           ) : (
-            <InactiveView state={trip.data.liane.state} />
+            <InactiveView state={trip.data.state} />
           )}
         </>
       )}
