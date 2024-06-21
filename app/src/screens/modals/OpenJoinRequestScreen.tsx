@@ -9,7 +9,7 @@ import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { AppText } from "@/components/base/AppText";
 import { WithFetchResource } from "@/components/base/WithFetchResource";
-import { Answer, Compatible, getBoundingBox, getMapStyleUrl, JoinLianeRequestDetailed, UnionUtils } from "@liane/common";
+import { Answer, getBoundingBox, getMapStyleUrl, JoinLianeRequestDetailed } from "@liane/common";
 import { LianeMatchView } from "@/components/trip/LianeMatchView";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppLocalization } from "@/api/i18n";
@@ -96,8 +96,7 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
   ({ data }) => {
     const userName = data.createdBy!.pseudo ?? "John Doe";
     const role = data.seats > 0 ? "conducteur" : "passager";
-    const reqIsExactMatch = UnionUtils.isInstanceOf(data.match, "Exact");
-    const wayPoints = reqIsExactMatch ? data.targetTrip.wayPoints : data.match.wayPoints;
+    const wayPoints = data.match.type === "Exact" ? data.targetTrip.wayPoints : data.match.wayPoints;
     const dateTime = `${AppLocalization.formatMonthDay(new Date(data.targetTrip.departureTime))} à ${AppLocalization.formatTime(
       new Date(data.targetTrip.departureTime)
     )}`;
@@ -134,11 +133,11 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
           </Row>
         )}
         <Row spacing={16} style={{ alignItems: "center" }}>
-          <AppIcon name={reqIsExactMatch ? "checkmark-circle-2-outline" : "alert-circle-outline"} />
+          <AppIcon name={data.match.type === "Exact" ? "checkmark-circle-2-outline" : "alert-circle-outline"} />
           <AppText numberOfLines={2} style={{ fontSize: 14 }}>
-            {reqIsExactMatch || (data.match as Compatible).delta.totalInSeconds <= 60
+            {data.match.type === "Exact" || data.match.delta.totalInSeconds <= 60
               ? "Votre trajet reste inchangé"
-              : "Le trajet sera rallongé de " + AppLocalization.formatDuration((data.match as Compatible).delta.totalInSeconds)}
+              : "Le trajet sera rallongé de " + AppLocalization.formatDuration(data.match.delta.totalInSeconds)}
           </AppText>
         </Row>
         {data.seats > 0 && !data.targetTrip.driver.canDrive && (
@@ -161,8 +160,7 @@ const DetailedRequestView = WithFetchResource<JoinLianeRequestDetailed>(
 const DetailedRequestQueryKey = "DetailedRequestQueryKey";
 
 const TripOverview = ({ request }: { request: JoinLianeRequestDetailed }) => {
-  const reqIsExactMatch = UnionUtils.isInstanceOf(request.match, "Exact");
-  const wayPoints = reqIsExactMatch ? request.targetTrip.wayPoints : request.match.wayPoints;
+  const wayPoints = request.match.type === "Exact" ? request.targetTrip.wayPoints : request.match.wayPoints;
   const boundingBox = getBoundingBox(
     wayPoints.map(w => [w.rallyingPoint.location.lng, w.rallyingPoint.location.lat]),
     24
@@ -191,7 +189,7 @@ const TripOverview = ({ request }: { request: JoinLianeRequestDetailed }) => {
         return <WayPointDisplay key={w.rallyingPoint.id!} rallyingPoint={w.rallyingPoint} type={type} />;
       })}
       <RouteLayer wayPoints={request.targetTrip.wayPoints} />
-      {!reqIsExactMatch && <RouteLayer wayPoints={request.match.wayPoints} id={"alternative"} style={{ lineDasharray: [3, 2] }} />}
+      {request.match.type === "Compatible" && <RouteLayer wayPoints={request.match.wayPoints} id={"alternative"} style={{ lineDasharray: [3, 2] }} />}
     </MapLibreGL.MapView>
   );
 };

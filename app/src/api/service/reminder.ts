@@ -1,8 +1,7 @@
-import { AppStorage, Liane } from "@liane/common";
+import { AppStorage, getUserTrip, Liane } from "@liane/common";
 import notifee, { AndroidAction, AndroidImportance, TriggerType } from "@notifee/react-native";
 import { AppLocalization } from "@/api/i18n";
 import { DefaultAndroidSettings } from "@/api/service/notification";
-import { getTripFromLiane } from "@/components/trip/trip";
 import { ReactNativeLogger } from "@/api/logger";
 
 const AndroidReminderActions: AndroidAction[] = [
@@ -22,7 +21,7 @@ export class ReminderService {
     const user = await this.storage.getUser();
     const online = lianes
       .map(l => {
-        const trip = getTripFromLiane(l, user!.id!);
+        const trip = getUserTrip(l, user!.id!);
         return { ...l, departureTime: trip.departureTime, wayPoints: trip.wayPoints };
       })
       .filter(l => l.members.length > 1 && l.driver.canDrive && new Date(l.departureTime).getTime() > now_plus_five);

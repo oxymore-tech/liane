@@ -1,12 +1,12 @@
-import { Liane } from "@liane/common";
-import { LianeStatus, useLianeStatus } from "@/components/trip/trip";
+import { Liane, TripStatus } from "@liane/common";
+import { useTripStatus } from "@/components/trip/trip";
 import { AppText } from "@/components/base/AppText";
 import React from "react";
 import { ColorValue } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 
 export const LianeStatusView = ({ liane }: { liane: Liane }) => {
-  const lianeStatus = useLianeStatus(liane);
+  const lianeStatus = useTripStatus(liane);
   const [statusText] = getLianeStatusStyle(lianeStatus!);
   if (!statusText) {
     return null;
@@ -25,7 +25,7 @@ export const LianeStatusView = ({ liane }: { liane: Liane }) => {
   );
 };
 
-const getLianeStatusStyle = (lianeStatus: LianeStatus): [string | undefined, ColorValue] => {
+const getLianeStatusStyle = (lianeStatus: TripStatus): [string | undefined, ColorValue] => {
   let status;
   let color: ColorValue = AppColors.grayBackground;
   switch (lianeStatus) {

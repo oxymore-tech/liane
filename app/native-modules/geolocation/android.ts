@@ -1,21 +1,12 @@
 import { SubscriptionLike } from "rxjs";
 import { Linking, PermissionsAndroid, Platform, PlatformAndroidStatic } from "react-native";
-import { HttpClient, WayPoint } from "@liane/common";
+import { HttpClient, WayPoint, getTotalDuration } from "@liane/common";
 import { RNAppEnv } from "@/api/env";
 import { AppLogger } from "@/api/logger";
 import { AppStorage } from "@/api/storage";
 import { check, PERMISSIONS, request } from "react-native-permissions";
 import { GeolocationPermission, LianeGeolocation } from "./index";
-import { ALLOW_LOCATION, ENABLE_GPS, inviteToOpenSettings, RNLianeGeolocation, running } from "./common";
-import { getTotalDuration } from "@/components/trip/trip.ts";
-
-export const LocationAlert = {
-  inviteToOpenSettings,
-  messages: {
-    ENABLE_GPS,
-    ALLOW_LOCATION
-  } as const
-};
+import { inviteToOpenSettings, RNLianeGeolocation, running } from "./common";
 
 type BackgroundGeolocationServiceConfig = {
   pingConfig: { url: string; token: string; userId: string; lianeId: string };
@@ -67,8 +58,9 @@ export class AndroidService implements LianeGeolocation {
     return this.AndroidNativeModule.startService(nativeConfig).then(() => running.next(nativeConfig.pingConfig.lianeId));
   }
 
-  stopSendingPings = () => {
-    return this.AndroidNativeModule.stopService().then(() => running.next(undefined));
+  stopSendingPings = async () => {
+    await this.AndroidNativeModule.stopService();
+    return running.next(undefined);
   };
   requestEnableGPS = this.AndroidNativeModule.enableLocation;
   currentLiane = this.AndroidNativeModule.current;

@@ -2,7 +2,7 @@ import React, { createContext, PropsWithChildren, useContext, useEffect, useStat
 import { Car, Liane, TrackingInfo } from "@liane/common";
 import { AppContext } from "@/components/context/ContextProvider";
 import { BehaviorSubject, Observable, SubscriptionLike } from "rxjs";
-import { useLianeStatus } from "@/components/trip/trip";
+import { useTripStatus } from "@/components/trip/trip";
 import { LianeGeolocation } from "@/api/service/location";
 import { useIsFocused } from "@react-navigation/native";
 import { AppLogger } from "@/api/logger";
@@ -20,7 +20,7 @@ export const TripGeolocationProvider = ({ liane, children }: { liane: Liane } & 
   const { services } = useContext(AppContext);
   const [observable, setObservable] = useState<Observable<TrackingInfo | null> | null>();
   const isFocused = useIsFocused();
-  const lianeStatus = useLianeStatus(liane);
+  const lianeStatus = useTripStatus(liane);
   const shouldBeActive = isFocused && (lianeStatus === "Started" || lianeStatus === "StartingSoon");
 
   // Check if service is running locally

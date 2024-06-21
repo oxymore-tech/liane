@@ -2,10 +2,9 @@ import { Center, Column, Row } from "@/components/base/AppLayout";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
-import { getPoint, LianeMatch, LianeMember, UnionUtils, UTCDateTime, WayPoint } from "@liane/common";
+import { getPoint, getTotalDuration, getTrip, LianeMatch, LianeMember, UserTrip, UTCDateTime, WayPoint } from "@liane/common";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { TripSegmentView } from "@/components/trip/TripSegmentView";
-import { getTotalDuration, getTrip, UserTrip } from "@/components/trip/trip";
 import { AppText } from "@/components/base/AppText";
 import { filterHasFullTrip, HomeMapContext } from "@/screens/home/StateMachine";
 import { useActor } from "@xstate/react";
@@ -100,13 +99,21 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
   const [showCompatible, setShowCompatible] = useState(false);
   const formattedData = useMemo(() => {
     const matches = (state.context.matches ?? []).map(item => {
-      const lianeIsExactMatch = UnionUtils.isInstanceOf(item.match, "Exact");
-      const wayPoints = lianeIsExactMatch ? item.trip.wayPoints : item.match.wayPoints;
+      const wayPoints = item.match.type === "Exact" ? item.trip.wayPoints : item.match.wayPoints;
       const fromPoint = getPoint(item, "pickup");
       const toPoint = getPoint(item, "deposit");
       const trip = getTrip(item.trip.departureTime, wayPoints, toPoint.id, fromPoint.id);
       const tripDuration = getTotalDuration(trip.wayPoints);
-      return { lianeMatch: item, lianeIsExactMatch, wayPoints, fromPoint, toPoint, trip, tripDuration, returnTime: item.returnTime };
+      return {
+        lianeMatch: item,
+        lianeIsExactMatch: item.match.type === "Exact",
+        wayPoints,
+        fromPoint,
+        toPoint,
+        trip,
+        tripDuration,
+        returnTime: item.returnTime
+      };
     });
     const exact = matches.filter(i => {
       return i.fromPoint.id === state.context.filter.from!.id && i.toPoint.id === state.context.filter.to!.id;

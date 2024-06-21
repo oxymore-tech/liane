@@ -1,4 +1,14 @@
-import { distance, HttpClient, isResourceNotFound, isValidationError, MemberPing, sleep, UTCDateTime, WayPoint } from "@liane/common";
+import {
+  distance,
+  HttpClient,
+  isResourceNotFound,
+  isValidationError,
+  MemberPing,
+  sleep,
+  UTCDateTime,
+  WayPoint,
+  getTotalDuration
+} from "@liane/common";
 import { RNAppEnv } from "@/api/env";
 import { AppLogger } from "@/api/logger";
 import { AppStorage } from "@/api/storage";
@@ -8,7 +18,6 @@ import DeviceInfo from "react-native-device-info";
 import { GeolocationPermission, LianeGeolocation } from "./index";
 import { Alert, Linking, NativeEventEmitter, Platform, PlatformIOSStatic } from "react-native";
 import { ENABLE_GPS, inviteToOpenSettings, RNLianeGeolocation, running } from "./common";
-import { getTotalDuration } from "@/components/trip/trip.ts";
 
 interface GeoWatchOptions {
   useSignificantChanges?: boolean;

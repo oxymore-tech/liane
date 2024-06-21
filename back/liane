@@ -42,7 +42,7 @@ function token {
   local effectiveCode=${3:-${code}}
   
   local token
-  token=$(http "${baseUrl}/api/auth/login" "phone=${effectivePhone}" "code=${effectiveCode}" | jq -r .token.accessToken)
+  token=$(xh "${baseUrl}/api/auth/login" "phone=${effectivePhone}" "code=${effectiveCode}" | jq -r .token.accessToken)
   echo "Authorization:Bearer${token}"
 }
 

@@ -6,6 +6,7 @@ export * from "./logger";
 export * from "./storage";
 
 export * from "./api";
+export * from "./trip";
 export * from "./event";
 export * from "./union";
 export * from "./localization/date";

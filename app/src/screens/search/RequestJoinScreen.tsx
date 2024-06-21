@@ -16,7 +16,7 @@ import { TripCard } from "@/components/TripCard";
 import { useKeyboardState } from "@/util/hooks/keyboardState";
 import { useQueryClient } from "react-query";
 import { JoinRequestsQueryKey } from "@/screens/user/MyTripsScreen";
-import { JoinRequest, UnionUtils } from "@liane/common";
+import { JoinRequest } from "@liane/common";
 import { AppStorage } from "@/api/storage";
 
 export const RequestJoinScreen = WithFullscreenModal(() => {
@@ -28,7 +28,6 @@ export const RequestJoinScreen = WithFullscreenModal(() => {
   const request = route.params.request;
   const [message, setMessage] = useState("");
   const queryClient = useQueryClient();
-  const exactMatch = UnionUtils.isInstanceOf(request.match, "Exact");
 
   const plural = Math.abs(request.seats) > 1 ? "s" : "";
   const peopleDescription =
@@ -36,10 +35,12 @@ export const RequestJoinScreen = WithFullscreenModal(() => {
   const dateTime = `${AppLocalization.formatMonthDay(new Date(request.targetTrip.departureTime))} à ${AppLocalization.formatTime(
     new Date(request.targetTrip.departureTime)
   )}`;
-  const fromPoint = exactMatch ? request.from : request.match.wayPoints.find(p => p.rallyingPoint.id === request.match.pickup)!.rallyingPoint;
-  const toPoint = exactMatch ? request.to : request.match.wayPoints.find(p => p.rallyingPoint.id === request.match.deposit)!.rallyingPoint;
+  const fromPoint =
+    request.match.type === "Exact" ? request.from : request.match.wayPoints.find(p => p.rallyingPoint.id === request.match.pickup)!.rallyingPoint;
+  const toPoint =
+    request.match.type === "Exact" ? request.to : request.match.wayPoints.find(p => p.rallyingPoint.id === request.match.deposit)!.rallyingPoint;
 
-  const wayPoints = exactMatch ? request.targetTrip.wayPoints : request.match.wayPoints;
+  const wayPoints = request.match.type === "Exact" ? request.targetTrip.wayPoints : request.match.wayPoints;
   const requestJoin = async () => {
     const geolocationLevel = await AppStorage.getSetting("geolocation");
     const unresolvedRequest: JoinRequest = {

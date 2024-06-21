@@ -15,53 +15,49 @@ export type Entity = Identity & {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export type Ref<T extends Identity> = string;
 
-export type AuthUser = Readonly<{
+export type AuthUser = {
   id: string;
   isAdmin: boolean;
   isSignedUp: boolean;
-}>;
+};
 
-export type AuthResponse = Readonly<{
+export type AuthResponse = {
   user: AuthUser;
   token: {
     accessToken: string;
     refreshToken: string;
   };
-}>;
+};
 
-export type AuthRequest = Readonly<{
+export type AuthRequest = {
   phone: string;
   code: string;
   pushToken?: string;
   withRefresh?: boolean;
-}>;
+};
 
-export type UserInfo = Readonly<{ firstName: string; lastName: string; gender: "Man" | "Woman" | "Unspecified"; pictureUrl?: string }>;
+export type UserInfo = { firstName: string; lastName: string; gender: "Man" | "Woman" | "Unspecified"; pictureUrl?: string };
 
-export type User = Readonly<
-  {
-    phone: string;
-    pseudo: string;
-    pictureUrl: string | undefined | null;
-    gender: "Man" | "Woman" | "Unspecified";
-    stats: { totalTrips: number; totalAvoidedEmissions: number; totalCreatedTrips: number; totalJoinedTrips: number } | null;
-  } & Entity
->;
+export type User = {
+  pseudo: string;
+  pictureUrl: string | undefined | null;
+  gender: "Man" | "Woman" | "Unspecified";
+  stats: { totalTrips: number; totalAvoidedEmissions: number; totalCreatedTrips: number; totalJoinedTrips: number } | null;
+} & Entity;
 
-export type FullUser = Readonly<
-  {
-    firstName: string;
-    lastName: string;
-    pushToken?: string;
-  } & User
->;
+export type FullUser = {
+  phone: string;
+  firstName: string;
+  lastName: string;
+  pushToken?: string;
+} & User;
 
 export type LngLat = [number, number];
 
-export type LatLng = Readonly<{
+export type LatLng = {
   lat: number;
   lng: number;
-}>;
+};
 
 export const RallyingPointLocationTypes = [
   "Parking",
@@ -92,32 +88,30 @@ export type RallyingPointRequest = { point: Omit<Omit<RallyingPoint, "isActive">
 export type DayBoolean = "0" | "1";
 export type DayOfWeekFlag = `${DayBoolean}${DayBoolean}${DayBoolean}${DayBoolean}${DayBoolean}${DayBoolean}${DayBoolean}`; // First index is Monday
 
-export type LianeRequest = Identity &
-  Readonly<{
-    departureTime: UTCDateTime;
-    returnTime?: UTCDateTime | null;
-    availableSeats: number;
-    from: Ref<RallyingPoint>;
-    to: Ref<RallyingPoint>;
-    recurrence?: DayOfWeekFlag;
-    geolocationLevel: GeolocationLevel;
-    // shareWith: Ref<User>[];
-  }>;
+export type LianeRequest = Identity & {
+  departureTime: UTCDateTime;
+  returnTime?: UTCDateTime | null;
+  availableSeats: number;
+  from: Ref<RallyingPoint>;
+  to: Ref<RallyingPoint>;
+  recurrence?: DayOfWeekFlag;
+  geolocationLevel: GeolocationLevel;
+  // shareWith: Ref<User>[];
+};
 
-export type Liane = Entity &
-  Readonly<{
-    departureTime: UTCDateTime;
-    return: Ref<Liane>;
-    wayPoints: WayPoint[];
-    members: LianeMember[];
-    driver: { user: Ref<User>; canDrive: boolean };
-    conversation: Ref<ConversationGroup>;
-    state: LianeState;
-    recurrence?: {
-      id: string;
-      days: DayOfWeekFlag;
-    };
-  }>;
+export type Liane = Entity & {
+  departureTime: UTCDateTime;
+  return?: Ref<Liane>;
+  wayPoints: WayPoint[];
+  members: LianeMember[];
+  driver: { user: Ref<User>; canDrive: boolean };
+  conversation: Ref<ConversationGroup>;
+  state: LianeState;
+  recurrence?: {
+    id: string;
+    days: DayOfWeekFlag;
+  };
+};
 
 export type LianeState = "NotStarted" | "Finished" | "Started" | "Canceled" | "Archived";
 export type GeolocationLevel = "None" | "Hidden" | "Shared";
@@ -129,7 +123,7 @@ export type WayPoint = {
   effectiveTime?: UTCDateTime;
 };
 
-export type LianeMember = Readonly<{
+export type LianeMember = {
   user: User;
   from: Ref<RallyingPoint>;
   to: Ref<RallyingPoint>;
@@ -137,7 +131,7 @@ export type LianeMember = Readonly<{
   geolocationLevel: GeolocationLevel;
   cancellation: UTCDateTime | undefined | null;
   departure: UTCDateTime | undefined | null;
-}>;
+};
 
 export type LianeRecurrence = {
   id: string;
@@ -157,37 +151,31 @@ export type LianeRecurrence = {
 // A date time in ISO 8601 format
 export type UTCDateTime = string;
 
-export type Feedback = Readonly<{
+export type Feedback = {
   comment: string | null;
   canceled: boolean;
-}>;
+};
 
 export type LianeUpdate = {
   departureTime: UTCDateTime;
 };
 
-export type LianeMatchDisplay = Readonly<{ features: FeatureCollection; lianeMatches: LianeMatch[] }>;
-export type ChatMessage = Readonly<
-  {
-    text: string;
-  } & Entity
->;
+export type LianeMatchDisplay = { features: FeatureCollection; lianeMatches: LianeMatch[] };
+export type ChatMessage = {
+  text: string;
+} & Entity;
 
-export type ConversationGroup = Readonly<
-  {
-    members: {
-      user: User;
-      joinedAt: UTCDateTime;
-      lastReadAt: UTCDateTime;
-    }[];
-  } & Identity
->;
+export type ConversationGroup = {
+  members: {
+    user: User;
+    joinedAt: UTCDateTime;
+    lastReadAt: UTCDateTime;
+  }[];
+} & Identity;
 
-export type TypedMessage = Readonly<
-  {
-    type: "proposal";
-  } & ChatMessage
->;
+export type TypedMessage = {
+  type: "proposal";
+} & ChatMessage;
 
 export type PaginatedResponse<T> = {
   pageSize: number;
@@ -204,7 +192,7 @@ export type PaginatedRequestParams = {
 
 export type TargetTimeDirection = "Departure" | "Arrival";
 
-export type LianeSearchFilter = Readonly<{
+export type LianeSearchFilter = {
   to: Ref<RallyingPoint>;
   from: Ref<RallyingPoint>;
   targetTime: {
@@ -213,7 +201,7 @@ export type LianeSearchFilter = Readonly<{
   };
   //TODO withReturnTrip?: boolean;
   availableSeats: number;
-}>;
+};
 
 export type Exact = { pickup: Ref<RallyingPoint>; deposit: Ref<RallyingPoint> } & IUnion<"Exact">;
 export type Compatible = {
@@ -233,39 +221,37 @@ export type Compatible = {
 } & IUnion<"Compatible">;
 export type Match = Exact | Compatible;
 
-export type LianeMatch = Readonly<{
+export type LianeMatch = {
   trip: Liane;
   //   wayPoints: WayPoint[];
   match: Match;
   returnTime?: UTCDateTime;
   freeSeatsCount: number;
-}>;
+};
 
 export const getPoint = (match: LianeMatch, type: "pickup" | "deposit"): RallyingPoint => {
   const wp = UnionUtils.isInstanceOf(match.match, "Exact") ? match.trip.wayPoints : match.match.wayPoints;
   return wp.find(p => p.rallyingPoint.id === match.match[type])!.rallyingPoint;
 };
 
-export type NewConversationMessage = Readonly<{
+export type NewConversationMessage = {
   conversationId: string;
   sender: User;
   message: ChatMessage;
-}>;
+};
 
-export type JoinLianeRequestDetailed = Readonly<
-  {
-    from: RallyingPoint;
-    to: RallyingPoint;
-    targetTrip: Liane;
-    seats: number;
-    takeReturnTrip: boolean;
-    message: string;
-    accepted?: boolean;
-    match: Match;
-    createdBy?: User;
-    createdAt?: UTCDateTime;
-  } & Identity
->;
+export type JoinLianeRequestDetailed = {
+  from: RallyingPoint;
+  to: RallyingPoint;
+  targetTrip: Liane;
+  seats: number;
+  takeReturnTrip: boolean;
+  message: string;
+  accepted?: boolean;
+  match: Match;
+  createdBy?: User;
+  createdAt?: UTCDateTime;
+} & Identity;
 
 export type TrackedMemberLocation = {
   member: Ref<User>;

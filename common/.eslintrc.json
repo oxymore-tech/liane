@@ -24,7 +24,6 @@
   "rules": {
     "@typescript-eslint/ban-ts-comment": "off",
     "no-use-before-define": "off",
-    "@typescript-eslint/no-use-before-define": [ "error" ],
     "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
     "no-shadow": "off",
     "@typescript-eslint/no-shadow": [ "error" ],
@@ -41,7 +40,6 @@
         "tsx": "never"
       }
     ]
-
   },
   "settings": {
     "import/resolver": {

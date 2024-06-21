@@ -11,7 +11,17 @@ import {
   StyleSheet,
   View
 } from "react-native";
-import { capitalize, extractDatePart, JoinLianeRequestDetailed, Liane, Ref, User, UTCDateTime } from "@liane/common";
+import {
+  capitalize,
+  extractDatePart,
+  getTripFromJoinRequest,
+  getUserTrip,
+  JoinLianeRequestDetailed,
+  Liane,
+  Ref,
+  User,
+  UTCDateTime
+} from "@liane/common";
 import { AppLocalization } from "@/api/i18n";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
@@ -26,7 +36,7 @@ import { WayPointsView } from "@/components/trip/WayPointsView";
 import { TripGeolocationProvider, useCarDelay } from "@/screens/detail/TripGeolocationProvider";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { startGeolocationService } from "@/screens/detail/components/GeolocationSwitch";
-import { getTripFromJoinRequest, getTripFromLiane, useLianeStatus } from "@/components/trip/trip";
+import { useTripStatus } from "@/components/trip/trip";
 import { useObservable } from "@/util/hooks/subscription";
 import { AppLogger } from "@/api/logger";
 
@@ -73,9 +83,7 @@ const isResolvedJoinLianeRequest = (item: Liane | JoinLianeRequestDetailed): ite
 const convertToDateSections = (data: (Liane | JoinLianeRequestDetailed)[], member: Ref<User>, reverseSort: boolean = false): TripSection[] =>
   Object.entries(
     data.reduce((tmp, item) => {
-      const departureTime = isResolvedJoinLianeRequest(item)
-        ? getTripFromJoinRequest(item).departureTime
-        : getTripFromLiane(item, member).departureTime;
+      const departureTime = isResolvedJoinLianeRequest(item) ? getTripFromJoinRequest(item).departureTime : getUserTrip(item, member).departureTime;
 
       // Use date for grouping
       const group = extractDatePart(departureTime);
@@ -105,11 +113,11 @@ const LianeItem = ({ item }: { item: Liane }) => {
 
   const unread = useObservable(services.realTimeHub.unreadConversations, undefined);
   const driver = useMemo(() => item.members.find(l => l.user.id === item.driver.user)!.user, [item]);
-  const { wayPoints } = useMemo(() => getTripFromLiane(item, user!.id!), [item, user]);
+  const { wayPoints } = useMemo(() => getUserTrip(item, user!.id!), [item, user]);
   const carLocation = useCarDelay();
   const me = useMemo(() => item.members.find(l => l.user.id === user!.id)!, [item.members, user]);
   const geolocationDisabled = !me.geolocationLevel || me.geolocationLevel === "None";
-  const status = useLianeStatus(item);
+  const status = useTripStatus(item);
   return (
     <View>
       <View>

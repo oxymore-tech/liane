@@ -1,8 +1,7 @@
-import { getPoint, LianeMatch, RallyingPoint, UnionUtils, WayPoint } from "@liane/common";
+import { getPoint, getTripFromMatch, getTripMatch, LianeMatch, RallyingPoint, WayPoint } from "@liane/common";
 import { FeatureCollection } from "geojson";
 import React, { useContext, useMemo } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
-import { getTripFromMatch, getTripMatch } from "@/components/trip/trip";
 import { useQuery } from "react-query";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import MapLibreGL, { LineLayerStyle } from "@maplibre/maplibre-react-native";
@@ -22,13 +21,12 @@ export const LianeMatchRouteLayer = (props: { match: LianeMatch; to?: RallyingPo
   const isSameDeposit = !to || to.id === toPoint.id;
 
   const wayPoints = useMemo(() => {
-    const isCompatibleMatch = !UnionUtils.isInstanceOf(match.match, "Exact");
     const trip = getTripMatch(
       toPoint,
       fromPoint,
       match.trip.wayPoints,
       match.trip.departureTime,
-      isCompatibleMatch ? match.match.wayPoints : match.trip.wayPoints
+      match.match.type === "Compatible" ? match.match.wayPoints : match.trip.wayPoints
     );
     return trip.wayPoints; //.slice(trip.departureIndex, trip.arrivalIndex + 1);
   }, [fromPoint, match, toPoint]);

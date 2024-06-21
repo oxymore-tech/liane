@@ -4,8 +4,18 @@ import AppMapView from "@/components/map/AppMapView";
 import { AppBottomSheet, AppBottomSheetHandleHeight, AppBottomSheetScrollView, BottomSheetRefProps } from "@/components/base/AppBottomSheet";
 import { Column, Row } from "@/components/base/AppLayout";
 import { FloatingBackButton } from "@/components/FloatingBackButton";
-import { capitalize, getBoundingBox, JoinLianeRequestDetailed, Liane, LianeMatch } from "@liane/common";
-import { getTotalDistance, getTripFromLiane, getTripFromMatch, getLianeCostContribution, useLianeStatus } from "@/components/trip/trip";
+import {
+  capitalize,
+  getBoundingBox,
+  JoinLianeRequestDetailed,
+  Liane,
+  LianeMatch,
+  getTotalDistance,
+  getUserTrip,
+  getTripFromMatch,
+  getTripCostContribution
+} from "@liane/common";
+import { useTripStatus } from "@/components/trip/trip";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -69,8 +79,8 @@ export const LianeDetailScreen = () => {
     }
   }, [refetch, lianeParam]);
 
-  const match = useMemo(() => (liane ? toLianeMatch(liane, user!.id!) : undefined), [liane]);
-  const lianeStatus = useLianeStatus(liane ? liane : undefined);
+  const match = useMemo(() => (liane ? toLianeMatch(liane, user!.id!) : undefined), [liane, user]);
+  const lianeStatus = useTripStatus(liane ? liane : undefined);
   if (liane && ["Started", "StartingSoon"].includes(lianeStatus!)) {
     return (
       <TripGeolocationProvider liane={liane}>
@@ -182,7 +192,7 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
 };
 
 const toLianeMatch = (trip: Liane, memberId: string): LianeMatch => {
-  const m = trip.members.find(m => m.user.id === memberId)!;
+  const m = trip.members.find(u => u.user.id === memberId)!;
   return {
     trip,
     match: {
@@ -197,7 +207,7 @@ const toLianeMatch = (trip: Liane, memberId: string): LianeMatch => {
 export const LianeWithDateView = (props: { liane: Liane }) => {
   const date = capitalize(AppLocalization.formatMonthDay(new Date(props.liane.departureTime)));
   const { user } = useContext(AppContext);
-  const { wayPoints } = useMemo(() => getTripFromLiane(props.liane, user!.id!), [props.liane, user]);
+  const { wayPoints } = useMemo(() => getUserTrip(props.liane, user!.id!), [props.liane, user]);
   const passengers = useMemo(
     () => props.liane.members.filter(m => m.user.id !== props.liane.driver.user && user?.id !== m.user.id),
     [props.liane, user?.id]
@@ -268,7 +278,7 @@ const StartButton = ({ startAction, isDriver }: { startAction: () => Promise<voi
 };
 
 const StartingSoonView = (props: { liane: Liane; isDriver: boolean }) => {
-  const status = useLianeStatus(props.liane);
+  const status = useTripStatus(props.liane);
   const { services } = useContext(AppContext);
   if (status === "StartingSoon" || (status === "Started" && props.liane.state === "NotStarted")) {
     return (
@@ -285,7 +295,7 @@ const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; re
   const { wayPoints: currentTrip } = useMemo(() => getTripFromMatch(liane), [liane]);
   const userTripDistance = Math.ceil(getTotalDistance(currentTrip) / 1000);
 
-  const tripPrice = getLianeCostContribution(liane.trip);
+  const tripPrice = getTripCostContribution(liane.trip);
 
   const driver = liane.trip.members.find(m => m.user.id === liane.trip.driver.user)!.user;
   const { user } = useContext(AppContext);

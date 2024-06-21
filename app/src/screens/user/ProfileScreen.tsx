@@ -10,7 +10,7 @@ import { AppIcon } from "@/components/base/AppIcon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ActionListItem } from "@/components/ActionItem";
 import { useAppNavigation } from "@/components/context/routing";
-import { capitalize, User } from "@liane/common";
+import { capitalize, FullUser, User } from "@liane/common";
 import { WithFetchResource } from "@/components/base/WithFetchResource";
 import { AppLocalization } from "@/api/i18n";
 import { DebugIdView } from "@/components/base/DebugIdView";
@@ -60,7 +60,7 @@ const ProfileView = ({ user }: { user: User }) => {
       <Column spacing={4} style={{ marginVertical: 24, marginHorizontal: 24 }}>
         {/*<AppText style={styles.data}>4 trajets effectués</AppText>*/}
         <AppText style={styles.data}>Membre depuis {capitalize(AppLocalization.formatMonthYear(new Date(displayedUser.createdAt!)))}</AppText>
-        {isMyPage && <AppText style={styles.data}>{displayedUser.phone}</AppText>}
+        {(displayedUser as FullUser).phone && <AppText style={styles.data}>{(displayedUser as FullUser).phone}</AppText>}
         <DebugIdView object={user} />
       </Column>
       {isMyPage && <Actions />}

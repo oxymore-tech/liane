@@ -1,4 +1,4 @@
-import { Liane, MemberPing } from "@liane/common";
+import { getUserTrip, Liane, MemberPing } from "@liane/common";
 import { useTripGeolocation } from "@/screens/detail/TripGeolocationProvider";
 import { Row } from "@/components/base/AppLayout";
 import { ActivityIndicator, Alert, StyleSheet, Switch } from "react-native";
@@ -7,7 +7,6 @@ import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
-import { getTripFromLiane } from "@/components/trip/trip";
 import { AppLogger } from "@/api/logger";
 import { AppStorage } from "@/api/storage";
 import { useAppNavigation } from "@/components/context/routing";
@@ -24,7 +23,7 @@ export const startGeolocationService = async (liane: Liane, force: boolean = fal
     LianeGeolocation.requestEnableGPS()
       .then(async () => {
         try {
-          const trip = getTripFromLiane(liane, user!.id!);
+          const trip = getUserTrip(liane, user!.id!);
           await LianeGeolocation.startSendingPings(liane.id!, trip.wayPoints);
         } catch (e) {
           AppLogger.error("GEOLOC", e);
