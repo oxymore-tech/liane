@@ -124,7 +124,12 @@ public sealed class LianeMatcher(
           return ImmutableList<Match>.Empty;
         }
 
-        var first = groupedMatches.First();
+        var first = groupedMatches.FirstOrDefault();
+        if (first is null)
+        {
+          return ImmutableList<Match>.Empty;
+        }
+
         return ImmutableList.Create(new Match.Group(
           liane.Name,
           liane,
