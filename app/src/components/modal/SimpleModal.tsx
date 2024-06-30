@@ -13,18 +13,14 @@ export interface SimpleModalProps extends PropsWithChildren {
   hideClose?: boolean;
 }
 export const SimpleModal = ({ backgroundColor = AppColors.darkBlue, visible, setVisible, children, hideClose }: SimpleModalProps) => {
+  const hide = () => setVisible(false);
   return (
-    <Modal
-      onBackButtonPress={() => setVisible(false)}
-      onBackdropPress={() => setVisible(false)}
-      isVisible={visible}
-      onSwipeComplete={() => setVisible(false)}
-      style={styles.modal}>
+    <Modal onBackButtonPress={hide} onBackdropPress={hide} isVisible={visible} onSwipeComplete={hide} style={styles.modal}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "position" : "height"}>
         <View style={{ backgroundColor, padding: 24, margin: 32, borderRadius: 8 }}>
           <Row style={{ marginBottom: 8 }}>
             {!hideClose && (
-              <AppPressable style={{ paddingBottom: 16 }} onPress={() => setVisible(false)}>
+              <AppPressable style={{ paddingBottom: 16 }} onPress={hide}>
                 <AppIcon name={"close-outline"} color={defaultTextColor(backgroundColor)} />
               </AppPressable>
             )}

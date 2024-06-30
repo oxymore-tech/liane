@@ -51,10 +51,6 @@ function isActive(liane: Liane): boolean {
 }
 
 export const TripSurveyView = ({ survey, coLiane }: { survey: LianeMessage<TripMessage>; coLiane: CoLiane }) => {
-  const date = useMemo(() => {
-    return capitalize(AppLocalization.formatMonthDay(new Date(survey.createdAt!)));
-  }, [survey.createdAt]);
-
   const { services, user } = useContext(AppContext);
 
   const trip = useQuery(LianeDetailQueryKey(survey.content.value), () => services.liane.get(survey.content.value));
@@ -67,6 +63,11 @@ export const TripSurveyView = ({ survey, coLiane }: { survey: LianeMessage<TripM
     const me = trip.data.members.some(m => m.user.id === user!.id);
     return { isMember: me, createdBy: c };
   }, [survey.createdBy, trip.data, user]);
+
+  const date = useQuery(LianeDetailQueryKey(survey.content.value), async () => {
+    const liane = await services.liane.get(survey.content.value);
+    return capitalize(AppLocalization.formatMonthDay(new Date(liane.departureTime)));
+  });
 
   const joinRequest = useQuery(JoinRequestDetailQueryKey(survey.content.value), async () => {
     const joinRequests = (await services.liane.listJoinRequests()).data;
@@ -102,7 +103,7 @@ export const TripSurveyView = ({ survey, coLiane }: { survey: LianeMessage<TripM
           <AppText style={{ fontWeight: "bold", color: AppColorPalettes.gray[500], fontSize: 16 }}>
             {driver ? `${driver} propose le trajet pour ` : `Trajet proposé pour `}
           </AppText>
-          <AppText style={{ fontWeight: "bold", fontSize: 18 }}>{date}</AppText>
+          <AppText style={{ fontWeight: "bold", fontSize: 18 }}>{date.data}</AppText>
           <LoadedTripSurveyView coLiane={coLiane} trip={trip.data} />
 
           {isActive(trip.data) ? (

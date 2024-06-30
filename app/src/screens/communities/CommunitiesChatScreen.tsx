@@ -232,6 +232,7 @@ export const CommunitiesChatScreen = () => {
       geolocationLevel: geolocationLevel || "None",
       recurrence: undefined
     });
+    console.log(JSON.stringify(time), created.departureTime);
     const goMessage = await services.community.sendMessage(liane!.id!, {
       type: "Trip",
       value: created.id!
@@ -503,7 +504,8 @@ const LaunchTripModal = ({
   const launch = () => {
     const todayIndex = (selectedTime[0].getDay() + 6) % 7;
     let addDays = (selectedDay.indexOf("1") - todayIndex + 7) % 7;
-    if (addDays === 0) {
+
+    if (addDays === 0 && selectedTime[0].valueOf() < new Date().valueOf()) {
       addDays = 7;
     }
     const departureTime = addSeconds(selectedTime[0], addDays * 3600 * 24);
