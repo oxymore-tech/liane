@@ -225,7 +225,40 @@ public sealed class LianeServiceImpl(
       return;
     }
 
-    await eventDispatcher.Dispatch(new LianeEvent.JoinRequest(query.Trip, match.Pickup, match.Deposit, -1, false, "Je souhaites rejoindre le trajet", query.GeolocationLevel ?? GeolocationLevel.None));
+    var direction = CheckDirection(match.LianeRequest.WayPoints, trip.WayPoints);
+    var (pickup, deposit) = direction == Direction.Outbound
+      ? (match.Pickup, match.Deposit)
+      : (match.Deposit, match.Pickup);
+    var title = direction == Direction.Outbound
+      ? "Je souhaites rejoindre le trajet"
+      : "Je souhaite rejoindre le trajet retour";
+    await eventDispatcher.Dispatch(new LianeEvent.JoinRequest(query.Trip, pickup, deposit, -1, false, title, query.GeolocationLevel ?? GeolocationLevel.None));
+  }
+
+  private static Direction CheckDirection(ImmutableList<Ref<RallyingPoint>> lianeRequestWayPoints, ImmutableList<WayPoint> tripWayPoints)
+  {
+    int? lastIndex = null;
+    foreach (var wayPoint in tripWayPoints)
+    {
+      var indexOf = lianeRequestWayPoints.IndexOf(wayPoint.RallyingPoint);
+      if (indexOf == -1)
+      {
+        continue;
+      }
+
+      if (lastIndex is null)
+      {
+        lastIndex = indexOf;
+        continue;
+      }
+
+      if (indexOf < lastIndex)
+      {
+        return Direction.Inbound;
+      }
+    }
+
+    return Direction.Outbound;
   }
 
   public async Task<Api.Community.Liane> Update(Ref<Api.Community.Liane> id, LianeUpdate liane)
@@ -433,3 +466,5 @@ public sealed record LianeMessageDb(
   Ref<Api.Auth.User> CreatedBy,
   DateTime? CreatedAt
 ) : IEntity<Guid>;
+
+enum Direction { Outbound, Inbound };
