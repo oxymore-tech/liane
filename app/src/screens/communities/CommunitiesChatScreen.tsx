@@ -232,7 +232,6 @@ export const CommunitiesChatScreen = () => {
       geolocationLevel: geolocationLevel || "None",
       recurrence: undefined
     });
-    console.log(JSON.stringify(time), created.departureTime);
     const goMessage = await services.community.sendMessage(liane!.id!, {
       type: "Trip",
       value: created.id!
@@ -263,7 +262,6 @@ export const CommunitiesChatScreen = () => {
       }
     };
 
-    // console.log("PARAMS", route.params);
     if (route.params.liane) {
       // Lorsqu'on arrive directement par une liane
       setLiane(route.params.liane);
@@ -323,7 +321,6 @@ export const CommunitiesChatScreen = () => {
   );
 
   // console.debug(JSON.stringify(messages));
-  console.log(group?.name, liane?.name);
   return (
     <View style={{ backgroundColor: AppColors.lightGrayBackground, justifyContent: "flex-end", flex: 1 }}>
       {chat && (
@@ -510,7 +507,6 @@ const LaunchTripModal = ({
     }
     const departureTime = addSeconds(selectedTime[0], addDays * 3600 * 24);
     const returnTime = selectedTime[1] ? addSeconds(selectedTime[1], addDays * 3600 * 24) : undefined;
-    console.log(todayIndex, addDays, departureTime, returnTime);
     launchTrip([departureTime, returnTime]);
   };
 
