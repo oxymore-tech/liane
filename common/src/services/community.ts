@@ -12,7 +12,6 @@ import {
 } from "../api";
 import { HttpClient } from "./http";
 import { TimeRange } from "./time";
-import { IUnion } from "../union";
 
 export type TimeConstraint = {
   when: TimeRange;
@@ -80,8 +79,9 @@ export type JoinTripQuery = { liane: Ref<CoLiane>; trip: Ref<Liane>; geolocation
 
 export type CoMatch = MatchSingle | MatchGroup;
 
-export type TextMessage = { value: string } & IUnion<"Text">;
-export type TripMessage = { value: Ref<Liane> } & IUnion<"Trip">;
+export type TextMessage = { type: "Text"; value: string };
+export type TripMessage = { type: "Trip"; value: Ref<Liane> };
+
 export type MessageContent = TextMessage | TripMessage;
 
 export type LianeMessage<T extends MessageContent = MessageContent> = Entity & { content: T };

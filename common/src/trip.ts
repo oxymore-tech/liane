@@ -134,7 +134,14 @@ export function getTripMatch(to: RallyingPoint, from: RallyingPoint, originalTri
   };
 }
 
-export type TripStatus = LianeState | "StartingSoon" | "AwaitingPassengers" | "AwaitingDriver";
+export type TripStatus =
+  | LianeState
+  | "StartingSoon"
+  | "AwaitingPassengers"
+  | "AwaitingDriver"
+  | "RequestAccepted"
+  | "RequestSent"
+  | "RequestReceived";
 
 function getTimeForUser(liane: Liane, user: Ref<User>, type: "to" | "from"): [Date, number] {
   const pointId = liane.members.find(m => m.user.id === user)![type];
@@ -144,7 +151,11 @@ function getTimeForUser(liane: Liane, user: Ref<User>, type: "to" | "from"): [Da
   return [time, delta];
 }
 
-export function getTripStatus(liane: Liane, user: Ref<User>): { status: TripStatus; nextUpdateMillis?: number | undefined } {
+export function getTripStatus(
+  liane: Liane,
+  user: Ref<User>,
+  joinRequest?: JoinLianeRequestDetailed
+): { status: TripStatus; nextUpdateMillis?: number | undefined } {
   if (liane.state === "NotStarted") {
     const [, delta] = getTimeForUser(liane, user, "from");
 
@@ -159,6 +170,12 @@ export function getTripStatus(liane: Liane, user: Ref<User>): { status: TripStat
       } else {
         return { status: "Started", nextUpdateMillis: deltaArrival * 1000 };
       }
+    }
+    if (joinRequest?.createdBy?.id === user) {
+      if (joinRequest.accepted) {
+        return { status: "RequestAccepted" };
+      }
+      return { status: "RequestSent" };
     }
     if (liane.members.length < 2) {
       if (liane.driver.canDrive) {

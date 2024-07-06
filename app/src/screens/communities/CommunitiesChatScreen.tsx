@@ -1,6 +1,5 @@
 import {
   addSeconds,
-  capitalize,
   Chat,
   CoLiane,
   CoLianeRequest,
@@ -10,84 +9,29 @@ import {
   MatchGroup,
   MatchSingle,
   PaginatedResponse,
-  Ref,
   ResolvedLianeRequest,
-  TripMessage,
   User
 } from "@liane/common";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from "react-native";
-import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
+import { AppColors, ContextualColors } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppExpandingTextInput } from "@/components/base/AppExpandingTextInput";
-import { AppLocalization } from "@/api/i18n";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppPressableIcon } from "@/components/base/AppPressable";
 import { DebugIdView } from "@/components/base/DebugIdView";
-import { UserPicture } from "@/components/UserPicture";
 import { AppStyles } from "@/theme/styles";
 import { extractDays } from "@/util/hooks/days";
 import { AppLogger } from "@/api/logger";
 import { SimpleModal } from "@/components/modal/SimpleModal.tsx";
 import { AppStorage } from "@/api/storage.ts";
-import { TripSurveyView } from "@/components/trip/TripSurveyView.tsx";
 import { TimeWheelPicker } from "@/components/TimeWheelPicker.tsx";
 import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker.tsx";
-
-const MessageBubble = ({
-  message,
-  sender,
-  isSender,
-  previousSender
-}: {
-  message: LianeMessage;
-  sender: User;
-  isSender: boolean;
-  previousSender?: Ref<User> | undefined;
-}) => {
-  const firstBySender = previousSender !== sender.id;
-  const date = capitalize(AppLocalization.toRelativeTimeString(new Date(message.createdAt!)));
-  return (
-    <Row
-      spacing={8}
-      style={{
-        marginBottom: 6,
-        alignSelf: isSender ? "flex-end" : "flex-start",
-        marginTop: firstBySender ? 6 : 0,
-        maxWidth: "80%"
-      }}>
-      {!isSender && firstBySender && <UserPicture url={sender.pictureUrl} id={sender.id} size={32} />}
-      {!isSender && !firstBySender && <View style={{ width: 32 }} />}
-      <Column spacing={2}>
-        {!isSender && firstBySender && (
-          <AppText style={{ marginLeft: 6, alignSelf: "flex-start", fontSize: 14, fontWeight: "500", color: AppColorPalettes.blue[700] }}>
-            {sender.pseudo}
-          </AppText>
-        )}
-        <Column
-          style={{
-            backgroundColor: isSender ? AppColors.white : AppColorPalettes.orange[100],
-            alignSelf: isSender ? "flex-end" : "flex-start",
-            paddingVertical: 8,
-            paddingHorizontal: 12,
-            borderRadius: 8,
-            marginRight: isSender ? 0 : 56,
-            marginLeft: isSender ? 56 : 0
-          }}
-          spacing={4}>
-          <AppText numberOfLines={-1} style={{ fontSize: 15 }}>
-            {message.content.value}
-          </AppText>
-          <AppText style={{ fontSize: 12, alignSelf: isSender ? "flex-end" : "flex-start" }}>{date}</AppText>
-        </Column>
-      </Column>
-    </Row>
-  );
-};
+import { MessageBubble } from "@/screens/communities/MessageBubble.tsx";
 
 export const CommunitiesChatScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesChat">();
@@ -320,30 +264,22 @@ export const CommunitiesChatScreen = () => {
     </View>
   );
 
-  // console.debug(JSON.stringify(messages));
   return (
     <View style={{ backgroundColor: AppColors.lightGrayBackground, justifyContent: "flex-end", flex: 1 }}>
-      {chat && (
+      {chat && liane && (
         <FlatList
           style={{ paddingHorizontal: 16, marginTop: insets.top + 72 }}
           data={messages}
           keyExtractor={m => m.id!}
           renderItem={({ item, index }) =>
-            members ? (
-              item.content.type === "Trip" && !!liane ? (
-                <View style={{ marginHorizontal: 24, marginVertical: 16 }}>
-                  <TripSurveyView survey={item as LianeMessage<TripMessage>} coLiane={liane!} />
-                </View>
-              ) : (
-                !!members[item.createdBy!] && (
-                  <MessageBubble
-                    message={item}
-                    sender={members[item.createdBy!]}
-                    isSender={item.createdBy === user?.id}
-                    previousSender={index < messages.length - 1 ? messages[index + 1].createdBy : undefined}
-                  />
-                )
-              )
+            members && !!members[item.createdBy!] ? (
+              <MessageBubble
+                coLiane={liane}
+                message={item}
+                sender={members[item.createdBy!]}
+                isSender={item.createdBy === user?.id}
+                previousSender={index < messages.length - 1 ? messages[index + 1].createdBy : undefined}
+              />
             ) : null
           }
           inverted={true}

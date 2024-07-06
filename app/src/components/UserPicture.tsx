@@ -14,6 +14,7 @@ export interface UserPictureProps {
   style?: StyleProp<ViewStyle>;
   borderWidth?: number;
   borderColor?: string;
+  shadow?: boolean;
 }
 
 export const UserPicture = ({ url, size = 48, id, style, borderWidth = 0, borderColor = "transparent" }: UserPictureProps) => {

@@ -14,7 +14,6 @@ export interface WayPointsViewProps {
 
 // TODO share state with detail view
 const extractData = (wayPoints: WayPoint[]) => {
-  //console.debug("extract data", JSON.stringify(wayPoints), departureTime);
   const from = wayPoints[0];
   const to = wayPoints[wayPoints.length - 1];
   const steps = wayPoints.slice(1, -1);
@@ -69,10 +68,10 @@ export const WayPointView = ({
           />
         </Column>
       )}
-      <View style={{ flexGrow: 1, flexShrink: 1 }}>
+      <Column>
         <AppText style={[styles.mainWayPointCity]}>{wayPoint.rallyingPoint.city}</AppText>
         <AppText style={[styles.mainWayPointLabel]}>{wayPoint.rallyingPoint.label}</AppText>
-      </View>
+      </Column>
     </Row>
   );
 };

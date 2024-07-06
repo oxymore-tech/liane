@@ -1,25 +1,34 @@
-import { Liane, TripStatus } from "@liane/common";
+import { JoinLianeRequestDetailed, Liane, TripStatus } from "@liane/common";
 import { useTripStatus } from "@/components/trip/trip";
 import { AppText } from "@/components/base/AppText";
 import React from "react";
-import { ColorValue } from "react-native";
+import { ColorValue, StyleProp, ViewStyle } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 
-export const LianeStatusView = ({ liane }: { liane: Liane }) => {
-  const lianeStatus = useTripStatus(liane);
+export type LianeStatusViewProps = {
+  liane: Liane;
+  joinRequest?: JoinLianeRequestDetailed;
+  style?: StyleProp<ViewStyle>;
+};
+
+export const LianeStatusView = ({ style, liane, joinRequest }: LianeStatusViewProps) => {
+  const lianeStatus = useTripStatus(liane, joinRequest);
   const [statusText] = getLianeStatusStyle(lianeStatus!);
   if (!statusText) {
     return null;
   }
   return (
     <AppText
-      style={{
-        paddingHorizontal: 6,
-        paddingVertical: 6,
-        color: AppColorPalettes.gray[400],
-        fontWeight: "500",
-        fontStyle: "italic"
-      }}>
+      style={[
+        {
+          paddingHorizontal: 6,
+          paddingVertical: 6,
+          color: AppColorPalettes.gray[400],
+          fontWeight: "bold",
+          fontStyle: "italic"
+        },
+        style
+      ]}>
       {statusText}
     </AppText>
   );
