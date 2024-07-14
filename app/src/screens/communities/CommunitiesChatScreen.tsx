@@ -6,6 +6,7 @@ import {
   CoMatch,
   DayOfWeekFlag,
   LianeMessage,
+  LianeRequest,
   MatchGroup,
   MatchSingle,
   PaginatedResponse,
@@ -402,7 +403,7 @@ export const CommunitiesChatScreen = () => {
         {!!me && (
           <LaunchTripModal
             nextDayIndex={nextDayIndex}
-            weekdays={me!.lianeRequest.weekDays}
+            lianeRequest={me!.lianeRequest}
             tripModalVisible={tripModalVisible}
             setTripModalVisible={setTripModalVisible}
             launchTrip={launchTrip}
@@ -418,17 +419,20 @@ const LaunchTripModal = ({
   tripModalVisible,
   setTripModalVisible,
   launchTrip,
-  weekdays,
+  lianeRequest,
   nextDayIndex,
   initialDate
 }: {
   initialDate: Date;
-  weekdays: DayOfWeekFlag;
+  lianeRequest: ResolvedLianeRequest;
   tripModalVisible: boolean;
   setTripModalVisible: (v: boolean) => void;
   launchTrip: (d: [Date, Date | undefined]) => void;
   nextDayIndex: number;
 }) => {
+  const weekdays = lianeRequest.weekDays;
+  console.log("Init params", lianeRequest);
+
   const [launchTripStep, setLaunchTripStep] = useState(0);
   const [selectedTime, setSelectedTime] = useState<[Date, Date | undefined]>([new Date(), undefined]);
   // @ts-ignore
