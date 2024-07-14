@@ -49,6 +49,7 @@ export const CommunitiesChatScreen = () => {
   const [request, setRequest] = useState<CoLianeRequest | ResolvedLianeRequest | undefined>(undefined);
   const [tripModalVisible, setTripModalVisible] = useState(false);
 
+  // TODO : fix the bug where messages are duplicated when the community is opened for the first time
   const members = useMemo(
     () =>
       chat?.currentGroup?.members?.reduce((acc, b) => {
@@ -130,15 +131,19 @@ export const CommunitiesChatScreen = () => {
 
   const onReceiveLatestMessages = (m: PaginatedResponse<LianeMessage>) => {
     setMessages(m.data);
+    // I don't understand, but when we receive messages here for the first time, we receive all the messages and yet the request tells us that there's a next number.
     setPaginationCursor(m.next);
   };
 
   const fetchNextPage = async () => {
     if (paginationCursor && liane && liane.id) {
-      const paginatedResult = await services.community.getMessages(liane.id, { cursor: paginationCursor, limit: 15 });
+      const paginatedResult = await services.community.getMessages(liane.id, { cursor: paginationCursor, limit: 25 });
+
       setMessages(oldList => {
         return [...oldList, ...paginatedResult.data];
       });
+      // here we have a call that is made when we already have all the data, which means that we create duplicates. What's more, the api only returns text messages, not trips.
+      // The next cursor is always the same
       setPaginationCursor(paginatedResult.next);
     }
   };
@@ -265,6 +270,7 @@ export const CommunitiesChatScreen = () => {
     </View>
   );
 
+  //console.log("MEssage,s", messages);
   return (
     <View style={{ backgroundColor: AppColors.lightGrayBackground, justifyContent: "flex-end", flex: 1 }}>
       {chat && liane && (
@@ -275,6 +281,7 @@ export const CommunitiesChatScreen = () => {
           renderItem={({ item, index }) =>
             members && !!members[item.createdBy!] ? (
               <MessageBubble
+                key={index}
                 coLiane={liane}
                 message={item}
                 sender={members[item.createdBy!]}
@@ -431,7 +438,6 @@ const LaunchTripModal = ({
   nextDayIndex: number;
 }) => {
   const weekdays = lianeRequest.weekDays;
-  console.log("Init params", lianeRequest);
 
   const [launchTripStep, setLaunchTripStep] = useState(0);
   const [selectedTime, setSelectedTime] = useState<[Date, Date | undefined]>([new Date(), undefined]);
