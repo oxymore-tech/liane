@@ -1,13 +1,23 @@
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import { AppText } from "@/components/base/AppText.tsx";
 import { AppColorPalettes, AppColors } from "@/theme/colors.ts";
 import { AppLocalization } from "@/api/i18n.ts";
-import { capitalize, CoLiane, JoinLianeRequestDetailed, Liane, LianeMessage, LianeState, TripMessage, UTCDateTime } from "@liane/common";
-import React, { useCallback, useContext, useMemo } from "react";
-import { Row } from "@/components/base/AppLayout.tsx";
+import {
+  addSeconds,
+  capitalize,
+  CoLiane,
+  DayOfWeekFlag,
+  JoinLianeRequestDetailed,
+  Liane,
+  LianeMessage,
+  RallyingPoint,
+  TripMessage
+} from "@liane/common";
+import React, { useCallback, useContext, useMemo, useState } from "react";
+import { Center, Column, Row } from "@/components/base/AppLayout.tsx";
 import { UserPicture } from "@/components/UserPicture.tsx";
 import { AppIcon } from "@/components/base/AppIcon.tsx";
-import { AppPressableOverlay } from "@/components/base/AppPressable.tsx";
+import { AppPressableIcon, AppPressableOverlay } from "@/components/base/AppPressable.tsx";
 import { WayPointView } from "@/components/trip/WayPointsView.tsx";
 import { useQuery, useQueryClient } from "react-query";
 import { JoinRequestDetailQueryKey, JoinRequestsQueryKey, LianeDetailQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen.tsx";
@@ -15,11 +25,15 @@ import { AppContext } from "@/components/context/ContextProvider.tsx";
 import { AppStorage } from "@/api/storage.ts";
 import { de } from "@faker-js/faker";
 import { LianeStatusView } from "@/components/trip/LianeStatusView.tsx";
+import { SimpleModal } from "@/components/modal/SimpleModal.tsx";
+import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker.tsx";
+import { TimeWheelPicker } from "@/components/TimeWheelPicker.tsx";
 
 export const TripSurveyView = ({ message, coLiane, color }: { message: LianeMessage<TripMessage>; coLiane: CoLiane; color: string }) => {
   const { services, user } = useContext(AppContext);
 
   const trip = useQuery(LianeDetailQueryKey(message.content.value), () => services.liane.get(message.content.value));
+  const [tripModalVisible, setTripModalVisible] = useState(false);
 
   const { isMember } = useMemo(() => {
     if (!trip.data) {
@@ -52,15 +66,31 @@ export const TripSurveyView = ({ message, coLiane, color }: { message: LianeMess
     await queryClient.invalidateQueries(JoinRequestsQueryKey);
   }, [trip.data, isMember, services.community, coLiane.id, queryClient, message.content.value]);
 
+  const editLianeTrip = async (d: Date, from: string | undefined, to: string | undefined) => {
+    // console.log("editLianeTrip", trip.data);
+    // console.log("editLianeTrip v2", d, from, to);
+
+    setTripModalVisible(false);
+
+    // TODO: Maj liane
+    /*const edited = await services.liane.post({
+      departureTime: time[0].toISOString(),
+    });*/
+  };
+
   return (
     <View>
       {(trip.isLoading || joinRequest.isLoading) && <ActivityIndicator color={AppColors.white} />}
       {trip.isError && <AppText>Erreur de chargement</AppText>}
       {!!trip.data && (
         <>
-          <AppText style={{ fontWeight: "bold", fontSize: 18, color }}>
-            {capitalize(AppLocalization.formatMonthDay(new Date(trip.data.departureTime)))}
-          </AppText>
+          <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+            <AppText style={{ fontWeight: "bold", fontSize: 18, color, marginTop: 5 }}>
+              {capitalize(AppLocalization.formatMonthDay(new Date(trip.data.departureTime)))}
+            </AppText>
+            {trip.data.createdBy === user!.id ? <AppPressableIcon name={"edit-outline"} onPress={() => setTripModalVisible(true)} /> : null}
+          </View>
+
           <View>
             {trip.data.wayPoints.map((s, i) => (
               <WayPointView
@@ -78,6 +108,9 @@ export const TripSurveyView = ({ message, coLiane, color }: { message: LianeMess
           )}
         </>
       )}
+      {trip.data ? (
+        <EditTripModal liane={trip.data} editTrip={editLianeTrip} setTripModalVisible={setTripModalVisible} tripModalVisible={tripModalVisible} />
+      ) : null}
     </View>
   );
 };
@@ -115,6 +148,94 @@ const ActiveView = ({ trip, isMember, joinRequest, handleJoinTrip }: ActiveViewP
   );
 };
 
+const DateToWeekdays = (date: Date): string => {
+  const dayNumber = (date.getDay() + 6) % 7;
+  const result = "0000000".split("");
+  result[dayNumber] = "1";
+
+  return result.join("");
+};
+
+const EditTripModal = ({
+  tripModalVisible,
+  setTripModalVisible,
+  editTrip,
+  liane
+}: {
+  liane: Liane;
+  tripModalVisible: boolean;
+  setTripModalVisible: (v: boolean) => void;
+  editTrip: (d: Date, from: string | undefined, to: string | undefined) => void;
+}) => {
+  const defaultTimeDate = new Date(liane.departureTime);
+  const [selectedTime, setSelectedTime] = useState<Date>(defaultTimeDate);
+  // @ts-ignore
+
+  const [selectedDay, setSelectedDay] = useState<DayOfWeekFlag>(DateToWeekdays(defaultTimeDate));
+  const [from, SetFrom] = useState<RallyingPoint>(liane.wayPoints[0].rallyingPoint);
+  const [to, SetTo] = useState<RallyingPoint>(liane.wayPoints[liane.wayPoints.length - 1].rallyingPoint);
+
+  const launch = () => {
+    const todayIndex = (selectedTime.getDay() + 6) % 7;
+
+    let selectedDays = selectedDay
+      .split("")
+      .map((day, index) => (day === "1" ? index : -1))
+      .filter(index => index !== -1);
+
+    let firstDay = (selectedDays[0] - todayIndex + 7) % 7;
+
+    if (firstDay === 0 && selectedTime.valueOf() < new Date().valueOf()) {
+      firstDay = 7;
+    }
+    const departureTime = addSeconds(selectedTime, firstDay * 3600 * 24);
+
+    editTrip(departureTime, from.id, to.id);
+  };
+
+  const switchDestination = () => {
+    const ToTemp = to;
+    SetTo(from);
+    SetFrom(ToTemp);
+  };
+
+  return (
+    <SimpleModal visible={tripModalVisible} setVisible={setTripModalVisible} backgroundColor={AppColors.white} hideClose>
+      <Column spacing={8}>
+        <Column spacing={8}>
+          <View>
+            <Row spacing={6}>
+              <AppText style={[{ marginTop: 5 }, styles.modalText]}>{from.label}</AppText>
+              <AppPressableIcon name={"flip-2-outline"} onPress={switchDestination} />
+              <AppText style={[{ marginTop: 5 }, styles.modalText]}>{to.label}</AppText>
+            </Row>
+          </View>
+          <View>
+            <Row spacing={6}>
+              <DayOfTheWeekPicker selectedDays={selectedDay} onChangeDays={setSelectedDay} enabledDays={"1111111"} singleOptionMode={true} />
+            </Row>
+          </View>
+          <AppText style={styles.modalText}>Départ à :</AppText>
+          <Center>
+            <TimeWheelPicker date={defaultTimeDate} minuteStep={5} onChange={d => setSelectedTime(d)} />
+          </Center>
+          <Row style={{ justifyContent: "flex-end" }}>
+            <AppPressableIcon name={"checkmark-outline"} onPress={launch} />
+          </Row>
+        </Column>
+      </Column>
+    </SimpleModal>
+  );
+};
+
 function isActive(liane: Liane): boolean {
   return liane.state === "Started" || liane.state === "NotStarted";
 }
+
+const styles = StyleSheet.create({
+  modalText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    lineHeight: 24
+  }
+});
