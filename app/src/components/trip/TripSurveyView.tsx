@@ -1,4 +1,4 @@
-import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { AppText } from "@/components/base/AppText.tsx";
 import { AppColorPalettes, AppColors } from "@/theme/colors.ts";
 import { AppLocalization } from "@/api/i18n.ts";
@@ -23,7 +23,6 @@ import { useQuery, useQueryClient } from "react-query";
 import { JoinRequestDetailQueryKey, JoinRequestsQueryKey, LianeDetailQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen.tsx";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
 import { AppStorage } from "@/api/storage.ts";
-import { de } from "@faker-js/faker";
 import { LianeStatusView } from "@/components/trip/LianeStatusView.tsx";
 import { SimpleModal } from "@/components/modal/SimpleModal.tsx";
 import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker.tsx";
