@@ -6,14 +6,12 @@ import {
   CoMatch,
   DayOfWeekFlag,
   LianeMessage,
-  LianeRequest,
   MatchGroup,
   MatchSingle,
   PaginatedResponse,
   RallyingPoint,
   ResolvedLianeRequest,
-  User,
-  WayPoint
+  User
 } from "@liane/common";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from "react-native";
@@ -149,14 +147,6 @@ export const CommunitiesChatScreen = () => {
 
   const name = !liane?.name && me ? `${me.lianeRequest.wayPoints[0].label}  ➔ ${me.lianeRequest.wayPoints[1].label}` : liane?.name;
 
-  const nextDayIndex = useMemo(() => {
-    const todayIndex = (new Date().getDay() + 6) % 7;
-    if (!me) {
-      return todayIndex;
-    } else {
-      return todayIndex + me.lianeRequest.weekDays.substring(todayIndex).concat(me.lianeRequest.weekDays.substring(0, todayIndex)).indexOf("1");
-    }
-  }, [me]);
   const startDate = useMemo(() => {
     const d = new Date();
     if (!me || me.lianeRequest.timeConstraints.length === 0) {
