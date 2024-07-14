@@ -439,8 +439,6 @@ const getNextAvailableDay = (weekdays: string, start: StartTime): string => {
   // If the current day is available but the current time is before the start time
   if (weekdays[currentDay] === "1" && (currentHour < start.hour || (currentHour === start.hour && currentMinute < start.minute))) {
     nextDayIndex = currentDay;
-  } else {
-    nextDayIndex = findNextDay(currentDay + 1);
   }
 
   if (nextDayIndex === -1) {
