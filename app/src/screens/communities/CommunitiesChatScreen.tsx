@@ -6,7 +6,6 @@ import {
   CoMatch,
   DayOfWeekFlag,
   LianeMessage,
-  LianeRequest,
   MatchGroup,
   MatchSingle,
   PaginatedResponse,
