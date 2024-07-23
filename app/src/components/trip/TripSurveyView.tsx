@@ -33,6 +33,7 @@ export const TripSurveyView = ({ message, coLiane, color }: { message: LianeMess
 
   const trip = useQuery(LianeDetailQueryKey(message.content.value), () => services.liane.get(message.content.value));
   const [tripModalVisible, setTripModalVisible] = useState(false);
+  const [departureTime, setDepartureTime] = useState<string | undefined>(undefined);
 
   const { isMember } = useMemo(() => {
     if (!trip.data) {
@@ -65,16 +66,14 @@ export const TripSurveyView = ({ message, coLiane, color }: { message: LianeMess
     await queryClient.invalidateQueries(JoinRequestsQueryKey);
   }, [trip.data, isMember, services.community, coLiane.id, queryClient, message.content.value]);
 
-  const editLianeTrip = async (d: Date, from: string | undefined, to: string | undefined) => {
-    // console.log("editLianeTrip", trip.data);
-    // console.log("editLianeTrip v2", d, from, to);
-
+  const editLianeTrip = async (d: Date) => {
     setTripModalVisible(false);
 
-    // TODO: Maj liane
-    /*const edited = await services.liane.post({
-      departureTime: time[0].toISOString(),
-    });*/
+    // in this update function, we just update the start date.
+    if (trip.data?.id) {
+      await services.liane.updateDepartureTime(trip.data?.id, d.toISOString());
+      message.id && (await queryClient.invalidateQueries(LianeDetailQueryKey(message.content.value)));
+    }
   };
 
   return (
@@ -164,7 +163,7 @@ const EditTripModal = ({
   liane: Liane;
   tripModalVisible: boolean;
   setTripModalVisible: (v: boolean) => void;
-  editTrip: (d: Date, from: string | undefined, to: string | undefined) => void;
+  editTrip: (d: Date) => void;
 }) => {
   const defaultTimeDate = new Date(liane.departureTime);
   const [selectedTime, setSelectedTime] = useState<Date>(defaultTimeDate);
@@ -189,13 +188,7 @@ const EditTripModal = ({
     }
     const departureTime = addSeconds(selectedTime, firstDay * 3600 * 24);
 
-    editTrip(departureTime, from.id, to.id);
-  };
-
-  const switchDestination = () => {
-    const ToTemp = to;
-    SetTo(from);
-    SetFrom(ToTemp);
+    editTrip(departureTime);
   };
 
   return (
@@ -205,7 +198,8 @@ const EditTripModal = ({
           <View>
             <Row spacing={6}>
               <AppText style={[{ marginTop: 5 }, styles.modalText]}>{from.label}</AppText>
-              <AppPressableIcon name={"flip-2-outline"} onPress={switchDestination} />
+              <AppPressableIcon name={"arrow-forward-outline"} />
+              <AppIcon name={"person-outline"} />
               <AppText style={[{ marginTop: 5 }, styles.modalText]}>{to.label}</AppText>
             </Row>
           </View>
