@@ -431,7 +431,6 @@ const LaunchTripModal = ({
   nextDayIndex: number;
 }) => {
   const weekdays = lianeRequest.weekDays;
-  console.log("Init params", lianeRequest);
 
   const [launchTripStep, setLaunchTripStep] = useState(0);
   const [selectedTime, setSelectedTime] = useState<[Date, Date | undefined]>([new Date(), undefined]);

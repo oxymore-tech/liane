@@ -30,7 +30,6 @@ export const useMarkersLayer = ({ source, id, props, onMouseLeavePoint, onMouseE
           map.current?.addImage("pin", image, { sdf: true });
           setReady(true);
         }
-        console.log("here");
       });
 
     console.log(map.current?.loaded());
@@ -117,7 +116,6 @@ export const RPMarkersLayer = ({
           map.current?.addImage("pin", image, { sdf: true });
           setReady(true);
         }
-        console.log("here");
       });
 
     console.log(map.current?.loaded());
