@@ -379,7 +379,7 @@ export const CommunitiesChatScreen = () => {
                 onPress={() => setTripModalVisible(true)}
                 name={"plus-outline"}
                 style={{ padding: 12 }}
-                backgroundStyle={{ borderRadius: 24, backgroundColor: AppColors.primaryColor }}
+                backgroundStyle={{ borderRadius: 24, backgroundColor: AppColors.primaryColor, maxHeight: 58 }}
               />
             )}
 
