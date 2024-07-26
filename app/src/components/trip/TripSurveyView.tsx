@@ -33,7 +33,6 @@ export const TripSurveyView = ({ message, coLiane, color }: { message: LianeMess
 
   const trip = useQuery(LianeDetailQueryKey(message.content.value), () => services.liane.get(message.content.value));
   const [tripModalVisible, setTripModalVisible] = useState(false);
-  const [departureTime, setDepartureTime] = useState<string | undefined>(undefined);
 
   const { isMember } = useMemo(() => {
     if (!trip.data) {
@@ -86,7 +85,9 @@ export const TripSurveyView = ({ message, coLiane, color }: { message: LianeMess
             <AppText style={{ fontWeight: "bold", fontSize: 18, color, marginTop: 5 }}>
               {capitalize(AppLocalization.formatMonthDay(new Date(trip.data.departureTime)))}
             </AppText>
-            {trip.data.createdBy === user!.id ? <AppPressableIcon name={"edit-outline"} onPress={() => setTripModalVisible(true)} /> : null}
+            {trip.data.createdBy === user!.id && isActive(trip.data) ? (
+              <AppPressableIcon name={"edit-outline"} onPress={() => setTripModalVisible(true)} />
+            ) : null}
           </View>
 
           <View>
@@ -106,9 +107,9 @@ export const TripSurveyView = ({ message, coLiane, color }: { message: LianeMess
           )}
         </>
       )}
-      {trip.data ? (
+      {trip.data && isActive(trip.data) && (
         <EditTripModal liane={trip.data} editTrip={editLianeTrip} setTripModalVisible={setTripModalVisible} tripModalVisible={tripModalVisible} />
-      ) : null}
+      )}
     </View>
   );
 };
