@@ -147,12 +147,12 @@ const ActiveView = ({ trip, isMember, joinRequest, handleJoinTrip }: ActiveViewP
   );
 };
 
-const DateToWeekdays = (date: Date): string => {
+const DateToWeekdays = (date: Date): DayOfWeekFlag => {
   const dayNumber = (date.getDay() + 6) % 7;
   const result = "0000000".split("");
   result[dayNumber] = "1";
 
-  return result.join("");
+  return result.join("") as DayOfWeekFlag;
 };
 
 const EditTripModal = ({
@@ -168,11 +168,10 @@ const EditTripModal = ({
 }) => {
   const defaultTimeDate = new Date(liane.departureTime);
   const [selectedTime, setSelectedTime] = useState<Date>(defaultTimeDate);
-  // @ts-ignore
 
   const [selectedDay, setSelectedDay] = useState<DayOfWeekFlag>(DateToWeekdays(defaultTimeDate));
-  const [from, SetFrom] = useState<RallyingPoint>(liane.wayPoints[0].rallyingPoint);
-  const [to, SetTo] = useState<RallyingPoint>(liane.wayPoints[liane.wayPoints.length - 1].rallyingPoint);
+  const [from] = useState<RallyingPoint>(liane.wayPoints[0].rallyingPoint);
+  const [to] = useState<RallyingPoint>(liane.wayPoints[liane.wayPoints.length - 1].rallyingPoint);
 
   const launch = () => {
     const todayIndex = (selectedTime.getDay() + 6) % 7;
