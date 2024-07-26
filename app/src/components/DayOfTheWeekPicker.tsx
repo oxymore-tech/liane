@@ -16,7 +16,8 @@ export const DayOfTheWeekPicker = ({
   daysSize,
   enabledDays,
   borderBottomDisplayed = false,
-  singleOptionMode = false
+  singleOptionMode = false,
+  dualOptionMode = false
 }: {
   selectedDays: DayOfWeekFlag | null;
   onChangeDays: (daysOfTheWeek: DayOfWeekFlag) => void;
@@ -25,6 +26,7 @@ export const DayOfTheWeekPicker = ({
   borderBottomDisplayed?: boolean;
   enabledDays?: DayOfWeekFlag;
   singleOptionMode?: boolean;
+  dualOptionMode?: boolean;
 }) => {
   const selectedDaysString = selectedDays ?? "0000000";
   const size = daysSize ?? 35;
@@ -36,11 +38,31 @@ export const DayOfTheWeekPicker = ({
     AppLocalization.daysList.forEach((_day: string, index: number) => {
       // Replace selected day at selected index
       newSelectedDays +=
-        index === dayIndex ? replaceSelectedDay(currentSelectedDays.charAt(index)) : singleOptionMode ? "0" : currentSelectedDays.charAt(index);
+        index === dayIndex
+          ? replaceSelectedDay(currentSelectedDays.charAt(index))
+          : singleOptionMode
+          ? "0"
+          : dualOptionMode
+          ? countAvailableDays(currentSelectedDays) > 1
+            ? "0"
+            : currentSelectedDays.charAt(index)
+          : currentSelectedDays.charAt(index);
     });
 
     onChangeDays(newSelectedDays as DayOfWeekFlag);
   };
+
+  const countAvailableDays = (weekdays: string): number => {
+    let availableDaysCount = 0;
+    for (let i = 0; i < weekdays.length; i++) {
+      if (weekdays[i] === "1") {
+        availableDaysCount++;
+      }
+    }
+
+    return availableDaysCount;
+  };
+
   return (
     <View>
       <Row style={styles.rowContainer} spacing={6}>
