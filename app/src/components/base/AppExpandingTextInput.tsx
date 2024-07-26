@@ -36,7 +36,6 @@ export const AppExpandingTextInput = ({ style, backgroundStyle, ...props }: AppT
       ]}>
       <AppTextInput
         {...props}
-        multiline={true}
         onContentSizeChange={event => {
           setContentHeight(event.nativeEvent.contentSize.height);
         }}

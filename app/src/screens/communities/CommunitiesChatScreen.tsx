@@ -371,7 +371,7 @@ export const CommunitiesChatScreen = () => {
                 onPress={() => setTripModalVisible(true)}
                 name={"plus-outline"}
                 style={{ padding: 12 }}
-                backgroundStyle={{ borderRadius: 24, backgroundColor: AppColors.primaryColor }}
+                backgroundStyle={{ borderRadius: 24, backgroundColor: AppColors.primaryColor, maxHeight: 58 }}
               />
             )}
 
@@ -398,7 +398,7 @@ export const CommunitiesChatScreen = () => {
             tripModalVisible={tripModalVisible}
             setTripModalVisible={setTripModalVisible}
             launchTrip={launchTrip}
-            initialDate={startDate}
+            startDate={startDate}
           />
         )}
       </KeyboardAvoidingView>
@@ -406,12 +406,7 @@ export const CommunitiesChatScreen = () => {
   );
 };
 
-type StartTime = {
-  hour: number;
-  minute: number;
-};
-
-const getNextAvailableDay = (weekdays: string, start: StartTime): string => {
+const getNextAvailableDay = (weekdays: string, start: Date): DayOfWeekFlag => {
   if (weekdays.length !== 7) {
     throw new Error("La chaîne weekdays doit contenir 7 caractères.");
   }
@@ -437,7 +432,7 @@ const getNextAvailableDay = (weekdays: string, start: StartTime): string => {
   let nextDayIndex = findNextDay(currentDay);
 
   // If the current day is available but the current time is before the start time
-  if (weekdays[currentDay] === "1" && (currentHour < start.hour || (currentHour === start.hour && currentMinute < start.minute))) {
+  if (weekdays[currentDay] === "1" && (currentHour < start.getHours() || (currentHour === start.getHours() && currentMinute < start.getMinutes()))) {
     nextDayIndex = currentDay;
   }
 
@@ -448,12 +443,7 @@ const getNextAvailableDay = (weekdays: string, start: StartTime): string => {
   const result = "0000000".split("");
   result[nextDayIndex] = "1";
 
-  return result.join("");
-};
-
-const createDateFromStart = (start: StartTime): Date => {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), start.hour, start.minute, 0, 0);
+  return result.join("") as DayOfWeekFlag;
 };
 
 const LaunchTripModal = ({
@@ -461,22 +451,19 @@ const LaunchTripModal = ({
   setTripModalVisible,
   launchTrip,
   lianeRequest,
-  initialDate
+  startDate
 }: {
-  initialDate: Date;
+  startDate: Date;
   lianeRequest: ResolvedLianeRequest;
   tripModalVisible: boolean;
   setTripModalVisible: (v: boolean) => void;
   launchTrip: (d: [Date, Date | undefined], from: string | undefined, to: string | undefined) => void;
 }) => {
-  const defaultTimeDate = createDateFromStart((lianeRequest as any).when?.start) ?? initialDate;
-
   const [launchTripStep, setLaunchTripStep] = useState(0);
   const [selectedTime, setSelectedTime] = useState<[Date, Date | undefined]>([new Date(), undefined]);
-  // @ts-ignore
-  const [selectedDay, setSelectedDay] = useState<DayOfWeekFlag>(getNextAvailableDay(lianeRequest.weekDays, (lianeRequest as any).when?.start));
-  const [from, SetFrom] = useState<RallyingPoint>(lianeRequest.wayPoints[0]);
-  const [to, SetTo] = useState<RallyingPoint>(lianeRequest.wayPoints[lianeRequest.wayPoints.length - 1]);
+  const [selectedDay, setSelectedDay] = useState<DayOfWeekFlag>(getNextAvailableDay(lianeRequest.weekDays, startDate));
+  const [from, setFrom] = useState<RallyingPoint>(lianeRequest.wayPoints[0]);
+  const [to, setTo] = useState<RallyingPoint>(lianeRequest.wayPoints[lianeRequest.wayPoints.length - 1]);
 
   const launch = () => {
     const todayIndex = (selectedTime[0].getDay() + 6) % 7;
@@ -497,7 +484,7 @@ const LaunchTripModal = ({
       launchTripStep === 2
         ? selectedTime[1]
           ? addSeconds(selectedTime[1], returnDay * 3600 * 24)
-          : addSeconds(defaultTimeDate, returnDay * 3600 * 24)
+          : addSeconds(startDate, returnDay * 3600 * 24)
         : undefined;
 
     launchTrip([departureTime, returnTime], from.id, to.id);
@@ -505,8 +492,8 @@ const LaunchTripModal = ({
 
   const switchDestination = () => {
     const ToTemp = to;
-    SetTo(from);
-    SetFrom(ToTemp);
+    setTo(from);
+    setFrom(ToTemp);
   };
 
   return (
@@ -547,7 +534,7 @@ const LaunchTripModal = ({
             </View>
             <AppText style={styles.modalText}>Départ à :</AppText>
             <Center>
-              <TimeWheelPicker date={defaultTimeDate} minuteStep={5} onChange={d => setSelectedTime([d, undefined])} />
+              <TimeWheelPicker date={startDate} minuteStep={5} onChange={d => setSelectedTime([d, undefined])} />
             </Center>
             <Row style={{ justifyContent: "flex-end" }}>
               <AppPressableIcon name={"checkmark-outline"} onPress={launch} />
@@ -573,13 +560,13 @@ const LaunchTripModal = ({
               <Column>
                 <AppText style={styles.modalText}>Départ à :</AppText>
                 <Center>
-                  <TimeWheelPicker date={defaultTimeDate} minuteStep={5} onChange={d => setSelectedTime(v => [d, v[1]])} />
+                  <TimeWheelPicker date={startDate} minuteStep={5} onChange={d => setSelectedTime(v => [d, v[1]])} />
                 </Center>
               </Column>
               <Column>
                 <AppText style={styles.modalText}>Retour à :</AppText>
                 <Center>
-                  <TimeWheelPicker date={defaultTimeDate} minuteStep={5} onChange={d => setSelectedTime(v => [v[0], d])} />
+                  <TimeWheelPicker date={startDate} minuteStep={5} onChange={d => setSelectedTime(v => [v[0], d])} />
                 </Center>
               </Column>
             </Row>
