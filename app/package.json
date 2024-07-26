@@ -17,8 +17,8 @@
     "url": "git+https://github.com/oxymore-tech/liane.git"
   },
   "dependencies": {
-    "@datadog/mobile-react-native": "^2.0.1",
-    "@datadog/mobile-react-navigation": "^2.0.1",
+    "@datadog/mobile-react-native": "^2.4.2",
+    "@datadog/mobile-react-navigation": "^2.4.2",
     "@liane/common": "file:../common",
     "@maplibre/maplibre-react-native": "^9.1.0",
     "@notifee/react-native": "^7.8.2",
@@ -39,7 +39,7 @@
     "i18n-js": "^4.2.2",
     "react": "18.2.0",
     "react-hook-form": "^7.49.2",
-    "react-native": "0.73.4",
+    "react-native": "0.74.3",
     "react-native-bouncy-checkbox": "^3.0.7",
     "react-native-device-info": "^10.12.0",
     "react-native-element-dropdown": "^2.10.1",
@@ -67,11 +67,11 @@
     "@babel/preset-env": "^7.20.0",
     "@babel/runtime": "^7.20.0",
     "@faker-js/faker": "^8.3.1",
-    "@react-native/babel-preset": "0.73.21",
-    "@react-native/eslint-config": "0.73.2",
-    "@react-native/metro-config": "0.73.5",
-    "@react-native/typescript-config": "0.73.1",
-    "@tsconfig/react-native": "^3.0.0",
+    "@react-native/babel-preset": "0.74.85",
+    "@react-native/eslint-config": "0.74.85",
+    "@react-native/metro-config": "0.74.85",
+    "@react-native/typescript-config": "0.74.85",
+    "@tsconfig/react-native": "^3.0.5",
     "@types/geojson": "^7946.0.11",
     "@types/jest": "^29.5.5",
     "@types/react": "^18.2.19",
@@ -88,5 +88,6 @@
   },
   "engines": {
     "node": ">=18"
-  }
+  },
+  "packageManager": "yarn@3.6.4"
 }
