@@ -62,7 +62,7 @@ export const TripSurveyView = ({ message, coLiane, color }: { message: LianeMess
     await queryClient.invalidateQueries(JoinRequestDetailQueryKey(message.content.value));
     await queryClient.invalidateQueries(LianeDetailQueryKey(message.content.value));
     await queryClient.invalidateQueries(LianeQueryKey);
-    await queryClient.invalidateQueries(JoinRequestsQueryKey);
+    // await queryClient.invalidateQueries(JoinRequestsQueryKey);
   }, [trip.data, isMember, services.community, coLiane.id, queryClient, message.content.value]);
 
   const editLianeTrip = async (d: Date) => {
