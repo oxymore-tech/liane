@@ -119,7 +119,7 @@ type ActiveViewProps = { trip: Liane; isMember: boolean; joinRequest?: JoinLiane
 const ActiveView = ({ trip, isMember, joinRequest, handleJoinTrip }: ActiveViewProps) => {
   return (
     <Row style={{ marginTop: 8, justifyContent: "space-between", alignItems: "center" }}>
-      <View style={{ marginLeft: 10 }}>
+      <View style={{ marginLeft: 10, justifyContent: "flex-start", flexDirection: "row" }}>
         {trip.members.map(m => (
           <UserPicture key={m.user.id} url={m.user.pictureUrl} id={m.user.id} size={28} style={{ marginLeft: -10 }} />
         ))}
