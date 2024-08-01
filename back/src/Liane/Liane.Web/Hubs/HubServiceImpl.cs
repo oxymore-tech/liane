@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using Liane.Api.Auth;
 using Liane.Api.Chat;
+using Liane.Api.Community;
 using Liane.Api.Event;
 using Liane.Api.Hub;
 using Liane.Api.Trip;
-using Liane.Api.Auth;
-using Liane.Api.Community;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Trip.Geolocation;
@@ -60,8 +60,7 @@ public sealed class HubServiceImpl(
     {
       try
       {
-        var result = await hubContext.Clients.Client(connectionId).ReceiveGroupMessage(conversation, message);
-        if (result) return true;
+        await hubContext.Clients.Client(connectionId).ReceiveGroupMessage(conversation, message);
         var sender = await userService.Get(message.CreatedBy);
         var notification = new Notification.NewMessage(
           null,
@@ -76,8 +75,8 @@ public sealed class HubServiceImpl(
       }
       catch (Exception e)
       {
-        // TODO handle retry 
-        logger.LogInformation("Could not send message to user {receiver} : {error}", receiver, e.Message);
+        logger.LogWarning(e, "Could not send message to user {receiver}", receiver);
+        return false;
       }
     }
 
@@ -92,8 +91,7 @@ public sealed class HubServiceImpl(
     {
       try
       {
-        var result = await hubContext.Clients.Client(connectionId).ReceiveLianeMessage(conversation, message);
-        if (result) return true;
+        await hubContext.Clients.Client(connectionId).ReceiveLianeMessage(conversation, message);
         var sender = await userService.Get(message.CreatedBy);
         var notification = new Notification.LianeMessage(
           null,
@@ -109,8 +107,8 @@ public sealed class HubServiceImpl(
       }
       catch (Exception e)
       {
-        // TODO handle retry 
-        logger.LogInformation("Could not send liane message to user {receiver} : {error}", receiver, e.Message);
+        logger.LogWarning(e, "Could not send liane message to user {receiver}", receiver);
+        return false;
       }
     }
 
@@ -135,7 +133,7 @@ public sealed class HubServiceImpl(
     return Task.CompletedTask;
   }
 
-  public Task<TrackingInfo?> GetLastTrackingInfo(Ref<Api.Trip.Trip> liane)
+  public Task<TrackingInfo?> GetLastTrackingInfo(Ref<Trip> liane)
   {
     var lastValue = trackerCache.GetTracker(liane)?.GetTrackingInfo();
     return Task.FromResult(lastValue);
@@ -155,7 +153,7 @@ public sealed class HubServiceImpl(
   }
 
 
-  public async Task Push(Api.Trip.Trip trip, Ref<User> recipient)
+  public async Task Push(Trip trip, Ref<User> recipient)
   {
     var connectionId = GetConnectionId(recipient);
     if (connectionId is not null)
