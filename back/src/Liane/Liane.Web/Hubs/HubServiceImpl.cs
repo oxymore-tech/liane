@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Auth;
 using Liane.Api.Chat;
@@ -19,7 +18,6 @@ namespace Liane.Web.Hubs;
 public sealed class HubServiceImpl(
   IHubContext<ChatHub, IHubClient> hubContext,
   ILogger<HubServiceImpl> logger,
-  IUserService userService,
   ILianeTrackerCache trackerCache
 ) : IHubService, IPushMiddleware, ILianeUpdatePushService, ILianeUpdateObserver
 {
@@ -40,8 +38,9 @@ public sealed class HubServiceImpl(
       var connectionId = GetConnectionId(recipient);
       if (connectionId is not null)
       {
-        return await hubContext.Clients.Client(connectionId)
+        await hubContext.Clients.Client(connectionId)
           .ReceiveNotification(notification);
+        return false;
       }
     }
     catch (Exception e)
@@ -61,17 +60,7 @@ public sealed class HubServiceImpl(
       try
       {
         await hubContext.Clients.Client(connectionId).ReceiveGroupMessage(conversation, message);
-        var sender = await userService.Get(message.CreatedBy);
-        var notification = new Notification.NewMessage(
-          null,
-          sender,
-          message.CreatedAt!.Value,
-          ImmutableList.Create(new Recipient(receiver)),
-          ImmutableHashSet<Answer>.Empty,
-          sender.Pseudo,
-          message.Text,
-          conversation.Id);
-        return await SendNotification(receiver, notification);
+        return false;
       }
       catch (Exception e)
       {
@@ -92,18 +81,7 @@ public sealed class HubServiceImpl(
       try
       {
         await hubContext.Clients.Client(connectionId).ReceiveLianeMessage(conversation, message);
-        var sender = await userService.Get(message.CreatedBy);
-        var notification = new Notification.LianeMessage(
-          null,
-          sender,
-          message.CreatedAt!.Value,
-          ImmutableList.Create(new Recipient(receiver)),
-          ImmutableHashSet<Answer>.Empty,
-          sender.Pseudo,
-          message.Content.AsText(),
-          message.Content,
-          conversation.Id);
-        return await SendNotification(receiver, notification);
+        return false;
       }
       catch (Exception e)
       {
