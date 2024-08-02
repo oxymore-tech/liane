@@ -91,7 +91,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     let user = await AppStorage.getUser();
     if (user) {
       await registerRumUser(user);
-      initPushNotification(user, SERVICES).then();
+      await initPushNotification(user, SERVICES);
 
       await SERVICES.realTimeHub.start();
     }

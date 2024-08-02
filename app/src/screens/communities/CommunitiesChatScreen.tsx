@@ -40,7 +40,7 @@ export const CommunitiesChatScreen = () => {
   const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState<LianeMessage[]>([]);
   const [paginationCursor, setPaginationCursor] = useState<string>();
-  const [chat, setchat] = useState<Chat<"Liane">>();
+  const [chat, setChat] = useState<Chat<"Liane">>();
   const [inputValue, setInputValue] = useState<string>("");
   const [error, setError] = useState<Error | undefined>(undefined);
   const [isSending, setIsSending] = useState(false);
@@ -223,21 +223,17 @@ export const CommunitiesChatScreen = () => {
       services.realTimeHub
         .connectToLianeChat(liane.id, onReceiveLatestMessages, appendMessage)
         .then(conv => {
-          /* if (__DEV__) {
-            console.debug("Joined chat", conv);
-          } */
-          setchat(conv);
+          setChat(conv);
         })
         .catch(e => {
+          AppLogger.error("CHAT", "Unable to connect to chat", e);
           setError(e);
         });
     }
     return () => {
       if (liane && liane.id) {
         services.realTimeHub.disconnectFromChat().catch(e => {
-          if (__DEV__) {
-            console.warn(e);
-          }
+          AppLogger.warn("CHAT", "Error while disconnecting from chat", e);
         });
       }
     };

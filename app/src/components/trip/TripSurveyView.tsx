@@ -20,7 +20,7 @@ import { AppIcon } from "@/components/base/AppIcon.tsx";
 import { AppPressableIcon, AppPressableOverlay } from "@/components/base/AppPressable.tsx";
 import { WayPointView } from "@/components/trip/WayPointsView.tsx";
 import { useQuery, useQueryClient } from "react-query";
-import { JoinRequestDetailQueryKey, JoinRequestsQueryKey, LianeDetailQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen.tsx";
+import { JoinRequestDetailQueryKey, LianeDetailQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen.tsx";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
 import { AppStorage } from "@/api/storage.ts";
 import { LianeStatusView } from "@/components/trip/LianeStatusView.tsx";
@@ -62,7 +62,6 @@ export const TripSurveyView = ({ message, coLiane, color }: { message: LianeMess
     await queryClient.invalidateQueries(JoinRequestDetailQueryKey(message.content.value));
     await queryClient.invalidateQueries(LianeDetailQueryKey(message.content.value));
     await queryClient.invalidateQueries(LianeQueryKey);
-    // await queryClient.invalidateQueries(JoinRequestsQueryKey);
   }, [trip.data, isMember, services.community, coLiane.id, queryClient, message.content.value]);
 
   const editLianeTrip = async (d: Date) => {

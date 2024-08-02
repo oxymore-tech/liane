@@ -313,6 +313,7 @@ export class HubServiceClient extends AbstractHubService {
     onReceiveLatestMessages: OnLatestMessagesCallback<MessageTypeOf<TChatType>>,
     onReceiveMessage: ConsumeMessage<MessageTypeOf<TChatType>>
   ): Promise<Chat<TChatType>> {
+    await this.start();
     if (this.currentChat) {
       await this.currentChat.disconnect();
     }

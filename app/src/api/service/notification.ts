@@ -116,6 +116,7 @@ export async function initializeNotification() {
 export async function initPushNotification(user: FullUser, services: AppServices) {
   try {
     const pushToken = await PushNotifications?.getToken();
+    services.logger.info("NOTIFICATIONS", "PUSH", pushToken);
     if (pushToken && pushToken !== user.pushToken) {
       services.logger.debug("NOTIFICATIONS", "New push token", pushToken);
       await services.auth.updatePushToken(pushToken);
