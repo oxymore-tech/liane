@@ -28,7 +28,7 @@ const Header = () => {
 
   return (
     <Row style={{ alignItems: "center" }} spacing={16}>
-      {/*<AppButton style={{ flex: 1 }} icon="plus-outline" kind="rounded" title="Créer une liane" onPress={() => navigation.navigate("Publish", {})} />*/}
+      {/*<AppButton style={{ flex: 1 }} icon="plus-outline" kind="rounded" title="Créer une annonce" onPress={() => navigation.navigate("Publish", {})} />*/}
       <Space />
       <View>
         <AppPressableIcon

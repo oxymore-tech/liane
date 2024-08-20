@@ -50,27 +50,6 @@ export const ItineraryForm = ({
   return (
     <Column spacing={6} style={styles.containerStyle}>
       <RallyingPointField
-        ref={inputRefFrom}
-        onChange={v => {
-          setSearchFrom(v);
-          onChangeFrom(v);
-        }}
-        value={from?.label || searchFrom || ""}
-        onFocus={() => {
-          setFocused("from");
-          if (!editable) {
-            onChangeFrom(undefined);
-          } else {
-            onChangeFrom(searchFrom);
-          }
-        }}
-        editable={editable}
-        placeholder={"Choisissez un départ..."}
-        icon={<AppIcon name={"pin"} color={AppColors.primaryColor} />}
-        showTrailing={(focused === "from" && (from || (searchFrom && searchFrom.length > 0))) === true}
-      />
-
-      <RallyingPointField
         ref={inputRefTo}
         onChange={v => {
           setSearchTo(v);
@@ -86,9 +65,30 @@ export const ItineraryForm = ({
           }
         }}
         editable={editable}
-        placeholder={"... Et votre destination !"}
+        placeholder={"Où allez-vous ?"}
         icon={<AppIcon name={"flag"} color={AppColors.primaryColor} />}
         showTrailing={focused === "to" && (to || (searchTo && searchTo.length > 0)) === true}
+      />
+
+      <RallyingPointField
+        ref={inputRefFrom}
+        onChange={v => {
+          setSearchFrom(v);
+          onChangeFrom(v);
+        }}
+        value={from?.label || searchFrom || ""}
+        onFocus={() => {
+          setFocused("from");
+          if (!editable) {
+            onChangeFrom(undefined);
+          } else {
+            onChangeFrom(searchFrom);
+          }
+        }}
+        editable={editable}
+        placeholder={"... et votre départ !"}
+        icon={<AppIcon name={"pin"} color={AppColors.primaryColor} />}
+        showTrailing={(focused === "from" && (from || (searchFrom && searchFrom.length > 0))) === true}
       />
 
       {(to || from) && (

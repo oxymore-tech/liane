@@ -6,7 +6,7 @@
     "Impossible d'effectuer la demande": "Signup failed"
   },
   "Home": {
-    "Mes trajets": "My trips",
+    "Calendrier": "My trips",
     "trajets partagés": {
       "one": "Vous avez partagé un trajet",
       "other": "Vous avez partagé 3 trajets",

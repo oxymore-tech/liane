@@ -62,7 +62,7 @@ const Button = () => {
               },
               AppStyles.shadow
             ]}>
-            <AppText style={{ color: AppColors.white, fontWeight: "bold", fontSize: 16 }}>Créer une Liane</AppText>
+            <AppText style={{ color: AppColors.white, fontWeight: "bold", fontSize: 16 }}>Créer une annonce</AppText>
           </View>
         </Animated.View>
       )}
@@ -160,7 +160,7 @@ function Home() {
         { headerShown: false }
       )}
       {makeTab(
-        "Mes trajets",
+        "Calendrier",
         ({ focused }) => {
           return <BadgeTabIcon iconName={"calendar"} focused={focused} size={iconSize} value={Math.max(notificationCount, notificationHub.length)} />;
         },
@@ -168,7 +168,7 @@ function Home() {
         { headerShown: false } //TODO generic header ?
       )}
       {makeTab(
-        "Communauté",
+        "Lianes",
         ({ focused }) => {
           return <TabIcon iconName={"people-outline"} focused={focused} size={iconSize} />;
         },

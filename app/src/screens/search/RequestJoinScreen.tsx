@@ -57,7 +57,7 @@ export const RequestJoinScreen = WithFullscreenModal(() => {
     await services.liane.join(r);
     await queryClient.invalidateQueries(JoinRequestsQueryKey);
     // @ts-ignore
-    navigation.navigate("Home", { screen: "Mes trajets" });
+    navigation.navigate("Home", { screen: "Calendrier" });
   };
   const headerDate = (
     <Row spacing={8}>

@@ -162,7 +162,7 @@ export const PublishScreenView = () => {
 
   return (
     <Column style={{ flex: 1, backgroundColor: AppColors.white, paddingBottom: insets.bottom }}>
-      <PageHeader title={"Créer une Liane"} navigation={navigation} />
+      <PageHeader title={"Créer une annonce"} navigation={navigation} />
 
       {(isOverviewStep || isSubmittingStep || isNameStep) && (
         <Animated.View
