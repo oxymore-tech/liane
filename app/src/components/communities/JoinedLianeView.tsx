@@ -42,7 +42,7 @@ const RenderGroupsView = ({ joinedLiane, unreadMessage }: GroupsViewProps) => {
             lineHeight: 14,
             color: "black"
           }}>
-          {`zerfergergregergerger ezfez fez fz zfze fzef ezf zef zef zef ze fze e`}
+          {`${joinedLiane.deposit.label}`}
         </AppText>
       </Row>
 
