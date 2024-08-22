@@ -563,7 +563,6 @@ const VehicleStepView = ({ editable, onChange, initialValue, onRequestEdit }: St
 const ReturnStepView = ({ editable, onChange, initialValue, onRequestEdit }: StepProps<TimeIntervalConstraint | null>) => {
   const [arriveBefore, setArriveBefore] = useState(initialValue?.arriveBefore);
   const [leaveAfter, setLeaveAfter] = useState(initialValue?.leaveAfter);
-  const [showTimeChoice, setShowTimeChoice] = useState(false);
 
   const daysMessage = useMemo(() => {
     if (!!arriveBefore && !!leaveAfter) {
@@ -573,58 +572,35 @@ const ReturnStepView = ({ editable, onChange, initialValue, onRequestEdit }: Ste
     } else if (leaveAfter) {
       return `Retour à partir de ${AppLocalization.formatTime(leaveAfter)}`;
     } else {
-      return "Journée entière";
+      return "Retour sur journée entière";
     }
   }, [arriveBefore, leaveAfter]);
 
   return (
     <Pressable disabled={editable} onPress={onRequestEdit}>
-      {editable && (
-        <Animated.View exiting={SlideOutLeft.duration(300)} entering={SlideInLeft.delay(280).duration(300).springify().damping(15)}>
-          <Center>
-            <AppText style={[AppStyles.title, styles.stepTitle]}>Prévoyez-vous un retour ?</AppText>
-          </Center>
-        </Animated.View>
-      )}
-
       {!editable && (
         <Animated.View exiting={FadeOutRight.duration(300)} entering={FadeIn.duration(300).springify().damping(15)}>
           <Row style={styles.stepResumeContainer} spacing={8}>
-            <AppText style={styles.stepResume}>{showTimeChoice ? daysMessage : "Pas de retour"}</AppText>
+            <AppText style={styles.stepResume}>{daysMessage}</AppText>
             <AppIcon name={"edit-2"} color={AppColors.white} />
           </Row>
         </Animated.View>
       )}
 
       {editable && (
-        <Row spacing={8} style={styles.validateContainer}>
-          <AppPressableOverlay
-            backgroundStyle={styles.cancelButtonBackground}
-            style={styles.validateButton}
-            onPress={() => {
-              onChange(null);
-            }}>
-            <Center>
-              <Row spacing={4}>
-                <AppText style={styles.cancelText}>Non</AppText>
-              </Row>
-            </Center>
-          </AppPressableOverlay>
-          <AppPressableOverlay
-            backgroundStyle={styles.validateButtonBackground}
-            style={styles.validateButton}
-            onPress={() => setShowTimeChoice(true)}>
-            <Center>
-              <Row spacing={4}>
-                <AppText style={styles.validateText}>Oui</AppText>
-              </Row>
-            </Center>
-          </AppPressableOverlay>
-        </Row>
+        <Animated.View exiting={SlideOutLeft.duration(300)} entering={SlideInLeft.delay(600).duration(300).springify().damping(15)}>
+          <Center>
+            <AppText style={[AppStyles.title, styles.stepTitle]}>Quels sont vos horaires de retour ?</AppText>
+          </Center>
+
+          <Center>
+            <AppText>{daysMessage}</AppText>
+          </Center>
+        </Animated.View>
       )}
 
       <Column spacing={8}>
-        {editable && showTimeChoice && (
+        {editable && (
           <Animated.View exiting={FadeOutLeft.delay(50).duration(150)} entering={SlideInLeft.delay(650).duration(300).springify().damping(20)}>
             <Row spacing={16} style={{ padding: 16 }}>
               <TimeConstraintView title={"Partir après"} value={leaveAfter} onChange={setLeaveAfter} />
@@ -633,7 +609,7 @@ const ReturnStepView = ({ editable, onChange, initialValue, onRequestEdit }: Ste
           </Animated.View>
         )}
 
-        {editable && showTimeChoice && (
+        {editable && (
           <Row spacing={8} style={styles.validateContainer}>
             <AppPressableOverlay
               backgroundStyle={[styles.validateButtonBackground, { backgroundColor: AppColors.primaryColor }]}

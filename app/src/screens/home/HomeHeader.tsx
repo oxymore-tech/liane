@@ -92,9 +92,9 @@ const HomeScreenHeader = ({ isRootHeader = false, updateTrip, trip }: HomeScreen
       {isRootHeader && (
         <View style={{ paddingTop: 8, marginTop: insets.top }}>
           <Row style={styles.headerContainer}>
-            <View style={styles.filterContainer}>
+            {/*<View style={styles.filterContainer}>
               <FilterSelector color={AppColors.white} shortFormat={true} />
-            </View>
+            </View>*/}
 
             {/*<TouchableOpacity
               style={[AppStyles.center, { borderWidth: 1, borderRadius: 20, borderColor: AppColors.primaryColor }]}
@@ -109,13 +109,13 @@ const HomeScreenHeader = ({ isRootHeader = false, updateTrip, trip }: HomeScreen
       )}
       {!isRootHeader && (
         <Column spacing={8}>
-          <View>
+          {/*<View>
             <FloatingBackButton onPress={() => updateTrip({ from: undefined })} />
 
             <View style={[styles.filterContainer, { alignSelf: "flex-start", marginTop: insets.top + 5, marginLeft: 72, marginRight: 8 }]}>
               <FilterSelector color={AppColors.white} shortFormat={true} />
             </View>
-          </View>
+          </View>*/}
           <Row
             style={[styles.filterContainer, { backgroundColor: AppColors.white, alignItems: "center", marginHorizontal: 16, paddingHorizontal: 16 }]}
             spacing={8}>
