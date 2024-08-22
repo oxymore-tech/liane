@@ -156,7 +156,7 @@ export const LianeMatchDetailView = () => {
       // setModalVisible(false);
       machine.send(["BACK", "BACK", "BACK"]);
       //@ts-ignore
-      navigation.navigate("Home", { screen: "Mes trajets" });
+      navigation.navigate("Home", { screen: "Calendrier" });
       setProgress(false);
     }
   };

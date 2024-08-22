@@ -17,19 +17,19 @@ export const RecentTrip = ({ trip, style }: { trip: Trip; style?: StyleProp<View
   return (
     <Row style={style} spacing={12}>
       <Column style={{ justifyContent: "space-between", alignSelf: "stretch", paddingVertical: 8 }}>
-        <AppIcon name={"pin"} size={24} color={AppColors.primaryColor} />
-        <View style={[TripViewStyles.verticalLine]} />
         <AppIcon name={"flag"} size={24} color={AppColors.primaryColor} />
+        <View style={[TripViewStyles.verticalLine]} />
+        <AppIcon name={"pin"} size={24} color={AppColors.primaryColor} />
       </Column>
 
       <Column spacing={8}>
         <Column>
-          <AppText style={[TripViewStyles.mainWayPointCity, { alignSelf: "flex-start", maxWidth: undefined }]}>{trip.from.city}</AppText>
-          <AppText style={[TripViewStyles.mainWayPointLabel]}>{trip.from.label}</AppText>
-        </Column>
-        <Column>
           <AppText style={[TripViewStyles.mainWayPointCity, { alignSelf: "flex-start", maxWidth: undefined }]}>{trip.to.city}</AppText>
           <AppText style={[TripViewStyles.mainWayPointLabel]}>{trip.to.label}</AppText>
+        </Column>
+        <Column>
+          <AppText style={[TripViewStyles.mainWayPointCity, { alignSelf: "flex-start", maxWidth: undefined }]}>{trip.from.city}</AppText>
+          <AppText style={[TripViewStyles.mainWayPointLabel]}>{trip.from.label}</AppText>
         </Column>
       </Column>
     </Row>

@@ -6,6 +6,7 @@ import { AppColors } from "@/theme/colors";
 import { UserPicture } from "@/components/UserPicture";
 import { MatchGroup } from "@liane/common";
 import { useAppNavigation } from "@/components/context/routing";
+import { Row } from "@/components/base/AppLayout.tsx";
 
 export interface GroupsViewProps {
   joinedLiane: MatchGroup;
@@ -16,38 +17,41 @@ const RenderGroupsView = ({ joinedLiane, unreadMessage }: GroupsViewProps) => {
   return (
     <View style={{ flexGrow: 1, flexShrink: 1 }}>
       <View style={{ flex: 1, flexDirection: "row" }}>
-        {joinedLiane.name.trim() !== "" && (
-          <AppText
-            style={{
-              fontSize: 18,
-              fontWeight: "bold",
-              flexShrink: 1,
-              lineHeight: 27,
-              color: "black"
-            }}>
-            {joinedLiane.name}
-          </AppText>
-        )}
         {unreadMessage && (
           <View style={styles.notificationDotContainer}>
             <View style={styles.notificationDot} />
           </View>
         )}
       </View>
-      <AppText
-        style={{
-          fontSize: 14,
-          fontWeight: "bold",
-          flexShrink: 1,
-          lineHeight: 27,
-          color: "black"
-        }}>{`${joinedLiane.pickup.label} ➔ ${joinedLiane.deposit.label}`}</AppText>
+      <Row style={{ alignItems: "flex-start", flexWrap: "wrap" }} spacing={4}>
+        <AppText
+          style={{
+            fontSize: 14,
+            fontWeight: "bold",
+            flexShrink: 1,
+            lineHeight: 14,
+            color: "black"
+          }}>
+          {`${joinedLiane.pickup.label} ➔`}
+        </AppText>
+        <AppText
+          style={{
+            fontSize: 14,
+            fontWeight: "bold",
+            flexShrink: 1,
+            lineHeight: 14,
+            color: "black"
+          }}>
+          {`${joinedLiane.deposit.label}`}
+        </AppText>
+      </Row>
+
       <AppText
         style={{
           fontSize: 14,
           fontWeight: "400",
           flexShrink: 1,
-          lineHeight: 16
+          lineHeight: 20
         }}>{`${extractDays(joinedLiane.weekDays)}`}</AppText>
       <View
         style={{

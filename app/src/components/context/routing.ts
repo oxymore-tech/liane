@@ -24,7 +24,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack/src/ty
 import { InternalLianeRequest } from "@/screens/publish/StateMachine";
 import { checkInitialNotification } from "@/api/service/notification";
 
-export const HOME_TRIPS = "Mes trajets";
+export const HOME_TRIPS = "Calendrier";
 export type NavigationParamList = {
   Home: undefined;
   [HOME_TRIPS]: undefined;
@@ -51,7 +51,7 @@ export type NavigationParamList = {
 };
 
 export const NavigationScreenTitles = {
-  Publish: "Créer une Liane",
+  Publish: "Créer une annonce",
   Account: "Mon compte",
   ArchivedTrips: "Historique des trajets",
   Settings: "Paramètres",

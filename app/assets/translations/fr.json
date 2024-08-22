@@ -2,7 +2,7 @@
   "SignUp": {
   },
   "Home": {
-    "Mes trajets": "Mes trajets",
+    "Calendrier": "Calendrier",
     "trajets partagés": {
       "one": "Vous avez partagé un trajet",
       "other": "Vous avez partagé %{formatted_number} trajets",

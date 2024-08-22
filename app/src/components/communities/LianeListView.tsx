@@ -133,6 +133,15 @@ const LianeRequestItem = ({ item, onRefresh }: { item: CoLianeMatch; onRefresh: 
                   borderWidth: 1,
                   borderColor: AppColors.grayBackground
                 }}>
+                <AppText
+                  style={{
+                    fontSize: 16,
+                    fontWeight: "bold",
+                    flexShrink: 1,
+                    lineHeight: 27,
+                    color: "black"
+                  }}
+                />
                 <View style={{ padding: 10 }}>
                   <AppText
                     style={{
@@ -141,7 +150,9 @@ const LianeRequestItem = ({ item, onRefresh }: { item: CoLianeMatch; onRefresh: 
                       flexShrink: 1,
                       lineHeight: 27,
                       color: "black"
-                    }}>{`${from.label} ➔ ${to.label}`}</AppText>
+                    }}>
+                    {!item?.lianeRequest?.name ? `${from.label} ➔ ${to.label}` : `${item?.lianeRequest?.name}`}
+                  </AppText>
                   <AppText
                     style={{
                       fontSize: 14,
