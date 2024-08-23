@@ -297,7 +297,7 @@ function PingsMarkersLayer({ features }: { features: FeatureCollection<GeoJSON.P
           }}
           props={{
             layout: {
-              "icon-size": 0.8
+              "icon-size": 1.2
             },
             paint: {
               "icon-color": ["get", "color"],

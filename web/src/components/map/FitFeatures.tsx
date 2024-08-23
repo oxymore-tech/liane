@@ -22,7 +22,8 @@ export const useFitFeatures = (features: Feature[], maxBounds: boolean) => {
       const bounds = getBounds(features);
       if (features.length === 1 && features[0].geometry.type === "Point") {
         const coords = features[0].geometry.coordinates;
-        map.current?.flyTo({ center: [coords[0], coords[1]], animate: true });
+
+        map.current?.flyTo({ center: [coords[0], coords[1]], zoom: 12, animate: true });
       } else if (features.length > 0 && bounds) {
         map.current?.fitBounds(bounds, { animate: true });
         if (maxBounds) {
@@ -35,7 +36,7 @@ export const useFitFeatures = (features: Feature[], maxBounds: boolean) => {
         }
       }
     });
-  }, [map, features]);
+  }, [map, features, maxBounds]);
 };
 
 export const bboxToLngLatBoundsLike = (box: BBox): LngLatBoundsLike => [
