@@ -118,7 +118,6 @@ export const PublishScreenView = () => {
   const isTimeStep = state.matches("time");
   const isVehicleStep = state.matches("vehicle");
   const isReturnStep = state.matches("return");
-  const isReturnTimeStep = state.matches("returnTime");
   const isNameStep = state.matches("name");
   const isOverviewStep = state.matches("overview");
   const isSubmittingStep = state.matches("submitting");
@@ -166,92 +165,31 @@ export const PublishScreenView = () => {
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         <View style={isReturnStep ? { height: 900 } : null}>
           <PageHeader title={"Créer une annonce"} navigation={navigation} />
-          {(isOverviewStep || isSubmittingStep || isNameStep) && (
-            <Animated.View
-              exiting={SlideOutLeft.duration(20)}
-              entering={SlideInLeft.delay(50).duration(300).springify().damping(20)}
-              style={[
-                styles.footerContainer,
-                { marginTop: isNameStep ? offsetsTop.nameStep + 62 : offsetsTop.nameStep + 48 },
-                !isNameStep ? styles.compactedStepStyle : null,
-                !isNameStep ? AppStyles.shadow : null
-              ]}>
-              <NameStepView
-                editable={isNameStep}
-                animationType={state.context.request.returnConstraints === undefined ? "firstEntrance" : "ease"}
-                onRequestEdit={() => machine.send("NAME", { data: { name: null } })}
-                onChange={v => machine.send("UPDATE", { data: { name: v } })}
-                initialValue={state.context.request.name}
-              />
-            </Animated.View>
-          )}
 
-          {(isOverviewStep || isSubmittingStep || isReturnStep || isNameStep) && (
-            <Animated.View
-              exiting={SlideOutLeft.duration(20)}
-              entering={SlideInLeft.delay(50).duration(300).springify().damping(20)}
-              style={[
-                styles.footerContainer,
-                { marginTop: isReturnStep ? offsetsTop.returnStep + 62 : offsetsTop.returnStep + 48 },
-                !isReturnStep ? styles.compactedStepStyle : null,
-                !isReturnStep ? AppStyles.shadow : null
-              ]}>
-              <ReturnStepView
-                editable={isReturnStep}
-                animationType={state.context.request.returnConstraints === undefined ? "firstEntrance" : "ease"}
-                onRequestEdit={() => machine.send("RETURN", { data: { returnTime: null } })}
-                onChange={v => machine.send("UPDATE", { data: { returnTime: v } })}
-                initialValue={state.context.request.returnConstraints}
-              />
-            </Animated.View>
-          )}
+          <ItinerarySearchForm
+            editable={isTripStep}
+            animateEntry={Platform.OS === "ios"} // TODO : investigate android issue where animation does not start
+            trip={state.context.request}
+            onSelectTrip={t => {
+              machine.send("NEXT", { data: t });
+              nextStep(1);
+            }}
+            updateTrip={t => {
+              if (isTripStep) {
+                machine.send("UPDATE", { data: t });
+              } else {
+                machine.send([
+                  { type: "EDIT", data: "trip" },
+                  { type: "UPDATE", data: t }
+                ]);
+              }
+            }}
+            openMap={data => machine.send("MAP", { data })}
+          />
 
-          {!isTripStep && !isDateStep && !isTimeStep && (
-            <Animated.View
-              exiting={SlideOutLeft.duration(20)}
-              entering={SlideInLeft.delay(50).duration(300).springify().damping(20)}
-              style={[
-                styles.footerContainer,
-                { marginTop: isVehicleStep ? offsetsTop.vehicleStep + 62 : offsetsTop.vehicleStep + 48 },
-                !isVehicleStep ? styles.compactedStepStyle : null,
-                !isVehicleStep ? AppStyles.shadow : null
-              ]}>
-              <VehicleStepView
-                animationType={step.value < 3 ? "firstEntrance" : "ease"}
-                editable={isVehicleStep}
-                initialValue={state.context.request.availableSeats}
-                onRequestEdit={() => machine.send("EDIT", { data: "vehicle" })}
-                onChange={d => {
-                  machine.send("NEXT", { data: { availableSeats: d } });
-                  nextStep(4);
-                }}
-              />
-            </Animated.View>
-          )}
-
-          {!isTripStep && !isDateStep && (
-            <Animated.View
-              exiting={SlideOutLeft.duration(20)}
-              entering={SlideInLeft.delay(50).duration(300).springify().damping(20)}
-              style={[
-                styles.footerContainer,
-                { marginTop: isTimeStep ? offsetsTop.timeStep + 62 : offsetsTop.timeStep + 48 },
-                !isTimeStep ? styles.compactedStepStyle : null,
-                !isTimeStep ? AppStyles.shadow : null
-              ]}>
-              <TimeStepView
-                animationType={step.value < PublishStateCount ? "firstEntrance" : "ease"}
-                editable={isTimeStep}
-                initialValue={state.context.request.departureConstraints}
-                onRequestEdit={() => machine.send("EDIT", { data: "time" })}
-                onChange={d => {
-                  machine.send("NEXT", { data: { departureConstraints: d } });
-                  nextStep(3);
-                }}
-              />
-            </Animated.View>
-          )}
-
+          {
+            // First container: days
+          }
           {!isTripStep && (
             <Animated.View
               exiting={SlideOutLeft.duration(20)}
@@ -275,26 +213,105 @@ export const PublishScreenView = () => {
             </Animated.View>
           )}
 
-          <ItinerarySearchForm
-            editable={isTripStep}
-            animateEntry={Platform.OS === "ios"} // TODO : investigate android issue where animation does not start
-            trip={state.context.request}
-            onSelectTrip={t => {
-              machine.send("NEXT", { data: t });
-              nextStep(1);
-            }}
-            updateTrip={t => {
-              if (isTripStep) {
-                machine.send("UPDATE", { data: t });
-              } else {
-                machine.send([
-                  { type: "EDIT", data: "trip" },
-                  { type: "UPDATE", data: t }
-                ]);
-              }
-            }}
-            openMap={data => machine.send("MAP", { data })}
-          />
+          {
+            // Second container: Time to leave
+          }
+          {!isTripStep && !isDateStep && (
+            <Animated.View
+              exiting={SlideOutLeft.duration(20)}
+              entering={SlideInLeft.delay(50).duration(300).springify().damping(20)}
+              style={[
+                styles.footerContainer,
+                { marginTop: isTimeStep ? offsetsTop.timeStep + 62 : offsetsTop.timeStep + 48 },
+                !isTimeStep ? styles.compactedStepStyle : null,
+                !isTimeStep ? AppStyles.shadow : null
+              ]}>
+              <TimeStepView
+                animationType={step.value < PublishStateCount ? "firstEntrance" : "ease"}
+                editable={isTimeStep}
+                initialValue={state.context.request.departureConstraints}
+                onRequestEdit={() => machine.send("EDIT", { data: "time" })}
+                onChange={d => {
+                  machine.send("NEXT", { data: { departureConstraints: d } });
+                  nextStep(3);
+                }}
+              />
+            </Animated.View>
+          )}
+
+          {
+            // Thirst container: driver
+          }
+          {!isTripStep && !isDateStep && !isTimeStep && (
+            <Animated.View
+              exiting={SlideOutLeft.duration(20)}
+              entering={SlideInLeft.delay(50).duration(300).springify().damping(20)}
+              style={[
+                styles.footerContainer,
+                { marginTop: isVehicleStep ? offsetsTop.vehicleStep + 62 : offsetsTop.vehicleStep + 48 },
+                !isVehicleStep ? styles.compactedStepStyle : null,
+                !isVehicleStep ? AppStyles.shadow : null
+              ]}>
+              <VehicleStepView
+                animationType={step.value < 3 ? "firstEntrance" : "ease"}
+                editable={isVehicleStep}
+                initialValue={state.context.request.availableSeats}
+                onRequestEdit={() => machine.send("EDIT", { data: "vehicle" })}
+                onChange={d => {
+                  machine.send("NEXT", { data: { availableSeats: d } });
+                  nextStep(4);
+                  machine.send("RETURN", { data: { returnTime: null } });
+                }}
+              />
+            </Animated.View>
+          )}
+
+          {
+            // Fourth container: Return time
+          }
+          {!isTripStep && !isDateStep && !isTimeStep && !isVehicleStep && (
+            <Animated.View
+              exiting={SlideOutLeft.duration(20)}
+              entering={SlideInLeft.delay(50).duration(300).springify().damping(20)}
+              style={[
+                styles.footerContainer,
+                { marginTop: isReturnStep ? offsetsTop.returnStep + 62 : offsetsTop.returnStep + 48 },
+                !isReturnStep ? styles.compactedStepStyle : null,
+                !isReturnStep ? AppStyles.shadow : null
+              ]}>
+              <ReturnStepView
+                editable={isReturnStep}
+                animationType={state.context.request.returnConstraints === undefined ? "firstEntrance" : "ease"}
+                onRequestEdit={() => machine.send("RETURN", { data: { returnTime: null } })}
+                onChange={v => {
+                  machine.send("UPDATE", { data: { returnTime: v } });
+                  machine.send("NAME", { data: { name: null } });
+                }}
+                initialValue={state.context.request.returnConstraints}
+              />
+            </Animated.View>
+          )}
+
+          {!isTripStep && !isDateStep && !isTimeStep && !isVehicleStep && !isReturnStep && (
+            <Animated.View
+              exiting={SlideOutLeft.duration(20)}
+              entering={SlideInLeft.delay(50).duration(300).springify().damping(20)}
+              style={[
+                styles.footerContainer,
+                { marginTop: isNameStep ? offsetsTop.nameStep + 62 : offsetsTop.nameStep + 48 },
+                !isNameStep ? styles.compactedStepStyle : null,
+                !isNameStep ? AppStyles.shadow : null
+              ]}>
+              <NameStepView
+                editable={isNameStep}
+                animationType={state.context.request.returnConstraints === undefined ? "firstEntrance" : "ease"}
+                onRequestEdit={() => machine.send("NAME", { data: { name: null } })}
+                onChange={v => machine.send("UPDATE", { data: { name: v } })}
+                initialValue={state.context.request.name}
+              />
+            </Animated.View>
+          )}
+
           {/*
           <Animated.View style={[styles.stepperIndicatorBaseStyle, stepperIndicatorStyle]} />
           */}
