@@ -95,7 +95,7 @@ public sealed class LianeMatcher(
                                                                    st_length(a_reverse.geometry) AS                      a_length_reverse
                                                             FROM liane_request
                                                                      INNER JOIN route a ON a.way_points = liane_request.way_points
-                                                                     LEFT JOIN route a_reverse ON liane_request.round_trip = true AND a_reverse.way_points = _pgr_array_reverse(liane_request.way_points)
+                                                                     LEFT JOIN route a_reverse ON liane_request.round_trip AND a_reverse.way_points = array_reverse(liane_request.way_points)
                                                                      INNER JOIN route b ON st_intersects(a.geometry, b.geometry)
                                                             WHERE liane_request.id = ANY(@liane_requests)) AS liane_request_match
                                                                INNER JOIN liane_request liane_request_b ON

@@ -651,7 +651,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   [Test]
   public async Task ShouldMatchNoMatterWhatDirection()
   {
-    var lianeGugu = await CreateLianeRequest(gugu, "Marché Mende", LabeledPositions.BlajouxParking, LabeledPositions.Mende, weekDays: DayOfWeekFlag.All);
+    var lianeGugu = await CreateLianeRequest(gugu, "Marché Mende", LabeledPositions.BlajouxParking, LabeledPositions.Mende, weekDays: DayOfWeekFlag.All, roundTrip: true);
     var lianeMathilde = await CreateLianeRequest(mathilde, "Biojour", LabeledPositions.Mende, LabeledPositions.Florac, weekDays: DayOfWeekFlag.All);
 
     {
@@ -671,7 +671,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
 
   private async Task<LianeRequest> CreateLianeRequest(DbUser user, string name, Ref<RallyingPoint> from, Ref<RallyingPoint> to, Ref<RallyingPoint>? intermediate = null,
     DayOfWeekFlag weekDays = default, TimeOnly? leavesAt = null,
-    TimeOnly? returnsAt = null, bool roundTrip = true)
+    TimeOnly? returnsAt = null, bool roundTrip = false)
   {
     currentContext.SetCurrentUser(user);
     var timeConstraints = new List<TimeConstraint>();
