@@ -664,7 +664,36 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       Assert.IsEmpty(list[0].JoinedLianes);
       list[0].Matches
         .AssertDeepEqual(
-          new Match.Single("Biojour", lianeMathilde, mathilde.Id, DayOfWeekFlag.All, default, LabeledPositions.Mende, LabeledPositions.QuezacParking, 0.71079016f, true)
+          new Match.Single("Biojour", lianeMathilde, mathilde.Id, DayOfWeekFlag.All, default, LabeledPositions.Mende, LabeledPositions.QuezacParking, 0.7699512f, true)
+        );
+    }
+  }
+
+  [Test]
+  public async Task ShouldUnjoinedRequestMustAppearInAllMatch()
+  {
+    var lianeGugu = await CreateLianeRequest(gugu, "Marché Mende", LabeledPositions.BlajouxParking, LabeledPositions.Mende, weekDays: DayOfWeekFlag.All);
+    var lianeGugu2 = await CreateLianeRequest(gugu, "Marché Lundi", LabeledPositions.BlajouxParking, LabeledPositions.Mende, weekDays: DayOfWeekFlag.Monday);
+    var lianeMathilde = await CreateLianeRequest(mathilde, "Biojour", LabeledPositions.Florac, LabeledPositions.Mende, weekDays: DayOfWeekFlag.All);
+
+    {
+      currentContext.SetCurrentUser(gugu);
+      var list = await tested.List();
+
+      Assert.AreEqual(2, list.Count);
+
+      Assert.AreEqual(list[0].LianeRequest.Id, lianeGugu.Id);
+      Assert.IsEmpty(list[0].JoinedLianes);
+      list[0].Matches
+        .AssertDeepEqual(
+          new Match.Single("Biojour", lianeMathilde, mathilde.Id, DayOfWeekFlag.All, default, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)
+        );
+
+      Assert.AreEqual(list[1].LianeRequest.Id, lianeGugu2.Id);
+      Assert.IsEmpty(list[1].JoinedLianes);
+      list[1].Matches
+        .AssertDeepEqual(
+          new Match.Single("Biojour", lianeMathilde, mathilde.Id, DayOfWeekFlag.Monday, default, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)
         );
     }
   }

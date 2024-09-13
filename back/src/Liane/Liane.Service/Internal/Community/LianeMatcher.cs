@@ -194,7 +194,7 @@ public sealed class LianeMatcher(
       return null;
     }
 
-    var matchingPoints = GetBestMacth(match);
+    var matchingPoints = GetBestMatch(match);
     if (matchingPoints is null)
     {
       return null;
@@ -208,12 +208,12 @@ public sealed class LianeMatcher(
       lianeRequest.When,
       await matchingPoints.Value.Pickup.Resolve(rallyingPointService.Get),
       await matchingPoints.Value.Deposit.Resolve(rallyingPointService.Get),
-      match.Score,
+      matchingPoints.Value.Score,
       matchingPoints.Value.Reverse
     );
   }
 
-  private (Ref<RallyingPoint> Pickup, Ref<RallyingPoint> Deposit, bool Reverse)? GetBestMacth(LianeRawMatch match)
+  private (Ref<RallyingPoint> Pickup, Ref<RallyingPoint> Deposit, float Score, bool Reverse)? GetBestMatch(LianeRawMatch match)
   {
     if (match.PickupPoint is null || match.DepositPoint is null)
     {
@@ -222,10 +222,10 @@ public sealed class LianeMatcher(
         return null;
       }
 
-      return (match.PickupPointReverse, match.DepositPointReverse, true);
+      return (match.PickupPointReverse, match.DepositPointReverse, match.ScoreReverse, true);
     }
 
-    return (match.PickupPoint, match.DepositPoint, false);
+    return (match.PickupPoint, match.DepositPoint, match.Score, false);
   }
 }
 
