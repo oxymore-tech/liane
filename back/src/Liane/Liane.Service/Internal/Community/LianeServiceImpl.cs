@@ -59,9 +59,16 @@ public sealed class LianeServiceImpl(
 
     var wayPointsArray = request.WayPoints.Deref();
     var coordinates = (await request.WayPoints.SelectAsync(rallyingPointService.Get))
-      .Select(w => w.Location);
+      .Select(w => w.Location)
+      .ToImmutableList();
     var route = await routingService.GetRoute(coordinates);
     await connection.MergeAsync(new RouteDb(wayPointsArray, route.Coordinates.ToLineString()), tx);
+    
+    if (request.RoundTrip)
+    {
+      var reverseRoute = await routingService.GetRoute(coordinates.Reverse());
+      await connection.MergeAsync(new RouteDb(wayPointsArray.Reverse().ToArray(), reverseRoute.Coordinates.ToLineString()), tx);
+    }
 
     var now = DateTime.UtcNow;
     var lianeRequestDb = new LianeRequestDb(id, request.Name, wayPointsArray, request.RoundTrip, request.CanDrive, request.WeekDays, request.IsEnabled, userId, now);

@@ -49,11 +49,11 @@ public sealed class LianeMatcher(
       .ToImmutableDictionary(r => r.Id!.Value);
     return await rawMatches
       .GroupByAsync(m => m.From, async g => (await GroupMatchByLiane(g.Key, g, fetchLianeRequests, joinedLianeIds, lianes))
-        .SplitJoinedLianes(joinedLianeIds));
+        .SplitJoinedLianes(joinedLianeIds.Keys));
   }
 
   /// <summary>
-  /// Récupère toutes les lianes request en base qui matche entre 2 à 2.<br/>
+  /// Récupère toutes les lianes request en base qui matchent 2 à 2.<br/>
   /// Pour que 2 liane_request matchent :
   /// <ul>
   ///   <li>il faut que leurs trajets se croisent.</li>
@@ -70,28 +70,38 @@ public sealed class LianeMatcher(
                                                              liane_request_b.created_by AS "user",
                                                              liane_request_b.way_points AS way_points,
                                                              liane_request_b.is_enabled AS is_enabled,
-                                                             st_length(intersection) / a_length AS score,
                                                              matching_weekdays(liane_request_match.week_days, liane_request_b.week_days) AS week_days,
+                                                             
+                                                             st_length(intersection) / a_length AS score,
                                                              st_startpoint(intersection) AS pickup,
                                                              st_endpoint(intersection) AS deposit,
                                                              nearest_rp(st_startpoint(intersection)) AS pickup_point,
                                                              nearest_rp(st_endpoint(intersection)) AS deposit_point,
+                                                             
+                                                             st_length(intersection_reverse) / a_length_reverse AS score_reverse,
+                                                             st_startpoint(intersection_reverse) AS pickup_reverse,
+                                                             st_endpoint(intersection_reverse) AS deposit_reverse,
+                                                             nearest_rp(st_startpoint(intersection_reverse)) AS pickup_point_reverse,
+                                                             nearest_rp(st_endpoint(intersection_reverse)) AS deposit_point_reverse,
+                                                             
                                                              (SELECT array_agg(DISTINCT liane_id) FROM liane_member WHERE liane_request_id = liane_request_b.id) AS lianes
                                                       FROM (SELECT liane_request.id,
                                                                    liane_request.created_by,
                                                                    liane_request.week_days,
-                                                                   a.way_points          AS                              a,
-                                                                   b.way_points          AS                              b,
+                                                                   b.way_points AS wb,
                                                                    st_linemerge(st_intersection(a.geometry, b.geometry)) intersection,
-                                                                   st_length(a.geometry) AS                              a_length
+                                                                   st_linemerge(st_intersection(a_reverse.geometry, b.geometry)) intersection_reverse,
+                                                                   st_length(a.geometry) AS                              a_length,
+                                                                   st_length(a_reverse.geometry) AS                      a_length_reverse
                                                             FROM liane_request
                                                                      INNER JOIN route a ON a.way_points = liane_request.way_points
+                                                                     LEFT JOIN route a_reverse ON liane_request.round_trip = true AND a_reverse.way_points = _pgr_array_reverse(liane_request.way_points)
                                                                      INNER JOIN route b ON st_intersects(a.geometry, b.geometry)
                                                             WHERE liane_request.id = ANY(@liane_requests)) AS liane_request_match
                                                                INNER JOIN liane_request liane_request_b ON
-                                                          liane_request_b.way_points = b AND liane_request_b.created_by != liane_request_match.created_by
+                                                          liane_request_b.way_points = wb AND liane_request_b.created_by != liane_request_match.created_by
                                                       WHERE matching_weekdays(liane_request_match.week_days, liane_request_b.week_days)::integer != 0
-                                                        AND st_length(intersection) / a_length > 0.3
+                                                        AND st_length(intersection) / a_length > 0.35
                                                       ORDER BY st_length(intersection) / a_length DESC, "from"
                                                       """,
       new { liane_requests = lianeRequests.ToArray() },
@@ -184,7 +194,8 @@ public sealed class LianeMatcher(
       return null;
     }
 
-    if (match.PickupPoint is null || match.DepositPoint is null)
+    var matchingPoints = GetBestMacth(match);
+    if (matchingPoints is null)
     {
       return null;
     }
@@ -195,23 +206,39 @@ public sealed class LianeMatcher(
       match.User,
       match.WeekDays,
       lianeRequest.When,
-      await match.PickupPoint.Resolve(rallyingPointService.Get),
-      await match.DepositPoint.Resolve(rallyingPointService.Get),
-      match.Score
+      await matchingPoints.Value.Pickup.Resolve(rallyingPointService.Get),
+      await matchingPoints.Value.Deposit.Resolve(rallyingPointService.Get),
+      match.Score,
+      matchingPoints.Value.Reverse
     );
+  }
+
+  private (Ref<RallyingPoint> Pickup, Ref<RallyingPoint> Deposit, bool Reverse)? GetBestMacth(LianeRawMatch match)
+  {
+    if (match.PickupPoint is null || match.DepositPoint is null)
+    {
+      if (match.PickupPointReverse is null || match.DepositPointReverse is null)
+      {
+        return null;
+      }
+
+      return (match.PickupPointReverse, match.DepositPointReverse, true);
+    }
+
+    return (match.PickupPoint, match.DepositPoint, false);
   }
 }
 
 public static class LianeMatcherExtensions
 {
-  public static LianeMatcherResult SplitJoinedLianes(this IEnumerable<Match> allMatches, ImmutableDictionary<Guid, Guid> joinedLianesIds)
+  public static LianeMatcherResult SplitJoinedLianes(this IEnumerable<Match> allMatches, IEnumerable<Guid> joinedLianesIds)
   {
-    var set = joinedLianesIds.ToImmutableDictionary(i => i.Key.ToString(), i => i.Value);
+    var set = joinedLianesIds.Select(i => i.ToString()).ToImmutableHashSet();
     var joinedLianes = new List<Match.Group>();
     var matches = new List<Match>();
     foreach (var match in allMatches)
     {
-      if (match is Match.Group group && set.ContainsKey(group.Liane.Id))
+      if (match is Match.Group group && set.Contains(group.Liane.Id))
       {
         joinedLianes.Add(group);
       }
@@ -232,12 +259,17 @@ internal sealed record LianeRawMatch(
   string User,
   string[] WayPoints,
   bool IsEnabled,
-  float Score,
   DayOfWeekFlag WeekDays,
+  float Score,
   LatLng Pickup,
   LatLng Deposit,
   Ref<RallyingPoint>? PickupPoint,
   Ref<RallyingPoint>? DepositPoint,
+  float ScoreReverse,
+  LatLng PickupReverse,
+  LatLng DepositReverse,
+  Ref<RallyingPoint>? PickupPointReverse,
+  Ref<RallyingPoint>? DepositPointReverse,
   Guid[]? Lianes
 );
 

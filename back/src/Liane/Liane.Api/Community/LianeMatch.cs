@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Immutable;
 using Liane.Api.Auth;
 using Liane.Api.Trip;
@@ -34,7 +33,8 @@ public abstract record Match
     TimeRange When,
     RallyingPoint Pickup,
     RallyingPoint Deposit,
-    float Score
+    float Score,
+    bool ReverseDirection = false
   ) : Match;
 
   public sealed record Group(

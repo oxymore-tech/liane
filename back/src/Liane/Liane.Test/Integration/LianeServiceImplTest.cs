@@ -648,9 +648,30 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     }
   }
 
+  [Test]
+  public async Task ShouldMatchNoMatterWhatDirection()
+  {
+    var lianeGugu = await CreateLianeRequest(gugu, "Marché Mende", LabeledPositions.BlajouxParking, LabeledPositions.Mende, weekDays: DayOfWeekFlag.All);
+    var lianeMathilde = await CreateLianeRequest(mathilde, "Biojour", LabeledPositions.Mende, LabeledPositions.Florac, weekDays: DayOfWeekFlag.All);
+
+    {
+      currentContext.SetCurrentUser(gugu);
+      var list = await tested.List();
+
+      Assert.AreEqual(1, list.Count);
+
+      Assert.AreEqual(list[0].LianeRequest.Id, lianeGugu.Id);
+      Assert.IsEmpty(list[0].JoinedLianes);
+      list[0].Matches
+        .AssertDeepEqual(
+          new Match.Single("Biojour", lianeMathilde, mathilde.Id, DayOfWeekFlag.All, default, LabeledPositions.Mende, LabeledPositions.QuezacParking, 0.71079016f, true)
+        );
+    }
+  }
+
   private async Task<LianeRequest> CreateLianeRequest(DbUser user, string name, Ref<RallyingPoint> from, Ref<RallyingPoint> to, Ref<RallyingPoint>? intermediate = null,
     DayOfWeekFlag weekDays = default, TimeOnly? leavesAt = null,
-    TimeOnly? returnsAt = null)
+    TimeOnly? returnsAt = null, bool roundTrip = true)
   {
     currentContext.SetCurrentUser(user);
     var timeConstraints = new List<TimeConstraint>();
@@ -665,7 +686,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     }
 
     var wayPoints = intermediate is null ? ImmutableList.Create(from, to) : ImmutableList.Create(from, intermediate, to);
-    return await tested.Create(new LianeRequest(default, name, wayPoints, false, true, weekDays, timeConstraints.ToImmutableList(), true, null, null));
+    return await tested.Create(new LianeRequest(default, name, wayPoints, roundTrip, true, weekDays, timeConstraints.ToImmutableList(), true, null, null));
   }
 
   private static (string User, string Text) ToTuple(LianeMessage message) => message.Content switch
