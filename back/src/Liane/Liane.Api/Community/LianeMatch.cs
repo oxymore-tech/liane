@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Immutable;
 using Liane.Api.Auth;
 using Liane.Api.Trip;

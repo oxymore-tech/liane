@@ -13,7 +13,7 @@ public sealed partial class PostgisServiceImpl
   public async Task<ITripSession> CreateOngoingTrip(string id, LineString route)
   {
     using var connection = db.NewConnection();
-    await connection.InsertAsync(new OngoingTripDb(id, route));
+    await connection.MergeAsync(new OngoingTripDb(id, route));
     return new OngoingTripSession(id, db);
   }
 

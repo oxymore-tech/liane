@@ -26,7 +26,7 @@ public sealed class Query
     new(ImmutableList.Create<FieldDefinition<T>>(new FieldDefinition<T>.Expr("count(*)")), Filter<T>.Empty, null, null, ImmutableList<SortDefinition<T>>.Empty);
 
   public static UpdateQuery<T> Update<T>() where T : notnull => new(Filter<T>.Empty);
-  public static InsertQuery<T, int> Insert<T>(T entity) where T : notnull => new(entity, new OnConflict.DoNothing());
-  public static InsertQuery<T, int> Insert<T>(IEnumerable<T> entities) where T : notnull => new(entities, new OnConflict.DoNothing());
+  public static InsertQuery<T, int> Insert<T>(T entity) where T : notnull => new(entity);
+  public static InsertQuery<T, int> Insert<T>(IEnumerable<T> entities) where T : notnull => new(entities);
   public static DeleteQuery<T> Delete<T>(Filter<T> where) where T : notnull => new(where);
 }

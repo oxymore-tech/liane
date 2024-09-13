@@ -55,25 +55,23 @@ public sealed class LianeServiceImpl(
     var userId = currentContext.CurrentUser().Id;
     var id = request.Id ?? Uuid7.Guid();
 
-    await connection.InsertMultipleAsync(request.TimeConstraints.Select(c => new TimeConstraintDb(id, c.When.Start, c.When.End, c.At, c.WeekDays)), tx);
+    await connection.MergeMultipleAsync(request.TimeConstraints.Select(c => new TimeConstraintDb(id, c.When.Start, c.When.End, c.At, c.WeekDays)), tx);
 
     var wayPointsArray = request.WayPoints.Deref();
     var coordinates = (await request.WayPoints.SelectAsync(rallyingPointService.Get))
       .Select(w => w.Location);
     var route = await routingService.GetRoute(coordinates);
-    await connection.InsertAsync(new RouteDb(wayPointsArray, route.Coordinates.ToLineString()), tx);
+    await connection.MergeAsync(new RouteDb(wayPointsArray, route.Coordinates.ToLineString()), tx);
 
     var now = DateTime.UtcNow;
     var lianeRequestDb = new LianeRequestDb(id, request.Name, wayPointsArray, request.RoundTrip, request.CanDrive, request.WeekDays, request.IsEnabled, userId, now);
 
-    var query = Query.Insert(lianeRequestDb)
-      .UpdateOnConflict(r => r.WayPoints, r => r.CreatedBy)
-      .ReturnsId(r => r.Id);
-    var createdId = await connection.InsertAsync(query, tx);
-
-    var created = await lianeRequestFetcher.FetchLianeRequest(connection, createdId, tx);
+    await connection.InsertAsync(lianeRequestDb, tx);
 
     tx.Commit();
+    
+    var created = await lianeRequestFetcher.FetchLianeRequest(connection, id, tx);
+
     return created;
   }
 
@@ -87,8 +85,7 @@ public sealed class LianeServiceImpl(
     var joinedLianeIds = (await connection.QueryAsync(Query.Select<LianeMemberDb>()
         .Where(Filter<LianeMemberDb>.Where(m => m.UserId, ComparisonOperator.Eq, userId))
         .OrderBy(r => r.JoinedAt)))
-      .Select(m => m.LianeId)
-      .ToImmutableHashSet();
+      .ToImmutableDictionary(m => m.LianeId, m => m.LianeRequestId);
 
     var matches = await matcher.FindMatches(connection, lianeRequests.Select(r => r.Id!.Value), joinedLianeIds);
 
@@ -170,7 +167,7 @@ public sealed class LianeServiceImpl(
 
     var lianeId = Guid.Parse(liane);
 
-    await connection.InsertAsync(new LianeMemberDb(lianeId, from.Id, userId, now, null), tx);
+    await connection.MergeAsync(new LianeMemberDb(lianeId, from.Id, userId, now, null), tx);
 
     var existingLiane = await lianeFetcher.FetchLiane(connection, lianeId, tx);
     tx.Commit();
@@ -200,9 +197,9 @@ public sealed class LianeServiceImpl(
 
     var lianeId = Uuid7.Guid();
 
-    await connection.InsertAsync(new LianeDb(lianeId, to.Name, userId, now), tx);
-    await connection.InsertAsync(new LianeMemberDb(lianeId, from.Id, userId, now, null), tx);
-    await connection.InsertAsync(new LianeMemberDb(lianeId, to.Id, to.CreatedBy, now, null), tx);
+    await connection.MergeAsync(new LianeDb(lianeId, to.Name, userId, now), tx);
+    await connection.MergeAsync(new LianeMemberDb(lianeId, from.Id, userId, now, null), tx);
+    await connection.MergeAsync(new LianeMemberDb(lianeId, to.Id, to.CreatedBy, now, null), tx);
 
     var createdLiane = await lianeFetcher.FetchLiane(connection, lianeId, tx);
     tx.Commit();
@@ -298,7 +295,6 @@ public sealed class LianeServiceImpl(
     var rest = await connection.CountAsync("SELECT COUNT(*) FROM liane_member WHERE liane_id = @liane_id", new { liane_id = lianeId }, tx);
     if (rest == 0)
     {
-      // await connection.ExecuteAsync("DELETE FROM liane_message WHERE id = @liane_id", new { liane_id = lianeId }, tx);
       await connection.ExecuteAsync("DELETE FROM liane WHERE id = @liane_id", new { liane_id = lianeId }, tx);
     }
 
@@ -316,7 +312,7 @@ public sealed class LianeServiceImpl(
     var resolvedLiane = await lianeFetcher.FetchLiane(connection, lianeId, tx);
     var id = Uuid7.Guid();
     var now = DateTime.UtcNow;
-    await connection.InsertAsync(new LianeMessageDb(id, lianeId, content, userId, now), tx);
+    await connection.MergeAsync(new LianeMessageDb(id, lianeId, content, userId, now), tx);
     var lianeMessage = new LianeMessage(id.ToString(), userId, now, content);
     var recipients = resolvedLiane.Members.Where(m => m.User.Id != userId)
       .Select(m => m.User)

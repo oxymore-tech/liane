@@ -139,8 +139,8 @@ public sealed partial class PostgisServiceImpl : IPostgisService
 
   private async Task UpdateGeometry(IDbConnection connection, IEnumerable<SegmentDb> segments, IEnumerable<LianeWaypointDb> lianeWaypoints, IDbTransaction tx)
   {
-    var segmentsAdded = await connection.InsertMultipleAsync(segments, tx);
-    var wayPointsAdded = await connection.InsertMultipleAsync(lianeWaypoints, tx);
+    var segmentsAdded = await connection.MergeMultipleAsync(segments, tx);
+    var wayPointsAdded = await connection.MergeMultipleAsync(lianeWaypoints, tx);
     logger.LogInformation("Added {segmentsAdded} segments and {wayPointsAdded} liane waypoints.", segmentsAdded, wayPointsAdded);
   }
 

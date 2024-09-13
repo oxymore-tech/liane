@@ -85,6 +85,14 @@ public static class QueryExtensions
     return connection.ExecuteAsync(sql, parameters, transaction);
   }
 
+  public static Task<int> MergeAsync<T>(this IDbConnection connection, T entity, IDbTransaction? transaction = null) where T : notnull
+  {
+    var insert = Query.Insert(entity)
+      .DoNothingOnConflict();
+    var (sql, parameters) = insert.ToSql();
+    return connection.ExecuteAsync(sql, parameters, transaction);
+  }
+
   public static Task<TId> InsertAsync<T, TId>(this IDbConnection connection, InsertQuery<T, TId> query, IDbTransaction? transaction = null) where T : notnull
   {
     var (sql, parameters) = query.ToSql();
@@ -94,6 +102,14 @@ public static class QueryExtensions
   public static Task<int> InsertMultipleAsync<T>(this IDbConnection connection, IEnumerable<T> entities, IDbTransaction? transaction = null) where T : notnull
   {
     var insert = Query.Insert(entities);
+    var (sql, parameters) = insert.ToSql();
+    return connection.ExecuteAsync(sql, parameters, transaction);
+  }
+
+  public static Task<int> MergeMultipleAsync<T>(this IDbConnection connection, IEnumerable<T> entities, IDbTransaction? transaction = null) where T : notnull
+  {
+    var insert = Query.Insert(entities)
+      .DoNothingOnConflict();
     var (sql, parameters) = insert.ToSql();
     return connection.ExecuteAsync(sql, parameters, transaction);
   }

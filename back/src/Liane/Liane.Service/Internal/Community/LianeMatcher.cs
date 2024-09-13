@@ -23,7 +23,7 @@ public sealed class LianeMatcher(
   public async Task<Match.Single?> FindMatchesBetween(IDbConnection connection,
     Guid a, Guid b, IDbTransaction? tx = null)
   {
-    var lianeRawMatches = await FindRawMatches(connection, new[] { a }, tx);
+    var lianeRawMatches = await FindRawMatches(connection, [a], tx);
     var lianeRawMatch = lianeRawMatches.FirstOrDefault(m => m.LianeRequest == b);
     if (lianeRawMatch is null)
     {
@@ -36,7 +36,7 @@ public sealed class LianeMatcher(
   public async Task<ImmutableDictionary<Guid, LianeMatcherResult>> FindMatches(
     IDbConnection connection,
     IEnumerable<Guid> lianeRequestsId,
-    ImmutableHashSet<Guid> joinedLianeIds)
+    ImmutableDictionary<Guid, Guid> joinedLianeIds)
   {
     var rawMatches = (await FindRawMatches(connection, lianeRequestsId))
       .ToImmutableList();
@@ -48,8 +48,8 @@ public sealed class LianeMatcher(
     var fetchLianeRequests = (await lianeRequestFetcher.FetchLianeRequests(connection, rawMatches.Select(m => m.LianeRequest)))
       .ToImmutableDictionary(r => r.Id!.Value);
     return await rawMatches
-      .GroupByAsync(m => m.From, async g => (await GroupMatchByLiane(g, fetchLianeRequests, joinedLianeIds, lianes))
-        .Split(joinedLianeIds));
+      .GroupByAsync(m => m.From, async g => (await GroupMatchByLiane(g.Key, g, fetchLianeRequests, joinedLianeIds, lianes))
+        .SplitJoinedLianes(joinedLianeIds));
   }
 
   /// <summary>
@@ -99,13 +99,31 @@ public sealed class LianeMatcher(
     );
   }
 
-  private async Task<ImmutableList<Match>> GroupMatchByLiane(IEnumerable<LianeRawMatch> matches, ImmutableDictionary<Guid, LianeRequest> fetchLianeRequests, ImmutableHashSet<Guid> joinedLianeIds,
+  private async Task<ImmutableList<Match>> GroupMatchByLiane(
+    Guid inputLianeRequest,
+    IEnumerable<LianeRawMatch> matches,
+    ImmutableDictionary<Guid, LianeRequest> fetchLianeRequests,
+    ImmutableDictionary<Guid, Guid> joinedLianeIds,
     ImmutableDictionary<Guid, Api.Community.Liane> lianes) =>
     (await matches
       .SelectMany(m => m.Lianes is null
         ? ImmutableList.Create(new LianeRawMatchByLiane(null, m))
         : m.Lianes.Select(l => new LianeRawMatchByLiane(l, m)))
-      .Where(ml => ml.Match.IsEnabled || (ml.Liane is not null && joinedLianeIds.Contains(ml.Liane.Value)))
+      .Where(ml =>
+      {
+        if (ml.Liane is null)
+        {
+          return ml.Match.IsEnabled;
+        }
+
+        var joinedLianeRequest = joinedLianeIds.GetValueOrDefault(ml.Liane.Value, default);
+        if (joinedLianeRequest == default)
+        {
+          return ml.Match.IsEnabled;
+        }
+
+        return joinedLianeRequest == inputLianeRequest;
+      })
       .GroupBy(m => m.Liane)
       .SelectManyAsync<IGrouping<Guid?, LianeRawMatchByLiane>, Match>(async g =>
       {
@@ -118,7 +136,7 @@ public sealed class LianeMatcher(
         var groupedMatches = (await g
             .FilterSelectAsync(m => ToSingleMatch(fetchLianeRequests, m.Match)))
           .ToImmutableList();
-        var liane = lianes.GetValueOrDefault(g.Key!.Value);
+        var liane = lianes.GetValueOrDefault(g.Key.Value);
         if (liane is null)
         {
           return ImmutableList<Match>.Empty;
@@ -186,14 +204,14 @@ public sealed class LianeMatcher(
 
 public static class LianeMatcherExtensions
 {
-  public static LianeMatcherResult Split(this IEnumerable<Match> allMatches, ImmutableHashSet<Guid> joinedLianesIds)
+  public static LianeMatcherResult SplitJoinedLianes(this IEnumerable<Match> allMatches, ImmutableDictionary<Guid, Guid> joinedLianesIds)
   {
-    var set = joinedLianesIds.Select(i => i.ToString()).ToImmutableHashSet();
+    var set = joinedLianesIds.ToImmutableDictionary(i => i.Key.ToString(), i => i.Value);
     var joinedLianes = new List<Match.Group>();
     var matches = new List<Match>();
     foreach (var match in allMatches)
     {
-      if (match is Match.Group group && set.Contains(group.Liane.Id))
+      if (match is Match.Group group && set.ContainsKey(group.Liane.Id))
       {
         joinedLianes.Add(group);
       }

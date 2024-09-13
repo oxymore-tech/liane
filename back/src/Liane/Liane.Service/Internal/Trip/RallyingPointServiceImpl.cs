@@ -158,7 +158,7 @@ public sealed class RallyingPointServiceImpl(IOsrmService osrmService, PostgisDa
   public async Task<RallyingPoint> Create(RallyingPoint obj)
   {
     using var connection = db.NewConnection();
-    await connection.InsertAsync(obj);
+    await connection.MergeAsync(obj);
     return obj;
   }
 
@@ -244,7 +244,7 @@ public sealed class RallyingPointServiceImpl(IOsrmService osrmService, PostgisDa
       await connection.DeleteAsync(Filter<RallyingPointDb>.Empty, tx);
     }
 
-    await connection.InsertMultipleAsync(rallyingPoints.Select(r => new RallyingPointDb(r.Id, r.Label, r.Location, r.Type.ToString(), r.Address, r.ZipCode, r.City, r.PlaceCount, r.IsActive)), tx);
+    await connection.MergeMultipleAsync(rallyingPoints.Select(r => new RallyingPointDb(r.Id, r.Label, r.Location, r.Type.ToString(), r.Address, r.ZipCode, r.City, r.PlaceCount, r.IsActive)), tx);
 
     tx.Commit();
   }
