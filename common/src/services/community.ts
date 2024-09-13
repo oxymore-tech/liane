@@ -46,6 +46,7 @@ export type MatchSingle = {
   pickup: RallyingPoint;
   deposit: RallyingPoint;
   score: number;
+  reverseDirection?: boolean;
 };
 
 export type MatchGroup = {

@@ -69,7 +69,7 @@ export const PublishScreen = () => {
 
       const liane = await services.community.create({
         wayPoints: [ctx.request.from!.id!, ctx.request.to!.id!],
-        roundTrip: !!ctx.request.returnConstraints,
+        roundTrip: true,
         canDrive: ctx.request.availableSeats! > 0,
         weekDays: ctx.request.recurrence!,
         isEnabled: true,
