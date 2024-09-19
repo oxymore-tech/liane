@@ -69,7 +69,7 @@ export const WithFetchPaginatedResponse =
               {error.message}
             </AppText>
             <Center>
-              <AppButton color={AppColors.primaryColor} title={"Réessayer"} icon={"refresh-outline"} onPress={onRefresh} />
+              <AppButton color={AppColors.primaryColor} title="Réessayer" icon="refresh-outline" onPress={onRefresh} />
             </Center>
           </View>
         );

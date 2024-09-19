@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Immutable;
-using System.Linq;
 using Liane.Api.Auth;
 using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
@@ -12,17 +11,13 @@ public sealed record LianeRequest(
   string Name,
   ImmutableList<Ref<RallyingPoint>> WayPoints,
   bool RoundTrip,
+  TimeOnly ArriveBefore,
+  TimeOnly ReturnAfter,
   bool CanDrive,
   DayOfWeekFlag WeekDays,
-  ImmutableList<TimeConstraint> TimeConstraints,
   bool IsEnabled,
   Ref<User>? CreatedBy,
   DateTime? CreatedAt
-) : IEntity<Guid?>
-{
-  public TimeRange When => TimeConstraints.Select(tc => tc.When).FirstOrDefault();
-}
+) : IEntity<Guid?>;
 
-public sealed record TimeConstraint(TimeRange When, Ref<RallyingPoint> At, DayOfWeekFlag WeekDays);
-
-public readonly record struct TimeRange(TimeOnly Start, TimeOnly? End);
+public readonly record struct TimeRange(TimeOnly Start, TimeOnly End);

@@ -11,6 +11,7 @@ import {
   PaginatedResponse,
   RallyingPoint,
   ResolvedLianeRequest,
+  TimeOnlyUtils,
   User
 } from "@liane/common";
 import React, { useContext, useEffect, useMemo, useState } from "react";
@@ -149,10 +150,10 @@ export const CommunitiesChatScreen = () => {
 
   const startDate = useMemo(() => {
     const d = new Date();
-    if (!me || me.lianeRequest.timeConstraints.length === 0) {
+    if (!me) {
       return d;
     }
-    const c = me.lianeRequest.timeConstraints[0].when.start;
+    const c = me.lianeRequest.arriveBefore;
     d.setHours(c.hour, c.minute);
     return d;
   }, [me]);
@@ -530,7 +531,11 @@ const LaunchTripModal = ({
             </View>
             <AppText style={styles.modalText}>Départ à :</AppText>
             <Center>
-              <TimeWheelPicker date={startDate} minuteStep={5} onChange={d => setSelectedTime([d, undefined])} />
+              <TimeWheelPicker
+                date={TimeOnlyUtils.fromDate(startDate)}
+                minuteStep={5}
+                onChange={d => setSelectedTime([TimeOnlyUtils.toDate(d, startDate), undefined])}
+              />
             </Center>
             <Row style={{ justifyContent: "flex-end" }}>
               <AppPressableIcon name={"checkmark-outline"} onPress={launch} />
@@ -556,13 +561,21 @@ const LaunchTripModal = ({
               <Column>
                 <AppText style={styles.modalText}>Départ à :</AppText>
                 <Center>
-                  <TimeWheelPicker date={startDate} minuteStep={5} onChange={d => setSelectedTime(v => [d, v[1]])} />
+                  <TimeWheelPicker
+                    date={TimeOnlyUtils.fromDate(startDate)}
+                    minuteStep={5}
+                    onChange={d => setSelectedTime(v => [TimeOnlyUtils.toDate(d, startDate), v[1]])}
+                  />
                 </Center>
               </Column>
               <Column>
                 <AppText style={styles.modalText}>Retour à :</AppText>
                 <Center>
-                  <TimeWheelPicker date={startDate} minuteStep={5} onChange={d => setSelectedTime(v => [v[0], d])} />
+                  <TimeWheelPicker
+                    date={TimeOnlyUtils.fromDate(startDate)}
+                    minuteStep={5}
+                    onChange={d => setSelectedTime(v => [v[0], TimeOnlyUtils.toDate(d, startDate)])}
+                  />
                 </Center>
               </Column>
             </Row>

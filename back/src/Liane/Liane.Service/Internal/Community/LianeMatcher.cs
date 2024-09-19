@@ -5,6 +5,7 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
+using Liane.Api.Community;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util;
@@ -205,7 +206,7 @@ public sealed class LianeMatcher(
       lianeRequest,
       match.User,
       match.WeekDays,
-      lianeRequest.When,
+      new TimeRange(lianeRequest.ArriveBefore, lianeRequest.ReturnAfter),
       await matchingPoints.Value.Pickup.Resolve(rallyingPointService.Get),
       await matchingPoints.Value.Deposit.Resolve(rallyingPointService.Get),
       matchingPoints.Value.Score,

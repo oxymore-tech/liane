@@ -4,7 +4,6 @@ using System.Collections.Immutable;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
-using Liane.Api.Community;
 using Liane.Api.Trip;
 using Liane.Api.Util;
 using Liane.Api.Util.Exception;
@@ -34,22 +33,17 @@ public sealed class LianeRequestFetcher(IRallyingPointService rallyingPointServi
   {
     var lianeRequestDbs = await connection.QueryAsync(Query.Select<LianeRequestDb>()
       .Where(lianeRequestFilter)
-      .OrderBy(r => r.Id));
-
-    var lianeRequestsId = lianeRequestDbs.Select(l => l.Id);
-    var constraints = (await connection.QueryAsync(Query.Select<TimeConstraintDb>()
-        .Where(Filter<TimeConstraintDb>.Where(r => r.LianeRequestId, ComparisonOperator.In, lianeRequestsId))))
-      .GroupBy(c => c.LianeRequestId)
-      .ToImmutableDictionary(g => g.Key, g => g.Select(c => new TimeConstraint(new TimeRange(c.Start, c.End), c.At, c.WeekDays)).ToImmutableList());
+      .OrderBy(r => r.Id), tx);
 
     return await lianeRequestDbs.SelectAsync(async l => new LianeRequest(
       l.Id,
       l.Name,
       await l.WayPoints.AsRef<RallyingPoint>(rallyingPointService.Get),
       l.RoundTrip,
+      l.ArriveBefore,
+      l.ReturnAfter,
       l.CanDrive,
       l.WeekDays,
-      constraints.GetValueOrDefault(l.Id, ImmutableList<TimeConstraint>.Empty),
       l.IsEnabled,
       l.CreatedBy,
       l.CreatedAt

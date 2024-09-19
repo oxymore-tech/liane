@@ -11,21 +11,16 @@ import {
   UTCDateTime
 } from "../api";
 import { HttpClient } from "./http";
-import { TimeRange } from "./time";
-
-export type TimeConstraint = {
-  when: TimeRange;
-  at: Ref<RallyingPoint>;
-  weekDays?: DayOfWeekFlag;
-};
+import { TimeOnly, TimeRange } from "./time";
 
 export type CoLianeRequest = Entity & {
   name: string;
   wayPoints: Ref<RallyingPoint>[];
   roundTrip: boolean;
+  arriveBefore: TimeOnly;
+  returnAfter: TimeOnly;
   canDrive: boolean;
   weekDays: DayOfWeekFlag;
-  timeConstraints: TimeConstraint[];
   isEnabled: boolean;
 };
 

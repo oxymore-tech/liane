@@ -55,15 +55,13 @@ public sealed class LianeServiceImpl(
     var userId = currentContext.CurrentUser().Id;
     var id = request.Id ?? Uuid7.Guid();
 
-    await connection.MergeMultipleAsync(request.TimeConstraints.Select(c => new TimeConstraintDb(id, c.When.Start, c.When.End, c.At, c.WeekDays)), tx);
-
     var wayPointsArray = request.WayPoints.Deref();
     var coordinates = (await request.WayPoints.SelectAsync(rallyingPointService.Get))
       .Select(w => w.Location)
       .ToImmutableList();
     var route = await routingService.GetRoute(coordinates);
     await connection.MergeAsync(new RouteDb(wayPointsArray, route.Coordinates.ToLineString()), tx);
-    
+
     if (request.RoundTrip)
     {
       var reverseRoute = await routingService.GetRoute(coordinates.Reverse());
@@ -71,12 +69,13 @@ public sealed class LianeServiceImpl(
     }
 
     var now = DateTime.UtcNow;
-    var lianeRequestDb = new LianeRequestDb(id, request.Name, wayPointsArray, request.RoundTrip, request.CanDrive, request.WeekDays, request.IsEnabled, userId, now);
+    var lianeRequestDb = new LianeRequestDb(id, request.Name, wayPointsArray, request.RoundTrip, request.ArriveBefore, request.ReturnAfter, request.CanDrive, request.WeekDays, request.IsEnabled,
+      userId, now);
 
     await connection.InsertAsync(lianeRequestDb, tx);
 
     tx.Commit();
-    
+
     var created = await lianeRequestFetcher.FetchLianeRequest(connection, id, tx);
 
     return created;
@@ -127,18 +126,15 @@ public sealed class LianeServiceImpl(
 
     var lianeRequestDb = await connection.GetAsync<LianeRequestDb>(lianeRequestId);
 
-    var constraints = (await connection.QueryAsync(Query.Select<TimeConstraintDb>()
-        .Where(Filter<TimeConstraintDb>.Where(r => r.LianeRequestId, ComparisonOperator.Eq, lianeRequestId))))
-      .Select(c => new TimeConstraint(new TimeRange(c.Start, c.End), c.At, c.WeekDays)).ToImmutableList();
-
     return new LianeRequest(
       lianeRequestDb.Id,
       lianeRequestDb.Name,
       await lianeRequestDb.WayPoints.AsRef<RallyingPoint>(rallyingPointService.Get),
       lianeRequestDb.RoundTrip,
+      lianeRequestDb.ArriveBefore,
+      lianeRequestDb.ReturnAfter,
       lianeRequestDb.CanDrive,
       lianeRequestDb.WeekDays,
-      constraints,
       lianeRequestDb.IsEnabled,
       lianeRequestDb.CreatedBy,
       lianeRequestDb.CreatedAt
@@ -442,20 +438,14 @@ public sealed record LianeRequestDb(
   string Name,
   string[] WayPoints,
   bool RoundTrip,
+  TimeOnly ArriveBefore,
+  TimeOnly ReturnAfter,
   bool CanDrive,
   DayOfWeekFlag WeekDays,
   bool IsEnabled,
   Ref<Api.Auth.User> CreatedBy,
   DateTime CreatedAt
 ) : IIdentity<Guid>;
-
-public sealed record TimeConstraintDb(
-  Guid LianeRequestId,
-  TimeOnly Start,
-  TimeOnly? End,
-  string At,
-  DayOfWeekFlag WeekDays
-);
 
 public sealed record RouteDb(
   string[] WayPoints,
@@ -470,4 +460,8 @@ public sealed record LianeMessageDb(
   DateTime? CreatedAt
 ) : IEntity<Guid>;
 
-enum Direction { Outbound, Inbound };
+enum Direction
+{
+  Outbound,
+  Inbound
+};

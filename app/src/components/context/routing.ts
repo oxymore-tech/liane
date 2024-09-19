@@ -21,14 +21,13 @@ import {
   User
 } from "@liane/common";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack/src/types";
-import { InternalLianeRequest } from "@/screens/publish/StateMachine";
 import { checkInitialNotification } from "@/api/service/notification";
 
 export const HOME_TRIPS = "Calendrier";
 export type NavigationParamList = {
   Home: undefined;
   [HOME_TRIPS]: undefined;
-  Publish: { initialValue?: Partial<InternalLianeRequest> };
+  Publish: { initialValue?: Partial<CoLianeRequest> };
   SignUp: undefined;
   RequestJoin: { request: JoinLianeRequestDetailed };
   LianeJoinRequestDetail: { request: JoinLianeRequestDetailed | string };

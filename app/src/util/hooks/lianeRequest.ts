@@ -1,4 +1,4 @@
-import { DayOfWeekFlag, RallyingPoint, TimeConstraint, WayPoint } from "@liane/common";
+import { DayOfWeekFlag, RallyingPoint, TimeOnly, WayPoint } from "@liane/common";
 import { extractDays } from "@/util/hooks/days";
 
 export function extractWaypointFromTo<T extends WayPoint | RallyingPoint>(wayPoints: T[]) {
@@ -13,11 +13,7 @@ export function extractWaypointFromTo<T extends WayPoint | RallyingPoint>(wayPoi
   };
 }
 
-export function extractDaysTimes(request: { weekDays: DayOfWeekFlag; timeConstraints: TimeConstraint[] }): string {
+export function extractDaysTimes(request: { weekDays: DayOfWeekFlag; arriveBefore: TimeOnly; returnAfter: TimeOnly }): string {
   const daysReccurence = extractDays(request.weekDays);
-  const timeConstraint = request.timeConstraints?.[0]?.when?.start;
-
-  const localeTime = timeConstraint ? `${timeConstraint.hour}h${timeConstraint.minute}` : "";
-
-  return `${daysReccurence} ${localeTime}`.trim();
+  return `${daysReccurence} ${request.arriveBefore.hour}h${request.arriveBefore.minute} -> ${request.returnAfter.hour}h${request.returnAfter.minute}`.trim();
 }

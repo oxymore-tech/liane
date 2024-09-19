@@ -2,7 +2,7 @@ import { ColorValue, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text
 import { AppStyles } from "@/theme/styles";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
-import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Column, Row, Space } from "@/components/base/AppLayout";
@@ -13,11 +13,7 @@ import { AppText } from "@/components/base/AppText";
 import { AppPressableIcon, AppPressableOverlay } from "@/components/base/AppPressable";
 import Modal from "react-native-modal/dist/modal";
 import { AppContext } from "@/components/context/ContextProvider";
-import { HomeMapContext } from "@/screens/home/StateMachine";
-import { useSelector } from "@xstate/react";
-import { capitalize, SearchedLocation, Trip } from "@liane/common";
-import { AppLocalization } from "@/api/i18n";
-import { DatePagerSelector } from "@/components/DatePagerSelector";
+import { SearchedLocation, Trip } from "@liane/common";
 import { FloatingBackButton } from "@/components/FloatingBackButton";
 import { AppTabs } from "@/components/base/AppTabs";
 import { AppStatusBar } from "@/components/base/AppStatusBar";
@@ -28,14 +24,16 @@ export const RallyingPointField = forwardRef(
       onChange,
       value,
       editable = true,
+      autoFocus = false,
       onFocus = () => {},
       showTrailing,
       icon,
       placeholder
     }: {
-      onChange: (v: string | undefined) => void;
+      onChange: (v: string) => void;
       value: string;
       editable?: boolean;
+      autoFocus?: boolean;
       onFocus?: () => void;
       showTrailing: boolean;
       icon: React.ReactElement;
@@ -49,13 +47,14 @@ export const RallyingPointField = forwardRef(
     const field = (
       <View style={styles.inputRallyingPointContainer} pointerEvents={editable ? undefined : "none"}>
         <AppTextInput
+          autoFocus={autoFocus}
           trailing={
             showTrailing ? (
               <Pressable
                 style={{ marginRight: 12 }}
                 onPress={() => {
                   inputRef.current?.clear();
-                  onChange(undefined);
+                  onChange("");
                   inputRef.current?.focus();
                 }}>
                 <AppIcon name={"close-outline"} color={AppColorPalettes.gray[800]} />
@@ -338,44 +337,6 @@ export const MapHeader = ({
   );
 };
 
-export interface FilterSelectorProps {
-  formatter?: (d: Date) => string;
-  color?: ColorValue;
-  shortFormat?: boolean;
-}
-
-//const selectAvailableSeats = state => state.context.filter.availableSeats;
-const selectTargetTime = (state: any) => state.context.filter.targetTime;
-export const FilterSelector = ({ formatter, shortFormat = false, color = defaultTextColor(AppColors.white) }: FilterSelectorProps) => {
-  const machine = useContext(HomeMapContext);
-
-  // const availableSeats = useSelector(machine, selectAvailableSeats);
-  const targetTime = useSelector(machine, selectTargetTime);
-
-  //  const driver = availableSeats > 0;
-  const date = targetTime?.dateTime || new Date();
-
-  const defaultFormatter = shortFormat
-    ? (d: Date) => capitalize(AppLocalization.toRelativeDateString(d, AppLocalization.formatShortMonthDay))!
-    : (d: Date) => {
-        return targetTime?.direction === "Arrival"
-          ? "Arrivée "
-          : "Départ " + AppLocalization.toRelativeDateString(d, AppLocalization.formatShortMonthDay);
-      };
-
-  return (
-    <Row style={{ justifyContent: "center", alignItems: "center", alignSelf: "center", flex: 1, paddingHorizontal: 8 }}>
-      <DatePagerSelector
-        color={color}
-        date={date}
-        size={20}
-        onSelectDate={d => machine.send("FILTER", { data: { targetTime: { ...targetTime, dateTime: new Date(d.toDateString()) } } })}
-        formatter={formatter || defaultFormatter}
-      />
-    </Row>
-  );
-};
-
 export const SearchModal = ({
   onSelectTrip,
   onSelectFeature,
@@ -545,7 +506,6 @@ const styles = StyleSheet.create({
     borderColor: AppColorPalettes.gray[200]
   },
   inputRallyingPointContainer: {
-    borderRadius: 18,
     marginHorizontal: 8,
     paddingHorizontal: 12,
     height: 42,

@@ -120,7 +120,6 @@ const styles = StyleSheet.create({
   pressedDefault: {
     backgroundColor: WithAlpha(AppColors.black, 0.3)
   },
-
   pressedFixed: {
     position: "absolute",
     right: 0,

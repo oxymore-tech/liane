@@ -1,14 +1,15 @@
 import React from "react";
-import { ColorValue, PressableProps, StyleSheet, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, ColorValue, PressableProps, StyleSheet, TouchableOpacity } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppText } from "./AppText";
 import { AppDimensions } from "@/theme/dimensions";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
-import { AppPressableOverlay } from "@/components/base/AppPressable";
+import { AppPressable } from "@/components/base/AppPressable";
 import { User } from "@liane/common";
 import { UserPicture } from "../UserPicture";
 import { Row } from "./AppLayout";
 import { useAppNavigation } from "@/components/context/routing";
+import { AppStyles } from "@/theme/styles.ts";
 
 // @ts-ignore
 export type AppButtonProps = PressableProps & {
@@ -17,6 +18,7 @@ export type AppButtonProps = PressableProps & {
   kind?: "circular" | "rounded";
   foregroundColor?: ColorValue;
   user?: User | null;
+  loading?: boolean;
 } & ({ title: string; icon?: IconName } | { icon: IconName; title?: string });
 
 export function AppButton({
@@ -27,22 +29,26 @@ export function AppButton({
   user = null,
   kind = "rounded",
   foregroundColor,
+  loading = false,
+  style,
   ...props
 }: AppButtonProps) {
   const { navigation } = useAppNavigation();
   const backgroundColor = disabled ? AppColorPalettes.gray[300] : color;
-  const textColor = foregroundColor || (color === AppColors.white ? AppColorPalettes.gray[800] : AppColors.white);
+  const textColor =
+    foregroundColor ||
+    (color === AppColors.white || color === AppColors.grayBackground || color === AppColors.lightGrayBackground
+      ? AppColorPalettes.gray[800]
+      : AppColors.white);
   const borderRadius = AppDimensions.borderRadius * (kind === "rounded" ? 2 : 1);
 
-  return (
-    <AppPressableOverlay {...props} backgroundStyle={{ backgroundColor, borderRadius }} style={styles.contentContainer} disabled={disabled}>
-      <Row>
-        {icon && (
-          <View style={styles.iconContainer}>
-            <AppIcon name={icon} color={textColor} size={28} />
-          </View>
-        )}
+  const d = disabled || loading;
 
+  return (
+    <AppPressable {...props} style={[style, { backgroundColor, borderRadius }]} disabled={d}>
+      <Row style={styles.contentContainer}>
+        {loading && <ActivityIndicator style={AppStyles.fullHeight} color={AppColors.white} size="large" />}
+        {!loading && icon && <AppIcon style={styles.iconContainer} name={icon} color={textColor} size={28} />}
         {title && <AppText style={[{ color: textColor }, styles.text]}>{title}</AppText>}
       </Row>
 
@@ -56,14 +62,14 @@ export function AppButton({
           <UserPicture size={30} url={user?.pictureUrl} id={user?.id} />
         </TouchableOpacity>
       )}
-    </AppPressableOverlay>
+    </AppPressable>
   );
 }
 
 const styles = StyleSheet.create({
   iconContainer: {
-    paddingVertical: AppDimensions.button.paddingVertical,
-    justifyContent: "center"
+    justifyContent: "center",
+    marginRight: 8
   },
   userIconContainer: {
     borderWidth: 1,
@@ -74,14 +80,13 @@ const styles = StyleSheet.create({
   contentContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "center",
     paddingHorizontal: AppDimensions.button.paddingHorizontal / 2,
-    zIndex: 1
+    zIndex: 1,
+    marginVertical: AppDimensions.button.paddingVertical
   },
   text: {
     fontSize: 18,
-    fontWeight: "bold",
-    marginVertical: AppDimensions.button.paddingVertical,
-    marginHorizontal: AppDimensions.button.paddingHorizontal / 2
+    fontWeight: "bold"
   }
 });

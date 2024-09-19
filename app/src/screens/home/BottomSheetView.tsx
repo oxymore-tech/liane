@@ -213,7 +213,9 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
             text={"Ajouter une annonce"}
             onPress={() => {
               navigation.navigate("Publish", {
-                initialValue: filterHasFullTrip(state.context.filter) ? { to: state.context.filter.to!, from: state.context.filter.from! } : undefined
+                initialValue: filterHasFullTrip(state.context.filter)
+                  ? { wayPoints: [state.context.filter.from!.id!, state.context.filter.to!.id!] }
+                  : undefined
               });
             }}
           />

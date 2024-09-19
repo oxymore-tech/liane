@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
@@ -21,6 +20,8 @@ namespace Liane.Test.Integration;
 [TestFixture(Category = "Integration")]
 public sealed class LianeServiceImplTest : BaseIntegrationTest
 {
+  private static readonly TimeRange DefaultTimeRange = new  (new TimeOnly(9,0),new TimeOnly(18,0));
+  
   private ILianeService tested = null!;
   private MockCurrentContext currentContext = null!;
 
@@ -80,9 +81,9 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
 
     lianeMatch.Matches
       .AssertDeepEqual(
-        new Match.Single("Pain", lianeJayBee, jayBee.Id, DayOfWeekFlag.All, default, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f),
-        new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, default, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f),
-        new Match.Single("Alodr", lianeMathilde, mathilde.Id, DayOfWeekFlag.All, default, LabeledPositions.QuezacParking, LabeledPositions.BalsiegeParkingEglise, 0.5349006f)
+        new Match.Single("Pain", lianeJayBee, jayBee.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f),
+        new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f),
+        new Match.Single("Alodr", lianeMathilde, mathilde.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.BalsiegeParkingEglise, 0.5349006f)
       );
   }
 
@@ -100,9 +101,9 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
 
     lianeMatch.Matches
       .AssertDeepEqual(
-        new Match.Single("Pain", lianeJayBee, jayBee.Id, DayOfWeekFlag.All, default, LabeledPositions.FloracFormares, LabeledPositions.BalsiegeParkingEglise, 0.8810778f),
-        new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, default, LabeledPositions.IspagnacParking, LabeledPositions.BalsiegeParkingEglise, 0.61637884f),
-        new Match.Single("Boulot", lianeGugu, gugu.Id, DayOfWeekFlag.All, default, LabeledPositions.QuezacParking, LabeledPositions.BalsiegeParkingEglise, 0.5739291f)
+        new Match.Single("Pain", lianeJayBee, jayBee.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.FloracFormares, LabeledPositions.BalsiegeParkingEglise, 0.8810778f),
+        new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.IspagnacParking, LabeledPositions.BalsiegeParkingEglise, 0.61637884f),
+        new Match.Single("Boulot", lianeGugu, gugu.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.BalsiegeParkingEglise, 0.5739291f)
       );
   }
 
@@ -123,8 +124,8 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
 
     lianeMatch.Matches
       .AssertDeepEqual(
-        new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, default, LabeledPositions.IspagnacParking, LabeledPositions.BalsiegeParkingEglise, 0.61637884f),
-        new Match.Single("Boulot", lianeGugu, gugu.Id, DayOfWeekFlag.All, default, LabeledPositions.QuezacParking, LabeledPositions.BalsiegeParkingEglise, 0.5739291f)
+        new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.IspagnacParking, LabeledPositions.BalsiegeParkingEglise, 0.61637884f),
+        new Match.Single("Boulot", lianeGugu, gugu.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.BalsiegeParkingEglise, 0.5739291f)
       );
   }
 
@@ -141,9 +142,9 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
 
     actual[1].Matches
       .AssertDeepEqual(
-        new Match.Single("Pain", lianeJayBee, jayBee.Id, DayOfWeekFlag.All, default, LabeledPositions.Cocures, LabeledPositions.Mende, 1f),
-        new Match.Single("Alodr", lianeMathilde, mathilde.Id, DayOfWeekFlag.All, default, LabeledPositions.FloracFormares, LabeledPositions.BalsiegeParkingEglise, 0.6964716f),
-        new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, default, LabeledPositions.IspagnacParking, LabeledPositions.Mende, 0.68868893f)
+        new Match.Single("Pain", lianeJayBee, jayBee.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.Cocures, LabeledPositions.Mende, 1f),
+        new Match.Single("Alodr", lianeMathilde, mathilde.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.FloracFormares, LabeledPositions.BalsiegeParkingEglise, 0.6964716f),
+        new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.IspagnacParking, LabeledPositions.Mende, 0.68868893f)
       );
   }
 
@@ -175,13 +176,13 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       list[0].JoinedLianes
         .AssertDeepEqual(
           new Match.Group("Pain", joinedLiane,
-            ImmutableList.Create(new Match.Single("Pain", lianeJayBee, jayBee.Id, DayOfWeekFlag.All, default, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)),
-            DayOfWeekFlag.All, default, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)
+            ImmutableList.Create(new Match.Single("Pain", lianeJayBee, jayBee.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)),
+            DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)
         );
       list[0].Matches
         .AssertDeepEqual(
-          new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, default, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f),
-          new Match.Single("Alodr", lianeMathilde, mathilde.Id, DayOfWeekFlag.All, default, LabeledPositions.QuezacParking, LabeledPositions.BalsiegeParkingEglise, 0.5349006f)
+          new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f),
+          new Match.Single("Alodr", lianeMathilde, mathilde.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.BalsiegeParkingEglise, 0.5349006f)
         );
     }
   }
@@ -232,13 +233,13 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       list[0].JoinedLianes
         .AssertDeepEqual(
           new Match.Group("Pain", joinedLianeUdated,
-            ImmutableList.Create(new Match.Single("Pain", disabledJayBeeLianeRequest, jayBee.Id, DayOfWeekFlag.All, default, LabeledPositions.QuezacParking, LabeledPositions.Mende,
+            ImmutableList.Create(new Match.Single("Pain", disabledJayBeeLianeRequest, jayBee.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende,
               0.77242357f)),
-            DayOfWeekFlag.All, default, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)
+            DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)
         );
       list[0].Matches
         .AssertDeepEqual(
-          new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, default, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)
+          new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)
         );
     }
   }
@@ -268,14 +269,14 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       list[0].JoinedLianes
         .AssertDeepEqual(
           new Match.Group("Pain", exisitingLiane,
-            ImmutableList.Create(new Match.Single("Alodr", lianeMathilde, mathilde.Id, DayOfWeekFlag.All, default, LabeledPositions.FloracFormares, LabeledPositions.BalsiegeParkingEglise,
+            ImmutableList.Create(new Match.Single("Alodr", lianeMathilde, mathilde.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.FloracFormares, LabeledPositions.BalsiegeParkingEglise,
               0.6964716f)),
-            DayOfWeekFlag.All, default, LabeledPositions.FloracFormares, LabeledPositions.BalsiegeParkingEglise, 0.6964716f)
+            DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.FloracFormares, LabeledPositions.BalsiegeParkingEglise, 0.6964716f)
         );
       list[0].Matches
         .AssertDeepEqual(
-          new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, default, LabeledPositions.IspagnacParking, LabeledPositions.Mende, 0.68868893f),
-          new Match.Single("Boulot", lianeGugu, gugu.Id, DayOfWeekFlag.All, default, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.6551334f)
+          new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.IspagnacParking, LabeledPositions.Mende, 0.68868893f),
+          new Match.Single("Boulot", lianeGugu, gugu.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.6551334f)
         );
     }
 
@@ -288,14 +289,14 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       list[0].JoinedLianes
         .AssertDeepEqual(
           new Match.Group("Pain", exisitingLiane,
-            ImmutableList.Create(new Match.Single("Pain", lianeJayBee, jayBee.Id, DayOfWeekFlag.All, default, LabeledPositions.FloracFormares, LabeledPositions.BalsiegeParkingEglise,
+            ImmutableList.Create(new Match.Single("Pain", lianeJayBee, jayBee.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.FloracFormares, LabeledPositions.BalsiegeParkingEglise,
               0.8810778f)),
-            DayOfWeekFlag.All, default, LabeledPositions.FloracFormares, LabeledPositions.BalsiegeParkingEglise, 0.8810778f)
+            DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.FloracFormares, LabeledPositions.BalsiegeParkingEglise, 0.8810778f)
         );
       list[0].Matches
         .AssertDeepEqual(
-          new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, default, LabeledPositions.IspagnacParking, LabeledPositions.BalsiegeParkingEglise, 0.61637884f),
-          new Match.Single("Boulot", lianeGugu, gugu.Id, DayOfWeekFlag.All, default, LabeledPositions.QuezacParking, LabeledPositions.BalsiegeParkingEglise, 0.5739291f)
+          new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.IspagnacParking, LabeledPositions.BalsiegeParkingEglise, 0.61637884f),
+          new Match.Single("Boulot", lianeGugu, gugu.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.BalsiegeParkingEglise, 0.5739291f)
         );
     }
 
@@ -311,11 +312,11 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
         .AssertDeepEqual(
           new Match.Group("Pain", exisitingLiane,
             ImmutableList.Create(
-              new Match.Single("Pain", lianeJayBee, jayBee.Id, DayOfWeekFlag.All, default, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f),
-              new Match.Single("Alodr", lianeMathilde, mathilde.Id, DayOfWeekFlag.All, default, LabeledPositions.QuezacParking, LabeledPositions.BalsiegeParkingEglise, 0.5349006f)
+              new Match.Single("Pain", lianeJayBee, jayBee.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f),
+              new Match.Single("Alodr", lianeMathilde, mathilde.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.BalsiegeParkingEglise, 0.5349006f)
             ),
-            DayOfWeekFlag.All, default, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f),
-          new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, default, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)
+            DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f),
+          new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)
         );
     }
   }
@@ -598,7 +599,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
 
     lianeMatch.Matches
       .AssertDeepEqual(
-        new Match.Single("Pain", lianeJayBee, jayBee.Id, DayOfWeekFlag.Monday, default, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)
+        new Match.Single("Pain", lianeJayBee, jayBee.Id, DayOfWeekFlag.Monday, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)
       );
   }
 
@@ -626,13 +627,13 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       list[0].JoinedLianes
         .AssertDeepEqual(
           new Match.Group("Pain", joinedLiane,
-            ImmutableList.Create(new Match.Single("Pain", lianeJayBee, jayBee.Id, DayOfWeekFlag.All, default, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)),
-            DayOfWeekFlag.All, default, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)
+            ImmutableList.Create(new Match.Single("Pain", lianeJayBee, jayBee.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)),
+            DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)
         );
       list[0].Matches
         .AssertDeepEqual(
-          new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, default, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f),
-          new Match.Single("Alodr", lianeMathilde, mathilde.Id, DayOfWeekFlag.All, default, LabeledPositions.QuezacParking, LabeledPositions.BalsiegeParkingEglise, 0.5349006f)
+          new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f),
+          new Match.Single("Alodr", lianeMathilde, mathilde.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.BalsiegeParkingEglise, 0.5349006f)
         );
 
       // Even if the second one match, the previously joined liane is omitted
@@ -641,8 +642,8 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
         .AssertDeepEqual();
       list[1].Matches
         .AssertDeepEqual(
-          new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.Friday | DayOfWeekFlag.Saturday, default, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f),
-          new Match.Single("Alodr", lianeMathilde, mathilde.Id, DayOfWeekFlag.Friday | DayOfWeekFlag.Saturday, default, LabeledPositions.QuezacParking, LabeledPositions.BalsiegeParkingEglise,
+          new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.Friday | DayOfWeekFlag.Saturday, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f),
+          new Match.Single("Alodr", lianeMathilde, mathilde.Id, DayOfWeekFlag.Friday | DayOfWeekFlag.Saturday, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.BalsiegeParkingEglise,
             0.5349006f)
         );
     }
@@ -664,7 +665,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       Assert.IsEmpty(list[0].JoinedLianes);
       list[0].Matches
         .AssertDeepEqual(
-          new Match.Single("Biojour", lianeMathilde, mathilde.Id, DayOfWeekFlag.All, default, LabeledPositions.Mende, LabeledPositions.QuezacParking, 0.7699512f, true)
+          new Match.Single("Biojour", lianeMathilde, mathilde.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.Mende, LabeledPositions.QuezacParking, 0.7699512f, true)
         );
     }
   }
@@ -686,36 +687,29 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       Assert.IsEmpty(list[0].JoinedLianes);
       list[0].Matches
         .AssertDeepEqual(
-          new Match.Single("Biojour", lianeMathilde, mathilde.Id, DayOfWeekFlag.All, default, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)
+          new Match.Single("Biojour", lianeMathilde, mathilde.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)
         );
 
       Assert.AreEqual(list[1].LianeRequest.Id, lianeGugu2.Id);
       Assert.IsEmpty(list[1].JoinedLianes);
       list[1].Matches
         .AssertDeepEqual(
-          new Match.Single("Biojour", lianeMathilde, mathilde.Id, DayOfWeekFlag.Monday, default, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)
+          new Match.Single("Biojour", lianeMathilde, mathilde.Id, DayOfWeekFlag.Monday, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)
         );
     }
   }
 
   private async Task<LianeRequest> CreateLianeRequest(DbUser user, string name, Ref<RallyingPoint> from, Ref<RallyingPoint> to, Ref<RallyingPoint>? intermediate = null,
-    DayOfWeekFlag weekDays = default, TimeOnly? leavesAt = null,
-    TimeOnly? returnsAt = null, bool roundTrip = false)
+    DayOfWeekFlag weekDays = default,
+    TimeOnly? arriveBefore = null,
+    TimeOnly? returnAfter = null, bool roundTrip = false)
   {
     currentContext.SetCurrentUser(user);
-    var timeConstraints = new List<TimeConstraint>();
-    if (leavesAt.HasValue)
-    {
-      timeConstraints.Add(new TimeConstraint(new TimeRange(leavesAt.Value, null), from, default));
-    }
-
-    if (returnsAt.HasValue)
-    {
-      timeConstraints.Add(new TimeConstraint(new TimeRange(returnsAt.Value, null), to, default));
-    }
-
     var wayPoints = intermediate is null ? ImmutableList.Create(from, to) : ImmutableList.Create(from, intermediate, to);
-    return await tested.Create(new LianeRequest(default, name, wayPoints, roundTrip, true, weekDays, timeConstraints.ToImmutableList(), true, null, null));
+    return await tested.Create(new LianeRequest(default, name, wayPoints, roundTrip,
+      arriveBefore ?? DefaultTimeRange.Start,
+      returnAfter ?? DefaultTimeRange.End,
+      true, weekDays, true, null, null));
   }
 
   private static (string User, string Text) ToTuple(LianeMessage message) => message.Content switch

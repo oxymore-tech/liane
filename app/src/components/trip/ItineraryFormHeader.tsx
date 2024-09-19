@@ -1,39 +1,44 @@
 import Animated, { SlideInUp, SlideOutUp } from "react-native-reanimated";
-import { AppStyles } from "@/theme/styles";
-import { StyleSheet } from "react-native";
-import { AppColors } from "@/theme/colors";
+import { StyleProp, StyleSheet, ViewStyle } from "react-native";
 import { ItineraryForm } from "@/components/forms/ItineraryForm";
 import React from "react";
 import { Trip } from "@liane/common";
 
-export interface ItineraryFormHeaderProps {
+export type ToOrFrom = "to" | "from";
+
+export type ItineraryFormHeaderProps = {
   editable?: boolean;
-  // onChangeFrom?: (value: string | undefined) => void;
-  onChangeField?: (field: "to" | "from", value: string | undefined) => void;
-  onRequestFocus?: (field: "to" | "from") => void;
+  field?: ToOrFrom;
+  onChangeField?: (field: ToOrFrom, value: string) => void;
+  onRequestFocus?: (field: ToOrFrom) => void;
   trip: Partial<Trip>;
   animateEntry?: boolean;
   updateTrip: (trip: Partial<Trip>) => void;
-
   title?: string;
-}
+  containerStyle?: StyleProp<ViewStyle>;
+  style?: StyleProp<ViewStyle>;
+};
 
 export const ItineraryFormHeader = ({
   trip,
   updateTrip,
-
+  containerStyle,
+  style,
+  field,
   onChangeField,
   onRequestFocus,
-  animateEntry: enters = true,
+  animateEntry = true,
   editable = true
 }: ItineraryFormHeaderProps) => {
   const { to, from } = trip;
 
   return (
-    <Animated.View style={[styles.headerContainer]} entering={enters ? SlideInUp : undefined} exiting={SlideOutUp}>
+    <Animated.View style={[styles.headerContainer, containerStyle]} entering={animateEntry ? SlideInUp : undefined} exiting={SlideOutUp}>
       <ItineraryForm
+        style={style}
         from={from}
         to={to}
+        field={field}
         onChangeFrom={onChangeField ? v => onChangeField("from", v) : undefined}
         onChangeTo={onChangeField ? v => onChangeField("to", v) : undefined}
         onValuesSwitched={(oldFrom, oldTo) => {
@@ -47,28 +52,5 @@ export const ItineraryFormHeader = ({
 };
 
 const styles = StyleSheet.create({
-  floatingSearchBar: {
-    paddingVertical: 24,
-    paddingHorizontal: 24,
-    position: "absolute",
-    width: "100%"
-  },
-  actionButton: {
-    padding: 12,
-    borderRadius: 52
-  },
-  title: { color: AppColors.white, ...AppStyles.title },
-  smallActionButton: {
-    padding: 8,
-    borderRadius: 52
-  },
-  headerContainer: {
-    width: "100%",
-    height: 140,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    alignSelf: "center",
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16
-  }
+  headerContainer: {}
 });

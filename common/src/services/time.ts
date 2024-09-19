@@ -63,7 +63,51 @@ export type Minutes =
 
 export type TimeOnly = { hour: Hours; minute?: Minutes };
 
+export type MinuteStep = 1 | 2 | 3 | 5 | 10 | 15 | 20 | 30;
+
+export class TimeOnlyUtils {
+  static fromDate(date: Date, minuteStep: MinuteStep = 5): TimeOnly {
+    const minutes = ((Math.ceil(date.getMinutes() / minuteStep) * minuteStep) % 60) as Minutes;
+    return { hour: date.getHours() as Hours, minute: minutes };
+  }
+
+  static toDate(value: TimeOnly, inputDate?: Date): Date {
+    const date = inputDate ?? new Date();
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate(), value.hour, value.minute ?? 0);
+  }
+
+  static now(minuteStep: MinuteStep = 5) {
+    return TimeOnlyUtils.fromDate(new Date(), minuteStep);
+  }
+
+  static trim(date: TimeOnly, minDate?: TimeOnly, maxDate?: TimeOnly): TimeOnly {
+    if (minDate && TimeOnlyUtils.compare(date, minDate) < 0) {
+      return minDate;
+    }
+    if (maxDate && TimeOnlyUtils.compare(date, maxDate) > 0) {
+      return maxDate;
+    }
+    return date;
+  }
+
+  static compare(a: TimeOnly, b: TimeOnly): number {
+    if (a.hour < b.hour) {
+      return -1;
+    }
+    if (a.hour > b.hour) {
+      return 1;
+    }
+    if (a.minute === undefined) {
+      return b.minute === undefined ? 0 : -1;
+    }
+    if (b.minute === undefined) {
+      return 1;
+    }
+    return a.minute - b.minute;
+  }
+}
+
 export type TimeRange = {
   start: TimeOnly;
-  end?: TimeOnly;
+  end: TimeOnly;
 };

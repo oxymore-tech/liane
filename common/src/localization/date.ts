@@ -1,5 +1,6 @@
 import { DayOfWeekFlag } from "../api";
 import { TimeInSeconds } from "../util";
+import { TimeOnly } from "../services";
 
 export class Localization {
   constructor(private locale: string) {}
@@ -67,6 +68,7 @@ export class Localization {
   formatShortMonthDay = this.shortMonthDayFormatter.format;
   formatDate = this.dateFormatter.format;
   formatTime24h = this.time24hFormatter.format;
+
   formatTime = (date?: number | Date | undefined) => {
     try {
       return this.timeFormatter.format(date);
@@ -75,16 +77,31 @@ export class Localization {
     }
   };
 
+  formatTimeOnly = (timeOnly?: TimeOnly) => {
+    if (!timeOnly) {
+      return "--:--";
+    }
+
+    return `${timeOnly.hour.toString().padStart(2, "0")}:${(timeOnly.minute ?? 0).toString().padStart(2, "0")}`;
+  };
+
   formatDateTime = (date: Date | number) => {
     return `${this.formatMonthDay(date)} à ${this.formatTime(date)}`;
   };
 
   readonly daysList = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
-  formatDaysOfTheWeek = (daysOfTheWeek: DayOfWeekFlag) => {
-    return this.daysList
+
+  formatDaysOfTheWeek = (daysOfTheWeek?: DayOfWeekFlag) => {
+    if (!daysOfTheWeek || daysOfTheWeek === "0000000") {
+      return;
+    } else if (daysOfTheWeek === "1111111") {
+      return "Tous les jours";
+    }
+    const formatted = this.daysList
       .filter((_day: string, index: number) => daysOfTheWeek?.charAt(index) === "1")
       .map((day: string) => `${day.toLocaleLowerCase()}s`)
       .join(", ");
+    return `Les ${formatted}`;
   };
 
   formatDuration = (duration: TimeInSeconds) => {

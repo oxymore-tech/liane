@@ -1,6 +1,6 @@
 import { Center, Column, Row } from "@/components/base/AppLayout";
-import React, { useContext, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, ColorValue, FlatList, KeyboardAvoidingView, Platform, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
+import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, ColorValue, FlatList, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { AppText } from "@/components/base/AppText";
 import { TripViewStyles } from "@/components/trip/TripSegmentView";
 import { asSearchedLocation, getKeyForTrip, isRallyingPointSearchedLocation, RallyingPoint, Ref, SearchedLocation, Trip } from "@liane/common";
@@ -9,9 +9,11 @@ import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
 import Animated, { FadeIn } from "react-native-reanimated";
-import { ItineraryFormHeader } from "@/components/trip/ItineraryFormHeader";
+import { ItineraryFormHeader, ToOrFrom } from "@/components/trip/ItineraryFormHeader";
 import { AppStyles } from "@/theme/styles";
 import { useDebounceValue } from "@/util/hooks/debounce";
+import { AppBackContextProvider } from "@/components/AppBackContextProvider.tsx";
+import { SelectOnMapView } from "@/screens/publish/SelectOnMapView.tsx";
 
 export const RecentTrip = ({ trip, style }: { trip: Trip; style?: StyleProp<ViewStyle> }) => {
   return (
@@ -57,7 +59,6 @@ export const CachedTripsView = (props: { onSelect: (trip: Trip) => void; filter?
         </Center>
       ) : (
         <FlatList
-          style={styles.flatListStyle}
           data={recentTrips}
           keyExtractor={i => getKeyForTrip(i)}
           renderItem={({ item, index }) => {
@@ -126,7 +127,7 @@ export const CachedPlaceLocationsView = ({
 
       {locationList.length > 0 && <AppText style={{ padding: 16, fontWeight: "bold", fontSize: 16 }}>Recherches récentes</AppText>}
       <FlatList
-        style={[styles.flatListStyle, { paddingVertical: 8 }]}
+        style={{ paddingVertical: 8 }}
         keyboardShouldPersistTaps="always"
         data={locationList}
         keyExtractor={v => (isRallyingPointSearchedLocation(v) ? v.properties!.id! : v.properties!.ref)}
@@ -142,79 +143,6 @@ export const CachedPlaceLocationsView = ({
           </AppPressableOverlay>
         )}
       />
-    </View>
-  );
-};
-
-export const CachedRallyingPointsView = ({
-  onSelect,
-  exceptValues,
-  showOpenMap,
-  showUsePosition = true
-}: {
-  onSelect: (r: RallyingPoint) => void;
-  exceptValues?: Ref<RallyingPoint>[] | undefined;
-  showOpenMap?: () => void;
-  showUsePosition?: boolean;
-}) => {
-  const { services } = useContext(AppContext);
-  const [recentLocations, setRecentLocations] = useState<RallyingPoint[]>([]);
-
-  useEffect(() => {
-    services.location.getRecentLocations().then(r => {
-      setRecentLocations(r);
-    });
-  }, [services.location]);
-
-  const updateValue = (v: RallyingPoint) => {
-    onSelect(v);
-    services.location.cacheRecentLocation(v).then(updated => setRecentLocations(updated));
-  };
-
-  const locationList = useMemo(() => {
-    if (exceptValues) {
-      return recentLocations.filter(l => !exceptValues!.includes(l.id!));
-    } else {
-      return recentLocations;
-    }
-  }, [exceptValues, recentLocations]);
-
-  return (
-    <View style={styles.page}>
-      {showUsePosition && (
-        <AppPressableOverlay
-          onPress={async () => {
-            const currentLocation = await services.location.currentLocation();
-            const closestPoint = await services.rallyingPoint.snap(currentLocation);
-            updateValue(closestPoint);
-          }}>
-          <Row style={{ padding: 16, alignItems: "center" }} spacing={16}>
-            <AppIcon name={"position-on"} color={AppColors.blue} />
-            <AppText>Utiliser ma position</AppText>
-          </Row>
-        </AppPressableOverlay>
-      )}
-      {showOpenMap && (
-        <AppPressableOverlay onPress={showOpenMap}>
-          <Row style={{ padding: 16, alignItems: "center" }} spacing={16}>
-            <AppIcon name={"map-outline"} color={AppColorPalettes.blue[700]} />
-            <AppText>Choisir sur la carte</AppText>
-          </Row>
-        </AppPressableOverlay>
-      )}
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "position" : undefined}>
-        {locationList.length > 0 && <AppText style={{ padding: 16, fontWeight: "bold", fontSize: 16 }}>Recherches récentes</AppText>}
-        <FlatList
-          keyboardShouldPersistTaps="always"
-          data={locationList}
-          keyExtractor={r => r.id!}
-          renderItem={({ item }) => (
-            <AppPressableOverlay key={item.id!} style={{ paddingHorizontal: 16, paddingVertical: 8 }} onPress={() => updateValue(item)}>
-              <RallyingPointItem item={item} />
-            </AppPressableOverlay>
-          )}
-        />
-      </KeyboardAvoidingView>
     </View>
   );
 };
@@ -302,19 +230,32 @@ export const PlaceItem = ({
     </Row>
   );
 };
-export const RallyingPointSuggestions = (props: {
-  currentSearch: string | undefined;
+
+export const RallyingPointSuggestions = ({
+  currentSearch,
+  onSelect,
+  exceptValues
+}: {
+  currentSearch?: string;
   onSelect: (r: RallyingPoint) => void;
-  exceptValues?: Ref<RallyingPoint>[] | undefined;
+  exceptValues?: Ref<RallyingPoint>[];
 }) => {
   const [results, setResults] = useState<RallyingPoint[]>([]);
   const { services } = useContext(AppContext);
 
-  const debouncedSearch = useDebounceValue(props.currentSearch);
+  const [recentLocations, setRecentLocations] = useState<RallyingPoint[]>([]);
+
+  useEffect(() => {
+    services.location.getRecentLocations().then(r => {
+      setRecentLocations(r);
+    });
+  }, [services.location]);
+
+  const debouncedSearch = useDebounceValue(currentSearch);
   const [loading, setLoading] = useState(false);
 
   const updateValue = async (v: RallyingPoint) => {
-    props.onSelect(v);
+    onSelect(v);
     await services.location.cacheRecentLocation(v);
   };
 
@@ -329,32 +270,27 @@ export const RallyingPointSuggestions = (props: {
   }, [services.rallyingPoint, debouncedSearch, services.location]);
 
   const locationList = useMemo(() => {
-    if (props.exceptValues) {
-      return results.filter(l => !props.exceptValues!.includes(l.id!));
+    const values = results.length > 0 ? results : recentLocations;
+    if (exceptValues) {
+      return values.filter(l => !exceptValues!.includes(l.id!));
     }
-    return results;
-  }, [props.exceptValues, results]);
-
-  if (loading) {
-    return <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />;
-  }
-
-  if (results.length === 0) {
-    return (
-      <Center>
-        <AppText style={AppStyles.noData}>Aucun résultat</AppText>
-      </Center>
-    );
-  }
+    return values;
+  }, [exceptValues, recentLocations, results]);
 
   return (
     <FlatList
-      style={styles.flatListStyle}
-      keyboardShouldPersistTaps="always"
+      refreshing={loading}
+      style={{ flex: 1 }}
+      keyboardShouldPersistTaps="handled"
       data={locationList}
       keyExtractor={i => i.id!}
       renderItem={({ item }) => (
-        <AppPressableOverlay key={item.id!} style={{ paddingHorizontal: 16, paddingVertical: 8 }} onPress={() => updateValue(item)}>
+        <AppPressableOverlay
+          key={item.id!}
+          style={{ paddingHorizontal: 16, paddingVertical: 8 }}
+          onPress={async () => {
+            await updateValue(item);
+          }}>
           <RallyingPointItem item={item} />
         </AppPressableOverlay>
       )}
@@ -422,7 +358,7 @@ export const PlaceSuggestions = (props: {
   }
   return (
     <FlatList
-      style={[styles.flatListStyle, { paddingTop: 8 }]}
+      style={{ paddingTop: 8 }}
       keyboardShouldPersistTaps="always"
       data={results}
       keyExtractor={(item, index) => (isRallyingPointSearchedLocation(item) ? item.properties!.id! : item.properties!.ref) + index}
@@ -438,79 +374,114 @@ export const PlaceSuggestions = (props: {
   );
 };
 
-export interface ItinerarySearchFormProps {
+export type ItinerarySearchFormProps = {
   trip: Partial<Trip>;
-  onSelectTrip: (trip: Trip) => void;
   updateTrip: (trip: Partial<Trip>) => void;
   title?: string;
-  animateEntry?: boolean;
-  openMap?: (data: "from" | "to") => void;
+  formWrapperStyle?: StyleProp<ViewStyle>;
+  formStyle?: StyleProp<ViewStyle>;
   editable?: boolean;
-}
+  onRequestFocus?: (field: "from" | "to") => void;
+};
+
 export const ItinerarySearchForm = ({
-  onSelectTrip,
   trip: currentTrip,
   updateTrip,
   title,
-  openMap,
-  animateEntry = true,
-  editable = true
+  formWrapperStyle,
+  formStyle,
+  editable = true,
+  onRequestFocus
 }: ItinerarySearchFormProps) => {
-  const [currentPoint, setCurrentPoint] = useState<"from" | "to" | undefined>();
-  const [currentSearch, setCurrentSearch] = useState<string | undefined>();
+  const { services } = useContext(AppContext);
+  const [currentPoint, setCurrentPoint] = useState<ToOrFrom | undefined>("to");
+  const [currentSearch, setCurrentSearch] = useState<string>("");
+  const [mapOpen, setMapOpen] = useState<ToOrFrom>();
 
   const otherValue = currentPoint ? currentTrip[currentPoint === "to" ? "from" : "to"] : undefined;
+
+  const handleUpdateField = useCallback(
+    (rp: RallyingPoint) => {
+      if (!currentPoint) {
+        return;
+      }
+      updateTrip({ [currentPoint]: rp });
+      const newPoint = currentPoint === "to" ? (!currentTrip.from ? "from" : undefined) : !currentTrip.to ? "to" : undefined;
+      setCurrentPoint(newPoint);
+    },
+    [currentTrip, currentPoint, updateTrip]
+  );
+
+  if (mapOpen) {
+    return (
+      <AppBackContextProvider
+        backHandler={() => {
+          setMapOpen(undefined);
+          return true;
+        }}>
+        <SelectOnMapView
+          onSelect={p => {
+            setMapOpen(undefined);
+            updateTrip({ [mapOpen]: p });
+          }}
+          title={"Choisissez un point " + (mapOpen === "from" ? "de départ" : "d'arrivée")}
+        />
+      </AppBackContextProvider>
+    );
+  }
 
   return (
     <Column style={{ flex: editable ? 1 : undefined }}>
       <ItineraryFormHeader
         title={title}
         editable={editable}
-        animateEntry={animateEntry}
+        containerStyle={formWrapperStyle}
+        style={formStyle}
+        animateEntry={true}
         onRequestFocus={field => {
           setCurrentPoint(field);
+          setCurrentSearch("");
+          updateTrip({ [field]: undefined });
+          onRequestFocus && onRequestFocus(field);
         }}
         onChangeField={(field, v) => {
           setCurrentPoint(field);
           setCurrentSearch(v);
-          if (v && v !== currentTrip[field]?.label) {
-            updateTrip({ [field]: undefined });
-            //updateField(field, undefined);
-            //  machine.send("UPDATE", { data: { from: undefined } });
-          } else if (!v) {
-            updateTrip({ [field]: undefined });
-          }
         }}
         trip={currentTrip}
         updateTrip={updateTrip}
       />
-      {editable && !currentTrip.to && !currentTrip.from && currentPoint === undefined && (
-        <CachedTripsView
-          onSelect={trip => {
-            onSelectTrip(trip);
-          }}
-        />
-      )}
-      {editable && currentPoint !== undefined && (currentSearch === undefined || currentSearch.trim().length === 0) && (
-        <CachedRallyingPointsView
-          exceptValues={[currentTrip.to?.id, currentTrip.from?.id].filter(i => i !== undefined) as string[]}
-          onSelect={async rp => {
-            updateTrip({ [currentPoint]: rp });
-          }}
-          showOpenMap={() => openMap?.(currentPoint)}
-        />
-      )}
 
-      {editable && currentPoint !== undefined && (currentSearch?.trim()?.length ?? 0) > 0 && (
-        <RallyingPointSuggestions
-          currentSearch={currentSearch}
-          exceptValues={otherValue ? [otherValue.id!] : undefined}
-          onSelect={rp => {
-            updateTrip({ [currentPoint]: rp });
-            setCurrentPoint(undefined);
-            setCurrentSearch(undefined);
-          }}
-        />
+      {editable && currentPoint !== undefined && (
+        <>
+          <Row style={{ paddingVertical: 20, justifyContent: "space-between" }}>
+            <AppPressableOverlay
+              onPress={async () => {
+                const currentLocation = await services.location.currentLocation();
+                const closestPoint = await services.rallyingPoint.snap(currentLocation);
+                handleUpdateField(closestPoint);
+              }}>
+              <Row spacing={16}>
+                <AppIcon name={"position-on"} color={AppColors.blue} />
+                <AppText>Utiliser ma position</AppText>
+              </Row>
+            </AppPressableOverlay>
+            <AppPressableOverlay onPress={() => setMapOpen(currentPoint)}>
+              <Row spacing={16}>
+                <AppIcon name={"map-outline"} color={AppColorPalettes.blue[700]} />
+                <AppText>Choisir sur la carte</AppText>
+              </Row>
+            </AppPressableOverlay>
+          </Row>
+          <AppText style={{ paddingBottom: 16, fontWeight: "bold" }}>Choisissez un point de ralliement</AppText>
+          <RallyingPointSuggestions
+            currentSearch={currentSearch}
+            exceptValues={otherValue ? [otherValue.id!] : undefined}
+            onSelect={rp => {
+              handleUpdateField(rp);
+            }}
+          />
+        </>
       )}
     </Column>
   );
@@ -522,16 +493,6 @@ const styles = StyleSheet.create({
   },
   bold: {
     fontWeight: "bold"
-  },
-  flatListStyle: {
-    borderRadius: 20,
-    margin: 16,
-    marginTop: 8,
-    paddingHorizontal: 8,
-    borderWidth: 2,
-    borderColor: AppColors.lightGrayBackground,
-    backgroundColor: AppColors.white,
-    height: "95%"
   },
   placeItemStyle: {
     paddingHorizontal: 16,

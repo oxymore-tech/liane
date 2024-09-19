@@ -28,7 +28,6 @@ import { useBehaviorSubject, useObservable } from "@/util/hooks/subscription";
 
 const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureCollection, Set<Ref<Liane>> | undefined]> }) => {
   const [movingDisplay, setMovingDisplay] = useState<boolean>(false);
-  // const [isLoadingDisplay, setLoadingDisplay] = useState<boolean>(false);
   const machine = useContext(HomeMapContext);
 
   const [state] = useActor(machine);
@@ -74,8 +73,6 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
 
   const appMapRef = useRef<AppMapViewController>(null);
   const [modalOpen, setModalOpen] = useState(false);
-
-  //const { bottom } = useSafeAreaInsets();
 
   return (
     <AppBackContextProvider backHandler={backHandler}>
@@ -141,15 +138,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
           </HomeBottomSheetContainer>
         )}
 
-        {state.matches("form") && (
-          <ItinerarySearchForm
-            // updateField={(field, value) => machine.send("UPDATE", { data: { [field]: value } })}
-            animateEntry={state.history?.matches("map") || state.history?.matches("detail") || false}
-            trip={state.context.filter}
-            onSelectTrip={t => machine.send("UPDATE", { data: t })}
-            updateTrip={t => machine.send("UPDATE", { data: t })}
-          />
-        )}
+        {state.matches("form") && <ItinerarySearchForm trip={state.context.filter} updateTrip={t => machine.send("UPDATE", { data: t })} />}
 
         {isDetailState && <AnimatedFloatingBackButton onPress={() => machine.send("BACK")} />}
         {isMapState && (
@@ -169,7 +158,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
                 ? {
                     icon: "play-circle-outline",
                     title: "Proposer un trajet vers ce point",
-                    onPress: () => navigation.navigate("Publish", { initialValue: { to: state.context.filter!.to } })
+                    onPress: () => navigation.navigate("Publish", { initialValue: { wayPoints: [state.context.filter!.to!.id!] } })
                   }
                 : null
             }

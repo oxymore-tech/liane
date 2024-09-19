@@ -20,9 +20,7 @@ export const ListGroupScreen = () => {
   const [error, setError] = useState<Error | undefined>(undefined);
   const { to, from } = useMemo(() => extractWaypointFromTo(lianeRequest?.wayPoints), [lianeRequest.wayPoints]);
   const daysReccurence = extractDays(lianeRequest.weekDays);
-  const localeTime = lianeRequest?.timeConstraints[0]
-    ? `${lianeRequest?.timeConstraints[0]?.when?.start?.hour}h${lianeRequest?.timeConstraints[0]?.when?.start?.minute}`
-    : "";
+  const localeTime = lianeRequest?.arriveBefore ? `${lianeRequest?.arriveBefore?.hour}h${lianeRequest?.arriveBefore?.minute}` : "";
 
   return (
     <View style={styles.mainContainer}>

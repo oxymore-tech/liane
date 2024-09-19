@@ -1,75 +1,61 @@
 import React, { useEffect, useRef, useState } from "react";
-import { StyleSheet, TextInput, View } from "react-native";
+import { StyleProp, StyleSheet, TextInput, View, ViewStyle } from "react-native";
 import { Column } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppColors } from "@/theme/colors";
 import { RallyingPointField } from "@/screens/home/HomeHeader";
 import { RallyingPoint } from "@liane/common";
 import { AppPressableIcon } from "@/components/base/AppPressable";
+import { ToOrFrom } from "@/components/trip/ItineraryFormHeader.tsx";
+import { AppText } from "@/components/base/AppText.tsx";
 
 export interface ItineraryFormProps {
   editable?: boolean;
-  onChangeFrom?: (value: string | undefined) => void;
-  onChangeTo?: (value: string | undefined) => void;
-  onRequestFocus?: (field: "to" | "from") => void;
+  field?: ToOrFrom;
+  onChangeFrom?: (value: string) => void;
+  onChangeTo?: (value: string) => void;
+  onRequestFocus?: (field: ToOrFrom) => void;
   to: RallyingPoint | undefined;
   from: RallyingPoint | undefined;
   onValuesSwitched: (oldFrom: RallyingPoint | undefined, oldTo: RallyingPoint | undefined) => void;
+  style?: StyleProp<ViewStyle>;
 }
 export const ItineraryForm = ({
   from,
   to,
+  field,
+  style,
   onValuesSwitched = () => {},
   onChangeFrom = () => {},
   onChangeTo = () => {},
+  onRequestFocus = () => {},
   editable = true
 }: ItineraryFormProps) => {
-  const [searchFrom, setSearchFrom] = useState<string>();
-  const [searchTo, setSearchTo] = useState<string>();
-  const [focused, setFocused] = useState<"from" | "to" | undefined>();
+  const [searchFrom, setSearchFrom] = useState<string>("");
+  const [searchTo, setSearchTo] = useState<string>("");
   const inputRefFrom = useRef<TextInput>(null);
   const inputRefTo = useRef<TextInput>(null);
 
   useEffect(() => {
-    if (from) {
-      if (!to) {
-        inputRefTo.current?.focus();
-      }
-
-      setSearchFrom(from?.label);
-    }
     if (to) {
       if (!from) {
         inputRefFrom.current?.focus();
+        return;
       }
-
-      setSearchTo(to?.label);
+    } else {
+      inputRefTo.current?.focus();
+      return;
+    }
+    if (from) {
+      if (!to) {
+        inputRefTo.current?.focus();
+        return;
+      }
     }
   }, [from, to]);
 
   return (
-    <Column spacing={6} style={styles.containerStyle}>
-      <RallyingPointField
-        ref={inputRefTo}
-        onChange={v => {
-          setSearchTo(v);
-          onChangeTo(v);
-        }}
-        value={to?.label || searchTo || ""}
-        onFocus={() => {
-          setFocused("to");
-          if (!editable) {
-            onChangeTo(undefined);
-          } else {
-            onChangeTo(searchTo);
-          }
-        }}
-        editable={editable}
-        placeholder={"Où allez-vous ?"}
-        icon={<AppIcon name={"flag"} color={AppColors.primaryColor} />}
-        showTrailing={focused === "to" && (to || (searchTo && searchTo.length > 0)) === true}
-      />
-
+    <Column spacing={6} style={[styles.containerStyle, style]}>
       <RallyingPointField
         ref={inputRefFrom}
         onChange={v => {
@@ -78,19 +64,28 @@ export const ItineraryForm = ({
         }}
         value={from?.label || searchFrom || ""}
         onFocus={() => {
-          setFocused("from");
-          if (!editable) {
-            onChangeFrom(undefined);
-          } else {
-            onChangeFrom(searchFrom);
-          }
+          onRequestFocus("from");
         }}
         editable={editable}
-        placeholder={"... et votre départ !"}
+        placeholder={"D'où partez vous ?"}
         icon={<AppIcon name={"pin"} color={AppColors.primaryColor} />}
-        showTrailing={(focused === "from" && (from || (searchFrom && searchFrom.length > 0))) === true}
+        showTrailing={(field === "from" && (from || (searchFrom && searchFrom.length > 0))) === true}
       />
-
+      <RallyingPointField
+        ref={inputRefTo}
+        onChange={v => {
+          setSearchTo(v);
+          onChangeTo(v);
+        }}
+        value={to?.label || searchTo || ""}
+        onFocus={() => {
+          onRequestFocus("to");
+        }}
+        editable={editable}
+        placeholder={"Où allez-vous ?"}
+        icon={<AppIcon name={"flag"} color={AppColors.primaryColor} />}
+        showTrailing={field === "to" && (to || (searchTo && searchTo.length > 0)) === true}
+      />
       {(to || from) && (
         <View style={{ position: "absolute", right: 0, top: 8, height: "100%", justifyContent: "center" }}>
           <AppPressableIcon
@@ -123,11 +118,6 @@ export const ItineraryForm = ({
 
 const styles = StyleSheet.create({
   containerStyle: {
-    borderWidth: 2,
-    borderColor: AppColors.lightGrayBackground,
-    borderRadius: 18,
-    paddingVertical: 12,
-    backgroundColor: AppColors.white,
-    flex: 1
+    paddingBottom: 12
   }
 });

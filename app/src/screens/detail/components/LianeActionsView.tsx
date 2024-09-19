@@ -2,7 +2,7 @@ import React, { useContext, useMemo, useState } from "react";
 import { QueryClient, useQueryClient } from "react-query";
 import { Alert, View } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { DayOfWeekFlag, getPoint, Liane, LianeMatch } from "@liane/common";
+import { DayOfWeekFlag, Liane, LianeMatch, TimeOnlyUtils } from "@liane/common";
 import { NavigationParamList, useAppNavigation } from "@/components/context/routing";
 import { AppServices } from "@/api/service";
 import { AppContext } from "@/components/context/ContextProvider";
@@ -36,7 +36,7 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
   const [date, setDate] = useState(new Date(liane.departureTime));
   const [daysOfTheWeek, setDaysOfTheWeek] = useState(liane.recurrence?.days || "0000000");
 
-  const initialMinDate = new Date(new Date().getTime() + 60000);
+  const initialMinDate = TimeOnlyUtils.fromDate(new Date(new Date().getTime() + 60000));
 
   const lianeHasRecurrence = !!liane.recurrence;
   const editOptions = useMemo(() => {
@@ -149,7 +149,7 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
           color={defaultTextColor(AppColors.primaryColor)}
           onPress={async () => {
             if (currentUserIsDriver) {
-              await relaunchLiane(navigation, match);
+              relaunchLiane(navigation, match);
             } else {
               //TODO
             }
@@ -185,7 +185,12 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
           <AppText style={{ ...AppStyles.title, marginVertical: 8, paddingLeft: 8 }}>À quelle heure partez-vous ?</AppText>
 
           <View>
-            <TimeWheelPicker date={date} minuteStep={5} onChange={setDate} minDate={initialMinDate} />
+            <TimeWheelPicker
+              date={TimeOnlyUtils.fromDate(date)}
+              minuteStep={5}
+              onChange={d => setDate(TimeOnlyUtils.toDate(d, date))}
+              minDate={initialMinDate}
+            />
           </View>
         </Column>
       </SlideUpModal>
@@ -283,11 +288,12 @@ const updateRecurrence = async (
     navigation.goBack();
   }
 };
+
 const relaunchLiane = (navigation: NativeStackNavigationProp<NavigationParamList, keyof NavigationParamList>, match: LianeMatch) => {
-  const fromPoint = getPoint(match, "pickup");
-  const toPoint = getPoint(match, "deposit");
-  const availableSeats = match.trip.members.find(m => m.user.id === match.trip.driver.user)!.seatCount;
-  navigation.navigate("Publish", { initialValue: { from: fromPoint, to: toPoint, recurrence: match.trip.recurrence?.days, availableSeats } });
+  // const fromPoint = getPoint(match, "pickup");
+  // const toPoint = getPoint(match, "deposit");
+  // const availableSeats = match.trip.members.find(m => m.user.id === match.trip.driver.user)!.seatCount;
+  // navigation.navigate("Publish", { initialValue: { from: fromPoint, to: toPoint, recurrence: match.trip.recurrence?.days, availableSeats } });
 };
 
 const deleteLiane = (

@@ -13,9 +13,6 @@ export const OfflineWarning = () => {
   const shouldDisplay = hubState && ["offline", "reconnecting"].includes(hubState);
   const [display, setDisplay] = useState(shouldDisplay);
 
-  if (!display) {
-    return null;
-  }
   const isReconnecting = hubState === "reconnecting";
 
   useEffect(() => {
@@ -28,6 +25,10 @@ export const OfflineWarning = () => {
       setDisplay(hubState === "offline");
     }
   }, [hubState]);
+
+  if (!display) {
+    return null;
+  }
 
   return (
     <Animated.View style={{ position: "absolute", bottom: 60, left: 24, right: 24 }} entering={SlideInDown}>

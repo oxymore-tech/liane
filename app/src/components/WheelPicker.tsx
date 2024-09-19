@@ -119,7 +119,6 @@ export const WheelPicker: React.FC<Props> = ({
       });
     } else if (index > options.length && offsetY >= (options.length + 1) * itemHeight) {
       // Going down, needs shifting
-      //  console.log("shouldD", options.length, oldVal.current, index);
       oldVal.current = 1;
       flatListRef.current?.scrollToOffset({ animated: false, offset: itemHeight });
     }

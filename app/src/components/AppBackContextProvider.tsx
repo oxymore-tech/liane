@@ -6,8 +6,9 @@ import { RootNavigation } from "@/components/context/routing";
 export interface AppBackController {
   goBack: () => void;
 }
-// @ts-ignore
-const AppBackActionContext = createContext<AppBackController>();
+
+const AppBackActionContext = createContext<AppBackController>({ goBack: () => {} });
+
 export const AppBackContextProvider = (props: { backHandler: () => boolean } & PropsWithChildren) => {
   useBackHandler(props.backHandler);
 

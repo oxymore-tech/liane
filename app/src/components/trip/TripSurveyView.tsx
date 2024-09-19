@@ -11,6 +11,7 @@ import {
   Liane,
   LianeMessage,
   RallyingPoint,
+  TimeOnlyUtils,
   TripMessage
 } from "@liane/common";
 import React, { useCallback, useContext, useMemo, useState } from "react";
@@ -209,7 +210,13 @@ const EditTripModal = ({
           </View>
           <AppText style={styles.modalText}>Départ à :</AppText>
           <Center>
-            <TimeWheelPicker date={defaultTimeDate} minuteStep={5} onChange={d => setSelectedTime(d)} />
+            <TimeWheelPicker
+              date={TimeOnlyUtils.fromDate(defaultTimeDate)}
+              minuteStep={5}
+              onChange={d =>
+                setSelectedTime(new Date(defaultTimeDate.getFullYear(), defaultTimeDate.getMonth(), defaultTimeDate.getDay(), d.hour, d.minute))
+              }
+            />
           </Center>
           <Row style={{ justifyContent: "flex-end" }}>
             <AppPressableIcon name={"checkmark-outline"} onPress={launch} />
