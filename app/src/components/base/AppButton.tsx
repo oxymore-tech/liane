@@ -1,5 +1,5 @@
 import React from "react";
-import { ActivityIndicator, ColorValue, PressableProps, StyleSheet, TouchableOpacity } from "react-native";
+import { ActivityIndicator, ColorValue, PressableProps, StyleProp, StyleSheet, TouchableOpacity, ViewStyle } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppText } from "./AppText";
 import { AppDimensions } from "@/theme/dimensions";
@@ -19,6 +19,7 @@ export type AppButtonProps = PressableProps & {
   foregroundColor?: ColorValue;
   user?: User | null;
   loading?: boolean;
+  style?: StyleProp<ViewStyle>;
 } & ({ title: string; icon?: IconName } | { icon: IconName; title?: string });
 
 export function AppButton({
