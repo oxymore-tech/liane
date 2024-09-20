@@ -79,10 +79,14 @@ export class Localization {
 
   formatTimeOnly = (timeOnly?: TimeOnly) => {
     if (!timeOnly) {
-      return "--:--";
+      return "--";
     }
 
-    return `${timeOnly.hour.toString().padStart(2, "0")}:${(timeOnly.minute ?? 0).toString().padStart(2, "0")}`;
+    if (!timeOnly.minute) {
+      return `${timeOnly.hour.toString()}h`;
+    }
+
+    return `${timeOnly.hour.toString()}h${timeOnly.minute.toString().padStart(2, "0")}`;
   };
 
   formatDateTime = (date: Date | number) => {
