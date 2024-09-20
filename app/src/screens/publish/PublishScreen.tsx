@@ -127,7 +127,7 @@ export const PublishScreen = () => {
             )
           },
           {
-            title: `Retour après ${AppLocalization.formatTimeOnly(lianeRequest.arriveBefore)}`,
+            title: `Retour après ${AppLocalization.formatTimeOnly(lianeRequest.returnAfter)}`,
             render: () => (
               <TimeStepView
                 title={`Je souhaite repartir de ${trip.to?.city ?? ""} après ?`}
