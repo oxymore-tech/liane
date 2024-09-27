@@ -8,7 +8,7 @@ namespace Liane.Api.Trip;
 public sealed record DetailedLianeTrackReport(
   Ref<Trip> Id,
   ImmutableList<WayPoint> WayPoints,
-  ImmutableList<LianeMember> Members,
+  ImmutableList<TripMember> Members,
   Driver Driver,
   DateTime StartedAt,
   DateTime? FinishedAt = null

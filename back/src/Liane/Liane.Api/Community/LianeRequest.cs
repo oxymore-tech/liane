@@ -20,4 +20,7 @@ public sealed record LianeRequest(
   DateTime? CreatedAt
 ) : IEntity<Guid?>;
 
-public readonly record struct TimeRange(TimeOnly Start, TimeOnly End);
+public readonly record struct TimeRange(TimeOnly Start, TimeOnly End)
+{
+  public TimeRange Merge(TimeRange other) => new(Start < other.Start ? Start : other.Start, End > other.End ? End : other.End);
+}

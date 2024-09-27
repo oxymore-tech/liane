@@ -12,13 +12,13 @@ public record BaseLianeRequest(
   GeolocationLevel GeolocationLevel
 );
 
-public sealed record LianeRequest(
+public sealed record TripRequest(
   string? Id,
+  Ref<Community.Liane> Liane,
   DateTime DepartureTime,
   DateTime? ReturnTime,
   int AvailableSeats,
   Ref<RallyingPoint> From,
   Ref<RallyingPoint> To,
-  DayOfWeekFlag? Recurrence = null,
-  GeolocationLevel GeolocationLevel = GeolocationLevel.None
+  GeolocationLevel GeolocationLevel
 ) : BaseLianeRequest(DepartureTime, ReturnTime, AvailableSeats, From, To, GeolocationLevel), IIdentity<string>;

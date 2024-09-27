@@ -114,10 +114,10 @@ public sealed class TripServiceImplTest : BaseIntegrationTest
   {
     var departureTime = DateTime.UtcNow.AddHours(9);
     currentContext.SetCurrentUser(userA);
-    return await testedService.Create(new LianeRequest(id, departureTime, null, 4, from, to), userA.Id);
+    return await testedService.Create(new TripRequest(id, Guid.Parse("019233a0-5c48-7cfa-b12e-7e7f0eb9c69f"), departureTime, null, 4, from, to, GeolocationLevel.None), userA.Id);
   }
 
-  public static LianeRequest[] CreateBaseLianeRequests()
+  public static TripRequest[] CreateBaseLianeRequests()
   {
     var tomorrow = DateTime.Now.AddDays(1);
     // Create fake Liane in database
@@ -128,7 +128,7 @@ public sealed class TripServiceImplTest : BaseIntegrationTest
       (LabeledPositions.LavalDuTarnEglise, LabeledPositions.Mende),
       (LabeledPositions.VillefortParkingGare, LabeledPositions.Mende),
     };
-    var requests = new LianeRequest[baseLianes.Length];
+    var requests = new TripRequest[baseLianes.Length];
     for (var i = 0; i < baseLianes.Length; i++)
     {
       var lianeRequest = Fakers.LianeRequestFaker.Generate() with { From = baseLianes[i].From, To = baseLianes[i].To, DepartureTime = tomorrow, AvailableSeats = 2 };
@@ -241,7 +241,7 @@ public sealed class TripServiceImplTest : BaseIntegrationTest
     var resolvedLianeA = await testedService.Get(createdLiane.Id);
     Assert.NotNull(resolvedLianeA);
 
-    await testedService.AddMember(createdLiane, new LianeMember(userB, lianeA.From, lianeA.To));
+    await testedService.AddMember(createdLiane, new TripMember(userB, lianeA.From, lianeA.To));
 
     resolvedLianeA = await testedService.Get(createdLiane.Id);
     Assert.AreEqual(createdLiane.Members.Count + 1, resolvedLianeA.Members.Count);
@@ -260,6 +260,7 @@ public sealed class TripServiceImplTest : BaseIntegrationTest
       var lianeA = Fakers.LianeRequestFaker.Generate();
       created.Add(await testedService.Create(lianeA, userA.Id));
     }
+
     created = created.OrderByDescending(l => l.DepartureTime).ToList();
 
     var firstPage = await testedService.List(new LianeFilter { ForCurrentUser = true }, new Pagination(Limit: pageSize, SortAsc: false));
@@ -270,7 +271,7 @@ public sealed class TripServiceImplTest : BaseIntegrationTest
     Assert.NotNull(firstPage.Next);
     var cursorId = (firstPage.Next as Cursor.Time)!.Id;
     Assert.AreEqual(10, created.FindIndex(l => l.Id == cursorId));
-    
+
     var lastPage = await testedService.List(new LianeFilter { ForCurrentUser = true }, new Pagination(Limit: pageSize, Cursor: firstPage.Next, SortAsc: false));
     Assert.AreEqual(pageSize, lastPage.Data.Count);
     Assert.AreEqual(10, created.FindIndex(l => l.Id == lastPage.Data.First().Id));
@@ -286,7 +287,8 @@ public sealed class TripServiceImplTest : BaseIntegrationTest
     var augustin = Fakers.FakeDbUsers[0].Id;
     currentContext.SetAllowPastResourceCreation(true);
     var departureTime = DateTime.Parse("2023-08-08T08:08:00Z");
-    var liane = await testedService.Create(new LianeRequest(null, departureTime, null, 3, LabeledPositions.BlajouxParking, LabeledPositions.Mende), augustin);
+    var liane = await testedService.Create(
+      new TripRequest(null, Guid.Parse("019233a0-5c48-7cfa-b12e-7e7f0eb9c69f"), departureTime, null, 3, LabeledPositions.BlajouxParking, LabeledPositions.Mende, GeolocationLevel.None), augustin);
     var actual = await testedService.Match(new Filter(LabeledPositions.Cocures, LabeledPositions.Mende, new DepartureOrArrivalTime(departureTime.AddHours(1), Direction.Arrival)),
       new Pagination());
 
@@ -310,7 +312,9 @@ public sealed class TripServiceImplTest : BaseIntegrationTest
     var bertrand = Fakers.FakeDbUsers[1];
 
     currentContext.SetCurrentUser(samuel);
-    var liane = await testedService.Create(new LianeRequest(null, DateTime.UtcNow.AddHours(24), null, 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille), samuel.Id);
+    var liane = await testedService.Create(
+      new TripRequest(null, Guid.Parse("019233a0-5c48-7cfa-b12e-7e7f0eb9c69f"), DateTime.UtcNow.AddHours(24), null, 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille,
+        GeolocationLevel.None), samuel.Id);
 
     currentContext.SetCurrentUser(bertrand);
     var actual = await testedService.Match(
@@ -329,5 +333,4 @@ public sealed class TripServiceImplTest : BaseIntegrationTest
     Assert.AreEqual("mairie:31324", compatible.Pickup.Id);
     Assert.AreEqual("mairie:31557", compatible.Deposit.Id);
   }
-
 }

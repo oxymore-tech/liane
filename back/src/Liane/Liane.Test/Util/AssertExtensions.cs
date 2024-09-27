@@ -21,9 +21,13 @@ public static class AssertExtensions
 
   public static void AssertDeepEqual<T>(this IEnumerable<T> actual, params T[] expected)
   {
-    expected.WithDeepEqual(actual).Assert();
+    actual.WithDeepEqual(expected).Assert();
   }
 
+  public static void AssertDeepEqual<T>(this T actual, T expected)
+  {
+    actual.WithDeepEqual(expected).Assert();
+  }
 
   public static void AreRefEquivalent<T>(this IEnumerable<Ref<T>?> expected, IEnumerable<Ref<T>> actual)
     where T : class, IIdentity<string>

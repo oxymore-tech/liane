@@ -31,7 +31,9 @@ public sealed class NotificationServiceImplTest : BaseIntegrationTest
   {
     var userA = Fakers.FakeDbUsers[0];
     var userB = Fakers.FakeDbUsers[1];
-    var liane = await tripService.Create(new LianeRequest(null, DateTime.UtcNow.AddHours(10), null, 4, LabeledPositions.BlajouxParking, LabeledPositions.Florac), userA.Id);
+    var liane = await tripService.Create(
+      new TripRequest(null, Guid.Parse("019233a0-5c48-7cfa-b12e-7e7f0eb9c69f"), DateTime.UtcNow.AddHours(10), null, 4, LabeledPositions.BlajouxParking, LabeledPositions.Florac, GeolocationLevel.None),
+      userA.Id);
 
     CurrentContext.SetCurrentUser(userB);
     var joinRequest = new LianeEvent.JoinRequest(liane.Id, LabeledPositions.BlajouxParking, LabeledPositions.Florac, 2, false, "Hey !");
@@ -50,18 +52,20 @@ public sealed class NotificationServiceImplTest : BaseIntegrationTest
 
     CollectionAssert.AreEquivalent(actual.Members.Select(m => m.User.Id), ImmutableList.Create(userA.Id, userB.Id));
   }
-  
+
   [Test]
   public async Task ShouldSendAJoinRequestNotificationWithId()
   {
     var userA = Fakers.FakeDbUsers[0];
     var userB = Fakers.FakeDbUsers[1];
-    var liane = await tripService.Create(new LianeRequest(null, DateTime.UtcNow.AddHours(10), null, 4, LabeledPositions.BlajouxParking, LabeledPositions.Florac), userA.Id);
+    var liane = await tripService.Create(
+      new TripRequest(null, Guid.Parse("019233a0-5c48-7cfa-b12e-7e7f0eb9c69f"), DateTime.UtcNow.AddHours(10), null, 4, LabeledPositions.BlajouxParking, LabeledPositions.Florac, GeolocationLevel.None),
+      userA.Id);
 
     CurrentContext.SetCurrentUser(userB);
     var joinRequest = new LianeEvent.JoinRequest(liane.Id, LabeledPositions.BlajouxParking, LabeledPositions.Florac, 2, false, "Hey !");
     await eventDispatcher.Dispatch(joinRequest);
-    
+
     CurrentContext.SetCurrentUser(userA);
     var notifications = await notificationService.List(new NotificationFilter(userA.Id, null, liane.Id, new PayloadType.Event<LianeEvent.JoinRequest>()), new Pagination());
 
@@ -70,20 +74,22 @@ public sealed class NotificationServiceImplTest : BaseIntegrationTest
     var notification = notifications.Data[0];
     Assert.AreEqual($"liane://join_request/{notification.Id}", notification.Uri);
   }
-  
+
   [Test]
   public async Task ShouldMarkAsReadOnAnswer()
   {
     var userA = Fakers.FakeDbUsers[0];
     var userB = Fakers.FakeDbUsers[1];
-    
+
     CurrentContext.SetCurrentUser(userA);
-    var liane = await tripService.Create(new LianeRequest(null, DateTime.UtcNow.AddHours(10), null, 4, LabeledPositions.BlajouxParking, LabeledPositions.Florac), userA.Id);
+    var liane = await tripService.Create(
+      new TripRequest(null, Guid.Parse("019233a0-5c48-7cfa-b12e-7e7f0eb9c69f"), DateTime.UtcNow.AddHours(10), null, 4, LabeledPositions.BlajouxParking, LabeledPositions.Florac, GeolocationLevel.None),
+      userA.Id);
 
     CurrentContext.SetCurrentUser(userB);
     var joinRequest = new LianeEvent.JoinRequest(liane.Id, LabeledPositions.BlajouxParking, LabeledPositions.Florac, 2, false, "Hey !");
     await eventDispatcher.Dispatch(joinRequest);
-    
+
     CurrentContext.SetCurrentUser(userA);
     var notifications = await notificationService.List(new NotificationFilter(userA.Id, null, liane.Id, new PayloadType.Event<LianeEvent.JoinRequest>()), new Pagination());
 

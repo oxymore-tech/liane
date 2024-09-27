@@ -190,7 +190,7 @@ public sealed class RallyingPointServiceImpl(IOsrmService osrmService, PostgisDa
       using var connection = db.NewConnection();
       return await connection.GetAsync((Ref<RallyingPointStats>)point.Id);
     }
-    catch (ResourceNotFoundException e)
+    catch (ResourceNotFoundException)
     {
       return new RallyingPointStats(point.Id, 0, null);
     }

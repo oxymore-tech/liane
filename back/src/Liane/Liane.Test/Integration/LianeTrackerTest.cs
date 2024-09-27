@@ -6,9 +6,9 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using GeoJSON.Text.Feature;
 using GeoJSON.Text.Geometry;
+using Liane.Api.Auth;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
-using Liane.Api.Auth;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Trip;
@@ -30,6 +30,7 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
     var departureTime = DateTime.Parse("2023-08-08T16:12:53.061Z");
     var liane = new Api.Trip.Trip(
       "6410edc1e02078e7108a5895",
+      Guid.Parse("019233a0-5c48-7cfa-b12e-7e7f0eb9c69f"),
       userId,
       DateTime.Today,
       departureTime,
@@ -40,13 +41,13 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
         new(LabeledPositions.AireDesPyrénées, 45 * 60, 65000, DateTime.Parse("2023-08-08T16:57:54.000Z")),
         new(LabeledPositions.PointisInard, 19 * 60, 24000, DateTime.Parse("2023-08-08T17:17:05.000Z"))
       }.ToImmutableList(),
-      new List<LianeMember>
+      new List<TripMember>
       {
         new(userId, LabeledPositions.Tournefeuille, LabeledPositions.PointisInard, 3),
         new("63f7a5c90f65806b1adb3081", LabeledPositions.Tournefeuille, LabeledPositions.AireDesPyrénées)
       }.ToImmutableList(),
       new Driver(userId),
-      LianeState.NotStarted,
+      TripStatus.NotStarted,
       null
     );
     return (liane, JsonSerializer.Deserialize<FeatureCollection>(AssertExtensions.ReadTestResource("Geolocation/test-tournefeuille-pointis-inard.json"))!);

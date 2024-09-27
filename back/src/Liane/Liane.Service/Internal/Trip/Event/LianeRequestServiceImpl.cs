@@ -69,7 +69,7 @@ public sealed class LianeRequestServiceImpl(
 
   private async Task<LianeEvent.MemberAccepted> AcceptMember(Ref<Api.Trip.Trip> lianeRef, Ref<Api.Auth.User> memberRef, LianeEvent.JoinRequest joinRequest)
   {
-    var member = new LianeMember(memberRef, joinRequest.From, joinRequest.To, joinRequest.Seats, GeolocationLevel: joinRequest.GeolocationLevel);
+    var member = new TripMember(memberRef, joinRequest.From, joinRequest.To, joinRequest.Seats, GeolocationLevel: joinRequest.GeolocationLevel);
     var liane = await tripService.AddMember(lianeRef, member);
     await userStatService.IncrementTotalJoinedTrips(memberRef);
     if (joinRequest.TakeReturnTrip)
@@ -84,7 +84,7 @@ public sealed class LianeRequestServiceImpl(
   public async Task OnAnswer(Notification.Event e, LianeEvent.JoinRequest joinRequest, Answer answer, Ref<Api.Auth.User>? sender = null)
   {
     var liane = await tripService.Get(joinRequest.Liane);
-    if (liane.State is not (LianeState.Started or LianeState.NotStarted))
+    if (liane.State is not (TripStatus.Started or TripStatus.NotStarted))
     {
       throw new ValidationException(ValidationMessage.LianeStateInvalid(liane.State));
     }
@@ -154,7 +154,7 @@ public sealed class LianeRequestServiceImpl(
     var liane = await tripService.Get(joinRequest.Liane);
     var createdBy = await userService.Get(lianeEvent.CreatedBy!);
 
-    if (liane.State != LianeState.NotStarted)
+    if (liane.State != TripStatus.NotStarted)
     {
       throw new ConstraintException($"This request is linked to a liane {liane.Id} with state {liane.State}");
     }
