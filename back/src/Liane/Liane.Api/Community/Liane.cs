@@ -13,5 +13,5 @@ public sealed record Liane(
   ImmutableList<LianeMember> PendingMembers
 ) : IIdentity<Guid>, ISharedResource<LianeMember>
 {
-  public bool IsMember(Ref<User> user) => Members.Any(m => m.User == user) || PendingMembers.Any(m => m.User == user);
+  public bool IsMember(Ref<User> user) => Members.Any(m => m.User.Id == user.Id) || PendingMembers.Any(m => m.User.Id == user.Id);
 }

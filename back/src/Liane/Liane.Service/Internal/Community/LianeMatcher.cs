@@ -19,8 +19,7 @@ namespace Liane.Service.Internal.Community;
 
 public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICurrentContext currentContext)
 {
-  public async Task<Match?> FindMatchBetween(IDbConnection connection,
-    Guid from, Guid to, IDbTransaction? tx = null)
+  public async Task<Match?> FindMatchBetween(IDbConnection connection, Guid from, Guid to, IDbTransaction? tx = null)
   {
     var userId = currentContext.CurrentUser().Id;
     var rawMatches = await FindRawMatches(connection, userId, null, from, to, tx);

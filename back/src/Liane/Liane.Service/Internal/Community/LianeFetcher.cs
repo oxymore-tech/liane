@@ -28,7 +28,7 @@ public sealed class LianeFetcher(LianeRequestFetcher lianeRequestFetcher, IUserS
   public async Task<ImmutableDictionary<Guid, Api.Community.Liane>> FetchLianes(IDbConnection connection, IEnumerable<Guid> lianeFilter, IDbTransaction? tx = null)
   {
     var lianeMemberDbs = (await connection.QueryAsync(
-        Query.Select<LianeMemberDb>().Where(Filter<LianeMemberDb>.Where(l => l.LianeRequestId, ComparisonOperator.In, lianeFilter))
+        Query.Select<LianeMemberDb>().Where(Filter<LianeMemberDb>.Where(l => l.LianeId, ComparisonOperator.In, lianeFilter))
           .OrderBy(m => m.JoinedAt)
           .OrderBy(m => m.RequestedAt),
         tx

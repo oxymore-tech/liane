@@ -46,6 +46,11 @@ public abstract record Filter<T>
     return new NearFilter(distance, radius);
   }
 
+  public override string ToString()
+  {
+    return ToSql(new NamedParams());
+  }
+
   private sealed record EmptyFilter : Filter<T>
   {
     internal override string ToSql(NamedParams namedParams) => "";

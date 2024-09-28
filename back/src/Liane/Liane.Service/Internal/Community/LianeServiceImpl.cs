@@ -209,7 +209,8 @@ public sealed class LianeServiceImpl(
     var lianeId = alreadyMember?.LianeId ?? foreignId;
     if (alreadyMember is null)
     {
-      await connection.MergeAsync(new LianeMemberDb(lianeId, lianeId, DateTime.UtcNow, DateTime.UtcNow, null), tx);
+      var uu = await connection.MergeAsync(new LianeMemberDb(lianeId, lianeId, DateTime.UtcNow, DateTime.UtcNow, null), tx);
+      Console.WriteLine("coco di", uu);
     }
 
     var updated = await connection.UpdateAsync(Query.Update<LianeMemberDb>()
@@ -312,18 +313,14 @@ public sealed class LianeServiceImpl(
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
     var lianeId = Guid.Parse(liane.Id);
-    var updated = await connection.ExecuteAsync("DELETE FROM liane_member WHERE liane_id = @liane_id AND user_id = @user_id", new { liane_id = lianeId, user_id = userId }, tx);
-    if (updated == 0)
+    var lianeMemberDb = await TryGetMember(connection, lianeId, userId, tx);
+    if (lianeMemberDb is null)
     {
       return false;
     }
 
-    var rest = await connection.CountAsync("SELECT COUNT(*) FROM liane_member WHERE liane_id = @liane_id", new { liane_id = lianeId }, tx);
-    if (rest == 0)
-    {
-      await connection.ExecuteAsync("DELETE FROM liane WHERE id = @liane_id", new { liane_id = lianeId }, tx);
-    }
-
+    await connection.ExecuteAsync("DELETE FROM liane_member WHERE liane_id = @liane_id AND liane_request_id = @liane_request_id",
+      new { liane_id = lianeMemberDb.LianeId, liane_request_id = lianeMemberDb.LianeRequestId }, tx);
     tx.Commit();
     return true;
   }
@@ -357,7 +354,7 @@ public sealed class LianeServiceImpl(
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
 
-    var lianeId = Guid.Parse(liane.Id);
+    var lianeId = liane.IdAsGuid();
     var member = await MarkAsRead(connection, lianeId, tx, DateTime.UtcNow);
 
     var filter = Filter<LianeMessageDb>.Where(m => m.LianeId, ComparisonOperator.Eq, lianeId)
@@ -393,8 +390,9 @@ public sealed class LianeServiceImpl(
     var unread = await connection.QueryAsync<(Guid, int)>("""
                                                           SELECT m.liane_id, COUNT(msg.id) AS unread
                                                           FROM liane_member m
-                                                                   LEFT JOIN liane_message msg ON msg.liane_id = m.liane_id
-                                                          WHERE m.user_id = @userId
+                                                            INNER JOIN liane_request r ON m.liane_request_id = r.id
+                                                            LEFT JOIN liane_message msg ON msg.liane_id = m.liane_id AND msg.created_at > m.joined_at
+                                                          WHERE m.joined_at IS NOT NULL AND r.created_by = @userId
                                                             AND (m.last_read_at IS NULL OR msg.created_at > m.last_read_at)
                                                           GROUP BY m.liane_id
                                                           """,
@@ -414,20 +412,7 @@ public sealed class LianeServiceImpl(
 
   private async Task<LianeMemberDb> MarkAsRead(IDbConnection connection, Guid lianeId, IDbTransaction tx, DateTime now)
   {
-    var userId = currentContext.CurrentUser().Id;
-
-    var lianeMemberDb = await connection.QuerySingleAsync<LianeMemberDb>("""
-                                                                         SELECT liane_member.*
-                                                                         FROM liane_member
-                                                                           INNER JOIN liane_request ON liane_member.liane_request_id = liane_request.id
-                                                                           AND liane_request.created_by = @userId
-                                                                         WHERE liane_member.liane_id = @lianeId
-                                                                         """, new { userId, lianeId }, tx);
-
-    if (lianeMemberDb is null)
-    {
-      throw new UnauthorizedAccessException("User is not part of the liane");
-    }
+    var lianeMemberDb = await CheckIsMember(connection, lianeId, tx: tx);
 
     var update = Query.Update<LianeMemberDb>()
       .Set(m => m.LastReadAt, now)
@@ -436,6 +421,30 @@ public sealed class LianeServiceImpl(
     await connection.UpdateAsync(update, tx);
 
     return lianeMemberDb with { LastReadAt = now };
+  }
+
+  private async Task<LianeMemberDb> CheckIsMember(IDbConnection connection, Guid lianeId, string? userId = null, IDbTransaction? tx = null)
+  {
+    var lianeMemberDb = await TryGetMember(connection, lianeId, userId, tx);
+
+    if (lianeMemberDb is null)
+    {
+      throw new UnauthorizedAccessException("User is not part of the liane");
+    }
+
+    return lianeMemberDb;
+  }
+
+  private async Task<LianeMemberDb?> TryGetMember(IDbConnection connection, Guid lianeId, string? userId, IDbTransaction? tx)
+  {
+    var userIdValue = userId ?? currentContext.CurrentUser().Id;
+    var lianeMemberDb = await connection.QueryFirstOrDefaultAsync<LianeMemberDb>("""
+                                                                                 SELECT liane_member.liane_request_id, liane_member.liane_id, liane_member.requested_at, liane_member.joined_at, liane_member.last_read_at
+                                                                                 FROM liane_member
+                                                                                   INNER JOIN liane_request ON liane_member.liane_request_id = liane_request.id
+                                                                                 WHERE liane_member.liane_id = @lianeId AND liane_request.created_by = @userId
+                                                                                 """, new { userId = userIdValue, lianeId }, tx);
+    return lianeMemberDb;
   }
 }
 
