@@ -4763,6 +4763,5 @@
   "conversation": {
     "$oid": "651ae7af5268e0fa7e88efb7"
   },
-  "recurrence": null,
   "totalSeatCount": 2
 }
