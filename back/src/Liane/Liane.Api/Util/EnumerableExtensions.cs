@@ -9,6 +9,27 @@ namespace Liane.Api.Util;
 
 public static class EnumerableExtensions
 {
+  
+  public static (IEnumerable<T>, IEnumerable<T>) Split<T>(this IEnumerable<T> input, Func<T, bool> predicate)
+  {
+    var left = new List<T>();
+    var right = new List<T>();
+
+    foreach (var item in input)
+    {
+      if (predicate(item))
+      {
+        left.Add(item);
+      }
+      else
+      {
+        right.Add(item);
+      }
+    }
+
+    return (left, right);
+  }
+  
   public static IEnumerable<T> TakeUntil<T>(this IEnumerable<T> input, T until) where T : notnull
   {
     bool found;

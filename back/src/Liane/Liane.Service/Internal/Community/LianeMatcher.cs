@@ -10,47 +10,42 @@ using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util;
 using Liane.Api.Util.Ref;
+using Liane.Service.Internal.Util;
+using MoreLinq.Extensions;
 using LianeRequest = Liane.Api.Community.LianeRequest;
 using Match = Liane.Api.Community.Match;
 
 namespace Liane.Service.Internal.Community;
 
-public sealed class LianeMatcher(
-  LianeRequestFetcher lianeRequestFetcher,
-  LianeFetcher lianeFetcher,
-  IRallyingPointService rallyingPointService
-)
+public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICurrentContext currentContext)
 {
-  public async Task<Match.Single?> FindMatchesBetween(IDbConnection connection,
-    Guid a, Guid b, IDbTransaction? tx = null)
+  public async Task<Match?> FindMatchBetween(IDbConnection connection, Guid from, Guid to, IDbTransaction? tx = null)
   {
-    var lianeRawMatches = await FindRawMatches(connection, [a], tx);
-    var lianeRawMatch = lianeRawMatches.FirstOrDefault(m => m.LianeRequest == b);
-    if (lianeRawMatch is null)
+    var userId = currentContext.CurrentUser().Id;
+    var rawMatches = await FindRawMatches(connection, userId, null, from, to, tx);
+    if (rawMatches.IsEmpty)
     {
       return null;
     }
 
-    return await ToSingleMatch(async id => await lianeRequestFetcher.FetchLianeRequest(connection, id, tx), lianeRawMatch);
+    return await ToMatch(rawMatches);
   }
 
-  public async Task<ImmutableDictionary<Guid, LianeMatcherResult>> FindMatches(
-    IDbConnection connection,
-    IEnumerable<Guid> lianeRequestsId,
-    ImmutableDictionary<Guid, Guid> joinedLianeIds)
+  public async Task<ImmutableDictionary<Guid, ImmutableList<Match>>> FindMatches(IDbConnection connection, IEnumerable<Guid> linkedTo)
   {
-    var rawMatches = (await FindRawMatches(connection, lianeRequestsId))
-      .ToImmutableList();
-    var allLianes = rawMatches.FilterSelect(r => r.Lianes)
-      .SelectMany(r => r)
-      .Distinct();
-    var lianes = (await lianeFetcher.FetchLianes(connection, allLianes))
-      .ToImmutableDictionary(l => Guid.Parse(l.Id));
-    var fetchLianeRequests = (await lianeRequestFetcher.FetchLianeRequests(connection, rawMatches.Select(m => m.LianeRequest)))
-      .ToImmutableDictionary(r => r.Id!.Value);
+    var userId = currentContext.CurrentUser().Id;
+    var rawMatches = await FindRawMatches(connection, userId, linkedTo);
     return await rawMatches
-      .GroupByAsync(m => m.From, async g => (await GroupMatchByLiane(g.Key, g, fetchLianeRequests, joinedLianeIds, lianes))
-        .SplitJoinedLianes(joinedLianeIds.Keys));
+      .GroupByAsync(m => m.From, async g =>
+      {
+        var matches = await g.GroupBy(m => m.LinkedTo ?? m.LianeRequest)
+          .FilterSelectAsync(r => ToMatch(r.ToImmutableList()));
+        return matches
+          .OrderByDescending(m => m.Score)
+          .ThenByDescending(m => m.Matches.Count)
+          .ThenBy(m => m.Liane.IdAsGuid())
+          .ToImmutableList();
+      });
   }
 
   /// <summary>
@@ -62,151 +57,101 @@ public sealed class LianeMatcher(
   ///   <li>que si elle appartienne déjà une liane, ce soit la même.</li>
   /// </ul> 
   /// </summary>
-  private static async Task<IEnumerable<LianeRawMatch>> FindRawMatches(IDbConnection connection, IEnumerable<Guid> lianeRequests, IDbTransaction? tx = null)
+  private static async Task<ImmutableList<LianeRawMatch>> FindRawMatches(IDbConnection connection, string userId, IEnumerable<Guid>? linkedTo = null, Guid? from = null, Guid? to = null,
+    IDbTransaction? tx = null)
   {
-    return await connection.QueryAsync<LianeRawMatch>("""
-                                                      SELECT liane_request_match.id AS "from",
-                                                             liane_request_b.id AS liane_request,
-                                                             liane_request_b.name AS name,
-                                                             liane_request_b.created_by AS "user",
-                                                             liane_request_b.way_points AS way_points,
-                                                             liane_request_b.is_enabled AS is_enabled,
-                                                             matching_weekdays(liane_request_match.week_days, liane_request_b.week_days) AS week_days,
-                                                             
-                                                             st_length(intersection) / a_length AS score,
-                                                             st_startpoint(intersection) AS pickup,
-                                                             st_endpoint(intersection) AS deposit,
-                                                             nearest_rp(st_startpoint(intersection)) AS pickup_point,
-                                                             nearest_rp(st_endpoint(intersection)) AS deposit_point,
-                                                             
-                                                             st_length(intersection_reverse) / a_length_reverse AS score_reverse,
-                                                             st_startpoint(intersection_reverse) AS pickup_reverse,
-                                                             st_endpoint(intersection_reverse) AS deposit_reverse,
-                                                             nearest_rp(st_startpoint(intersection_reverse)) AS pickup_point_reverse,
-                                                             nearest_rp(st_endpoint(intersection_reverse)) AS deposit_point_reverse,
-                                                             
-                                                             (SELECT array_agg(DISTINCT liane_id) FROM liane_member WHERE liane_request_id = liane_request_b.id) AS lianes
-                                                      FROM (SELECT liane_request.id,
-                                                                   liane_request.created_by,
-                                                                   liane_request.week_days,
-                                                                   b.way_points AS wb,
-                                                                   st_linemerge(st_intersection(a.geometry, b.geometry)) intersection,
-                                                                   st_linemerge(st_intersection(a_reverse.geometry, b.geometry)) intersection_reverse,
-                                                                   st_length(a.geometry) AS                              a_length,
-                                                                   st_length(a_reverse.geometry) AS                      a_length_reverse
-                                                            FROM liane_request
-                                                                     INNER JOIN route a ON a.way_points = liane_request.way_points
-                                                                     LEFT JOIN route a_reverse ON liane_request.round_trip AND a_reverse.way_points = array_reverse(liane_request.way_points)
-                                                                     INNER JOIN route b ON st_intersects(a.geometry, b.geometry)
-                                                            WHERE liane_request.id = ANY(@liane_requests)) AS liane_request_match
-                                                               INNER JOIN liane_request liane_request_b ON
-                                                          liane_request_b.way_points = wb AND liane_request_b.created_by != liane_request_match.created_by
-                                                      WHERE matching_weekdays(liane_request_match.week_days, liane_request_b.week_days)::integer != 0
-                                                        AND st_length(intersection) / a_length > 0.35
-                                                      ORDER BY st_length(intersection) / a_length DESC, "from"
-                                                      """,
-      new { liane_requests = lianeRequests.ToArray() },
+    var result = await connection.QueryAsync<LianeRawMatch>("""
+                                                            SELECT "from",
+                                                                   liane_request,
+                                                                   arrive_before,
+                                                                   return_after,
+                                                                   (SELECT count(*) FROM liane_member c WHERE c.liane_id = linked_to_b) AS total_members,
+                                                                   way_points,
+                                                                   week_days,
+                                                                   
+                                                                   st_length(intersection) / a_length AS score,
+                                                                   st_startpoint(intersection) AS pickup,
+                                                                   st_endpoint(intersection) AS deposit,
+                                                                   nearest_rp(st_startpoint(intersection)) AS pickup_point,
+                                                                   nearest_rp(st_endpoint(intersection)) AS deposit_point,
+                                                                   
+                                                                   st_length(intersection_reverse) / a_length_reverse AS score_reverse,
+                                                                   st_startpoint(intersection_reverse) AS pickup_reverse,
+                                                                   st_endpoint(intersection_reverse) AS deposit_reverse,
+                                                                   nearest_rp(st_startpoint(intersection_reverse)) AS pickup_point_reverse,
+                                                                   nearest_rp(st_endpoint(intersection_reverse)) AS deposit_point_reverse,
+                                                                   
+                                                                   linked_to_b AS linked_to
+                                                            FROM (SELECT lr_a.id AS "from",
+                                                                         lr_b.id AS liane_request,
+                                                                         lr_b.arrive_before AS arrive_before,
+                                                                         lr_b.return_after AS return_after,
+                                                                         
+                                                                         lr_b.way_points AS way_points,
+                                                                         matching_weekdays(lr_a.week_days, lr_b.week_days) AS week_days,
+                                                                         
+                                                                         lm_b.liane_id AS linked_to_b,
+                                                                         
+                                                                         st_linemerge(st_intersection(a.geometry, b.geometry)) intersection,
+                                                                         st_linemerge(st_intersection(a_reverse.geometry, b.geometry)) intersection_reverse,
+                                                                         st_length(a.geometry) AS                              a_length,
+                                                                         st_length(a_reverse.geometry) AS                      a_length_reverse
+                                                                  FROM liane_request lr_a
+                                                                          LEFT JOIN liane_member lm_a ON
+                                                                            lr_a.id = lm_a.liane_request_id
+                                                                          INNER JOIN route a ON
+                                                                            a.way_points = lr_a.way_points
+                                                                          LEFT JOIN route a_reverse ON
+                                                                            lr_a.round_trip AND a_reverse.way_points = array_reverse(lr_a.way_points)
+                                                                          INNER JOIN liane_request lr_b ON
+                                                                            lr_b.id != lr_a.id
+                                                                              AND ((@to IS NULL AND lr_b.is_enabled) OR lr_b.id = @to)
+                                                                              AND (@linkedTo IS NULL OR (NOT lr_b.id = ANY(@linkedTo)))
+                                                                              AND lr_b.created_by != lr_a.created_by
+                                                                              AND matching_weekdays(lr_a.week_days, lr_b.week_days)::integer != 0
+                                                                          LEFT JOIN liane_member lm_b ON
+                                                                            lr_b.id = lm_b.liane_request_id AND (@linkedTo IS NULL OR (NOT lm_b.liane_id = ANY(@linkedTo)))
+                                                                          INNER JOIN route b ON
+                                                                            b.way_points = lr_b.way_points AND st_intersects(a.geometry, b.geometry)
+                                                                  WHERE lr_a.created_by = @userId AND lm_a.liane_request_id IS NULL AND (@from IS NULL OR lr_a.id = @from)
+                                                                  ) AS first_glance
+                                                            WHERE st_length(intersection) / a_length > 0.35
+                                                            ORDER BY st_length(intersection) / a_length DESC, "from"
+                                                            """,
+      new { userId, linkedTo = linkedTo?.ToArray(), from, to },
       tx
     );
+    return result.ToImmutableList();
   }
 
-  private async Task<ImmutableList<Match>> GroupMatchByLiane(
-    Guid inputLianeRequest,
-    IEnumerable<LianeRawMatch> matches,
-    ImmutableDictionary<Guid, LianeRequest> fetchLianeRequests,
-    ImmutableDictionary<Guid, Guid> joinedLianeIds,
-    ImmutableDictionary<Guid, Api.Community.Liane> lianes) =>
-    (await matches
-      .SelectMany(m => m.Lianes is null
-        ? ImmutableList.Create(new LianeRawMatchByLiane(null, m))
-        : m.Lianes.Select(l => new LianeRawMatchByLiane(l, m)))
-      .Where(ml =>
-      {
-        if (ml.Liane is null)
-        {
-          return ml.Match.IsEnabled;
-        }
-
-        var joinedLianeRequest = joinedLianeIds.GetValueOrDefault(ml.Liane.Value, default);
-        if (joinedLianeRequest == default)
-        {
-          return ml.Match.IsEnabled;
-        }
-
-        return joinedLianeRequest == inputLianeRequest;
-      })
-      .GroupBy(m => m.Liane)
-      .SelectManyAsync<IGrouping<Guid?, LianeRawMatchByLiane>, Match>(async g =>
-      {
-        if (g.Key is null)
-        {
-          return await g
-            .FilterSelectAsync(async m => (Match?)await ToSingleMatch(fetchLianeRequests, m.Match));
-        }
-
-        var groupedMatches = (await g
-            .FilterSelectAsync(m => ToSingleMatch(fetchLianeRequests, m.Match)))
-          .ToImmutableList();
-        var liane = lianes.GetValueOrDefault(g.Key.Value);
-        if (liane is null)
-        {
-          return ImmutableList<Match>.Empty;
-        }
-
-        var first = groupedMatches.FirstOrDefault();
-        if (first is null)
-        {
-          return ImmutableList<Match>.Empty;
-        }
-
-        return ImmutableList.Create(new Match.Group(
-          liane.Name,
-          liane,
-          groupedMatches,
-          first.WeekDays,
-          first.When,
-          first.Pickup,
-          first.Deposit,
-          first.Score));
-      }))
-    .OrderByDescending(m => m.Score)
-    .ThenByDescending(m => m switch
-    {
-      Match.Single => 1,
-      Match.Group group => group.Matches.Count,
-      _ => throw new ArgumentOutOfRangeException()
-    })
-    .ThenBy(m => m switch
-    {
-      Match.Single s => s.LianeRequest.Id,
-      Match.Group group => group.Matches.First().LianeRequest.Id,
-      _ => throw new ArgumentOutOfRangeException()
-    })
-    .ToImmutableList();
-
-  private Task<Match.Single?> ToSingleMatch(ImmutableDictionary<Guid, LianeRequest> fetcher, LianeRawMatch match)
-    => ToSingleMatch(i => Task.FromResult(fetcher.GetValueOrDefault(i)), match);
-
-  private async Task<Match.Single?> ToSingleMatch(Func<Guid, Task<LianeRequest?>> fetcher, LianeRawMatch match)
+  private async Task<Match?> ToMatch(ImmutableList<LianeRawMatch> rawMatches)
   {
-    var lianeRequest = await fetcher(match.LianeRequest);
-    if (lianeRequest is null)
-    {
-      return null;
-    }
+    var first = rawMatches.First();
+    var liane = (Ref<Api.Community.Liane>)first.LinkedTo ?? first.LianeRequest;
 
-    var matchingPoints = GetBestMatch(match);
+    var matchingPoints = rawMatches.Select(GetBestMatch)
+      .Where(m => m is not null)
+      .OrderByDescending(m => m!.Value.Score)
+      .FirstOrDefault();
     if (matchingPoints is null)
     {
       return null;
     }
 
-    return new Match.Single(
-      match.Name,
-      lianeRequest,
-      match.User,
-      match.WeekDays,
-      new TimeRange(lianeRequest.ArriveBefore, lianeRequest.ReturnAfter),
+    var weekDays = rawMatches.Select(m => m.WeekDays)
+      .AggregateRight((a, b) => a | b);
+
+    var when = rawMatches.Select(m => new TimeRange(m.ArriveBefore, m.ReturnAfter))
+      .AggregateRight((a, b) => a.Merge(b));
+
+    var matches = rawMatches.Select(m => (Ref<LianeRequest>)m.LianeRequest).ToImmutableList();
+
+    return new Match(
+      liane,
+      first.TotalMembers,
+      matches,
+      weekDays,
+      when,
       await matchingPoints.Value.Pickup.Resolve(rallyingPointService.Get),
       await matchingPoints.Value.Deposit.Resolve(rallyingPointService.Get),
       matchingPoints.Value.Score,
@@ -230,36 +175,13 @@ public sealed class LianeMatcher(
   }
 }
 
-public static class LianeMatcherExtensions
-{
-  public static LianeMatcherResult SplitJoinedLianes(this IEnumerable<Match> allMatches, IEnumerable<Guid> joinedLianesIds)
-  {
-    var set = joinedLianesIds.Select(i => i.ToString()).ToImmutableHashSet();
-    var joinedLianes = new List<Match.Group>();
-    var matches = new List<Match>();
-    foreach (var match in allMatches)
-    {
-      if (match is Match.Group group && set.Contains(group.Liane.Id))
-      {
-        joinedLianes.Add(group);
-      }
-      else
-      {
-        matches.Add(match);
-      }
-    }
-
-    return new LianeMatcherResult(joinedLianes.ToImmutableList(), matches.ToImmutableList());
-  }
-}
-
 internal sealed record LianeRawMatch(
   Guid From,
   Guid LianeRequest,
-  string Name,
-  string User,
+  TimeOnly ArriveBefore,
+  TimeOnly ReturnAfter,
+  int TotalMembers,
   string[] WayPoints,
-  bool IsEnabled,
   DayOfWeekFlag WeekDays,
   float Score,
   LatLng Pickup,
@@ -271,7 +193,5 @@ internal sealed record LianeRawMatch(
   LatLng DepositReverse,
   Ref<RallyingPoint>? PickupPointReverse,
   Ref<RallyingPoint>? DepositPointReverse,
-  Guid[]? Lianes
+  Guid? LinkedTo
 );
-
-internal readonly record struct LianeRawMatchByLiane(Guid? Liane, LianeRawMatch Match);

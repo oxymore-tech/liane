@@ -28,7 +28,7 @@ public sealed class LianeMemberPingHandler(
     var ping = new UserPing(memberId, at, e.Delay ?? TimeSpan.Zero, e.Coordinate);
     var filter = Builders<LianeDb>.Filter.Where(l => l.Id == e.Liane)
                  & Builders<LianeDb>.Filter.Or(Builders<LianeDb>.Filter.Lt(l => l.DepartureTime, DateTime.UtcNow + TimeSpan.FromMinutes(15)),
-                   Builders<LianeDb>.Filter.Where(l => l.State == LianeState.Started))
+                   Builders<LianeDb>.Filter.Where(l => l.State == TripStatus.Started))
                  & Builders<LianeDb>.Filter.ElemMatch(l => l.Members, m => m.User == memberId);
 
     var liane = await db.GetCollection<LianeDb>()
@@ -42,7 +42,7 @@ public sealed class LianeMemberPingHandler(
       throw ResourceNotFoundException.For(e.Liane);
     }
 
-    if (liane.State is not LianeState.Started)
+    if (liane.State is not TripStatus.Started)
     {
       throw new ValidationException(ValidationMessage.LianeStateInvalid(liane.State));
     }

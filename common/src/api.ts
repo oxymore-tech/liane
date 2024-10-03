@@ -1,6 +1,7 @@
 import { TimeInSeconds } from "./util";
 import { FeatureCollection } from "geojson";
 import { IUnion, UnionUtils } from "./union";
+import { CoLiane } from "./services";
 
 export type Identity = {
   id?: string;
@@ -89,6 +90,7 @@ export type DayBoolean = "0" | "1";
 export type DayOfWeekFlag = `${DayBoolean}${DayBoolean}${DayBoolean}${DayBoolean}${DayBoolean}${DayBoolean}${DayBoolean}`; // First index is Monday
 
 export type LianeRequest = Identity & {
+  liane: Ref<CoLiane>;
   departureTime: UTCDateTime;
   returnTime?: UTCDateTime | null;
   availableSeats: number;
@@ -96,24 +98,24 @@ export type LianeRequest = Identity & {
   to: Ref<RallyingPoint>;
   recurrence?: DayOfWeekFlag;
   geolocationLevel: GeolocationLevel;
-  // shareWith: Ref<User>[];
 };
 
 export type Liane = Entity & {
+  liane: Ref<CoLiane>;
   departureTime: UTCDateTime;
   return?: Ref<Liane>;
   wayPoints: WayPoint[];
   members: LianeMember[];
   driver: { user: Ref<User>; canDrive: boolean };
   conversation: Ref<ConversationGroup>;
-  state: LianeState;
+  state: TripStatus;
   recurrence?: {
     id: string;
     days: DayOfWeekFlag;
   };
 };
 
-export type LianeState = "NotStarted" | "Finished" | "Started" | "Canceled" | "Archived";
+export type TripStatus = "NotStarted" | "Finished" | "Started" | "Canceled" | "Archived";
 export type GeolocationLevel = "None" | "Hidden" | "Shared";
 export type WayPoint = {
   rallyingPoint: RallyingPoint;

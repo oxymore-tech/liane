@@ -1,18 +1,18 @@
-import React, { useContext, useMemo } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 
-import { Pressable, RefreshControl, SectionBase, SectionList, SectionListData, SectionListRenderItemInfo, StyleSheet, View } from "react-native";
-import { CoLianeMatch, Ref, User } from "@liane/common";
-import { useAppNavigation } from "@/components/context/routing";
+import { Pressable, RefreshControl, SectionBase, SectionList, SectionListData, StyleSheet, View } from "react-native";
+import { CoLianeMatch } from "@liane/common";
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppIcon } from "@/components/base/AppIcon";
 import { Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
-import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
+import { AppColors } from "@/theme/colors";
 import Eye from "@/assets/images/eye-fill.svg";
 import EyeOff from "@/assets/images/eye-off-fill.svg";
 import { JoinedLianeView } from "@/components/communities/JoinedLianeView";
 import { AppLogger } from "@/api/logger";
 import { extractDaysTimes, extractWaypointFromTo } from "@/util/hooks/lianeRequest";
+import { DetachedLianeItem } from "@/components/communities/DetachedLianeItem.tsx";
 
 export interface TripSection extends SectionBase<CoLianeMatch> {}
 
@@ -20,23 +20,26 @@ export interface LianeListViewProps {
   data: CoLianeMatch[];
   isFetching?: boolean;
   onRefresh?: () => void;
-  reverseSort?: boolean;
   loadMore?: () => void;
 }
 
-export const LianeListView = ({ data, isFetching, onRefresh, reverseSort, loadMore }: LianeListViewProps) => {
-  const { user } = useContext(AppContext);
-  const userId = user!.id!;
+export const LianeListView = ({ data, isFetching, onRefresh, loadMore }: LianeListViewProps) => {
+  const { services } = useContext(AppContext);
+  const [unreadLianes, setUnreadLianes] = useState<Record<string, number>>({});
+
   const sections = useMemo(() => {
-    return convertToDateSections(data, userId, reverseSort);
-  }, [data, userId, reverseSort]);
+    return convertToDateSections(data);
+  }, [data]);
+  useEffect(() => {
+    services.community.getUnreadLianes().then(setUnreadLianes);
+  }, [services.community]);
   return (
     <SectionList
       style={{ flex: 1 }}
       refreshControl={<RefreshControl refreshing={isFetching || false} onRefresh={onRefresh} />}
       sections={sections}
       showsVerticalScrollIndicator={false}
-      renderItem={props => renderItem({ ...props, onRefresh })}
+      renderItem={props => <LianeRequestItem {...props} onRefresh={onRefresh} unreadLianes={unreadLianes} />}
       keyExtractor={item => item.lianeRequest.id!}
       onEndReachedThreshold={0.2}
       onEndReached={loadMore}
@@ -45,7 +48,7 @@ export const LianeListView = ({ data, isFetching, onRefresh, reverseSort, loadMo
   );
 };
 
-const convertToDateSections = (data: CoLianeMatch[], member: Ref<User>, reverseSort: boolean = false): TripSection[] =>
+const convertToDateSections = (data: CoLianeMatch[]): TripSection[] =>
   data.map(
     item =>
       ({
@@ -53,12 +56,14 @@ const convertToDateSections = (data: CoLianeMatch[], member: Ref<User>, reverseS
       } as TripSection)
   );
 
-const LianeRequestItem = ({ item, onRefresh }: { item: CoLianeMatch; onRefresh: (() => void) | undefined }) => {
-  const { services, user } = useContext(AppContext);
-  const { navigation } = useAppNavigation();
-  const unreadLianes = useMemo(async () => {
-    return await services.community.getUnreadLianes();
-  }, []);
+type LianeRequestItemProps = {
+  item: CoLianeMatch;
+  onRefresh: (() => void) | undefined;
+  unreadLianes: Record<string, number>;
+};
+
+const LianeRequestItem = ({ item, onRefresh, unreadLianes }: LianeRequestItemProps) => {
+  const { services } = useContext(AppContext);
 
   const { to, from } = useMemo(() => extractWaypointFromTo(item.lianeRequest?.wayPoints), [item.lianeRequest.wayPoints]);
 
@@ -171,70 +176,48 @@ const LianeRequestItem = ({ item, onRefresh }: { item: CoLianeMatch; onRefresh: 
       </View>
 
       <View style={styles.subRowsContainer}>
-        {!!item.joinedLianes?.length &&
-          item.joinedLianes.map(joinedLiane => (
-            <Row key={joinedLiane.liane.id} style={styles.subRow}>
-              <JoinedLianeView joinedLiane={joinedLiane} unreadMessage={!!(joinedLiane.liane.id && joinedLiane.liane.id in unreadLianes)} />
-            </Row>
-          ))}
+        {item.state.type === "Detached" && <DetachedLianeItem lianeRequest={item.lianeRequest} state={item.state} />}
 
-        {!!item.matches?.length && (
+        {item.state.type === "Pending" && (
           <Row style={styles.subRow}>
-            <Pressable
-              style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", flex: 1, paddingVertical: 5 }}
-              onPress={() => navigation.navigate("ListGroups", { groups: item.matches ?? [], lianeRequest: item.lianeRequest })}>
-              <Row>
-                <View style={styles.notificationDotContainer}>
-                  <View style={styles.notificationDot} />
-                </View>
-                <AppText
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "bold",
-                    lineHeight: 23,
-                    color: AppColors.orange,
-                    marginLeft: 5
-                  }}>
-                  {item.matches.length === 1 ? "Voir le groupe disponible" : `Voir les ${item.matches.length} groupes disponibles`}
-                </AppText>
-              </Row>
-              <AppIcon name={"arrow-right"} />
-            </Pressable>
+            <AppText style={{ fontSize: 14, fontWeight: "bold", lineHeight: 23, color: AppColors.orange }}>
+              Cette liane est en attente de conducteur
+            </AppText>
           </Row>
         )}
 
-        {!item.joinedLianes?.length && (
-          <Pressable
-            style={[
-              styles.subRow,
-              {
-                flexDirection: "row",
-                alignItems: "center"
-              }
-            ]}
-            onPress={deleteLiane}>
-            <AppIcon name={"trash"} />
-            <AppText
-              style={{
-                fontSize: 14,
-                fontWeight: "bold",
-                lineHeight: 23,
-                color: "#7B0000",
-                marginLeft: 5
-              }}>
-              Supprimer cette liane
-            </AppText>
-          </Pressable>
+        {item.state.type === "Attached" && (
+          <Row style={styles.subRow}>
+            <JoinedLianeView
+              lianeRequest={item.lianeRequest}
+              liane={item.state.liane}
+              unreadMessage={!!(item.state.liane.id && item.state.liane.id in unreadLianes)}
+            />
+          </Row>
         )}
-      </View>
-    </View>
-  );
-};
 
-const renderItem = ({ item, onRefresh }: SectionListRenderItemInfo<CoLianeMatch, TripSection> & { onRefresh: (() => void) | undefined }) => {
-  return (
-    <View style={[]}>
-      <LianeRequestItem item={item} onRefresh={onRefresh} />
+        <Pressable
+          style={[
+            styles.subRow,
+            {
+              flexDirection: "row",
+              alignItems: "center"
+            }
+          ]}
+          onPress={deleteLiane}>
+          <AppIcon name={"trash"} />
+          <AppText
+            style={{
+              fontSize: 14,
+              fontWeight: "bold",
+              lineHeight: 23,
+              color: "#7B0000",
+              marginLeft: 5
+            }}>
+            Supprimer cette liane
+          </AppText>
+        </Pressable>
+      </View>
     </View>
   );
 };
@@ -242,52 +225,18 @@ const renderItem = ({ item, onRefresh }: SectionListRenderItemInfo<CoLianeMatch,
 const renderSectionHeader = ({ section: {} }: { section: SectionListData<CoLianeMatch, TripSection> }) => <View style={styles.header} />;
 
 const styles = StyleSheet.create({
-  container: {
-    marginHorizontal: 26,
-    height: "100%"
-  },
-  grayBorder: {
-    borderColor: AppColorPalettes.gray[200]
-  },
   header: {
     padding: 6,
     paddingBottom: 12,
     height: 32,
     backgroundColor: "transparent"
   },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: "bold"
-  },
-  disabledItem: { backgroundColor: WithAlpha(AppColors.white, 0.7) },
-  item: {
-    paddingVertical: 8,
-    paddingBottom: 12,
-    backgroundColor: AppColors.backgroundColor,
-    borderBottomWidth: 1
-  },
   driverContainer: {
     alignItems: "center"
-  },
-  driverText: {
-    fontSize: 16,
-    fontWeight: "500",
-    alignSelf: "center"
   },
   headerContainer: {
     flexDirection: "row",
     alignItems: "center"
-  },
-  informatioContainer: {
-    fontSize: 16,
-    fontWeight: "500"
-  },
-  geolocText: {
-    marginBottom: -2,
-    alignSelf: "center"
-  },
-  geolocSwitch: {
-    marginBottom: -4
   },
   subRowsContainer: {
     marginLeft: 28,
@@ -301,88 +250,5 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: AppColors.grayBackground,
     padding: 15
-  },
-  chatButton: {
-    alignItems: "flex-end",
-    position: "absolute",
-    padding: 4,
-    top: -8,
-    right: -4
-  },
-  chatBadge: {
-    backgroundColor: AppColors.primaryColor,
-    borderRadius: 16,
-    padding: 6,
-    top: 4,
-    right: 4,
-    position: "absolute"
-  },
-  relaunchStatus: {
-    paddingHorizontal: 4,
-    paddingVertical: 4,
-    borderRadius: 4,
-    backgroundColor: AppColorPalettes.gray[100]
-  },
-  statusRowContainer: {
-    flex: 1,
-    alignItems: "center",
-    marginVertical: 8,
-    height: 32
-  },
-  infoRowContainer: {
-    flex: 1,
-    alignItems: "center",
-    marginTop: 15,
-    marginBottom: 15
-  },
-  infoContainer: {
-    paddingHorizontal: 4
-  },
-  infoTravel: {
-    fontSize: 16,
-    marginLeft: 6,
-    color: AppColorPalettes.gray[500]
-  },
-  infoText: {
-    fontSize: 14,
-    color: AppColorPalettes.gray[600]
-  },
-  infoIcon: {
-    marginTop: 2
-  },
-  statusContainer: {
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-    borderRadius: 4,
-    alignItems: "center",
-    backgroundColor: AppColorPalettes.gray[100]
-  },
-  validationContainer: {
-    alignItems: "center",
-    borderRadius: 16,
-    backgroundColor: AppColors.primaryColor,
-    padding: 4,
-    paddingLeft: 12,
-    marginHorizontal: 4
-  },
-  validationText: {
-    fontWeight: "bold",
-    color: AppColors.white,
-    marginRight: 8
-  },
-  bottomView: {
-    position: "absolute",
-    right: 16,
-    top: -16
-  },
-  notificationDotContainer: {
-    justifyContent: "center",
-    alignItems: "center"
-  },
-  notificationDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 6,
-    backgroundColor: AppColors.orange
   }
 });

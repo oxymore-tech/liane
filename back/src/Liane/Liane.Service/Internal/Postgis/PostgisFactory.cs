@@ -30,9 +30,8 @@ public sealed class PostgisFactory
     if (clearAll)
     {
       await connection.ExecuteAsync("DELETE FROM liane_member", transaction: tx);
-      await connection.ExecuteAsync("DELETE FROM liane_request", transaction: tx);
       await connection.ExecuteAsync("DELETE FROM liane_message", transaction: tx);
-      await connection.ExecuteAsync("DELETE FROM liane", transaction: tx);
+      await connection.ExecuteAsync("DELETE FROM liane_request", transaction: tx);
       await connection.ExecuteAsync("DELETE FROM route", transaction: tx);
       await connection.ExecuteAsync("DELETE FROM liane_waypoint", transaction: tx);
       await connection.ExecuteAsync("DELETE FROM segment", transaction: tx);

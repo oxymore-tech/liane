@@ -1,16 +1,17 @@
 using System;
 using System.Collections.Immutable;
+using System.Linq;
+using Liane.Api.Auth;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Community;
 
 public sealed record Liane(
-  string Id,
-  string Name,
-  Ref<Auth.User> CreatedBy,
-  DateTime? CreatedAt,
-  ImmutableList<LianeMember> Members
-) : IEntity<string>, ISharedResource<LianeMember>;
-
-public sealed record LianeUpdate(string Name);
+  Guid Id,
+  ImmutableList<LianeMember> Members,
+  ImmutableList<LianeMember> PendingMembers
+) : IIdentity<Guid>, ISharedResource<LianeMember>
+{
+  public bool IsMember(Ref<User> user) => Members.Any(m => m.User.Id == user.Id) || PendingMembers.Any(m => m.User.Id == user.Id);
+}

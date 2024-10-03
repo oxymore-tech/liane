@@ -52,5 +52,5 @@ public sealed class ValidationMessage
 
   public static ValidationMessage AlreadyMember => new("already_member");
 
-  public static ValidationMessage LianeStateInvalid(LianeState state) => new($"liane_state_invalid state:{state}");
+  public static ValidationMessage LianeStateInvalid(TripStatus state) => new($"liane_state_invalid state:{state}");
 }

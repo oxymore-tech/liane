@@ -34,7 +34,7 @@ public class LianeStorageTest: BaseIntegrationTest
       (LabeledPositions.LavalDuTarnEglise, LabeledPositions.Mende),
       (LabeledPositions.VillefortParkingGare, LabeledPositions.Mende),
     };
-    var requests = new LianeRequest[baseLianes.Length];
+    var requests = new TripRequest[baseLianes.Length];
     for (var i = 0; i < baseLianes.Length; i++)
     {
       var lianeRequest = Fakers.LianeRequestFaker.Generate() with { From = baseLianes[i].From, To = baseLianes[i].To, DepartureTime = tomorrow, AvailableSeats = 2 };

@@ -26,7 +26,6 @@ public sealed class LianeController(
   ICurrentContext currentContext,
   IMockService mockService,
   EventDispatcher eventDispatcher,
-  ILianeRecurrenceService lianeRecurrenceService,
   ILianeTrackerService lianeTrackerService)
   : ControllerBase
 {
@@ -115,7 +114,7 @@ public sealed class LianeController(
   {
     return tripService.ForceSyncDatabase();
   }
-  
+
   [HttpPost("match")]
   [DebugRequest]
   public Task<PaginatedResponse<LianeMatch>> Match([FromBody] Filter filter, [FromQuery] Pagination pagination, CancellationToken cancellationToken)
@@ -131,15 +130,15 @@ public sealed class LianeController(
   }
 
   [HttpGet("")]
-  public Task<PaginatedResponse<Trip>> List([FromQuery] Pagination pagination, [FromQuery(Name = "state")] LianeState[] stateFilter, CancellationToken cancellationToken)
+  public Task<PaginatedResponse<Trip>> List([FromQuery] Pagination pagination, [FromQuery(Name = "state")] TripStatus[] stateFilter, CancellationToken cancellationToken)
   {
     return tripService.List(new LianeFilter { ForCurrentUser = true, States = stateFilter }, pagination, cancellationToken);
   }
 
   [HttpPost("")]
-  public Task<Trip> Create(LianeRequest lianeRequest)
+  public Task<Trip> Create(TripRequest tripRequest)
   {
-    return tripService.Create(lianeRequest);
+    return tripService.Create(tripRequest);
   }
 
   [HttpGet("all")]
@@ -162,41 +161,6 @@ public sealed class LianeController(
     }
 
     return await mockService.GenerateLianes(count, from, to, radius);
-  }
-  
-  [HttpGet("recurrence")]
-  public Task<ImmutableList<LianeRecurrence>> ListRecurrences()
-  {
-    return lianeRecurrenceService.ListForCurrentUser();
-  }
-
-  [HttpGet("recurrence/{id}")]
-  public Task<LianeRecurrence> GetRecurrence([FromRoute] string id)
-  {
-    return lianeRecurrenceService.GetWithResolvedRefs(id);
-  }
-
-  [HttpDelete("recurrence/{id}")]
-  [RequiresAccessLevel(ResourceAccessLevel.Owner, typeof(LianeRecurrence))]
-  public async Task RemoveRecurrence([FromRoute] string id)
-  {
-    await lianeRecurrenceService.Delete(id);
-    await tripService.RemoveRecurrence(id);
-  }
-
-  [HttpPatch("recurrence/{id}")]
-  [RequiresAccessLevel(ResourceAccessLevel.Owner, typeof(LianeRecurrence))]
-  public async Task UpdateRecurrence([FromRoute] string id, [FromBody] DayOfWeekFlag days)
-  {
-    // Deactivate recurrence while cleaning up old lianes
-    await lianeRecurrenceService.Update(id, DayOfWeekFlag.Empty);
-    await tripService.RemoveRecurrence(id);
-    // If flag is all 0, we stop here, else reactivate recurrence and create lianes
-    if (!days.IsEmpty())
-    {
-      await lianeRecurrenceService.Update(id, days);
-      await tripService.CreateFromRecurrence(id);
-    }
   }
 
   [HttpGet("record")]

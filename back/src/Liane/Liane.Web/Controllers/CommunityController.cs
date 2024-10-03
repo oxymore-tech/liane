@@ -40,28 +40,22 @@ public sealed class CommunityController(ILianeService lianeService)
     return lianeService.Delete(id);
   }
 
-  [HttpPost("liane/{id:guid}/join_new/{lianeRequest:guid}")]
-  public Task<Api.Community.Liane> JoinNew(Guid id, Guid lianeRequest)
+  [HttpPost("liane/{liane:guid}/join/{id:guid}")]
+  public Task JoinRequest(Guid id, Guid liane)
   {
-    return lianeService.JoinNew(id, lianeRequest);
+    return lianeService.JoinRequest(id, liane);
   }
 
-  [HttpPost("liane/{id:guid}/join/{liane:guid}")]
-  public Task<Api.Community.Liane> Join(Guid id, Guid liane)
+  [HttpPost("liane/{liane:guid}/accept/{id:guid}")]
+  public Task<Api.Community.Liane> Accept(Guid id, Guid liane)
   {
-    return lianeService.Join(id, liane);
+    return lianeService.Accept(id, liane);
   }
 
   [HttpPost("liane/join_trip")]
   public Task JoinTrip([FromBody] JoinTripQuery query)
   {
     return lianeService.JoinTrip(query);
-  }
-
-  [HttpPost("liane/{id:guid}")]
-  public Task Update(Guid id, [FromBody] LianeUpdate lianeUpdate)
-  {
-    return lianeService.Update(id, lianeUpdate);
   }
 
   [HttpGet("liane/{id:guid}")]

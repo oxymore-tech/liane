@@ -4,5 +4,5 @@ public sealed class LianeFilter
 {
   public bool ForCurrentUser { get; init; }
 
-  public LianeState[]? States { get; init; }
+  public TripStatus[]? States { get; init; }
 }

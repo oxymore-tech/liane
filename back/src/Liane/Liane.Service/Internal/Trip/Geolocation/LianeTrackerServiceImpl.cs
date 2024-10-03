@@ -198,7 +198,7 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
         .ContinueWith(async _ =>
         {
           logger.LogInformation($"Liane {liane.Id} is now Finished");
-          await tripService.UpdateState(liane.Id, LianeState.Finished);
+          await tripService.UpdateState(liane.Id, TripStatus.Finished);
         })
         .Start();
     };
@@ -206,7 +206,7 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
 
   public async Task SyncTrackers()
   {
-    var started = await mongo.GetCollection<LianeDb>().Find(l => l.State == LianeState.Started).ToListAsync();
+    var started = await mongo.GetCollection<LianeDb>().Find(l => l.State == TripStatus.Started).ToListAsync();
     foreach (var lianeDb in started)
     {
       var liane = await tripService.Get(lianeDb.Id);

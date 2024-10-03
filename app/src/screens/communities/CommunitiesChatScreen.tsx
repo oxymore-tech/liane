@@ -6,8 +6,6 @@ import {
   CoMatch,
   DayOfWeekFlag,
   LianeMessage,
-  MatchGroup,
-  MatchSingle,
   PaginatedResponse,
   RallyingPoint,
   ResolvedLianeRequest,
@@ -60,7 +58,6 @@ export const CommunitiesChatScreen = () => {
   );
 
   const sendMessage = async (value: string) => {
-    let lianeTemp = liane;
     setIsSending(true);
 
     if (!chat) {
@@ -70,52 +67,11 @@ export const CommunitiesChatScreen = () => {
       // Si c'est un MatchSingle, il faut faire un joinNew
       // Si c'est un MatchGroup, il faut faire un join
 
-      if ((group as MatchGroup).matches?.length) {
-        // Dans le cas d'un MatchGroup
-        const lianeCible = (group as MatchGroup).liane.id;
-        if (request && request.id && lianeCible) {
-          const coLiane = await services.community.join(request.id, lianeCible);
-          setGroup(undefined);
-          lianeTemp = coLiane;
-        }
-      } else {
-        const lianeRequest = (group as MatchSingle).lianeRequest;
-        if (request && request.id && lianeRequest && lianeRequest.id) {
-          const coLiane = await services.community.joinNew(request.id, lianeRequest.id);
-          setGroup(undefined);
-          lianeTemp = coLiane;
-        }
-      }
-
-      if (lianeTemp && lianeTemp.id) {
-        try {
-          await services.community.sendMessage(lianeTemp.id, {
-            type: "Text",
-            value: value
-          });
-          setLiane(lianeTemp);
-          setInputValue("");
-        } catch (e) {
-          setError(new Error("Message non envoyé suite à une erreur"));
-          AppLogger.debug("COMMUNITIES", "Une erreur est survenu lors de l'entrée dans une nouvelle liane", e);
-          setIsSending(false);
-        }
-      }
-    } else {
-      if (lianeTemp && lianeTemp.id && value && value.length > 0) {
-        try {
-          await chat?.send({
-            type: "Text",
-            value: value
-          });
-          setInputValue("");
-        } catch (e) {
-          setError(new Error("Message non envoyé suite à une erreur"));
-          AppLogger.debug("COMMUNITIES", "Une erreur est survenu lors de l'entrée dans une nouvelle liane", e);
-          setIsSending(false);
-        }
-      } else {
-        setError(new Error("Message non envoyé suite à une erreur"));
+      // Dans le cas d'un MatchGroup
+      const lianeCible = group?.liane;
+      if (request && request.id && lianeCible) {
+        await services.community.joinRequest(request.id, group.liane);
+        setGroup(undefined);
       }
     }
 
@@ -146,7 +102,7 @@ export const CommunitiesChatScreen = () => {
 
   const me = useMemo(() => liane?.members.find(m => m.user.id === user!.id), [liane?.members, user]);
 
-  const name = !liane?.name && me ? `${me.lianeRequest.wayPoints[0].label}  ➔ ${me.lianeRequest.wayPoints[1].label}` : liane?.name;
+  const name = me ? `${me.lianeRequest.wayPoints[0].label}  ➔ ${me.lianeRequest.wayPoints[1].label}` : "???";
 
   const startDate = useMemo(() => {
     const d = new Date();
@@ -162,6 +118,7 @@ export const CommunitiesChatScreen = () => {
     const geolocationLevel = await AppStorage.getSetting("geolocation");
 
     const created = await services.liane.post({
+      liane: liane!.id!,
       departureTime: time[0].toISOString(),
       returnTime: time[1]?.toISOString(),
       from: from ?? me!.lianeRequest.wayPoints[0].id!,
@@ -192,7 +149,7 @@ export const CommunitiesChatScreen = () => {
 
     const fetchLiane = async (id: string) => {
       try {
-        const l: CoLiane = await services.community.getLiane(id);
+        const l: CoLiane = await services.community.get(id);
         setLiane(l);
         return l;
       } catch (e) {

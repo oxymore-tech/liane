@@ -9,7 +9,7 @@ import {
   LianeUpdate,
   DayOfWeekFlag,
   LianeRecurrence,
-  LianeState,
+  TripStatus,
   GeolocationLevel,
   PaginatedRequestParams
 } from "../api";
@@ -19,7 +19,7 @@ import { HttpClient } from "./http";
 
 export interface LianeService {
   get(lianeId: string): Promise<Liane>;
-  list(states: LianeState[], pagination: PaginatedRequestParams): Promise<PaginatedResponse<Liane>>;
+  list(states: TripStatus[], pagination: PaginatedRequestParams): Promise<PaginatedResponse<Liane>>;
   post(liane: LianeRequest): Promise<Liane>;
   join(joinRequest: JoinRequest): Promise<void>;
   match(filter: LianeSearchFilter): Promise<LianeMatchDisplay>;
@@ -57,7 +57,7 @@ export class LianeServiceClient implements LianeService {
   async getProof(id: string): Promise<FeatureCollection> {
     return await this.http.get<FeatureCollection>(`/liane/${id}/geolocation`);
   }
-  async list(states: LianeState[] = ["NotStarted", "Started"], pagination?: PaginatedRequestParams) {
+  async list(states: TripStatus[] = ["NotStarted", "Started"], pagination?: PaginatedRequestParams) {
     return await this.http.get<PaginatedResponse<Liane>>("/liane", { params: { ...(pagination ?? {}), state: states } });
   }
 

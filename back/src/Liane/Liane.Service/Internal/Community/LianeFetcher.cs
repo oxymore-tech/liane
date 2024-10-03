@@ -8,7 +8,6 @@ using Liane.Api.Auth;
 using Liane.Api.Community;
 using Liane.Api.Util;
 using Liane.Api.Util.Exception;
-using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Util.Sql;
 
 namespace Liane.Service.Internal.Community;
@@ -17,7 +16,7 @@ public sealed class LianeFetcher(LianeRequestFetcher lianeRequestFetcher, IUserS
 {
   public async Task<Api.Community.Liane> FetchLiane(IDbConnection connection, Guid lianeId, IDbTransaction? tx = null)
   {
-    var liane = (await FetchLianes(connection, ImmutableList.Create(lianeId), tx)).FirstOrDefault();
+    var liane = (await FetchLianes(connection, ImmutableList.Create(lianeId), tx)).GetValueOrDefault(lianeId);
     if (liane is null)
     {
       throw new ResourceNotFoundException($"Liane {liane} not found");
@@ -26,35 +25,54 @@ public sealed class LianeFetcher(LianeRequestFetcher lianeRequestFetcher, IUserS
     return liane;
   }
 
-  public async Task<ImmutableList<Api.Community.Liane>> FetchLianes(IDbConnection connection, IEnumerable<Guid> lianeFilter, IDbTransaction? tx = null)
+  public async Task<ImmutableDictionary<Guid, Api.Community.Liane>> FetchLianes(IDbConnection connection, IEnumerable<Guid> lianeFilter, IDbTransaction? tx = null)
   {
-    var lianeDbs = await connection.QueryAsync(Query.Select<LianeDb>().Where(Filter<LianeDb>.Where(l => l.Id, ComparisonOperator.In, lianeFilter)), tx);
-    var memberDbs = (await connection.QueryAsync(
-        Query.Select<LianeMemberDb>()
-        .Where(Filter<LianeMemberDb>.Where(m => m.LianeId, ComparisonOperator.In, lianeFilter))
-        .OrderBy(m => m.JoinedAt)
-        .OrderBy(m => m.UserId)
-        , tx))
-      .GroupBy(lm => lm.LianeId)
+    var lianeMemberDbs = (await connection.QueryAsync(
+        Query.Select<LianeMemberDb>().Where(Filter<LianeMemberDb>.Where(l => l.LianeId, ComparisonOperator.In, lianeFilter))
+          .OrderBy(m => m.JoinedAt)
+          .OrderBy(m => m.RequestedAt),
+        tx
+      )).GroupBy(m => m.LianeId)
       .ToImmutableDictionary(g => g.Key, g => g.ToImmutableList());
-    var lianeRequestFilter = memberDbs.Values.SelectMany(l => l.Select(m => m.LianeRequestId)).ToImmutableList();
-    var fetchLianeRequests = (await lianeRequestFetcher.FetchLianeRequests(connection, lianeRequestFilter, tx))
-      .ToImmutableDictionary(r => r.Id);
-    return await lianeDbs.SelectAsync(async l =>
-    {
-      var members = memberDbs.GetValueOrDefault(l.Id, ImmutableList<LianeMemberDb>.Empty);
-      return new Api.Community.Liane(
-        l.Id.ToString(),
-        l.Name,
-        l.CreatedBy,
-        l.CreatedAt,
-        await members.SelectAsync(async m =>
+
+    var lianeRequestFilter = lianeMemberDbs.Values.SelectMany(m => m)
+      .Select(m => m.LianeRequestId)
+      .Distinct();
+
+    var lianeRequests = (await lianeRequestFetcher.FetchLianeRequests(connection, lianeRequestFilter, tx))
+      .ToImmutableDictionary(r => r.Id!.Value);
+
+    return (await lianeRequests
+        .Values
+        .OrderBy(r => r.Id)
+        .FilterSelectAsync(async lianeRequest =>
         {
-          var lianeRequest = fetchLianeRequests.GetValueOrDefault(m.LianeRequestId) ?? (Ref<LianeRequest>)m.LianeRequestId;
-          var user = await userService.GetFullUser(m.UserId);
-          return new LianeMember(user, lianeRequest, m.JoinedAt, m.LastReadAt);
-        })
-      );
-    });
+          var lianeRequestId = lianeRequest.Id!.Value;
+          var g = lianeMemberDbs.GetValueOrDefault(lianeRequestId, ImmutableList<LianeMemberDb>.Empty);
+
+          var (pendingMembers, members) = g.Split(l => l.JoinedAt == null);
+          var lianeMembers = await members
+            .FilterSelectAsync(m => ToLianeMember(lianeRequests, m, m.JoinedAt!.Value));
+          var lianePendingMembers = await pendingMembers
+            .FilterSelectAsync(m => ToLianeMember(lianeRequests, m, m.RequestedAt));
+          return new Api.Community.Liane(
+            lianeRequestId,
+            lianeMembers.ToImmutableList(),
+            lianePendingMembers.ToImmutableList()
+          );
+        }))
+      .ToImmutableDictionary(l => l.Id);
+  }
+
+  private async Task<LianeMember?> ToLianeMember(ImmutableDictionary<Guid, LianeRequest> lianeRequests, LianeMemberDb m, DateTime joinedAt)
+  {
+    var memberRequest = lianeRequests.GetValueOrDefault(m.LianeRequestId);
+    if (memberRequest is null)
+    {
+      return null;
+    }
+
+    var user = await userService.GetFullUser(memberRequest.CreatedBy!);
+    return new LianeMember(user, memberRequest, joinedAt, m.LastReadAt);
   }
 }

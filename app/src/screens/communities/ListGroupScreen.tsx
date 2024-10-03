@@ -8,7 +8,7 @@ import { AppPressableIcon } from "@/components/base/AppPressable";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppColors, ContextualColors } from "@/theme/colors";
 import { extractDays } from "@/util/hooks/days";
-import { CoMatch, MatchGroup } from "@liane/common";
+import { CoMatch } from "@liane/common";
 import { extractWaypointFromTo } from "@/util/hooks/lianeRequest";
 
 export const ListGroupScreen = () => {
@@ -78,9 +78,7 @@ const GroupItem = ({ group, onPress }: GroupItemProps) => (
         <View style={styles.textContainer}>
           <AppText style={styles.nameText}>{`${group.pickup.label} ➔ ${group.deposit.label}`}</AppText>
           <AppText style={styles.locationText}>{`${extractDays(group.weekDays)}`}</AppText>
-          <AppText style={styles.timeText}>{`${(group as MatchGroup).matches?.length ?? 1} membre${
-            (group as MatchGroup).matches?.length > 1 ? "s" : ""
-          }`}</AppText>
+          <AppText style={styles.timeText}>{`${group.matches?.length ?? 1} membre${group.matches?.length > 1 ? "s" : ""}`}</AppText>
         </View>
       </View>
       <View style={{ paddingRight: 10 }}>

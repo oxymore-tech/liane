@@ -12,7 +12,9 @@ using Liane.Test.Util;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using NUnit.Framework;
+using LianeMatch = Liane.Api.Community.LianeMatch;
 using LianeRequest = Liane.Api.Community.LianeRequest;
+using LianeState = Liane.Api.Community.LianeState;
 using Match = Liane.Api.Community.Match;
 
 namespace Liane.Test.Integration;
@@ -20,8 +22,8 @@ namespace Liane.Test.Integration;
 [TestFixture(Category = "Integration")]
 public sealed class LianeServiceImplTest : BaseIntegrationTest
 {
-  private static readonly TimeRange DefaultTimeRange = new  (new TimeOnly(9,0),new TimeOnly(18,0));
-  
+  private static readonly TimeRange DefaultTimeRange = new(new TimeOnly(9, 0), new TimeOnly(18, 0));
+
   private ILianeService tested = null!;
   private MockCurrentContext currentContext = null!;
 
@@ -73,18 +75,19 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var (lianeGugu, lianeJayBee, lianeMathilde, lianeSiloe, _, _, _, _) = await SetupDefaultLianes();
 
     currentContext.SetCurrentUser(gugu);
-    var actual = await tested.List();
-    Assert.AreEqual(1, actual.Count);
+    var list = await tested.List();
 
-    var lianeMatch = actual[0];
-    lianeGugu.WayPoints.AreRefEquivalent(lianeMatch.LianeRequest.WayPoints);
-
-    lianeMatch.Matches
-      .AssertDeepEqual(
-        new Match.Single("Pain", lianeJayBee, jayBee.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f),
-        new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f),
-        new Match.Single("Alodr", lianeMathilde, mathilde.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.BalsiegeParkingEglise, 0.5349006f)
-      );
+    AssertMatchesEquals(list,
+      new LianeMatch(lianeGugu, new LianeState.Detached(ImmutableList.Create(
+        new Match(lianeJayBee.Id, 0, ImmutableList.Create<Ref<LianeRequest>>(lianeJayBee.Id), DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.772423565f,
+          false),
+        new Match(lianeSiloe.Id, 0, ImmutableList.Create<Ref<LianeRequest>>(lianeSiloe.Id), DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.772423565f,
+          false),
+        new Match(lianeMathilde.Id, 0, ImmutableList.Create<Ref<LianeRequest>>(lianeMathilde.Id), DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking,
+          LabeledPositions.BalsiegeParkingEglise,
+          0.534900606f,
+          false)
+      ))));
   }
 
   [Test]
@@ -99,11 +102,16 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var lianeMatch = actual[0];
     lianeMathilde.WayPoints.AreRefEquivalent(lianeMatch.LianeRequest.WayPoints);
 
-    lianeMatch.Matches
+    lianeMatch.State
       .AssertDeepEqual(
-        new Match.Single("Pain", lianeJayBee, jayBee.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.FloracFormares, LabeledPositions.BalsiegeParkingEglise, 0.8810778f),
-        new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.IspagnacParking, LabeledPositions.BalsiegeParkingEglise, 0.61637884f),
-        new Match.Single("Boulot", lianeGugu, gugu.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.BalsiegeParkingEglise, 0.5739291f)
+        new LianeState.Detached(ImmutableList.Create(
+          new Match(lianeJayBee.Id, 0, ImmutableList.Create<Ref<LianeRequest>>(lianeJayBee.Id), DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.FloracFormares, LabeledPositions.BalsiegeParkingEglise,
+            0.8810778f, false),
+          new Match(lianeSiloe.Id, 0, ImmutableList.Create<Ref<LianeRequest>>(lianeSiloe.Id), DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.IspagnacParking, LabeledPositions.BalsiegeParkingEglise,
+            0.61637884f, false),
+          new Match(lianeGugu.Id, 0, ImmutableList.Create<Ref<LianeRequest>>(lianeGugu.Id), DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.BalsiegeParkingEglise,
+            0.5739291f, false)
+        ))
       );
   }
 
@@ -116,54 +124,63 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     await tested.Update(lianeJayBee.Id, lianeJayBee with { IsEnabled = false });
 
     currentContext.SetCurrentUser(mathilde);
-    var actual = await tested.List();
-    Assert.AreEqual(1, actual.Count);
+    var list = await tested.List();
 
-    var lianeMatch = actual[0];
-    lianeMathilde.WayPoints.AreRefEquivalent(lianeMatch.LianeRequest.WayPoints);
-
-    lianeMatch.Matches
-      .AssertDeepEqual(
-        new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.IspagnacParking, LabeledPositions.BalsiegeParkingEglise, 0.61637884f),
-        new Match.Single("Boulot", lianeGugu, gugu.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.BalsiegeParkingEglise, 0.5739291f)
-      );
+    AssertMatchesEquals(list,
+      new LianeMatch(lianeMathilde, new LianeState.Detached(ImmutableList.Create(
+        new Match(lianeSiloe.Id, 0, ImmutableList.Create<Ref<LianeRequest>>(lianeSiloe.Id), DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.IspagnacParking, LabeledPositions.BalsiegeParkingEglise,
+          0.61637884f, false),
+        new Match(lianeGugu.Id, 0, ImmutableList.Create<Ref<LianeRequest>>(lianeGugu.Id), DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.BalsiegeParkingEglise, 0.5739291f,
+          false)
+      ))));
   }
 
   [Test]
   public async Task ExactSameLianeRequestShouldMatch()
   {
-    var (_, lianeJayBee, lianeMathilde, lianeSiloe, _, _, _, _) = await SetupDefaultLianes();
+    var (lianeGugu, lianeJayBee, lianeMathilde, lianeSiloe, _, _, _, _) = await SetupDefaultLianes();
 
-    await CreateLianeRequest(gugu, "Pain 2", LabeledPositions.Cocures, LabeledPositions.Mende, weekDays: DayOfWeekFlag.All);
+    var lianePain2 = await CreateLianeRequest(gugu, "Pain 2", LabeledPositions.Cocures, LabeledPositions.Mende, weekDays: DayOfWeekFlag.All);
 
     currentContext.SetCurrentUser(gugu);
-    var actual = await tested.List();
-    Assert.AreEqual(2, actual.Count);
+    var list = await tested.List();
 
-    actual[1].Matches
-      .AssertDeepEqual(
-        new Match.Single("Pain", lianeJayBee, jayBee.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.Cocures, LabeledPositions.Mende, 1f),
-        new Match.Single("Alodr", lianeMathilde, mathilde.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.FloracFormares, LabeledPositions.BalsiegeParkingEglise, 0.6964716f),
-        new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.IspagnacParking, LabeledPositions.Mende, 0.68868893f)
-      );
+    AssertMatchesEquals(list,
+      new LianeMatch(lianeGugu, new LianeState.Detached(ImmutableList.Create(
+        new Match(lianeJayBee.Id, 0, ImmutableList.Create<Ref<LianeRequest>>(lianeJayBee.Id), DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.772423565f,
+          false),
+        new Match(lianeSiloe.Id, 0, ImmutableList.Create<Ref<LianeRequest>>(lianeSiloe.Id), DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.772423565f,
+          false),
+        new Match(lianeMathilde.Id, 0, ImmutableList.Create<Ref<LianeRequest>>(lianeMathilde.Id), DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking,
+          LabeledPositions.BalsiegeParkingEglise,
+          0.534900606f,
+          false)
+      ))),
+      new LianeMatch(lianePain2, new LianeState.Detached(ImmutableList.Create(
+        new Match(lianeJayBee.Id, 0, ImmutableList.Create<Ref<LianeRequest>>(lianeJayBee.Id), DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.Cocures, LabeledPositions.Mende, 1f, false),
+        new Match(lianeMathilde.Id, 0, ImmutableList.Create<Ref<LianeRequest>>(lianeMathilde.Id), DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.FloracFormares,
+          LabeledPositions.BalsiegeParkingEglise,
+          0.6964716f,
+          false),
+        new Match(lianeSiloe.Id, 0, ImmutableList.Create<Ref<LianeRequest>>(lianeSiloe.Id), DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.IspagnacParking, LabeledPositions.Mende, 0.68868893f,
+          false)
+      )))
+    );
   }
 
   [Test]
   public async Task GuguShouldJoinANewLianeByJoiningAMatch()
   {
-    var (_, lianeJayBee, lianeMathilde, lianeSiloe, _, _, _, _) = await SetupDefaultLianes();
+    var (lianeGugu, lianeJayBee, _, _, _, _, _, _) = await SetupDefaultLianes();
 
     // Gugu join JayBee : a new liane is created
     Api.Community.Liane joinedLiane;
     {
       currentContext.SetCurrentUser(gugu);
-      var list = await tested.List();
 
-      var from = list[0].LianeRequest;
-      var to = (list[0].Matches.First() as Match.Single)!.LianeRequest;
-      joinedLiane = await tested.JoinNew(from, to);
+      await tested.JoinRequest(lianeGugu, lianeJayBee.Id);
+      joinedLiane = await tested.Accept(lianeGugu, lianeJayBee.Id);
 
-      Assert.AreEqual(gugu.Id, joinedLiane.CreatedBy.Id);
       ImmutableList.Create(gugu.Id, jayBee.Id)
         .AreRefEquivalent(joinedLiane.Members.Select(m => m.User));
     }
@@ -173,30 +190,23 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       currentContext.SetCurrentUser(gugu);
       var list = await tested.List();
 
-      list[0].JoinedLianes
-        .AssertDeepEqual(
-          new Match.Group("Pain", joinedLiane,
-            ImmutableList.Create(new Match.Single("Pain", lianeJayBee, jayBee.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)),
-            DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)
-        );
-      list[0].Matches
-        .AssertDeepEqual(
-          new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f),
-          new Match.Single("Alodr", lianeMathilde, mathilde.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.BalsiegeParkingEglise, 0.5349006f)
-        );
+      AssertMatchesEquals(list,
+        new LianeMatch(lianeGugu, new LianeState.Attached(joinedLiane))
+      );
     }
   }
 
   [Test]
   public async Task GuguSeeJoinedLianesEvenIfRequestIsDisabled()
   {
-    var (lianeGugu, lianeJayBee, lianeMathilde, lianeSiloe, _, _, _, _) = await SetupDefaultLianes();
+    var (lianeGugu, lianeJayBee, lianeMathilde, _, _, _, _, _) = await SetupDefaultLianes();
 
     // Gugu join JayBee : a new liane is created
     Api.Community.Liane joinedLiane;
     {
       currentContext.SetCurrentUser(gugu);
-      joinedLiane = await tested.JoinNew(lianeGugu, lianeJayBee);
+      await tested.JoinRequest(lianeGugu, lianeJayBee.Id);
+      joinedLiane = await tested.Accept(lianeGugu, lianeJayBee.Id);
     }
 
     // jaybee disable its liane request
@@ -230,17 +240,9 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       currentContext.SetCurrentUser(gugu);
       var list = await tested.List();
 
-      list[0].JoinedLianes
-        .AssertDeepEqual(
-          new Match.Group("Pain", joinedLianeUdated,
-            ImmutableList.Create(new Match.Single("Pain", disabledJayBeeLianeRequest, jayBee.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende,
-              0.77242357f)),
-            DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)
-        );
-      list[0].Matches
-        .AssertDeepEqual(
-          new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)
-        );
+      AssertMatchesEquals(list,
+        new LianeMatch(lianeGugu, new LianeState.Attached(joinedLianeUdated))
+      );
     }
   }
 
@@ -253,71 +255,45 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     Api.Community.Liane exisitingLiane;
     {
       currentContext.SetCurrentUser(mathilde);
-      var list = await tested.List();
-
-      var from = list[0].LianeRequest;
-      var to = (list[0].Matches.First() as Match.Single)!;
-      exisitingLiane = await tested.JoinNew(from, to.LianeRequest);
-
-      Assert.AreEqual("Pain", exisitingLiane.Name);
+      await tested.JoinRequest(lianeMathilde, lianeJayBee.Id);
+      exisitingLiane = await tested.Accept(lianeMathilde, lianeJayBee.Id);
     }
 
-    // Mathilde doesn't appears anymore in jaybee matches
+    // Mathilde is attached to jaybee now
     {
       currentContext.SetCurrentUser(jayBee);
       var list = await tested.List();
-      list[0].JoinedLianes
-        .AssertDeepEqual(
-          new Match.Group("Pain", exisitingLiane,
-            ImmutableList.Create(new Match.Single("Alodr", lianeMathilde, mathilde.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.FloracFormares, LabeledPositions.BalsiegeParkingEglise,
-              0.6964716f)),
-            DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.FloracFormares, LabeledPositions.BalsiegeParkingEglise, 0.6964716f)
-        );
-      list[0].Matches
-        .AssertDeepEqual(
-          new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.IspagnacParking, LabeledPositions.Mende, 0.68868893f),
-          new Match.Single("Boulot", lianeGugu, gugu.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.6551334f)
-        );
+
+      AssertMatchesEquals(list,
+        new LianeMatch(lianeJayBee, new LianeState.Attached(exisitingLiane))
+      );
     }
 
-    // JayBee doesn't appears anymore in mathilde matches
+    // JayBee is attached to jaybee mathilde now
     {
       currentContext.SetCurrentUser(mathilde);
       var list = await tested.List();
 
-      Assert.AreEqual(2, list[0].Matches.Count);
-      list[0].JoinedLianes
-        .AssertDeepEqual(
-          new Match.Group("Pain", exisitingLiane,
-            ImmutableList.Create(new Match.Single("Pain", lianeJayBee, jayBee.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.FloracFormares, LabeledPositions.BalsiegeParkingEglise,
-              0.8810778f)),
-            DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.FloracFormares, LabeledPositions.BalsiegeParkingEglise, 0.8810778f)
-        );
-      list[0].Matches
-        .AssertDeepEqual(
-          new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.IspagnacParking, LabeledPositions.BalsiegeParkingEglise, 0.61637884f),
-          new Match.Single("Boulot", lianeGugu, gugu.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.BalsiegeParkingEglise, 0.5739291f)
-        );
+      AssertMatchesEquals(list,
+        new LianeMatch(lianeMathilde, new LianeState.Attached(exisitingLiane))
+      );
     }
 
     // Jaybee/Mathilde liane now appears in a liane in gugu matches
     {
       currentContext.SetCurrentUser(gugu);
-      var actual = await tested.List();
+      var list = await tested.List();
 
-      var lianeMatch = actual[0];
-      Assert.AreEqual(lianeGugu.Id, lianeMatch.LianeRequest.Id);
-      Assert.IsEmpty(lianeMatch.JoinedLianes);
-      lianeMatch.Matches
-        .AssertDeepEqual(
-          new Match.Group("Pain", exisitingLiane,
-            ImmutableList.Create(
-              new Match.Single("Pain", lianeJayBee, jayBee.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f),
-              new Match.Single("Alodr", lianeMathilde, mathilde.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.BalsiegeParkingEglise, 0.5349006f)
-            ),
-            DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f),
-          new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)
-        );
+      AssertMatchesEquals(list,
+        new LianeMatch(lianeGugu, new LianeState.Detached(
+          ImmutableList.Create(
+            new Match(exisitingLiane.Id, 2, ImmutableList.Create<Ref<LianeRequest>>(lianeJayBee.Id, lianeMathilde.Id), DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking,
+              LabeledPositions.Mende, 0.77242357f, false),
+            new Match(lianeSiloe.Id, 0, ImmutableList.Create<Ref<LianeRequest>>(lianeSiloe.Id), DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende,
+              Score: 0.77242357f, false)
+          )
+        ))
+      );
     }
   }
 
@@ -330,17 +306,15 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     Api.Community.Liane exisitingLiane;
     {
       currentContext.SetCurrentUser(mathilde);
-      var list = await tested.List();
-
-      var from = list[0].LianeRequest;
-      var to = (list[0].Matches.First() as Match.Single)!.LianeRequest;
-      exisitingLiane = await tested.JoinNew(from, to);
+      await tested.JoinRequest(lianeMathilde, lianeJayBee.Id);
+      exisitingLiane = await tested.Accept(lianeMathilde, lianeJayBee.Id);
     }
 
     // Gugu join JayBee : gugu join the existing liane
     {
       currentContext.SetCurrentUser(gugu);
-      var joinedLiane = await tested.Join(lianeGugu.Id, exisitingLiane.Id);
+      await tested.JoinRequest(lianeGugu, exisitingLiane.Id);
+      var joinedLiane = await tested.Accept(lianeGugu, exisitingLiane.Id);
 
       CollectionAssert.AreEquivalent(ImmutableList.Create(
         (jayBee.Id, lianeJayBee.Id),
@@ -353,34 +327,33 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   [Test]
   public async Task WhenTheLastMemberLeaveALianeTheLianeIsDeleted()
   {
-    await SetupDefaultLianes();
+    var (lianeGugu, lianeJayBee, lianeMathilde, _, _, _, _, _) = await SetupDefaultLianes();
 
     // Mathilde join JayBee : a new liane is created
     Api.Community.Liane exisitingLiane;
     {
       currentContext.SetCurrentUser(mathilde);
-      var list = await tested.List();
-
-      var from = list[0].LianeRequest;
-      var to = (list[0].Matches.First() as Match.Single)!.LianeRequest;
-      exisitingLiane = await tested.JoinNew(from, to);
+      await tested.JoinRequest(lianeMathilde, lianeJayBee.Id);
+      exisitingLiane = await tested.Accept(lianeMathilde, lianeJayBee.Id);
     }
 
     // Gugu join JayBee : gugu join the existing liane
     Api.Community.Liane liane;
     {
       currentContext.SetCurrentUser(gugu);
-      var list = await tested.List();
-
-      var from = list[0].LianeRequest;
-      liane = await tested.Join(from, exisitingLiane);
+      await tested.JoinRequest(lianeGugu, lianeJayBee.Id);
+      liane = await tested.Accept(lianeGugu, lianeJayBee.Id);
+      Assert.AreEqual(liane.Id, exisitingLiane.Id);
     }
 
     // Gugu liane request is attached to the joined liane
     {
       currentContext.SetCurrentUser(gugu);
       var list = await tested.List();
-      CollectionAssert.AreEquivalent(ImmutableList.Create(liane.Id), list[0].JoinedLianes.Select(j => j.Liane.Id));
+
+      AssertMatchesEquals(list,
+        new LianeMatch(lianeGugu, new LianeState.Attached(liane))
+      );
     }
 
     // Gugu leave the liane
@@ -389,7 +362,8 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       var left = await tested.Leave(exisitingLiane);
       Assert.IsTrue(left);
       var list = await tested.List();
-      CollectionAssert.IsEmpty(list[0].JoinedLianes);
+
+      Assert.IsInstanceOf<LianeState.Detached>(list[0].State);
     }
 
     // Gugu leave the liane
@@ -410,28 +384,23 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   [Test]
   public async Task ShouldNotSendAMessageToALeftLiane()
   {
-    await SetupDefaultLianes();
+    var (lianeGugu, lianeJayBee, lianeMathilde, _, _, _, _, _) = await SetupDefaultLianes();
 
     // Mathilde join JayBee : a new liane is created
     Api.Community.Liane liane;
     {
       currentContext.SetCurrentUser(mathilde);
-      var list = await tested.List();
-
-      var from = list[0].LianeRequest;
-      var to = (list[0].Matches.First() as Match.Single)!.LianeRequest;
-      liane = await tested.JoinNew(from, to);
+      await tested.JoinRequest(lianeMathilde, lianeJayBee.Id);
+      liane = await tested.Accept(lianeMathilde, lianeJayBee.Id);
     }
 
     // Gugu join JayBee : gugu join the existing liane
     {
       currentContext.SetCurrentUser(gugu);
-      var list = await tested.List();
-
-      var from = list[0].LianeRequest;
-      var to = (list[0].Matches.First() as Match.Group)!.Liane;
-      Assert.IsNotNull(to);
-      await tested.Join(from, to);
+      await tested.JoinRequest(lianeGugu, lianeJayBee.Id);
+      var liane2 = await tested.Accept(lianeGugu, lianeJayBee.Id);
+      Assert.AreEqual(liane.Id, liane2.Id);
+      liane = liane2;
     }
 
     // Bertrand cannot send a message in this liane
@@ -444,17 +413,14 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   [Test]
   public async Task ShouldChatInALiane()
   {
-    await SetupDefaultLianes();
+    var (lianeGugu, lianeJayBee, lianeMathilde, _, _, _, _, _) = await SetupDefaultLianes();
 
     // Mathilde join JayBee : a new liane is created
     Api.Community.Liane liane;
     {
       currentContext.SetCurrentUser(mathilde);
-      var list = await tested.List();
-
-      var from = list[0].LianeRequest;
-      var to = (list[0].Matches.First() as Match.Single)!.LianeRequest;
-      liane = await tested.JoinNew(from, to);
+      await tested.JoinRequest(lianeMathilde, lianeJayBee.Id);
+      liane = await tested.Accept(lianeMathilde, lianeJayBee.Id);
     }
 
     // Mathilde send a message in the liane
@@ -471,7 +437,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
         var unread = await tested.GetUnreadLianes();
         CollectionAssert.AreEquivalent(ImmutableList.Create(
           (liane.Id, 1)
-        ), unread.Select(l => (l.Key.Id, l.Value)));
+        ), unread.Select(l => (l.Key.IdAsGuid(), l.Value)));
       }
       var messages = await tested.GetMessages(liane, new Pagination(SortAsc: false));
       Assert.AreEqual(1, messages.TotalCount);
@@ -482,7 +448,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       );
       {
         var unread = await tested.GetUnreadLianes();
-        Assert.IsEmpty(unread.Select(l => (l.Key.Id, l.Value)));
+        Assert.IsEmpty(unread.Select(l => (l.Key.IdAsGuid(), l.Value)));
       }
       await tested.SendMessage(liane, "Bonjour Mathilde, je suis partant !");
     }
@@ -490,11 +456,8 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     // Gugu join JayBee : gugu join the existing liane
     {
       currentContext.SetCurrentUser(gugu);
-      var list = await tested.List();
-
-      var from = list[0].LianeRequest;
-      var to = (list[0].Matches.First() as Match.Group)!.Liane;
-      await tested.Join(from, to);
+      await tested.JoinRequest(lianeGugu, lianeJayBee.Id);
+      await tested.Accept(lianeGugu, lianeJayBee.Id);
     }
 
     // Gugu send a message in the liane
@@ -519,7 +482,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
         var unread = await tested.GetUnreadLianes();
         CollectionAssert.AreEquivalent(ImmutableList.Create(
           (liane.Id, 5)
-        ), unread.Select(l => (l.Key.Id, l.Value)));
+        ), unread.Select(l => (l.Key.IdAsGuid(), l.Value)));
       }
       var messages = await tested.GetMessages(liane, new Pagination(SortAsc: false));
       Assert.AreEqual(6, messages.TotalCount);
@@ -591,23 +554,19 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     await CreateLianeRequest(mathilde, "Alodr", LabeledPositions.Florac, LabeledPositions.BalsiegeParkingEglise, weekDays: DayOfWeekFlag.Wednesday);
 
     currentContext.SetCurrentUser(gugu);
-    var actual = await tested.List();
-    Assert.AreEqual(1, actual.Count);
+    var list = await tested.List();
 
-    var lianeMatch = actual[0];
-    lianeGugu.WayPoints.Select(p => p.Id).AreRefEquivalent(lianeMatch.LianeRequest.WayPoints);
-
-    lianeMatch.Matches
-      .AssertDeepEqual(
-        new Match.Single("Pain", lianeJayBee, jayBee.Id, DayOfWeekFlag.Monday, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)
-      );
+    AssertMatchesEquals(list,
+      new LianeMatch(lianeGugu, new LianeState.Detached(ImmutableList.Create(
+        new Match(lianeJayBee.Id, 0, ImmutableList.Create<Ref<LianeRequest>>(lianeJayBee.Id), DayOfWeekFlag.Monday, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f, false)))
+      ));
   }
 
   [Test]
   public async Task EveryRequestIsIndependant()
   {
     var (lianeGugu, lianeJayBee, lianeMathilde, lianeSiloe, _, _, _, _) = await SetupDefaultLianes();
-    var lianeGuguMarché = await CreateLianeRequest(gugu, "Marché", LabeledPositions.BlajouxParking, LabeledPositions.Mende, weekDays: DayOfWeekFlag.Friday | DayOfWeekFlag.Saturday);
+    var lianeGuguMarch = await CreateLianeRequest(gugu, "Marché", LabeledPositions.BlajouxParking, LabeledPositions.Mende, weekDays: DayOfWeekFlag.Friday | DayOfWeekFlag.Saturday);
 
     currentContext.SetCurrentUser(gugu);
 
@@ -615,37 +574,24 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     Api.Community.Liane joinedLiane;
     {
       currentContext.SetCurrentUser(gugu);
-      joinedLiane = await tested.JoinNew(lianeGugu, lianeJayBee);
+      await tested.JoinRequest(lianeGugu, lianeJayBee.Id);
+      joinedLiane = await tested.Accept(lianeGugu, lianeJayBee.Id);
     }
 
     {
       currentContext.SetCurrentUser(gugu);
       var list = await tested.List();
 
-      // Gugu first liane request is attached to the liane
-      Assert.AreEqual(list[0].LianeRequest.Id, lianeGugu.Id);
-      list[0].JoinedLianes
-        .AssertDeepEqual(
-          new Match.Group("Pain", joinedLiane,
-            ImmutableList.Create(new Match.Single("Pain", lianeJayBee, jayBee.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)),
-            DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)
-        );
-      list[0].Matches
-        .AssertDeepEqual(
-          new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f),
-          new Match.Single("Alodr", lianeMathilde, mathilde.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.BalsiegeParkingEglise, 0.5349006f)
-        );
-
-      // Even if the second one match, the previously joined liane is omitted
-      Assert.AreEqual(list[1].LianeRequest.Id, lianeGuguMarché.Id);
-      list[1].JoinedLianes
-        .AssertDeepEqual();
-      list[1].Matches
-        .AssertDeepEqual(
-          new Match.Single("Bahut", lianeSiloe, siloe.Id, DayOfWeekFlag.Friday | DayOfWeekFlag.Saturday, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f),
-          new Match.Single("Alodr", lianeMathilde, mathilde.Id, DayOfWeekFlag.Friday | DayOfWeekFlag.Saturday, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.BalsiegeParkingEglise,
-            0.5349006f)
-        );
+      AssertMatchesEquals(list,
+        new LianeMatch(lianeGugu, new LianeState.Attached(joinedLiane)),
+        new LianeMatch(lianeGuguMarch, new LianeState.Detached(ImmutableList.Create(
+          new Match(lianeSiloe.Id, 0, ImmutableList.Create<Ref<LianeRequest>>(lianeSiloe.Id), DayOfWeekFlag.Friday | DayOfWeekFlag.Saturday, DefaultTimeRange, LabeledPositions.QuezacParking,
+            LabeledPositions.Mende,
+            0.77242357f, false),
+          new Match(lianeMathilde.Id, 0, ImmutableList.Create<Ref<LianeRequest>>(lianeMathilde.Id), DayOfWeekFlag.Friday | DayOfWeekFlag.Saturday, DefaultTimeRange, LabeledPositions.QuezacParking,
+            LabeledPositions.BalsiegeParkingEglise, 0.5349006f, false)
+        )))
+      );
     }
   }
 
@@ -659,14 +605,11 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       currentContext.SetCurrentUser(gugu);
       var list = await tested.List();
 
-      Assert.AreEqual(1, list.Count);
-
-      Assert.AreEqual(list[0].LianeRequest.Id, lianeGugu.Id);
-      Assert.IsEmpty(list[0].JoinedLianes);
-      list[0].Matches
-        .AssertDeepEqual(
-          new Match.Single("Biojour", lianeMathilde, mathilde.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.Mende, LabeledPositions.QuezacParking, 0.7699512f, true)
-        );
+      AssertMatchesEquals(list,
+        new LianeMatch(lianeGugu, new LianeState.Detached(ImmutableList.Create(
+          new Match(lianeMathilde.Id, 0, ImmutableList.Create<Ref<LianeRequest>>(lianeMathilde.Id), DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.Mende, LabeledPositions.QuezacParking, 0.7699512f, true)
+        )))
+      );
     }
   }
 
@@ -681,21 +624,15 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       currentContext.SetCurrentUser(gugu);
       var list = await tested.List();
 
-      Assert.AreEqual(2, list.Count);
 
-      Assert.AreEqual(list[0].LianeRequest.Id, lianeGugu.Id);
-      Assert.IsEmpty(list[0].JoinedLianes);
-      list[0].Matches
-        .AssertDeepEqual(
-          new Match.Single("Biojour", lianeMathilde, mathilde.Id, DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)
-        );
-
-      Assert.AreEqual(list[1].LianeRequest.Id, lianeGugu2.Id);
-      Assert.IsEmpty(list[1].JoinedLianes);
-      list[1].Matches
-        .AssertDeepEqual(
-          new Match.Single("Biojour", lianeMathilde, mathilde.Id, DayOfWeekFlag.Monday, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f)
-        );
+      AssertMatchesEquals(list,
+        new LianeMatch(lianeGugu, new LianeState.Detached(ImmutableList.Create(
+          new Match(lianeMathilde.Id, 0, ImmutableList.Create<Ref<LianeRequest>>(lianeMathilde.Id), DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f, false)
+        ))),
+        new LianeMatch(lianeGugu2, new LianeState.Detached(ImmutableList.Create(
+          new Match(lianeMathilde.Id, 0, ImmutableList.Create<Ref<LianeRequest>>(lianeMathilde.Id), DayOfWeekFlag.Monday, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.77242357f, false)
+        )))
+      );
     }
   }
 
@@ -718,4 +655,9 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     MessageContent.Trip => (message.CreatedBy.Id, "!!NOUVEAU TRIP PROPOSE!!"),
     _ => throw new ArgumentOutOfRangeException(nameof(message))
   };
+
+  private static void AssertMatchesEquals(ImmutableList<LianeMatch> list, params LianeMatch[] expected)
+  {
+    list.AssertDeepEqual(expected);
+  }
 }

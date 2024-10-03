@@ -39,18 +39,18 @@ public sealed class LianeStatusServiceTest : BaseIntegrationTest
     var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddHours(-2));
     var liane2 = await InsertLiane("6408a644437b60cfd3b15872", userB, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddHours(-2));
     var liane3 = await InsertLiane("6408a644437b60cfd3b15875", userB, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddMinutes(-55));
-    await tripService.AddMember(liane1, new LianeMember(userB.Id, LabeledPositions.Cocures, LabeledPositions.Mende));
-    await tripService.AddMember(liane2, new LianeMember(userA.Id, LabeledPositions.Cocures, LabeledPositions.Mende));
-    await tripService.UpdateState(liane2, LianeState.Started);
+    await tripService.AddMember(liane1, new TripMember(userB.Id, LabeledPositions.Cocures, LabeledPositions.Mende));
+    await tripService.AddMember(liane2, new TripMember(userA.Id, LabeledPositions.Cocures, LabeledPositions.Mende));
+    await tripService.UpdateState(liane2, TripStatus.Started);
     await lianeStatusUpdate.Update(now);
 
     liane1 = await tripService.Get(liane1.Id);
     liane2 = await tripService.Get(liane2.Id);
     liane3 = await tripService.Get(liane3.Id);
 
-    Assert.AreEqual(LianeState.Finished, liane1.State);
-    Assert.AreEqual(LianeState.Finished, liane2.State);
-    Assert.AreEqual(LianeState.Canceled, liane3.State);
+    Assert.AreEqual(TripStatus.Finished, liane1.State);
+    Assert.AreEqual(TripStatus.Finished, liane2.State);
+    Assert.AreEqual(TripStatus.Canceled, liane3.State);
   }
 
   [Test]
@@ -66,9 +66,9 @@ public sealed class LianeStatusServiceTest : BaseIntegrationTest
     var liane2 = await InsertLiane("6408a644437b60cfd3b15875", userA, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddHours(-2));
     var liane3 = await InsertLiane("6408a644437b60cfd3b15876", userA, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddMinutes(10));
     var liane4 = await InsertLiane("6408a644437b60cfd3b15876", userA, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddMinutes(2));
-    await tripService.AddMember(liane1.Id, new LianeMember(userB.Id, LabeledPositions.QuezacParking, LabeledPositions.Mende));
-    await tripService.AddMember(liane4.Id, new LianeMember(userB.Id, LabeledPositions.QuezacParking, LabeledPositions.Mende));
-    
+    await tripService.AddMember(liane1.Id, new TripMember(userB.Id, LabeledPositions.QuezacParking, LabeledPositions.Mende));
+    await tripService.AddMember(liane4.Id, new TripMember(userB.Id, LabeledPositions.QuezacParking, LabeledPositions.Mende));
+
     await lianeStatusUpdate.Update(now);
     liane1 = await tripService.Get(liane1.Id);
     liane2 = await tripService.Get(liane2.Id);
@@ -76,8 +76,8 @@ public sealed class LianeStatusServiceTest : BaseIntegrationTest
     liane4 = await tripService.Get(liane4.Id);
 
     // Assert.AreEqual(LianeState.Started, liane1.State);
-     Assert.AreEqual(LianeState.Canceled, liane2.State);
-     Assert.AreEqual(LianeState.NotStarted, liane3.State);
+    Assert.AreEqual(TripStatus.Canceled, liane2.State);
+    Assert.AreEqual(TripStatus.NotStarted, liane3.State);
     // Assert.AreEqual(LianeState.Started, liane4.State);
   }
 
@@ -91,10 +91,10 @@ public sealed class LianeStatusServiceTest : BaseIntegrationTest
     var departureTime = DateTime.UtcNow.AddMinutes(5);
 
     var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Cocures, LabeledPositions.Mende, departureTime);
-    await tripService.AddMember(liane1.Id, new LianeMember(userB.Id, LabeledPositions.QuezacParking, LabeledPositions.Mende));
+    await tripService.AddMember(liane1.Id, new TripMember(userB.Id, LabeledPositions.QuezacParking, LabeledPositions.Mende));
 
     currentContext.SetCurrentUser(userA);
-    await eventDispatcher.Dispatch(new LianeEvent.MemberPing(liane1.Id,  ((DateTimeOffset)DateTime.Now).ToUnixTimeMilliseconds(), TimeSpan.FromMinutes(5), null));
+    await eventDispatcher.Dispatch(new LianeEvent.MemberPing(liane1.Id, ((DateTimeOffset)DateTime.Now).ToUnixTimeMilliseconds(), TimeSpan.FromMinutes(5), null));
 
     var actual = await tripService.Get(liane1.Id);
 
@@ -108,6 +108,6 @@ public sealed class LianeStatusServiceTest : BaseIntegrationTest
   private async Task<Api.Trip.Trip> InsertLiane(string id, DbUser userA, Ref<RallyingPoint> from, Ref<RallyingPoint> to, DateTime departureTime)
   {
     currentContext.SetCurrentUser(userA);
-    return await tripService.Create(new LianeRequest(id, departureTime, null, 4, from, to), userA.Id);
+    return await tripService.Create(new TripRequest(id, Guid.Parse("019233a0-5c48-7cfa-b12e-7e7f0eb9c69f"), departureTime, null, 4, from, to, GeolocationLevel.None), userA.Id);
   }
 }

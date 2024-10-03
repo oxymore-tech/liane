@@ -77,24 +77,6 @@ export const CommunitiesDetailScreen = () => {
     }
   };
 
-  const changeParams = async () => {
-    setMyModalVisible(false);
-    const liane = group;
-
-    if (liane && liane.id) {
-      // Todo changement a apporter
-
-      try {
-        const updatedLianeRequest = await services.community.updateLiane(liane.id, liane);
-        AppLogger.debug("COMMUNITIES", "Mise a jour de la liane fait avec succès", updatedLianeRequest);
-      } catch (e) {
-        AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de la modification de la liane", e);
-      }
-    } else {
-      AppLogger.debug("COMMUNITIES", "Pas de liane lors de la modification de ses paramètres", group);
-    }
-  };
-
   return (
     <View style={styles.mainContainer}>
       {error && (
@@ -107,7 +89,6 @@ export const CommunitiesDetailScreen = () => {
           <View style={{ flexDirection: "row", width: "100%" }}>
             <AppPressableIcon onPress={() => navigation.goBack()} name={"arrow-ios-back-outline"} color={AppColors.white} size={32} />
           </View>
-          <AppText style={styles.groupName}>{group.name}</AppText>
           <View style={styles.statsContainer}>
             <View style={styles.statBox}>
               <View style={styles.iconContainer}>

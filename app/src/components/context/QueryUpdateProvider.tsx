@@ -2,7 +2,7 @@ import React, { PropsWithChildren, useContext, useEffect } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 import { InfiniteData, useQueryClient } from "react-query";
 import { NotificationQueryKey } from "@/screens/notifications/NotificationScreen";
-import { JoinLianeRequestDetailed, Liane, LianeState, Notification, PaginatedResponse } from "@liane/common";
+import { JoinLianeRequestDetailed, Liane, LianeState, Notification, PaginatedResponse, TripStatus } from "@liane/common";
 import { JoinRequestsQueryKey, LianeDetailQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen";
 import { useSubscription } from "@/util/hooks/subscription";
 import { LianeGeolocation } from "@/api/service/location";
@@ -20,7 +20,7 @@ export const useQueryUpdater = () => {
   return useContext<IQueryUpdater>(QueryUpdaterContext);
 };
 
-export const FutureStates: LianeState[] = ["NotStarted", "Started"];
+export const FutureStates: TripStatus[] = ["NotStarted", "Started"];
 
 const updateLianeList = (old: PaginatedResponse<Liane>, liane: Liane) => {
   const found = old.data.findIndex(l => l.id === liane.id);

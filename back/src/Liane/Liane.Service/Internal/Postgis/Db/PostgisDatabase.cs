@@ -34,6 +34,8 @@ public sealed class PostgisDatabase : IDisposable
     SqlMapper.AddTypeHandler(new PointTypeHandler());
     SqlMapper.AddTypeHandler(new LatLngTypeHandler());
     SqlMapper.AddTypeHandler(new TimeOnlyHandler());
+    SqlMapper.AddTypeHandler(new RefTypeHandler<LianeRequest>());
+    SqlMapper.AddTypeHandler(new RefTypeHandler<Api.Community.Liane>());
     SqlMapper.AddTypeHandler(new RefTypeHandler<RallyingPoint>());
     SqlMapper.AddTypeHandler(new RefTypeHandler<Api.Auth.User>());
     SqlMapper.AddTypeHandler(new JsonTypeHandler<MessageContent>(jsonSerializerOptions));

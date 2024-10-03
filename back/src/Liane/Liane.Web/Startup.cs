@@ -92,10 +92,9 @@ public static class Startup
     services.AddService<RallyingPointGenerator>();
     services.AddService<ChatServiceImpl>();
     services.AddService<TripServiceImpl>();
-    services.AddService<LianeRecurrenceServiceImpl>();
     services.AddService<LianeTrackerServiceImpl>();
     services.AddService<LianeTrackerCache>();
-    
+
     services.AddService<LianeRequestFetcher>();
     services.AddService<LianeFetcher>();
     services.AddService<LianeMatcher>();
@@ -112,12 +111,9 @@ public static class Startup
 
     services.AddSingleton(MongoFactory.Create);
 
-    services.AddService<MockServiceImpl>();
-
     services.AddSettings<GeneratorSettings>(context);
     services.AddHostedService<LianeMockGenerator>();
     services.AddHostedService<LianeStatusUpdate>();
-    services.AddHostedService<LianeRecurrenceScheduler>();
 
     services.AddHealthChecks();
   }
@@ -143,6 +139,7 @@ public static class Startup
   {
     var loggingConfiguration = new LoggingConfiguration();
 
+#pragma warning disable CS0618 // Type or member is obsolete
     AspNetLayoutRendererBase.Register("trace_id",
       (_, _, _) => MappedDiagnosticsLogicalContext.GetObject("TraceId"));
     AspNetLayoutRendererBase.Register("span_id",
@@ -150,6 +147,7 @@ public static class Startup
     AspNetLayoutRendererBase.Register("user_id", (_, httpContext, _) => httpContext.User.Identity?.Name);
     AspNetLayoutRendererBase.Register("request_path",
       (_, _, _) => MappedDiagnosticsLogicalContext.GetObject("RequestPath"));
+#pragma warning restore CS0618 // Type or member is obsolete
 
     Layout jsonLayout = new JsonLayout
     {
@@ -188,7 +186,7 @@ public static class Startup
     };
     var consoleTarget = new AsyncTargetWrapper("console", coloredConsoleTarget);
     loggingConfiguration.AddTarget(consoleTarget);
-    
+
     var requestLoggingRule = new LoggingRule("Microsoft.AspNetCore.Hosting.Diagnostics", LogLevel.Info, LogLevel.Info, consoleTarget);
 
     requestLoggingRule.Filters.Add(
@@ -198,11 +196,11 @@ public static class Startup
         {
           return FilterResult.LogFinal;
         }
-        
+
         return path?.ToString() == "/health" ? FilterResult.IgnoreFinal : FilterResult.LogFinal;
       })
     );
-    
+
     loggingConfiguration.AddRule(requestLoggingRule);
     loggingConfiguration.AddRule(LogLevel.Debug, LogLevel.Fatal, consoleTarget);
 
@@ -274,10 +272,7 @@ public static class Startup
   private static Task StartCurrentModuleWeb(string[] args)
   {
     return WebHost.CreateDefaultBuilder(args)
-      .ConfigureLogging(logging =>
-      {
-        logging.ClearProviders();
-      })
+      .ConfigureLogging(logging => { logging.ClearProviders(); })
       .UseNLog(new NLogAspNetCoreOptions { RemoveLoggerFactoryFilter = false })
       .ConfigureAppConfiguration((hostingContext, config) =>
       {
@@ -355,7 +350,7 @@ public static class Startup
       .ConfigureAwait(false)
       .GetAwaiter()
       .GetResult();
-    
+
     var lianeTrackerService = app.ApplicationServices.GetRequiredService<ILianeTrackerService>();
     lianeTrackerService.SyncTrackers()
       .ConfigureAwait(false)

@@ -4,7 +4,7 @@ import {
   Liane,
   LianeMatch,
   LianeMember,
-  LianeState,
+  TripStatus,
   RallyingPoint,
   Ref,
   UnionUtils,
@@ -134,8 +134,8 @@ export function getTripMatch(to: RallyingPoint, from: RallyingPoint, originalTri
   };
 }
 
-export type TripStatus =
-  | LianeState
+export type DetailedTripStatus =
+  | TripStatus
   | "StartingSoon"
   | "AwaitingPassengers"
   | "AwaitingDriver"
@@ -155,7 +155,7 @@ export function getTripStatus(
   liane: Liane,
   user: Ref<User>,
   joinRequest?: JoinLianeRequestDetailed
-): { status: TripStatus; nextUpdateMillis?: number | undefined } {
+): { status: DetailedTripStatus; nextUpdateMillis?: number | undefined } {
   if (liane.state === "NotStarted") {
     const [, delta] = getTimeForUser(liane, user, "from");
 
