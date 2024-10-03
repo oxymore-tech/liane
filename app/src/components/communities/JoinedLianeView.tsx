@@ -4,93 +4,76 @@ import { AppText } from "@/components/base/AppText";
 import { extractDays } from "@/util/hooks/days";
 import { AppColors } from "@/theme/colors";
 import { UserPicture } from "@/components/UserPicture";
-import { MatchGroup } from "@liane/common";
 import { useAppNavigation } from "@/components/context/routing";
 import { Row } from "@/components/base/AppLayout.tsx";
+import { CoLiane, ResolvedLianeRequest } from "@liane/common";
 
 export interface GroupsViewProps {
-  joinedLiane: MatchGroup;
+  lianeRequest: ResolvedLianeRequest;
+  liane: CoLiane;
   unreadMessage?: boolean;
 }
 
-const RenderGroupsView = ({ joinedLiane, unreadMessage }: GroupsViewProps) => {
-  return (
-    <View style={{ flexGrow: 1, flexShrink: 1 }}>
-      <View style={{ flex: 1, flexDirection: "row" }}>
-        {unreadMessage && (
-          <View style={styles.notificationDotContainer}>
-            <View style={styles.notificationDot} />
-          </View>
-        )}
-      </View>
-      <Row style={{ alignItems: "flex-start", flexWrap: "wrap" }} spacing={4}>
-        <AppText
-          style={{
-            fontSize: 14,
-            fontWeight: "bold",
-            flexShrink: 1,
-            lineHeight: 14,
-            color: "black"
-          }}>
-          {`${joinedLiane.pickup.label} ➔`}
-        </AppText>
-        <AppText
-          style={{
-            fontSize: 14,
-            fontWeight: "bold",
-            flexShrink: 1,
-            lineHeight: 14,
-            color: "black"
-          }}>
-          {`${joinedLiane.deposit.label}`}
-        </AppText>
-      </Row>
-
-      <AppText
-        style={{
-          fontSize: 14,
-          fontWeight: "400",
-          flexShrink: 1,
-          lineHeight: 20
-        }}>{`${extractDays(joinedLiane.weekDays)}`}</AppText>
-      <View
-        style={{
-          flex: 1,
-          flexDirection: "row",
-          marginLeft: 8,
-          marginTop: 5
-        }}>
-        {joinedLiane.liane.members.map(member => (
-          <UserPicture key={member.user.id} size={24} url={member.user.pictureUrl} id={member.user.id} style={{ marginLeft: -10 }} />
-        ))}
-      </View>
-    </View>
-  );
-};
-
-export const JoinedLianeView = ({ joinedLiane, unreadMessage }: GroupsViewProps) => {
+export const JoinedLianeView = ({ lianeRequest, liane, unreadMessage }: GroupsViewProps) => {
   const { navigation } = useAppNavigation();
 
   return (
-    <Pressable onPress={() => navigation.navigate("CommunitiesChat", { liane: joinedLiane.liane })}>
-      <RenderGroupsView joinedLiane={joinedLiane} unreadMessage={unreadMessage} />
+    <Pressable onPress={() => navigation.navigate("CommunitiesChat", { liane: liane })}>
+      <View style={{ flexGrow: 1, flexShrink: 1 }}>
+        <View style={{ flex: 1, flexDirection: "row" }}>
+          {unreadMessage && (
+            <View style={styles.notificationDotContainer}>
+              <View style={styles.notificationDot} />
+            </View>
+          )}
+        </View>
+        <Row style={{ alignItems: "flex-start", flexWrap: "wrap" }} spacing={4}>
+          <AppText
+            style={{
+              fontSize: 14,
+              fontWeight: "bold",
+              flexShrink: 1,
+              lineHeight: 14,
+              color: "black"
+            }}>
+            {`${lianeRequest.wayPoints[0].label} ➔`}
+          </AppText>
+          <AppText
+            style={{
+              fontSize: 14,
+              fontWeight: "bold",
+              flexShrink: 1,
+              lineHeight: 14,
+              color: "black"
+            }}>
+            {`${lianeRequest.wayPoints[1].label}`}
+          </AppText>
+        </Row>
+
+        <AppText
+          style={{
+            fontSize: 14,
+            fontWeight: "400",
+            flexShrink: 1,
+            lineHeight: 20
+          }}>{`${extractDays(lianeRequest.weekDays)}`}</AppText>
+        <View
+          style={{
+            flex: 1,
+            flexDirection: "row",
+            marginLeft: 8,
+            marginTop: 5
+          }}>
+          {liane.members.map(member => (
+            <UserPicture key={member.user.id} size={24} url={member.user.pictureUrl} id={member.user.id} style={{ marginLeft: -10 }} />
+          ))}
+        </View>
+      </View>
     </Pressable>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center" // Centre verticalement les éléments dans le conteneur
-  },
-  groupName: {
-    fontSize: 18,
-    fontWeight: "bold",
-    flexShrink: 1,
-    lineHeight: 27,
-    color: "black"
-  },
   notificationDotContainer: {
     justifyContent: "center",
     alignItems: "center"

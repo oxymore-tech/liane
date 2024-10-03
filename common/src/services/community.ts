@@ -2,6 +2,7 @@ import {
   DayOfWeekFlag,
   Entity,
   GeolocationLevel,
+  Identity,
   Liane,
   PaginatedRequestParams,
   PaginatedResponse,
@@ -28,40 +29,41 @@ export type ResolvedLianeRequest = Omit<CoLianeRequest, "wayPoints"> & { wayPoin
 
 export type CoLianeMatch = {
   lianeRequest: ResolvedLianeRequest;
-  joinedLianes: MatchGroup[];
+  state: LianeState;
+};
+
+export type Detached = {
+  type: "Detached";
   matches: CoMatch[];
 };
 
-export type MatchSingle = {
-  name: string;
-  lianeRequest: ResolvedLianeRequest;
-  user: Ref<User>;
-  weekDays: DayOfWeekFlag;
-  when: TimeRange;
-  pickup: RallyingPoint;
-  deposit: RallyingPoint;
-  score: number;
-  reverseDirection?: boolean;
-};
-
-export type MatchGroup = {
-  name: string;
+export type Pending = {
+  type: "Pending";
   liane: CoLiane;
-  matches: MatchSingle[];
+};
+
+export type Attached = {
+  type: "Attached";
+  liane: CoLiane;
+};
+
+export type LianeState = Detached | Pending | Attached;
+
+export type CoMatch = {
+  liane: Ref<CoLiane>;
+  totalMembers: number;
+  matches: Ref<CoLianeRequest>[];
   weekDays: DayOfWeekFlag;
   when: TimeRange;
   pickup: RallyingPoint;
   deposit: RallyingPoint;
   score: number;
+  isReverseDirection?: boolean;
 };
 
-export type CoLiane = Entity & {
-  name: string;
+export type CoLiane = Identity & {
   members: CoLianeMember[];
-};
-
-export type CoLianeUpdate = {
-  name: string;
+  pendingMembers: CoLianeMember[];
 };
 
 export type CoLianeMember = {
@@ -73,8 +75,6 @@ export type CoLianeMember = {
 
 export type JoinTripQuery = { liane: Ref<CoLiane>; trip: Ref<Liane>; geolocationLevel?: GeolocationLevel };
 
-export type CoMatch = MatchSingle | MatchGroup;
-
 export type TextMessage = { type: "Text"; value: string };
 export type TripMessage = { type: "Trip"; value: Ref<Liane> };
 
@@ -85,7 +85,7 @@ export type LianeMessage<T extends MessageContent = MessageContent> = Entity & {
 export interface CommunityService {
   list(): Promise<CoLianeMatch[]>;
 
-  getLiane(liane: string): Promise<CoLiane>;
+  get(liane: string): Promise<CoLiane>;
 
   create(lianeRequest: CoLianeRequest): Promise<CoLianeRequest>;
 
@@ -93,13 +93,11 @@ export interface CommunityService {
 
   delete(lianeRequestId: string): Promise<void>;
 
-  joinNew(lianeRequestId: string, foreignLianeRequest: string): Promise<CoLiane>;
+  joinRequest(mine: string, liane: string): Promise<void>;
 
-  join(lianeRequestId: string, liane: string): Promise<CoLiane>;
+  accept(mine: string, liane: string): Promise<CoLiane>;
 
   joinTrip(query: JoinTripQuery): Promise<void>;
-
-  updateLiane(lianeRequestId: string, request: CoLianeUpdate): Promise<CoLianeUpdate>;
 
   leave(liane: string): Promise<boolean>;
 
@@ -129,20 +127,16 @@ export class CommunityServiceClient implements CommunityService {
     return this.http.postAs<CoLianeRequest>(`/community/liane/request/${lianeRequestId}`, { body: request });
   }
 
-  joinNew(id: string, lianeRequest: string) {
-    return this.http.postAs<CoLiane>(`/community/liane/${id}/join_new/${lianeRequest}`);
+  async joinRequest(mine: string, liane: string) {
+    await this.http.post(`/community/liane/${liane}/join/${mine}`);
   }
 
-  join(id: string, liane: string) {
-    return this.http.postAs<CoLiane>(`/community/liane/${id}/join/${liane}`);
+  accept(mine: string, liane: string) {
+    return this.http.postAs<CoLiane>(`/community/liane/${liane}/accept/${mine}`);
   }
 
   async joinTrip(query: JoinTripQuery) {
     await this.http.post("/community/liane/join_trip", { body: query });
-  }
-
-  updateLiane(lianeId: string, request: CoLianeUpdate) {
-    return this.http.postAs<CoLiane>(`/community/liane/${lianeId}`, { body: request });
   }
 
   leave(liane: string) {
@@ -161,7 +155,7 @@ export class CommunityServiceClient implements CommunityService {
     return this.http.get<Record<string, number>>("/community/liane/unread");
   }
 
-  getLiane(liane: string) {
+  get(liane: string) {
     return this.http.get<CoLiane>(`/community/liane/${liane}`);
   }
 }

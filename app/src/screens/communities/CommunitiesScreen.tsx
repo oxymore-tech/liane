@@ -103,9 +103,7 @@ export const CommunitiesScreen = () => {
       </Column>
       <Column spacing={16} style={styles.container}>
         {data.length === 0 && <NoLiane />}
-        {data.length > 0 && (
-          <LianeListView data={data} isFetching={isFetching} onRefresh={() => queriesData.forEach(q => q.refetch())} reverseSort={false} />
-        )}
+        {data.length > 0 && <LianeListView data={data} isFetching={isFetching} onRefresh={() => queriesData.forEach(q => q.refetch())} />}
       </Column>
     </Column>
   );

@@ -40,10 +40,16 @@ public sealed class CommunityController(ILianeService lianeService)
     return lianeService.Delete(id);
   }
 
-  [HttpPost("liane/{id:guid}/join/{liane:guid}")]
-  public Task Join(Guid id, Guid liane)
+  [HttpPost("liane/{liane:guid}/join/{id:guid}")]
+  public Task JoinRequest(Guid id, Guid liane)
   {
     return lianeService.JoinRequest(id, liane);
+  }
+
+  [HttpPost("liane/{liane:guid}/accept/{id:guid}")]
+  public Task<Api.Community.Liane> Accept(Guid id, Guid liane)
+  {
+    return lianeService.Accept(id, liane);
   }
 
   [HttpPost("liane/join_trip")]

@@ -1,4 +1,4 @@
-import { JoinLianeRequestDetailed, Liane, TripStatus } from "@liane/common";
+import { DetailedTripStatus, JoinLianeRequestDetailed, Liane, TripStatus } from "@liane/common";
 import { useTripStatus } from "@/components/trip/trip";
 import { AppText } from "@/components/base/AppText";
 import React from "react";
@@ -34,7 +34,7 @@ export const LianeStatusView = ({ style, liane, joinRequest }: LianeStatusViewPr
   );
 };
 
-const getLianeStatusStyle = (lianeStatus: TripStatus): [string | undefined, ColorValue] => {
+const getLianeStatusStyle = (lianeStatus: DetailedTripStatus): [string | undefined, ColorValue] => {
   let status;
   let color: ColorValue = AppColors.grayBackground;
   switch (lianeStatus) {
