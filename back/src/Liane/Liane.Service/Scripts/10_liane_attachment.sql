@@ -1,7 +1,14 @@
 TRUNCATE liane_member;
 
 ALTER TABLE liane_message
-  DROP CONSTRAINT liane_message_liane_id_fkey,
+  DROP CONSTRAINT liane_message_liane_id_fkey;
+
+UPDATE liane_message m SET liane_id = lm.liane_request_id
+FROM liane_member lm WHERE lm.liane_id = m.liane_id;
+
+DELETE FROM liane_message WHERE liane_id NOT IN (SELECT id FROM liane_request);
+
+ALTER TABLE liane_message
   ADD CONSTRAINT liane_message_liane_id_fkey FOREIGN KEY (liane_id) REFERENCES liane_request (id);
 
 ALTER TABLE liane_member

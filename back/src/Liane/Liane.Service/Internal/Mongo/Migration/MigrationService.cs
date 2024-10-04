@@ -1,29 +1,19 @@
 using System;
 using System.Threading.Tasks;
-using Liane.Api.Auth;
-using Liane.Service.Internal.User;
+using Liane.Service.Internal.Trip;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Mongo.Migration;
 
-public sealed class MigrationService
+public sealed class MigrationService(IMongoDatabase db, ILogger<MigrationService> logger)
 {
-  private const int Version = 16;
-
-  private readonly IMongoDatabase db;
-  private readonly ILogger<MigrationService> logger;
-
-  public MigrationService(IMongoDatabase db, ILogger<MigrationService> logger)
-  {
-    this.db = db;
-    this.logger = logger;
-  }
+  private const int Version = 18;
 
   private async Task Migrate()
   {
-    await db.GetCollection<DbUser>()
-      .UpdateManyAsync(Builders<DbUser>.Filter.Empty, Builders<DbUser>.Update.Unset("tripsCount").Set("stats", new UserStats()));
+    await db.GetCollection<LianeDb>()
+      .UpdateManyAsync(Builders<LianeDb>.Filter.Empty, Builders<LianeDb>.Update.Unset("recurrence"));
   }
 
   public async Task Execute()

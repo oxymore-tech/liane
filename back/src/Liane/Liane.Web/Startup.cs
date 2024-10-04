@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Liane.Api.Image;
 using Liane.Api.Trip;
 using Liane.Api.Util;
-using Liane.Mock;
 using Liane.Service.Internal.Address;
 using Liane.Service.Internal.Chat;
 using Liane.Service.Internal.Community;
@@ -111,8 +110,6 @@ public static class Startup
 
     services.AddSingleton(MongoFactory.Create);
 
-    services.AddSettings<GeneratorSettings>(context);
-    services.AddHostedService<LianeMockGenerator>();
     services.AddHostedService<LianeStatusUpdate>();
 
     services.AddHealthChecks();

@@ -17,8 +17,5 @@
     "Issuer": "Liane",
     "Audience": "Liane",
     "ValidateLifetime": true
-  },
-  "Generator": {
-    "IsEnabled": false
   }
 }

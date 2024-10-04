@@ -1,13 +1,10 @@
-using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 using GeoJSON.Text.Feature;
 using Liane.Api.Event;
-using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Pagination;
-using Liane.Mock;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Trip.Geolocation;
 using Liane.Service.Internal.Util;
@@ -24,7 +21,6 @@ namespace Liane.Web.Controllers;
 public sealed class LianeController(
   ITripService tripService,
   ICurrentContext currentContext,
-  IMockService mockService,
   EventDispatcher eventDispatcher,
   ILianeTrackerService lianeTrackerService)
   : ControllerBase
@@ -146,21 +142,6 @@ public sealed class LianeController(
   public Task<PaginatedResponse<Trip>> ListAll([FromQuery] Pagination pagination, CancellationToken cancellationToken)
   {
     return tripService.List(new LianeFilter(), pagination, cancellationToken);
-  }
-
-  [HttpPost("generate")]
-  [RequiresAdminAuth]
-  public async Task<ImmutableList<Trip>> Generate([FromQuery] int count, [FromQuery] double lat, [FromQuery] double lng, [FromQuery] double? lat2, [FromQuery] double? lng2,
-    [FromQuery] int? radius)
-  {
-    var from = new LatLng(lat, lng);
-    LatLng? to = null;
-    if (lat2 != null && lng2 != null)
-    {
-      to = new LatLng((double)lat2, (double)lng2);
-    }
-
-    return await mockService.GenerateLianes(count, from, to, radius);
   }
 
   [HttpGet("record")]
