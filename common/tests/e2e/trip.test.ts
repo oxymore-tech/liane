@@ -29,13 +29,13 @@ describe.sequential("Joining a trip", () => {
     test("Should create new trip", async () => {
       const currentUser = users[0];
       const posted = await currentUser.services.liane.post({
+        liane: "019233a0-5c48-7cfa-b12e-7e7f0eb9c69f",
         from: pickup,
         to: destination,
         departureTime: addSeconds(new Date(), 1800).toISOString(),
         returnTime: addSeconds(new Date(), 3600 * 5).toISOString(),
         availableSeats: 2,
-        geolocationLevel: "None",
-        recurrence: "0000000"
+        geolocationLevel: "None"
       });
       const tripList = await currentUser.services.liane.list(["NotStarted", "Started"], { asc: true, cursor: undefined, limit: 20 });
       expect(tripList.data.length).toBe(2);
