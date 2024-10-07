@@ -16,7 +16,7 @@ import { TimeOnly, TimeRange } from "./time";
 
 export type CoLianeRequest = Entity & {
   name: string;
-  wayPoints: Ref<RallyingPoint>[];
+  wayPoints: RallyingPoint[];
   roundTrip: boolean;
   arriveBefore: TimeOnly;
   returnAfter: TimeOnly;

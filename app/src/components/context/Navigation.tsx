@@ -27,6 +27,7 @@ import { ChatScreen } from "@/screens/ChatScreen";
 import { CommunitiesChatScreen } from "@/screens/communities/CommunitiesChatScreen";
 import { ListGroupScreen } from "@/screens/communities/ListGroupScreen";
 import { CommunitiesDetailScreen } from "@/screens/communities/CommunitiesDetailScreen";
+import { LianeMapDetailScreen } from "@/screens/communities/LianeMapDetail.tsx";
 import { OpenJoinRequestScreen } from "@/screens/modals/OpenJoinRequestScreen";
 import { RequestJoinScreen } from "@/screens/search/RequestJoinScreen";
 import { TripGeolocationWizard } from "@/screens/home/TripGeolocationWizard";
@@ -209,6 +210,7 @@ function Navigation() {
         <Stack.Screen name="Chat" component={ChatScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Communities" component={CommunitiesScreen} options={{ headerShown: false }} />
         <Stack.Screen name="CommunitiesChat" component={CommunitiesChatScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="LianeMapDetail" component={LianeMapDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="CommunitiesDetails" component={CommunitiesDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
         <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} options={{ headerShown: false }} />
