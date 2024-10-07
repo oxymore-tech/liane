@@ -31,10 +31,10 @@ export const ListGroupScreen = () => {
       )}
       <View style={[styles.header, { paddingTop: insets.top }]}>
         <View style={styles.headerContent}>
-          <AppPressableIcon onPress={() => navigation.goBack()} name={"arrow-ios-back-outline"} color={AppColors.primaryColor} size={32} />
-          <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 16, lineHeight: 27, color: AppColors.primaryColor }}>
-            Lianes compatibles
-          </AppText>
+          <View style={{ backgroundColor: AppColors.primaryColor, borderRadius: 90, marginRight: 5 }}>
+            <AppPressableIcon onPress={() => navigation.goBack()} name={"arrow-ios-back-outline"} color={AppColors.white} size={32} />
+          </View>
+          <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 16, lineHeight: 27, color: AppColors.black }}>Lianes compatibles</AppText>
         </View>
         <View style={styles.headerSubContent}>
           <AppText
@@ -42,16 +42,16 @@ export const ListGroupScreen = () => {
               fontWeight: "bold",
               fontSize: 14,
               lineHeight: 27,
-              color: AppColors.white
-            }}>{`${from.label} ➔ ${to.label}`}</AppText>
+              color: AppColors.black
+            }}>{`${from.city} ➔ ${to.city}`}</AppText>
           <AppText
             style={{
               paddingLeft: 15,
               fontWeight: "400",
               fontSize: 12,
               lineHeight: 27,
-              color: AppColors.white
-            }}>{`${daysReccurence} ${localeTime}`}</AppText>
+              color: AppColors.black
+            }}>{`${daysReccurence}`}</AppText>
         </View>
       </View>
       <View style={styles.membersContainer}>
@@ -90,7 +90,7 @@ const GroupItem = ({ group, onPress }: GroupItemProps) => (
 
 const styles = StyleSheet.create({
   mainContainer: {
-    backgroundColor: AppColors.lightGrayBackground,
+    backgroundColor: AppColors.grayBackground,
     justifyContent: "flex-start",
     flex: 1,
     height: "100%"
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     paddingHorizontal: 20,
-    backgroundColor: AppColors.primaryColor,
+    backgroundColor: AppColors.lightGrayBackground,
     paddingVertical: 2,
     alignItems: "center",
     justifyContent: "space-between"

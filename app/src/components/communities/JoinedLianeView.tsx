@@ -27,16 +27,3 @@ export const JoinedLianeView = ({ liane }: GroupsViewProps) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  notificationDotContainer: {
-    justifyContent: "center",
-    alignItems: "center"
-  },
-  notificationDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 6,
-    backgroundColor: AppColors.orange
-  }
-});

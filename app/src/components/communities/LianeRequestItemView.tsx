@@ -11,6 +11,8 @@ import { AppLogger } from "@/api/logger";
 import { extractDaysOnly, extractWaypointFromTo } from "@/util/hooks/lianeRequest";
 import { DetachedLianeItem } from "@/components/communities/DetachedLianeItem.tsx";
 import { useAppNavigation } from "@/components/context/routing.ts";
+import { AppIcon } from "@/components/base/AppIcon.tsx";
+import App from "@/App.tsx";
 
 type LianeRequestItemProps = {
   item: CoLianeMatch;
@@ -79,6 +81,9 @@ export const LianeRequestItem = ({ item, onRefresh, unreadLianes }: LianeRequest
                   borderWidth: 1,
                   borderColor: AppColors.grayBackground
                 }}>
+                <View style={{ position: "absolute", top: 10, right: 10 }}>
+                  <AppIcon name={"edit-2-outline"} color={AppColors.darkGray} size={22} />
+                </View>
                 <View style={{ padding: 10 }}>
                   <AppText
                     style={{
@@ -98,7 +103,7 @@ export const LianeRequestItem = ({ item, onRefresh, unreadLianes }: LianeRequest
                       lineHeight: 27,
                       color: "black"
                     }}>
-                    {`${from.label}`}
+                    {`${from.city}`}
                   </AppText>
                   <AppText
                     style={{
@@ -108,7 +113,7 @@ export const LianeRequestItem = ({ item, onRefresh, unreadLianes }: LianeRequest
                       lineHeight: 27,
                       color: "black"
                     }}>
-                    {`${to.label}`}
+                    {`${to.city}`}
                   </AppText>
                   <AppText
                     style={{
