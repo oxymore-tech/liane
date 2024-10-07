@@ -22,7 +22,7 @@ export const LianeMapDetailScreen = () => {
 
   const insets = useSafeAreaInsets();
   const [error, setError] = useState<Error | undefined>(undefined);
-  const { to, from } = useMemo(() => extractWaypointFromTo(lianeRequest?.wayPoints), [lianeRequest.wayPoints]);
+  //const { to, from } = useMemo(() => extractWaypointFromTo(lianeRequest?.wayPoints), [lianeRequest.wayPoints]);
   const daysReccurence = extractDays(lianeRequest?.weekDays);
   const appMapRef = useRef<AppMapViewController>(null);
 
@@ -69,7 +69,7 @@ export const LianeMapDetailScreen = () => {
                   color: AppColors.black,
                   paddingLeft: 10,
                   marginTop: 30
-                }}>{`${from.city} => ${to.city}`}</AppText>
+                }}>{`Liane:`}</AppText>
               <AppText
                 style={{
                   paddingLeft: 15,
