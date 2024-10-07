@@ -5,7 +5,7 @@ export const extractDays = (days: DayOfWeekFlag | undefined) => {
     return "";
   }
 
-  const dayNames = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+  const dayNames = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
   const selectedDays = dayNames.filter((_, index) => days[index] === "1");
 
   return selectedDays.join(", ");

@@ -2,7 +2,6 @@ import React, { useCallback, useContext, useMemo } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useQueries, UseQueryResult } from "react-query";
 import { CoLianeMatch, UnauthorizedError } from "@liane/common";
-import { useAppNavigation } from "@/components/context/routing";
 import { AppText } from "@/components/base/AppText";
 import { Center, Column, Row, Space } from "@/components/base/AppLayout";
 import { AppButton } from "@/components/base/AppButton";
@@ -11,35 +10,7 @@ import { LianeListView } from "@/components/communities/LianeListView";
 import { AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppPressableIcon } from "@/components/base/AppPressable";
-import { useObservable } from "@/util/hooks/subscription";
 import { useFocusEffect } from "@react-navigation/native";
-
-const Header = () => {
-  const { navigation } = useAppNavigation();
-  const { services } = useContext(AppContext);
-  const notificationCount = useObservable<number>(services.notification.unreadNotificationCount, 0);
-  const notificationHub = useObservable<string[]>(services.realTimeHub.unreadNotifications, []);
-
-  return (
-    <Row style={{ alignItems: "center" }} spacing={16}>
-      <Space />
-      <View>
-        <AppPressableIcon
-          name={"bell-outline"}
-          color={AppColors.primaryColor}
-          size={32}
-          onPress={() => {
-            navigation.navigate("Notifications");
-          }}
-        />
-        {Math.max(notificationCount, notificationHub.length) > 0 && (
-          <View style={{ backgroundColor: AppColors.primaryColor, borderRadius: 8, height: 12, width: 12, position: "absolute", right: 3, top: 0 }} />
-        )}
-      </View>
-    </Row>
-  );
-};
 
 export const CommunitiesScreen = () => {
   const insets = useSafeAreaInsets();
@@ -98,9 +69,7 @@ export const CommunitiesScreen = () => {
 
   return (
     <Column style={{ backgroundColor: AppColors.lightGrayBackground, height: "100%" }}>
-      <Column style={[styles.headerContainer, { paddingTop: insets.top }]} spacing={16}>
-        <Header />
-      </Column>
+      <Column style={[styles.headerContainer, { paddingTop: insets.top }]} spacing={16} />
       <Column spacing={16} style={styles.container}>
         {data.length === 0 && <NoLiane />}
         {data.length > 0 && <LianeListView data={data} isFetching={isFetching} onRefresh={() => queriesData.forEach(q => q.refetch())} />}

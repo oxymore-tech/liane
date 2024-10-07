@@ -17,3 +17,8 @@ export function extractDaysTimes(request: { weekDays: DayOfWeekFlag; arriveBefor
   const daysReccurence = extractDays(request.weekDays);
   return `${daysReccurence} ${request.arriveBefore.hour}h${request.arriveBefore.minute} -> ${request.returnAfter.hour}h${request.returnAfter.minute}`.trim();
 }
+
+export function extractDaysOnly(request: { weekDays: DayOfWeekFlag; arriveBefore: TimeOnly; returnAfter: TimeOnly }): string {
+  const daysReccurence = extractDays(request.weekDays);
+  return `${daysReccurence}`.trim();
+}
