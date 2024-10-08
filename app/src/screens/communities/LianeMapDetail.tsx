@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useContext, useMemo, useRef, useState } from "react";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Center } from "@/components/base/AppLayout";
@@ -7,24 +7,39 @@ import { useAppNavigation } from "@/components/context/routing";
 import { AppPressableIcon } from "@/components/base/AppPressable";
 import { AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
 import { extractDays } from "@/util/hooks/days";
-import { extractWaypointFromTo } from "@/util/hooks/lianeRequest.ts";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton.tsx";
-import { HomeMap } from "@/screens/home/HomeMap.tsx";
 import { AppLogger } from "@/api/logger.ts";
-import { SearchModal } from "@/screens/home/HomeHeader.tsx";
-import { getBoundingBox } from "@liane/common";
 import { AppMapViewController } from "@/components/map/AppMapView.tsx";
+import { AppContext } from "@/components/context/ContextProvider.tsx";
+import { DisplayDays } from "@/components/communities/displayDaysView.tsx";
+import { AppIcon } from "@/components/base/AppIcon.tsx";
+import { extractWaypointFromTo } from "@/util/hooks/lianeRequest.ts";
+import { DisplayWayPoints } from "@/components/communities/displayWaypointsView.tsx";
 
 export const LianeMapDetailScreen = () => {
   const { navigation, route } = useAppNavigation<"LianeMapDetail">();
-  const groups = route.params.group;
+  const group = route.params.group;
   const lianeRequest = route.params.request;
+  const { services } = useContext(AppContext);
 
   const insets = useSafeAreaInsets();
   const [error, setError] = useState<Error | undefined>(undefined);
-  //const { to, from } = useMemo(() => extractWaypointFromTo(lianeRequest?.wayPoints), [lianeRequest.wayPoints]);
   const daysReccurence = extractDays(lianeRequest?.weekDays);
   const appMapRef = useRef<AppMapViewController>(null);
+
+  const joinLiane = async () => {
+    if (lianeRequest && lianeRequest.id) {
+      try {
+        const result = await services.community.joinRequest(lianeRequest.id, group.liane);
+        AppLogger.debug("COMMUNITIES", "Demande de rejoindre une liane avec succès", result);
+        navigation.navigate("Communities");
+      } catch (error) {
+        AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de la demande de rejoindre d'une liane", error);
+      }
+    } else {
+      AppLogger.debug("COMMUNITIES", "Pas de lianeRequest ID lors de la demande de rejoindre", lianeRequest);
+    }
+  };
 
   return (
     <View style={styles.mainContainer}>
@@ -40,7 +55,7 @@ export const LianeMapDetailScreen = () => {
           </View>
         </View>
         <View style={{ flex: 1, flexDirection: "column", alignItems: "flex-end", justifyContent: "space-between", height: "100%", width: "100%" }}>
-          <View style={{ height: "50%", backgroundColor: AppColors.darkGray, width: "100%" }}>
+          <View style={{ height: "30%", backgroundColor: AppColors.darkGray, width: "100%" }}>
             <AppText
               style={{
                 fontWeight: "bold",
@@ -49,35 +64,41 @@ export const LianeMapDetailScreen = () => {
                 color: AppColors.black
               }}>{`Map`}</AppText>
           </View>
-          <View style={{ width: "100%", height: "100%" }}>
+          <View style={{ width: "100%", height: "100%", backgroundColor: AppColors.white }}>
             <View style={{ paddingTop: 20 }}>
               <View style={{ marginHorizontal: "20%" }}>
                 <AppRoundedButton
                   color={defaultTextColor(AppColors.primaryColor)}
-                  //onPress={requestJoin}
-                  onPress={() => null}
+                  onPress={joinLiane}
                   backgroundColor={AppColors.primaryColor}
                   text={"Rejoindre cette liane"}
                 />
               </View>
+              <DisplayDays days={lianeRequest.weekDays} />
+              <DisplayWayPoints wayPoints={lianeRequest.wayPoints} endTime={lianeRequest.arriveBefore} />
 
-              <AppText
-                style={{
-                  fontWeight: "bold",
-                  fontSize: 14,
-                  lineHeight: 27,
-                  color: AppColors.black,
-                  paddingLeft: 10,
-                  marginTop: 30
-                }}>{`Liane:`}</AppText>
-              <AppText
-                style={{
-                  paddingLeft: 15,
-                  fontWeight: "400",
-                  fontSize: 12,
-                  lineHeight: 27,
-                  color: AppColors.black
-                }}>{`${daysReccurence}`}</AppText>
+              <View style={{ width: "100%", flexDirection: "row", alignItems: "center", paddingLeft: 30, marginTop: 15 }}>
+                <AppIcon name={"checkmark-square-2-outline"} color={AppColors.black} size={32} />
+                <AppText
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: 14,
+                    lineHeight: 32,
+                    color: AppColors.black
+                  }}>{`Aller - retour`}</AppText>
+              </View>
+              <DisplayWayPoints wayPoints={lianeRequest.wayPoints} inverseTravel startTime={lianeRequest.returnAfter} />
+
+              <View style={{ width: "100%", paddingLeft: 30 }}>
+                <AppText
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: 14,
+                    lineHeight: 27,
+                    color: AppColors.black,
+                    marginTop: 30
+                  }}>{`5€ Prix du trajet aller`}</AppText>
+              </View>
             </View>
           </View>
         </View>
@@ -92,46 +113,5 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     flex: 1,
     height: "100%"
-  },
-  errorText: {
-    color: ContextualColors.redAlert.text
-  },
-  header: {
-    backgroundColor: AppColors.white,
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0
-  },
-  headerContent: {
-    flex: 1,
-    flexDirection: "row",
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    alignItems: "center"
-  },
-  headerSubContent: {
-    flex: 1,
-    flexDirection: "row",
-    paddingHorizontal: 20,
-    backgroundColor: AppColors.lightGrayBackground,
-    paddingVertical: 2,
-    alignItems: "center",
-    justifyContent: "space-between"
-  },
-  membersContainer: {
-    marginTop: 170,
-    height: "100%"
-  },
-  memberContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 10,
-    marginHorizontal: 16,
-    marginBottom: 10,
-    borderRadius: 8,
-    paddingLeft: 15,
-    paddingVertical: 10,
-    backgroundColor: AppColors.white
   }
 });
