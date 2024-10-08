@@ -9,7 +9,6 @@ namespace Liane.Api.Util;
 
 public static class EnumerableExtensions
 {
-  
   public static (IEnumerable<T>, IEnumerable<T>) Split<T>(this IEnumerable<T> input, Func<T, bool> predicate)
   {
     var left = new List<T>();
@@ -29,7 +28,7 @@ public static class EnumerableExtensions
 
     return (left, right);
   }
-  
+
   public static IEnumerable<T> TakeUntil<T>(this IEnumerable<T> input, T until) where T : notnull
   {
     bool found;
@@ -66,6 +65,22 @@ public static class EnumerableExtensions
     return enumerable.Select(transformer)
       .Where(e => e is not null)
       .Select(e => e!);
+  }
+
+  public static IEnumerable<TOut> FilterSelectMany<T, TOut>(this IEnumerable<T> enumerable, Func<T, IEnumerable<TOut?>> transformer)
+    where TOut : notnull
+  {
+    return enumerable.SelectMany(transformer)
+      .Where(e => e is not null)
+      .Select(e => e!);
+  }
+
+  public static IEnumerable<TOut> FilterSelectMany<T, TOut>(this IEnumerable<T> enumerable, Func<T, IEnumerable<TOut?>> transformer)
+    where TOut : struct
+  {
+    return enumerable.SelectMany(transformer)
+      .Where(e => e is not null)
+      .Select(e => e!.Value);
   }
 
   public static IEnumerable<TOut> FilterSelect<T, TOut>(this IEnumerable<T> enumerable, Func<T, TOut?> transformer)
