@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using GeoJSON.Text.Feature;
+using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Pagination;
 using Liane.Service.Internal.Util;
@@ -50,12 +51,12 @@ public sealed class RallyingPointController : ControllerBase
   {
     await rallyingPointService.Update(id, rallyingPoint);
   }
-  
+
   [HttpGet("{id}/stats")]
   [RequiresAdminAuth]
   public Task<RallyingPointStats> GetStats([FromRoute] string id)
   {
-   return rallyingPointService.GetStats(id);
+    return rallyingPointService.GetStats(id);
   }
 
 
@@ -82,7 +83,7 @@ public sealed class RallyingPointController : ControllerBase
   [HttpGet("snap")]
   public async Task<RallyingPoint?> Snap([FromQuery] double lat, [FromQuery] double lng)
   {
-    return await rallyingPointService.Snap(new(lat, lng), IRallyingPointService.MaxRadius);
+    return await rallyingPointService.Snap(new  LatLng(lat, lng), IRallyingPointService.MaxRadius);
   }
 
   [HttpGet("export")]

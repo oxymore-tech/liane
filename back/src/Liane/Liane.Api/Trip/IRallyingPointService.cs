@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Threading.Tasks;
 using GeoJSON.Text.Feature;
@@ -15,6 +16,8 @@ public interface IRallyingPointService : ICrudService<RallyingPoint>
   const int MaxRadius = 50_000;
 
   Task<PaginatedResponse<RallyingPoint>> List(RallyingPointFilter rallyingPointFilter);
+
+  Task<ImmutableDictionary<LatLng, RallyingPoint>> Snap(ImmutableHashSet<LatLng> positions, int radiusInMeters = 10000);
 
   Task Insert(IEnumerable<RallyingPoint> rallyingPoints, bool clearAll = false);
 

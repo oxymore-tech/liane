@@ -214,7 +214,6 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
     }
   }
 
-
   private async Task InsertMemberLocation(LianeTracker tracker, Ref<Api.Auth.User> user, MemberLocationSample data)
   {
     tracker.InsertMemberLocation(user, data);

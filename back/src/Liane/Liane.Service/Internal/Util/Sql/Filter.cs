@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
 using Liane.Api.Routing;
+using Liane.Service.Internal.Util.Geo;
 
 namespace Liane.Service.Internal.Util.Sql;
 
@@ -46,6 +47,12 @@ public abstract record Filter<T>
     return new NearFilter(distance, radius);
   }
 
+  public static Filter<T> Within(Expression<Func<T, LatLng?>> func, BoundingBox boundingBox)
+  {
+    var field = FieldDefinition<T>.From(func);
+    return new WithinFilter(field, boundingBox);
+  }
+
   public override string ToString()
   {
     return ToSql(new NamedParams());
@@ -85,6 +92,14 @@ public abstract record Filter<T>
     internal override string ToSql(NamedParams namedParams)
     {
       return $"{Distance.ToSql(namedParams)} <= {namedParams.Add(Radius)}";
+    }
+  }
+
+  private sealed record WithinFilter(FieldDefinition<T> Field, BoundingBox BoudingBox) : Filter<T>
+  {
+    internal override string ToSql(NamedParams namedParams)
+    {
+      return $"ST_Contains({namedParams.Add(BoudingBox.AsPolygon())}, {Field.ToSql(namedParams)})";
     }
   }
 

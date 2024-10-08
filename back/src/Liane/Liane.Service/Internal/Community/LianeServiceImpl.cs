@@ -4,7 +4,6 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
-using GeoJSON.Text.Geometry;
 using Liane.Api.Community;
 using Liane.Api.Event;
 using Liane.Api.Routing;
@@ -17,6 +16,7 @@ using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Postgis.Db;
 using Liane.Service.Internal.Util;
 using Liane.Service.Internal.Util.Sql;
+using NetTopologySuite.Geometries;
 using UuidExtensions;
 using LianeMatch = Liane.Api.Community.LianeMatch;
 using LianeRequest = Liane.Api.Community.LianeRequest;
@@ -209,8 +209,7 @@ public sealed class LianeServiceImpl(
     var lianeId = alreadyMember?.LianeId ?? foreignId;
     if (alreadyMember is null)
     {
-      var uu = await connection.MergeAsync(new LianeMemberDb(lianeId, lianeId, DateTime.UtcNow, DateTime.UtcNow, null), tx);
-      Console.WriteLine("coco di", uu);
+      await connection.MergeAsync(new LianeMemberDb(lianeId, lianeId, DateTime.UtcNow, DateTime.UtcNow, null), tx);
     }
 
     var updated = await connection.UpdateAsync(Query.Update<LianeMemberDb>()

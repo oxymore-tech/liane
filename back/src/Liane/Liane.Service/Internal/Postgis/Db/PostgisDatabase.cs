@@ -16,6 +16,7 @@ using Liane.Service.Internal.Postgis.Db.Copy;
 using Liane.Service.Internal.Postgis.Db.Handler;
 using Liane.Service.Internal.Util.Sql;
 using Microsoft.Extensions.Logging;
+using NetTopologySuite.Geometries;
 using Npgsql;
 
 namespace Liane.Service.Internal.Postgis.Db;
@@ -30,9 +31,12 @@ public sealed class PostgisDatabase : IDisposable
   {
     this.settings = settings;
     SqlMapper.AddTypeHandler(new DayOfWeekFlagTypeHandler());
-    SqlMapper.AddTypeHandler(new LineStringTypeHandler());
-    SqlMapper.AddTypeHandler(new PointTypeHandler());
+    SqlMapper.AddTypeHandler(new GeometryTypeMapper<LineString>());
+    SqlMapper.AddTypeHandler(new GeometryTypeMapper<Point>());
+    SqlMapper.AddTypeHandler(new GeometryTypeMapper<Polygon>());
     SqlMapper.AddTypeHandler(new LatLngTypeHandler());
+    SqlMapper.AddTypeHandler(typeof(ImmutableList<LatLng>), new LatLngEnumerableTypeHandler(e => e.ToImmutableList()));
+    SqlMapper.AddTypeHandler(typeof(ImmutableHashSet<LatLng>), new LatLngEnumerableTypeHandler(e => e.ToImmutableHashSet()));
     SqlMapper.AddTypeHandler(new TimeOnlyHandler());
     SqlMapper.AddTypeHandler(new RefTypeHandler<LianeRequest>());
     SqlMapper.AddTypeHandler(new RefTypeHandler<Api.Community.Liane>());
@@ -43,7 +47,7 @@ public sealed class PostgisDatabase : IDisposable
     AddCopyTypeMapper<LatLng>(new LatLngCopyTypeMapper());
     var connectionString = NewConnectionString();
     var builder = new NpgsqlDataSourceBuilder(connectionString);
-    builder.UseGeoJson();
+    builder.UseNetTopologySuite();
     builder.UseLoggerFactory(loggerFactory);
     dataSource = builder.Build();
   }

@@ -1,10 +1,10 @@
 using System.Data;
 using System.Threading.Tasks;
 using Dapper;
-using GeoJSON.Text.Geometry;
 using Liane.Api.Routing;
 using Liane.Service.Internal.Postgis.Db;
 using Liane.Service.Internal.Util.Sql;
+using NetTopologySuite.Geometries;
 
 namespace Liane.Service.Internal.Postgis;
 

@@ -28,18 +28,21 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
       return null;
     }
 
-    return await ToMatch(rawMatches);
+    var snapedPoints = await rallyingPointService.Snap(rawMatches.FilterSelectMany<LianeRawMatch, LatLng>(r => [r.Deposit, r.Pickup, r.DepositReverse, r.PickupReverse]).ToImmutableHashSet());
+
+    return await ToMatch(rawMatches, snapedPoints);
   }
 
   public async Task<ImmutableDictionary<Guid, ImmutableList<Match>>> FindMatches(IDbConnection connection, IEnumerable<Guid> linkedTo)
   {
     var userId = currentContext.CurrentUser().Id;
     var rawMatches = await FindRawMatches(connection, userId, linkedTo);
+    var snapedPoints = await rallyingPointService.Snap(rawMatches.FilterSelectMany<LianeRawMatch, LatLng>(r => [r.Deposit, r.Pickup, r.DepositReverse, r.PickupReverse]).ToImmutableHashSet());
     return await rawMatches
       .GroupByAsync(m => m.From, async g =>
       {
         var matches = await g.GroupBy(m => m.LinkedTo ?? m.LianeRequest)
-          .FilterSelectAsync(r => ToMatch(r.ToImmutableList()));
+          .FilterSelectAsync(r => ToMatch(r.ToImmutableList(), snapedPoints));
         return matches
           .OrderByDescending(m => m.Score)
           .ThenByDescending(m => m.Matches.Count)
@@ -66,20 +69,15 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
                                                                    arrive_before,
                                                                    return_after,
                                                                    (SELECT count(*) FROM liane_member c WHERE c.liane_id = linked_to_b) AS total_members,
-                                                                   way_points,
                                                                    week_days,
                                                                    
                                                                    st_length(intersection) / a_length AS score,
                                                                    st_startpoint(intersection) AS pickup,
                                                                    st_endpoint(intersection) AS deposit,
-                                                                   nearest_rp(st_startpoint(intersection)) AS pickup_point,
-                                                                   nearest_rp(st_endpoint(intersection)) AS deposit_point,
                                                                    
                                                                    st_length(intersection_reverse) / a_length_reverse AS score_reverse,
                                                                    st_startpoint(intersection_reverse) AS pickup_reverse,
                                                                    st_endpoint(intersection_reverse) AS deposit_reverse,
-                                                                   nearest_rp(st_startpoint(intersection_reverse)) AS pickup_point_reverse,
-                                                                   nearest_rp(st_endpoint(intersection_reverse)) AS deposit_point_reverse,
                                                                    
                                                                    linked_to_b AS linked_to
                                                             FROM (SELECT lr_a.id AS "from",
@@ -87,7 +85,6 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
                                                                          lr_b.arrive_before AS arrive_before,
                                                                          lr_b.return_after AS return_after,
                                                                          
-                                                                         lr_b.way_points AS way_points,
                                                                          matching_weekdays(lr_a.week_days, lr_b.week_days) AS week_days,
                                                                          
                                                                          lm_b.liane_id AS linked_to_b,
@@ -124,12 +121,12 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     return result.ToImmutableList();
   }
 
-  private async Task<Match?> ToMatch(ImmutableList<LianeRawMatch> rawMatches)
+  private async Task<Match?> ToMatch(ImmutableList<LianeRawMatch> rawMatches, ImmutableDictionary<LatLng, RallyingPoint> snapedPoints)
   {
     var first = rawMatches.First();
     var liane = (Ref<Api.Community.Liane>)first.LinkedTo ?? first.LianeRequest;
 
-    var matchingPoints = rawMatches.Select(GetBestMatch)
+    var matchingPoints = rawMatches.Select(m => GetBestMatch(m, snapedPoints))
       .Where(m => m is not null)
       .OrderByDescending(m => m!.Value.Score)
       .FirstOrDefault();
@@ -159,19 +156,24 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     );
   }
 
-  private (Ref<RallyingPoint> Pickup, Ref<RallyingPoint> Deposit, float Score, bool Reverse)? GetBestMatch(LianeRawMatch match)
+  private (Ref<RallyingPoint> Pickup, Ref<RallyingPoint> Deposit, float Score, bool Reverse)? GetBestMatch(LianeRawMatch match, ImmutableDictionary<LatLng, RallyingPoint> snapedPoints)
   {
-    if (match.PickupPoint is null || match.DepositPoint is null)
+    var pickup = match.Pickup.GetOrDefault(snapedPoints.GetValueOrDefault);
+    var deposit = match.Deposit.GetOrDefault(snapedPoints.GetValueOrDefault);
+    var pickupReverse = match.PickupReverse.GetOrDefault(snapedPoints.GetValueOrDefault);
+    var depositReverse = match.DepositReverse.GetOrDefault(snapedPoints.GetValueOrDefault);
+
+    if (pickup is null || deposit is null)
     {
-      if (match.PickupPointReverse is null || match.DepositPointReverse is null)
+      if (pickupReverse is null || depositReverse is null)
       {
         return null;
       }
 
-      return (match.PickupPointReverse, match.DepositPointReverse, match.ScoreReverse, true);
+      return (pickupReverse, depositReverse, match.ScoreReverse, true);
     }
 
-    return (match.PickupPoint, match.DepositPoint, match.Score, false);
+    return (pickup, deposit, match.Score, false);
   }
 }
 
@@ -181,17 +183,12 @@ internal sealed record LianeRawMatch(
   TimeOnly ArriveBefore,
   TimeOnly ReturnAfter,
   int TotalMembers,
-  string[] WayPoints,
   DayOfWeekFlag WeekDays,
   float Score,
-  LatLng Pickup,
-  LatLng Deposit,
-  Ref<RallyingPoint>? PickupPoint,
-  Ref<RallyingPoint>? DepositPoint,
+  LatLng? Pickup,
+  LatLng? Deposit,
   float ScoreReverse,
-  LatLng PickupReverse,
-  LatLng DepositReverse,
-  Ref<RallyingPoint>? PickupPointReverse,
-  Ref<RallyingPoint>? DepositPointReverse,
+  LatLng? PickupReverse,
+  LatLng? DepositReverse,
   Guid? LinkedTo
 );

@@ -99,7 +99,7 @@ public sealed class LianeTracker
 
   public TrackedMemberLocation? GetCurrentMemberLocation(Ref<Api.Auth.User> member)
   {
-    currentLocationMap.TryGetValue(member.Id, out var lastLocations);
+    var lastLocations = currentLocationMap.GetValueOrDefault(member.Id);
 
     var currentLocation = lastLocations?.Peek();
     if (currentLocation is null) return null;

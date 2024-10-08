@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
-using GeoJSON.Text.Geometry;
 using Liane.Api.Routing;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Postgis.Db;
+using NetTopologySuite.Geometries;
 
 namespace Liane.Service.Internal.Postgis;
 
@@ -13,7 +13,7 @@ public sealed record BatchGeometryUpdateInput(HashSet<string> Lianes, HashSet<(s
 
 public sealed record BatchGeometryUpdate(List<SegmentDb> Segments, List<LianeWaypointDb> WayPoints);
 
-public interface ITripSession: IAsyncDisposable
+public interface ITripSession : IAsyncDisposable
 {
   public Task<(double fraction, LatLng nearestPoint, double distance)> LocateOnRoute(LatLng coordinate);
 }

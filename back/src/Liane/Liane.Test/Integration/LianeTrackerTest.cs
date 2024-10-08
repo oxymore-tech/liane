@@ -67,7 +67,7 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
       var point = (f.Geometry as Point)!;
       var time = f.Properties["timestamp"].ToString()!;
       var user = f.Properties["user"].ToString()!;
-      return (timestamp: DateTime.Parse(time), coordinate: new LatLng(point.Coordinates.Latitude, point.Coordinates.Longitude), user: user);
+      return (timestamp: DateTime.Parse(time), coordinate: new LatLng(point.Coordinates.Latitude, point.Coordinates.Longitude), user);
     });
     foreach (var p in pings.OrderBy(p => p.timestamp))
     {
@@ -142,8 +142,8 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
     var bson = BsonDocument.Parse(AssertExtensions.ReadTestResource("Geolocation/liane-pings-case-1.json"));
     var lianeDb = BsonSerializer.Deserialize<LianeDb>(bson);
     var userIds = lianeDb.Members.Select((m, i) => (m, i)).ToDictionary(m => m.m.User, m => Fakers.FakeDbUsers[m.i].Id);
-    lianeDb = lianeDb with { Members = lianeDb.Members.Select((m, i) => m with { User = userIds[m.User] }).ToImmutableList() };
-    await Db.GetCollection<LianeDb>().InsertOneAsync(lianeDb);
+    lianeDb = lianeDb with { Members = lianeDb.Members.Select(m => m with { User = userIds[m.User] }).ToImmutableList() };
+    await mongo.GetCollection<LianeDb>().InsertOneAsync(lianeDb);
     var liane = await tripService.Get(lianeDb.Id);
     var tracker = await lianeTrackerService.Start(liane, () => { finished = true; });
     var pings = lianeDb.Pings.OrderBy(p => p.At).Select(p => p with { User = userIds[p.User] }).ToImmutableList();
@@ -167,7 +167,7 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
 
     // check that next point is Quezac (the car is going towards Quezac)
     var actual = tracker.GetTrackingInfo();
-    Assert.AreEqual("Quezac_Parking", actual.Car.NextPoint.Id);
+    Assert.AreEqual("Quezac_Parking", actual.Car?.NextPoint.Id);
   }
 
   [Test]
@@ -178,8 +178,8 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
 
     // check that next point is Quezac (the car is going towards Quezac)
     var actual = tracker.GetTrackingInfo();
-    Assert.AreEqual("Quezac_Parking", actual.Car.NextPoint.Id);
-    Assert.Less(Math.Abs(actual.Car.Delay - 562), 10); // Check difference with expected value is less than 10 seconds
+    Assert.AreEqual("Quezac_Parking", actual.Car?.NextPoint.Id);
+    Assert.Less(Math.Abs(actual.Car!.Delay - 562), 10); // Check difference with expected value is less than 10 seconds
     Assert.AreEqual(DateTime.Parse("2023-12-05T07:37:34.113Z").ToUniversalTime(), actual.Car.At);
   }
 
@@ -192,8 +192,8 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
     var actual = tracker.GetTrackingInfo();
 
     // check that next point is Mende 
-    Assert.AreEqual("Mende", actual.Car.NextPoint.Id);
-    Assert.Less(Math.Abs(actual.Car.Delay - 1450), 10); // Check difference with expected value is less than 10 seconds
+    Assert.AreEqual("Mende", actual.Car?.NextPoint.Id);
+    Assert.Less(Math.Abs(actual.Car!.Delay - 1450), 10); // Check difference with expected value is less than 10 seconds
   }
 
   [Test]
@@ -203,7 +203,7 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
 
     var actual = tracker.GetTrackingInfo();
     // Check who's in the car
-    CollectionAssert.AreEquivalent(ImmutableList.Create(tracker.Trip.Driver.User.Id), actual.Car.Members.Select(m => m.Id));
+    CollectionAssert.AreEquivalent(ImmutableList.Create(tracker.Trip.Driver.User.Id), actual.Car!.Members.Select(m => m.Id));
   }
 
   [Test]
@@ -213,7 +213,7 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
 
     var actual = tracker.GetTrackingInfo();
     // Check who's in the car
-    CollectionAssert.AreEquivalent(ImmutableList.Create(tracker.Trip.Driver.User.Id), actual.Car.Members.Select(m => m.Id));
+    CollectionAssert.AreEquivalent(ImmutableList.Create(tracker.Trip.Driver.User.Id), actual.Car!.Members.Select(m => m.Id));
     // Check we do have location for the other member
     Assert.AreEqual(1, actual.OtherMembers.Count);
     Assert.AreNotEqual(tracker.Trip.Driver.User.Id, actual.OtherMembers.Keys.First());
@@ -226,7 +226,7 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
 
     var actual = tracker.GetTrackingInfo();
     // Check who's in the car
-    CollectionAssert.AreEquivalent(tracker.Trip.Members.Select(m => m.User.Id), actual.Car.Members.Select(m => m.Id));
+    CollectionAssert.AreEquivalent(tracker.Trip.Members.Select(m => m.User.Id), actual.Car!.Members.Select(m => m.Id));
     // Check car's current location
     var expectedLocation = tracker.GetCurrentMemberLocation(
       tracker.Trip.Members.First(m => m.User != tracker.Trip.Driver.User
@@ -245,7 +245,7 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
       Members = lianeDb.Members.Select(m => m with { User = userMapping[m.User] }).ToImmutableList(),
       Pings = lianeDb.Pings.Select(p => p with { User = userMapping[p.User] }).ToImmutableList()
     };
-    await Db.GetCollection<LianeDb>().InsertOneAsync(lianeDb);
+    await mongo.GetCollection<LianeDb>().InsertOneAsync(lianeDb);
     var liane = await tripService.Get(lianeDb.Id);
     var tracker = await lianeTrackerService.Start(liane);
     var pings = lianeDb.Pings
@@ -323,7 +323,7 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
   [Test]
   public async Task Trip_qui_se_trouve_deja_a_destination()
   {
-    var (tracker, userMapping) = await SetupTrackerAt("Geolocation/Trip_qui_se_trouve_deja_a_destination.json");
+    var (tracker, _) = await SetupTrackerAt("Geolocation/Trip_qui_se_trouve_deja_a_destination.json");
 
     // Départ : Roques
     // Arrivée : LivingObjects
@@ -340,13 +340,13 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
   }
 
 
-  private IMongoDatabase Db = null!;
+  private IMongoDatabase mongo = null!;
   private ITripService tripService = null!;
   private ILianeTrackerService lianeTrackerService = null!;
 
   protected override void Setup(IMongoDatabase db)
   {
-    Db = db;
+    mongo = db;
     tripService = ServiceProvider.GetRequiredService<ITripService>();
     lianeTrackerService = ServiceProvider.GetRequiredService<ILianeTrackerService>();
   }

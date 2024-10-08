@@ -13,6 +13,7 @@ using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Postgis.Db;
+using Liane.Service.Internal.Util.Geo;
 using Liane.Service.Internal.Util.Sql;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -52,6 +53,23 @@ public sealed class RallyingPointServiceImpl(IOsrmService osrmService, PostgisDa
       .Where(Filter<RallyingPoint>.Where(r => r.Id, ComparisonOperator.In, references));
     var results = await connection.QueryAsync(query);
     return results.ToImmutableDictionary(r => r.Id!);
+  }
+
+  public async Task<ImmutableDictionary<LatLng, RallyingPoint>> Snap(ImmutableHashSet<LatLng> coordinates, int distanceInMeters = 10000)
+  {
+    using var connection = db.NewConnection();
+
+    var boundingBox = BoundingBox.From(coordinates).Enlarge(distanceInMeters);
+
+    var query = Query.Select<RallyingPoint>()
+      .Where(Filter<RallyingPoint>.Within(r => r.Location, boundingBox));
+    var results = await connection.QueryAsync(query);
+    foreach (var rallyingPoint in results)
+    {
+      pointCache.Set(rallyingPoint.Id!, rallyingPoint);
+    }
+
+    return RallyingPointExtensions.SnapToClosestPoints(coordinates, results);
   }
 
   private static Filter<RallyingPoint> GetFilter(RallyingPointFilter rallyingPointFilter)
@@ -166,7 +184,7 @@ public sealed class RallyingPointServiceImpl(IOsrmService osrmService, PostgisDa
   {
     using var connection = db.NewConnection();
     await connection.UpdateAsync(new UpdateQuery<RallyingPoint>(
-      Filter<RallyingPoint>.Where(r => r.Id, ComparisonOperator.In, points))
+        Filter<RallyingPoint>.Where(r => r.Id, ComparisonOperator.In, points))
       .Set(r => r.IsActive, active)
     );
   }
@@ -234,6 +252,7 @@ public sealed class RallyingPointServiceImpl(IOsrmService osrmService, PostgisDa
         , transaction);
     }
   }
+
   public async Task Insert(IEnumerable<RallyingPoint> rallyingPoints, bool clearAll = false)
   {
     using var connection = db.NewConnection();

@@ -76,4 +76,5 @@ public abstract record FieldDefinition<T>
     internal override string RawSql => ToSql(null!);
     internal override Type ColumnType => typeof(int);
   }
+  
 }
