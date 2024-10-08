@@ -44,26 +44,6 @@ export const LianeRequestItem = ({ item, onRefresh, unreadLianes }: LianeRequest
     }
   };
 
-  /*  const switchLianeRequestStatus = async () => {
-    const lianeRequest = item.lianeRequest;
-
-    if (lianeRequest && lianeRequest.id) {
-      lianeRequest.isEnabled = !lianeRequest.isEnabled;
-
-      try {
-        const updatedLianeRequest = await services.community.update(lianeRequest.id, lianeRequest);
-        if (onRefresh) {
-          onRefresh();
-        }
-        AppLogger.debug("COMMUNITIES", "Changement du status d'une liane fait avec succès", updatedLianeRequest);
-      } catch (error) {
-        AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors du changement du status d'une liane", error);
-      }
-    } else {
-      AppLogger.debug("COMMUNITIES", "Pas de lianeRequest lors du changement du status d'une liane", lianeRequest);
-    }
-  };*/
-
   return (
     <Pressable
       style={{ justifyContent: "center", display: "flex", marginRight: 20 }}
