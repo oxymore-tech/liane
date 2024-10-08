@@ -8,7 +8,7 @@ using NpgsqlTypes;
 
 namespace Liane.Service.Internal.Postgis.Db.Handler;
 
-public sealed class EnumerableTypeHandler<TItem, TItemDb>(Func<TItem, TItemDb> format, Func<TItemDb, TItem?> parse, Func<TItem[], object> collect) : SqlMapper.ITypeHandler
+public sealed class EnumerableTypeHandler<TItem, TItemDb>(Func<TItem, TItemDb> format, Func<TItemDb, TItem?> parse, Func<IEnumerable<TItem>, object> collect) : SqlMapper.ITypeHandler
 {
   private static readonly NpgsqlDbType ArrayDbType = typeof(TItemDb) == typeof(string) ? NpgsqlDbType.Varchar : NpgsqlDbType.Integer;
 
@@ -24,7 +24,7 @@ public sealed class EnumerableTypeHandler<TItem, TItemDb>(Func<TItem, TItemDb> f
   {
     return value switch
     {
-      IEnumerable<TItemDb> array => collect(array.Select(parse).Where(o => o is not null).Cast<TItem>().ToArray()),
+      IEnumerable<TItemDb> array => collect(array.Select(parse).Where(o => o is not null).Cast<TItem>()),
       _ => throw new ArgumentOutOfRangeException($"Unable to read from {value.GetType()}")
     };
   }
