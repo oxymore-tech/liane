@@ -9,7 +9,9 @@ using System.Threading.Tasks;
 using Liane.Api.Auth;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson;
@@ -35,10 +37,12 @@ public sealed class AuthServiceImpl : IAuthService
   private readonly SymmetricSecurityKey signinKey;
   private readonly MemoryCache smsCodeCache = new(new MemoryCacheOptions());
   private readonly IMongoDatabase mongo;
+  private readonly IWebHostEnvironment env;
 
-  public AuthServiceImpl(ILogger<AuthServiceImpl> logger, TwilioSettings twilioSettings, AuthSettings authSettings, IMongoDatabase mongo)
+  public AuthServiceImpl(ILogger<AuthServiceImpl> logger, TwilioSettings twilioSettings, AuthSettings authSettings, IMongoDatabase mongo, IWebHostEnvironment env)
   {
     this.mongo = mongo;
+    this.env = env;
     this.logger = logger;
     this.twilioSettings = twilioSettings;
     this.authSettings = authSettings;
@@ -126,7 +130,7 @@ public sealed class AuthServiceImpl : IAuthService
     var phoneNumber = request.Phone.ToPhoneNumber().ToString()!;
     var testAccountPhoneNumber = authSettings.TestAccount?.ToPhoneNumber().ToString();
 
-    if (phoneNumber == testAccountPhoneNumber && request.Code.Equals(authSettings.TestCode))
+    if (env.IsDevelopment() || (phoneNumber == testAccountPhoneNumber && request.Code.Equals(authSettings.TestCode)))
     {
       return (phoneNumber, true);
     }
