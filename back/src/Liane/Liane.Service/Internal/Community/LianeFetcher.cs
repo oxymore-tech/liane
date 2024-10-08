@@ -37,6 +37,11 @@ public sealed class LianeFetcher(LianeRequestFetcher lianeRequestFetcher, IUserS
 
     var lianeRequests = (await lianeRequestFetcher.FetchLianeRequests(connection, lianeFilter, tx))
       .ToImmutableDictionary(r => r.Id!.Value);
+    
+    var foreignLianeRequests = (await lianeRequestFetcher.FetchLianeRequests(connection, lianeMemberDbs.Values.SelectMany(g => g.Select(m =>m.LianeRequestId)).Distinct(), tx))
+      .ToImmutableDictionary(r => r.Id!.Value);
+    
+    Func<Guid, LianeRequest?> lianeRequestsFetcher = id => lianeRequests.GetValueOrDefault(id) ?? foreignLianeRequests.GetValueOrDefault(id);
 
     return (await lianeRequests
         .Values
@@ -48,9 +53,9 @@ public sealed class LianeFetcher(LianeRequestFetcher lianeRequestFetcher, IUserS
 
           var (pendingMembers, members) = g.Split(l => l.JoinedAt == null);
           var lianeMembers = await members
-            .FilterSelectAsync(m => ToLianeMember(lianeRequests, m, m.JoinedAt!.Value));
+            .FilterSelectAsync(m => ToLianeMember(lianeRequestsFetcher, m, m.JoinedAt!.Value));
           var lianePendingMembers = await pendingMembers
-            .FilterSelectAsync(m => ToLianeMember(lianeRequests, m, m.RequestedAt));
+            .FilterSelectAsync(m => ToLianeMember(lianeRequestsFetcher, m, m.RequestedAt));
           return new Api.Community.Liane(
             lianeRequestId,
             lianeMembers.ToImmutableList(),
@@ -60,9 +65,9 @@ public sealed class LianeFetcher(LianeRequestFetcher lianeRequestFetcher, IUserS
       .ToImmutableDictionary(l => l.Id);
   }
 
-  private async Task<LianeMember?> ToLianeMember(ImmutableDictionary<Guid, LianeRequest> lianeRequests, LianeMemberDb m, DateTime joinedAt)
+  private async Task<LianeMember?> ToLianeMember(Func<Guid, LianeRequest?> lianeRequestsFetcher, LianeMemberDb m, DateTime joinedAt)
   {
-    var memberRequest = lianeRequests.GetValueOrDefault(m.LianeRequestId);
+    var memberRequest = lianeRequestsFetcher(m.LianeRequestId);
     if (memberRequest is null)
     {
       return null;
