@@ -35,11 +35,7 @@ public sealed class LianeFetcher(LianeRequestFetcher lianeRequestFetcher, IUserS
       )).GroupBy(m => m.LianeId)
       .ToImmutableDictionary(g => g.Key, g => g.ToImmutableList());
 
-    var lianeRequestFilter = lianeMemberDbs.Values.SelectMany(m => m)
-      .Select(m => m.LianeRequestId)
-      .Distinct();
-
-    var lianeRequests = (await lianeRequestFetcher.FetchLianeRequests(connection, lianeRequestFilter, tx))
+    var lianeRequests = (await lianeRequestFetcher.FetchLianeRequests(connection, lianeFilter, tx))
       .ToImmutableDictionary(r => r.Id!.Value);
 
     return (await lianeRequests
