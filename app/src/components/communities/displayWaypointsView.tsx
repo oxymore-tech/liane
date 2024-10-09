@@ -1,4 +1,4 @@
-import React, { useContext, useMemo } from "react";
+import React, { ReactNode, useContext, useMemo } from "react";
 
 import { Pressable, StyleSheet, View } from "react-native";
 import { CoLianeMatch, DayOfWeekFlag, RallyingPoint, TimeOnly, WayPoint } from "@liane/common";
@@ -26,7 +26,7 @@ export const DisplayWayPoints = ({ wayPoints, inverseTravel = false, startTime, 
 
   // TODO: Manque le calcul du temps de trajet. Manque les icones. Découpage en composants.
 
-  const travelRow = (step: RallyingPoint, time: TimeOnly, icon?: string): Element => {
+  const travelRow = (step: RallyingPoint, time: TimeOnly, icon?: string): ReactNode => {
     return (
       <View
         style={{
@@ -130,6 +130,7 @@ export const DisplayWayPoints = ({ wayPoints, inverseTravel = false, startTime, 
               }}>{`${from.label}`}</AppText>
           </View>
         </View>
+        {startTime ? travelRow(from, startTime, "-") : endTime ? travelRow(from, endTime, "-") : null}
         {steps.map((step, position) => (
           <View
             style={{
