@@ -71,34 +71,12 @@ export const LianeMapDetailScreen = () => {
                   color={defaultTextColor(AppColors.primaryColor)}
                   onPress={joinLiane}
                   backgroundColor={AppColors.primaryColor}
-                  text={"Rejoindre cette liane"}
+                  text={"Rejoindre "}
                 />
               </View>
               <DisplayDays days={lianeRequest.weekDays} />
               <DisplayWayPoints wayPoints={lianeRequest.wayPoints} endTime={lianeRequest.arriveBefore} />
-
-              <View style={{ width: "100%", flexDirection: "row", alignItems: "center", paddingLeft: 30, marginTop: 15 }}>
-                <AppIcon name={"checkmark-square-2-outline"} color={AppColors.black} size={32} />
-                <AppText
-                  style={{
-                    fontWeight: "bold",
-                    fontSize: 14,
-                    lineHeight: 32,
-                    color: AppColors.black
-                  }}>{`Aller - retour`}</AppText>
-              </View>
               <DisplayWayPoints wayPoints={lianeRequest.wayPoints} inverseTravel startTime={lianeRequest.returnAfter} />
-
-              <View style={{ width: "100%", paddingLeft: 30 }}>
-                <AppText
-                  style={{
-                    fontWeight: "bold",
-                    fontSize: 14,
-                    lineHeight: 27,
-                    color: AppColors.black,
-                    marginTop: 30
-                  }}>{`5€ Prix du trajet aller`}</AppText>
-              </View>
             </View>
           </View>
         </View>

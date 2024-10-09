@@ -43,7 +43,7 @@ export const DisplayDays = ({ days }: DisplayDaysProps) => {
           <AppText
             style={{
               fontWeight: "400",
-              fontSize: 20,
+              fontSize: 18,
               lineHeight: 27,
               color: AppColors.white
             }}>{`${DaysOfWeek[position]}`}</AppText>
@@ -57,8 +57,8 @@ const styles = StyleSheet.create({
   daySelected: {
     backgroundColor: AppColors.primaryColor,
     borderRadius: 90,
-    height: 45,
-    width: 45,
+    height: 40,
+    width: 40,
     alignItems: "center",
     justifyContent: "center",
     marginHorizontal: 3
@@ -66,8 +66,8 @@ const styles = StyleSheet.create({
   dayNotSelected: {
     backgroundColor: AppColors.grayBackground,
     borderRadius: 90,
-    height: 45,
-    width: 45,
+    height: 40,
+    width: 40,
     alignItems: "center",
     justifyContent: "center",
     marginHorizontal: 3
