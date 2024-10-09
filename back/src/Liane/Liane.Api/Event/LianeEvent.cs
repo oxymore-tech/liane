@@ -29,6 +29,7 @@ public abstract record LianeEvent
     Ref<RallyingPoint> From,
     DateTime At
   ) : LianeEvent;
+  
   public sealed record MemberAccepted(
     Ref<Trip.Trip> Liane,
     Ref<Auth.User> Member,

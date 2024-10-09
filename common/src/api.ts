@@ -53,8 +53,6 @@ export type FullUser = {
   pushToken?: string;
 } & User;
 
-export type LngLat = [number, number];
-
 export type LatLng = {
   lat: number;
   lng: number;
@@ -109,10 +107,6 @@ export type Liane = Entity & {
   driver: { user: Ref<User>; canDrive: boolean };
   conversation: Ref<ConversationGroup>;
   state: TripStatus;
-  recurrence?: {
-    id: string;
-    days: DayOfWeekFlag;
-  };
 };
 
 export type TripStatus = "NotStarted" | "Finished" | "Started" | "Canceled" | "Archived";
@@ -133,21 +127,6 @@ export type LianeMember = {
   geolocationLevel: GeolocationLevel;
   cancellation: UTCDateTime | undefined | null;
   departure: UTCDateTime | undefined | null;
-};
-
-export type LianeRecurrence = {
-  id: string;
-  createdBy: Ref<User>;
-  createdAt: UTCDateTime;
-  days: DayOfWeekFlag;
-  initialRequest: {
-    to: RallyingPoint;
-    from: RallyingPoint;
-    departureTime: Date;
-    availableSeats: number;
-    returnTime: Date | null | undefined;
-  };
-  active: boolean;
 };
 
 // A date time in ISO 8601 format
@@ -174,10 +153,6 @@ export type ConversationGroup = {
     lastReadAt: UTCDateTime;
   }[];
 } & Identity;
-
-export type TypedMessage = {
-  type: "proposal";
-} & ChatMessage;
 
 export type PaginatedResponse<T> = {
   pageSize: number;
@@ -225,7 +200,6 @@ export type Match = Exact | Compatible;
 
 export type LianeMatch = {
   trip: Liane;
-  //   wayPoints: WayPoint[];
   match: Match;
   returnTime?: UTCDateTime;
   freeSeatsCount: number;
@@ -235,25 +209,6 @@ export const getPoint = (match: LianeMatch, type: "pickup" | "deposit"): Rallyin
   const wp = UnionUtils.isInstanceOf(match.match, "Exact") ? match.trip.wayPoints : match.match.wayPoints;
   return wp.find(p => p.rallyingPoint.id === match.match[type])!.rallyingPoint;
 };
-
-export type NewConversationMessage = {
-  conversationId: string;
-  sender: User;
-  message: ChatMessage;
-};
-
-export type JoinLianeRequestDetailed = {
-  from: RallyingPoint;
-  to: RallyingPoint;
-  targetTrip: Liane;
-  seats: number;
-  takeReturnTrip: boolean;
-  message: string;
-  accepted?: boolean;
-  match: Match;
-  createdBy?: User;
-  createdAt?: UTCDateTime;
-} & Identity;
 
 export type TrackedMemberLocation = {
   member: Ref<User>;

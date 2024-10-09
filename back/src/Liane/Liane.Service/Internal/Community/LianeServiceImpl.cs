@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using Liane.Api.Community;
-using Liane.Api.Event;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util;
@@ -34,8 +33,7 @@ public sealed class LianeServiceImpl(
   LianeRequestFetcher lianeRequestFetcher,
   LianeMatcher matcher,
   IPushService pushService,
-  ITripService tripService,
-  EventDispatcher eventDispatcher) : ILianeService
+  ITripService tripService) : ILianeService
 {
   public async Task<LianeRequest> Create(LianeRequest request)
   {
@@ -274,10 +272,8 @@ public sealed class LianeServiceImpl(
     var (pickup, deposit) = direction == Direction.Outbound
       ? (match.Pickup, match.Deposit)
       : (match.Deposit, match.Pickup);
-    var title = direction == Direction.Outbound
-      ? "Je souhaites rejoindre le trajet"
-      : "Je souhaite rejoindre le trajet retour";
-    await eventDispatcher.Dispatch(new LianeEvent.JoinRequest(query.Trip, pickup, deposit, -1, false, title, query.GeolocationLevel ?? GeolocationLevel.None));
+
+    await tripService.AddMember(trip, new TripMember(userId, pickup, deposit));
   }
 
   private static Direction CheckDirection(ImmutableList<Ref<RallyingPoint>> lianeRequestWayPoints, ImmutableList<WayPoint> tripWayPoints)

@@ -1,16 +1,4 @@
-import {
-  DayOfWeekFlag,
-  Entity,
-  GeolocationLevel,
-  Identity,
-  Liane,
-  PaginatedRequestParams,
-  PaginatedResponse,
-  RallyingPoint,
-  Ref,
-  User,
-  UTCDateTime
-} from "../api";
+import { DayOfWeekFlag, Entity, Identity, Liane, PaginatedRequestParams, PaginatedResponse, RallyingPoint, Ref, User, UTCDateTime } from "../api";
 import { HttpClient } from "./http";
 import { TimeOnly, TimeRange } from "./time";
 
@@ -73,7 +61,11 @@ export type CoLianeMember = {
   lastReadAt?: UTCDateTime;
 };
 
-export type JoinTripQuery = { liane: Ref<CoLiane>; trip: Ref<Liane>; geolocationLevel?: GeolocationLevel };
+export type JoinTripQuery = {
+  liane: Ref<CoLiane>;
+  trip: Ref<Liane>;
+  takeReturnTrip: boolean;
+};
 
 export type TextMessage = { type: "Text"; value: string };
 export type TripMessage = { type: "Trip"; value: Ref<Liane> };

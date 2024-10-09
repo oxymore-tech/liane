@@ -38,7 +38,8 @@ public sealed record TripMember(
   Feedback? Feedback = null,
   GeolocationLevel GeolocationLevel = GeolocationLevel.None,
   DateTime? Departure = null,
-  DateTime? Cancellation = null
+  DateTime? Cancellation = null,
+  bool TakeReturnTrip = false
 ) : IResourceMember;
 
 public sealed record Driver

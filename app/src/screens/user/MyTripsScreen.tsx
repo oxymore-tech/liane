@@ -1,7 +1,7 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
-import { useQueries, useQueryClient, UseQueryResult } from "react-query";
-import { JoinLianeRequestDetailed, Liane, Ref, UnauthorizedError } from "@liane/common";
+import { useQuery, useQueryClient } from "react-query";
+import { Liane, Ref, UnauthorizedError } from "@liane/common";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppText } from "@/components/base/AppText";
 import { AppTabs } from "@/components/base/AppTabs";
@@ -51,21 +51,15 @@ const MyTripsScreen = () => {
   const queryClient = useQueryClient();
 
   const { services } = useContext(AppContext);
-  const queriesData = useQueries([
-    { queryKey: JoinRequestsQueryKey, queryFn: () => services.liane.listJoinRequests() },
-    {
-      queryKey: LianeQueryKey,
-      queryFn: async () => {
-        const lianes = await services.liane.list(FutureStates, { cursor: undefined, limit: 25, asc: false });
-        await services.reminder.syncReminders(lianes.data);
-        return lianes;
-      }
-    }
-  ]);
+  const trip = useQuery(LianeQueryKey, async () => {
+    const lianes = await services.liane.list(FutureStates, { cursor: undefined, limit: 25, asc: false });
+    await services.reminder.syncReminders(lianes.data);
+    return lianes;
+  });
   const [selectedTab, setSelectedTab] = useState(0);
 
   const isFetchingFutureLianes = queryClient.isFetching({
-    predicate: query => query.queryKey === LianeQueryKey || query.queryKey === JoinRequestsQueryKey
+    predicate: query => query.queryKey === LianeQueryKey
   });
   useEffect(() => {
     if (isFetchingFutureLianes) {
@@ -95,19 +89,7 @@ const MyTripsScreen = () => {
     });
   }, [services.liane]);
 
-  const isLoading = queriesData.some(q => q.isLoading);
-  const error: any = queriesData.find(q => q.error)?.error;
-  const isFetching = queriesData.some(q => q.isFetching);
-
-  // Create section list from a list of Liane objects
-  const data: (JoinLianeRequestDetailed | Liane)[] = useMemo(() => {
-    if (queriesData[0].data && queriesData[1].data) {
-      return [...queriesData[0].data!.data, ...queriesData[1].data!.data];
-    }
-    return [];
-  }, [queriesData]);
-
-  if (isLoading) {
+  if (trip.isLoading) {
     return (
       <View style={styles.container}>
         <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />
@@ -115,24 +97,26 @@ const MyTripsScreen = () => {
     );
   }
 
-  if (error) {
+  if (trip.error) {
     // Show content depending on the error or propagate it
-    if (error instanceof UnauthorizedError) {
-      throw error;
+    if (trip.error instanceof UnauthorizedError) {
+      throw trip.error;
     } else {
       return (
         <View style={styles.container}>
           <Column style={[AppStyles.center, AppStyles.fullHeight]}>
             <AppText style={AppStyles.errorData}>Une erreur est survenue.</AppText>
-            <AppText style={AppStyles.errorData}>Message: {error.message}</AppText>
+            <AppText style={AppStyles.errorData}>Message: {(trip.error as any).message}</AppText>
             <View style={{ marginTop: 12 }}>
-              <AppButton color={AppColors.primaryColor} title={"Réessayer"} icon={"refresh-outline"} onPress={() => refetch(queriesData)} />
+              <AppButton color={AppColors.primaryColor} title={"Réessayer"} icon={"refresh-outline"} onPress={() => trip.refetch()} />
             </View>
           </Column>
         </View>
       );
     }
   }
+
+  const list = trip.data?.data ?? [];
 
   return (
     <Column style={{ backgroundColor: AppColors.lightGrayBackground, height: "100%" }}>
@@ -147,9 +131,9 @@ const MyTripsScreen = () => {
         />
       </Column>
       <Column spacing={16} style={styles.container}>
-        {selectedTab === 0 && data.length === 0 && <NoFutureTrip />}
-        {selectedTab === 0 && data.length > 0 && (
-          <TripListView data={data} isFetching={isFetching} onRefresh={() => queriesData.forEach(q => q.refetch())} reverseSort={false} />
+        {selectedTab === 0 && list.length === 0 && <NoFutureTrip />}
+        {selectedTab === 0 && list.length > 0 && (
+          <TripListView data={list} isFetching={trip.isFetching} onRefresh={() => trip.refetch()} reverseSort={false} />
         )}
         {selectedTab === 1 && <PastLianeListView />}
       </Column>
@@ -192,15 +176,6 @@ const PastLianeListView = WithFetchPaginatedResponse<Liane>(
   NoRecentTrip
 );
 
-const refetch = (queriesData: UseQueryResult[]) => {
-  if (queriesData[0].error) {
-    queriesData[0].refetch();
-  }
-  if (queriesData[1].error) {
-    queriesData[1].refetch();
-  }
-};
-
 const styles = StyleSheet.create({
   headerContainer: {
     padding: 12,
@@ -216,6 +191,4 @@ const styles = StyleSheet.create({
 
 export const LianeQueryKey = "trip";
 export const LianeDetailQueryKey = (id: Ref<Liane>) => ["trip", id];
-export const JoinRequestsQueryKey = "join_request";
-export const JoinRequestDetailQueryKey = (id: Ref<Liane>) => ["join_request", id];
 export default MyTripsScreen;

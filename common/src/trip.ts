@@ -1,17 +1,4 @@
-import {
-  addSeconds,
-  JoinLianeRequestDetailed,
-  Liane,
-  LianeMatch,
-  LianeMember,
-  TripStatus,
-  RallyingPoint,
-  Ref,
-  UnionUtils,
-  User,
-  UTCDateTime,
-  WayPoint
-} from ".";
+import { addSeconds, Liane, LianeMatch, LianeMember, TripStatus, RallyingPoint, Ref, UnionUtils, User, UTCDateTime, WayPoint } from ".";
 
 export type UserTrip = {
   wayPoints: WayPoint[];
@@ -60,14 +47,6 @@ export function getTripCostContribution(liane: Liane) {
 export function getUserTrip(liane: Liane, user: Ref<User>) {
   const member = liane.members.find(m => m.user.id === user);
   return getTrip(liane.departureTime, liane.wayPoints, member?.to, member?.from);
-}
-
-export function getTripFromJoinRequest(request: JoinLianeRequestDetailed) {
-  const wayPoints = UnionUtils.isInstanceOf(request.match, "Exact") ? request.targetTrip.wayPoints : request.match.wayPoints;
-  const departureIndex = wayPoints.findIndex(w => w.rallyingPoint.id === request.from.id);
-  const arrivalIndex = wayPoints.findIndex(w => w.rallyingPoint.id === request.to.id);
-  const departureTime = wayPoints[departureIndex].eta;
-  return { wayPoints: wayPoints.slice(departureIndex, arrivalIndex + 1), departureTime };
 }
 
 export function getTripFromMatch(liane: LianeMatch) {
@@ -151,11 +130,7 @@ function getTimeForUser(liane: Liane, user: Ref<User>, type: "to" | "from"): [Da
   return [time, delta];
 }
 
-export function getTripStatus(
-  liane: Liane,
-  user: Ref<User>,
-  joinRequest?: JoinLianeRequestDetailed
-): { status: DetailedTripStatus; nextUpdateMillis?: number | undefined } {
+export function getTripStatus(liane: Liane, user: Ref<User>): { status: DetailedTripStatus; nextUpdateMillis?: number | undefined } {
   if (liane.state === "NotStarted") {
     const [, delta] = getTimeForUser(liane, user, "from");
 
@@ -170,12 +145,6 @@ export function getTripStatus(
       } else {
         return { status: "Started", nextUpdateMillis: deltaArrival * 1000 };
       }
-    }
-    if (joinRequest?.createdBy?.id === user) {
-      if (joinRequest.accepted) {
-        return { status: "RequestAccepted" };
-      }
-      return { status: "RequestSent" };
     }
     if (liane.members.length < 2) {
       if (liane.driver.canDrive) {

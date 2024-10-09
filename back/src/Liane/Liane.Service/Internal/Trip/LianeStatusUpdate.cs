@@ -3,7 +3,6 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Liane.Api.Event;
 using Liane.Api.Trip;
 using Liane.Api.Util;
 using Liane.Api.Util.Ref;
@@ -13,26 +12,12 @@ using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Trip;
 
-public sealed class LianeStatusUpdate : CronJobService
+public sealed class LianeStatusUpdate(ILogger<LianeStatusUpdate> logger, IMongoDatabase mongo, ITripService tripService, ILianeUpdateObserver lianeUpdateObserver)
+  : CronJobService(logger, "* * * * *", false)
 {
-  private readonly IMongoDatabase mongo;
-  private readonly ITripService tripService;
-  private readonly ILianeUpdateObserver lianeUpdateObserver;
-  private readonly ILianeRequestService lianeRequestService;
-
   private const int StartedDelayInMinutes = 5;
   public const int FinishedDelayInMinutes = 5;
-  public const int StartedTimeoutInMinutes = 60;
-
-  public LianeStatusUpdate(ILogger<LianeStatusUpdate> logger, IMongoDatabase mongo, ITripService tripService,
-    ILianeUpdateObserver lianeUpdateObserver, ILianeRequestService lianeRequestService) : base(logger, "* * * * *",
-    false)
-  {
-    this.mongo = mongo;
-    this.tripService = tripService;
-    this.lianeUpdateObserver = lianeUpdateObserver;
-    this.lianeRequestService = lianeRequestService;
-  }
+  private const int StartedTimeoutInMinutes = 60;
 
   protected override Task DoWork(CancellationToken cancellationToken) => Update(DateTime.UtcNow);
 
@@ -57,7 +42,6 @@ public sealed class LianeStatusUpdate : CronJobService
 
     await Parallel.ForEachAsync(canceled, async (id, _) => { await tripService.UpdateState(id, TripStatus.Canceled); });
     //await postgisService.Clear(canceled.ToImmutableList());
-    await lianeRequestService.RejectJoinLianeRequests(canceled);
   }
 
   private async Task FinishLianes(DateTime from)
@@ -114,7 +98,6 @@ public sealed class LianeStatusUpdate : CronJobService
     // TODO create ongoing trip here ?
     var toClear = activeLianes.Select(l => (Ref<Api.Trip.Trip>)l.Id).ToImmutableHashSet();
     //await postgisService.Clear(toClear);
-    await lianeRequestService.RejectJoinLianeRequests(toClear);
   }
 
   private async Task RealtimeUpdate(DateTime from)

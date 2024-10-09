@@ -22,14 +22,12 @@ import { ProfileScreen } from "@/screens/user/ProfileScreen";
 import { ArchivedTripsScreen } from "@/screens/user/ArchivedTripsScreen";
 import { SettingsScreen } from "@/screens/user/SettingsScreen";
 import { PublishScreen } from "@/screens/publish/PublishScreen";
-import { LianeDetailScreen, LianeJoinRequestDetailScreen } from "@/screens/detail/LianeDetailScreen";
+import { LianeDetailScreen } from "@/screens/detail/LianeDetailScreen";
 import { ChatScreen } from "@/screens/ChatScreen";
 import { CommunitiesChatScreen } from "@/screens/communities/CommunitiesChatScreen";
 import { ListGroupScreen } from "@/screens/communities/ListGroupScreen";
 import { CommunitiesDetailScreen } from "@/screens/communities/CommunitiesDetailScreen";
 import { LianeMapDetailScreen } from "@/screens/communities/LianeMapDetail.tsx";
-import { OpenJoinRequestScreen } from "@/screens/modals/OpenJoinRequestScreen";
-import { RequestJoinScreen } from "@/screens/search/RequestJoinScreen";
 import { TripGeolocationWizard } from "@/screens/home/TripGeolocationWizard";
 import { ProfileEditScreen } from "@/screens/user/ProfileEditScreen";
 import { AccountScreen } from "@/screens/user/AccountScreen";
@@ -136,13 +134,11 @@ function Home() {
   const navigation = useNavigation();
 
   useEffect(() => {
-    const unsubscribe = navigation.addListener("state", e => {
+    return navigation.addListener("state", _ => {
       //Security to ensure that we always have a token
-      refreshUser();
+      return refreshUser();
     });
-
-    return unsubscribe;
-  }, [navigation]);
+  }, [navigation, refreshUser]);
 
   return (
     <Tab.Navigator
@@ -214,14 +210,11 @@ function Navigation() {
         <Stack.Screen name="CommunitiesDetails" component={CommunitiesDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
         <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="RequestJoin" component={RequestJoinScreen} options={{ headerShown: false, presentation: "modal" }} />
-        <Stack.Screen name="OpenJoinLianeRequest" component={OpenJoinRequestScreen} options={{ headerShown: false, presentation: "modal" }} />
         <Stack.Screen
           name="TripGeolocationWizard"
           component={TripGeolocationWizard}
           options={{ headerShown: false, animation: "slide_from_bottom" }}
         />
-        <Stack.Screen name="LianeJoinRequestDetail" component={LianeJoinRequestDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Account" component={AccountScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Notifications" component={NotificationScreen} />
         <Stack.Screen name="RallyingPointRequests" component={RallyingPointRequestsScreen} options={{ headerShown: false }} />

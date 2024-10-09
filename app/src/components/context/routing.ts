@@ -7,19 +7,7 @@ import {
   useNavigation,
   useRoute
 } from "@react-navigation/native";
-import {
-  CoLiane,
-  CoLianeRequest,
-  CoMatch,
-  Event,
-  JoinLianeRequestDetailed,
-  JoinRequest,
-  Liane,
-  Notification,
-  ResolvedLianeRequest,
-  UnionUtils,
-  User
-} from "@liane/common";
+import { CoLiane, CoLianeRequest, CoMatch, Liane, Notification, ResolvedLianeRequest, UnionUtils, User } from "@liane/common";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack/src/types";
 import { checkInitialNotification } from "@/api/service/notification";
 
@@ -29,8 +17,6 @@ export type NavigationParamList = {
   [HOME_TRIPS]: undefined;
   Publish: { initialValue?: Partial<CoLianeRequest> };
   SignUp: undefined;
-  RequestJoin: { request: JoinLianeRequestDetailed };
-  LianeJoinRequestDetail: { request: JoinLianeRequestDetailed | string };
   Chat: { conversationId: string; liane?: Liane };
   Communities: undefined;
   CommunitiesChat: { group?: CoMatch; liane?: CoLiane; request?: CoLianeRequest | ResolvedLianeRequest; lianeId?: string };
@@ -39,7 +25,6 @@ export type NavigationParamList = {
   Profile: { user: User } | undefined;
   ProfileEdit: undefined;
   Account: undefined;
-  OpenJoinLianeRequest: { request: Event<JoinRequest> };
   TripGeolocationWizard: { showAs: "driver" | "passenger" | undefined | null; lianeId: string | undefined } | undefined;
   ArchivedTrips: undefined;
   Settings: undefined;
@@ -72,9 +57,6 @@ export const AppLinking: LinkingOptions<NavigationParamList> = {
       },*/
       Chat: {
         path: "chat/:conversationId"
-      },
-      OpenJoinLianeRequest: {
-        path: "join_request/:request"
       },
       CommunitiesChat: {
         path: "community/:lianeId"

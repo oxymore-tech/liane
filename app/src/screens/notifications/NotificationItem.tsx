@@ -22,9 +22,6 @@ export const NotificationItem = ({ notification: item, read }: { notification: N
       case "MemberAccepted":
         icon = "calendar-outline";
         break;
-      case "MemberRejected":
-        icon = "bell-outline";
-        break;
       case "MemberHasLeft":
         icon = "log-out-outline";
         break;

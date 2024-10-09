@@ -1,12 +1,12 @@
-import { DetailedTripStatus, getTripStatus, JoinLianeRequestDetailed, Liane } from "@liane/common";
+import { DetailedTripStatus, getTripStatus, Liane } from "@liane/common";
 import { useContext, useEffect, useState } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 
-export const useTripStatus = (liane: Liane | undefined, joinRequest?: JoinLianeRequestDetailed): DetailedTripStatus | undefined => {
+export const useTripStatus = (liane?: Liane): DetailedTripStatus | undefined => {
   const { user } = useContext(AppContext);
   const userId = user!.id!;
 
-  const [status, setStatus] = useState(liane ? getTripStatus(liane, userId, joinRequest) : undefined);
+  const [status, setStatus] = useState(liane ? getTripStatus(liane, userId) : undefined);
 
   useEffect(() => {
     if (!liane) {

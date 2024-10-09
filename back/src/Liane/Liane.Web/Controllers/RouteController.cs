@@ -6,26 +6,18 @@ namespace Liane.Web.Controllers;
 
 [Route("api/basicRoute")] // TODO name "routing" ?
 [ApiController]
-public class RouteController : ControllerBase
+public class RouteController(IRoutingService routeService) : ControllerBase
 {
-    private readonly IRoutingService routeService;
+  [HttpPost("")]
+  public async Task<ActionResult<RouteWithSteps>> BasicRouteMethod([FromBody] RoutingQuery routingQuery)
+  {
+    return await routeService.GetRouteStepsGeometry(routingQuery);
+  }
 
-    public RouteController(IRoutingService routeService)
-    {
-        this.routeService = routeService;
-    }
-
-    [HttpPost("")]
-    public async Task<ActionResult<RouteWithSteps>> BasicRouteMethod([FromBody] RoutingQuery routingQuery)
-    {
-        return await routeService.GetRouteStepsGeometry(routingQuery);
-    }
-
-    [HttpGet("duration")]
-    public async Task<float> GetTravelTime([FromQuery]double  latFrom, [FromQuery]double lngFrom, [FromQuery] double latTo, [FromQuery] double lngTo)
-    {
-      var route = await routeService.GetRoute(new RoutingQuery(new LatLng(latFrom, lngFrom), new LatLng(latTo, lngTo)));
-      return route.Duration;
-    }
-
+  [HttpGet("duration")]
+  public async Task<float> GetTravelTime([FromQuery] double latFrom, [FromQuery] double lngFrom, [FromQuery] double latTo, [FromQuery] double lngTo)
+  {
+    var route = await routeService.GetRoute(new RoutingQuery(new LatLng(latFrom, lngFrom), new LatLng(latTo, lngTo)));
+    return route.Duration;
+  }
 }

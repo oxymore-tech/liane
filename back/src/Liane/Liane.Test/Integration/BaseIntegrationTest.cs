@@ -138,7 +138,6 @@ public abstract class BaseIntegrationTest
     MongoFactory.InitSchema(mongo);
     var postgisDatabase = ServiceProvider.GetRequiredService<PostgisDatabase>();
     await PostgisFactory.UpdateSchema(postgisDatabase, true);
-    NpgsqlConnection.GlobalTypeMapper.MapEnum<LocationType>();
     mongo.Drop();
     // Init services in child class 
     Setup(mongo);

@@ -16,7 +16,6 @@ import { Observable } from "rxjs";
 import { AppBackContextProvider } from "@/components/AppBackContextProvider";
 import { HomeBottomSheetContainer } from "@/screens/home/HomeBottomSheet";
 import { OfflineWarning } from "@/components/OfflineWarning";
-import { LianeMatchDetailView } from "@/screens/home/LianeMatchDetailView";
 import { useBottomBarStyle } from "@/components/context/Navigation";
 import { useAppNavigation } from "@/components/context/routing";
 import { WelcomeWizardModal } from "@/screens/home/WelcomeWizard";
@@ -134,7 +133,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
             display={bottomSheetDisplay}
             canScroll={loadingDisplay && !movingDisplay}>
             {isMatchState && <LianeMatchListView loading={loadingList} />}
-            {!loadingList && isDetailState && <LianeMatchDetailView />}
+            {!loadingList && isDetailState && <View />}
           </HomeBottomSheetContainer>
         )}
 

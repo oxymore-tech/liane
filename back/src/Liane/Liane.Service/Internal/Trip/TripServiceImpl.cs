@@ -9,6 +9,7 @@ using GeoJSON.Text.Feature;
 using GeoJSON.Text.Geometry;
 using Liane.Api.Auth;
 using Liane.Api.Chat;
+using Liane.Api.Event;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util;
@@ -16,6 +17,7 @@ using Liane.Api.Util.Exception;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
+using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Postgis;
 using Liane.Service.Internal.Trip.Geolocation;
@@ -39,7 +41,8 @@ public sealed class TripServiceImpl(
   IPostgisService postgisService,
   ILianeUpdateObserver lianeUpdateObserver,
   IUserStatService userStatService,
-  LianeTrackerCache trackerCache)
+  LianeTrackerCache trackerCache,
+  EventDispatcher eventDispatcher)
   : BaseMongoCrudService<LianeDb, Api.Trip.Trip>(mongo), ITripService
 {
   private const int MaxDeltaInSeconds = 15 * 60; // 15 min
@@ -232,50 +235,21 @@ public sealed class TripServiceImpl(
     return filter;
   }
 
-  public async Task<Api.Trip.Trip> AddMember(Ref<Api.Trip.Trip> liane, TripMember newMember)
+  public async Task<Api.Trip.Trip> AddMember(Ref<Api.Trip.Trip> tripId, TripMember newMember)
   {
-    var toUpdate = await Mongo.GetCollection<LianeDb>()
-      .Find(l => l.Id == liane.Id)
-      .FirstOrDefaultAsync();
-
-    if (toUpdate is null)
+    var member = new TripMember(newMember.User, newMember.From, newMember.To);
+    var trip = await AddMemberSingle(tripId, member);
+    await userStatService.IncrementTotalJoinedTrips(newMember.User);
+    if (newMember.TakeReturnTrip)
     {
-      throw ResourceNotFoundException.For(liane);
+      await AddMemberSingle(trip.Return!, member with { From = newMember.To, To = newMember.From });
+      await userStatService.IncrementTotalJoinedTrips(newMember.User);
     }
 
-    if (toUpdate.Members.Exists(m => m.User == newMember.User))
-    {
-      throw new ValidationException(ValidationMessage.AlreadyMember);
-    }
-
-    var updateDef = (await GetTripUpdate(toUpdate.DepartureTime, toUpdate.Driver.User, toUpdate.Members.Add(newMember)))
-      .Push(l => l.Members, newMember)
-      .Set(l => l.TotalSeatCount, toUpdate.TotalSeatCount + newMember.SeatCount);
-
-    // If Liane now has 2 users, create a conversation
-    if (toUpdate.Conversation is null)
-    {
-      var conv = await chatService.Create(ConversationGroup.CreateWithMembers(new[]
-      {
-        toUpdate.Members[0].User,
-        newMember.User
-      }, DateTime.UtcNow), toUpdate.CreatedBy!);
-      updateDef = updateDef.Set<LianeDb, Ref<ConversationGroup>?>(l => l.Conversation, conv.Id!);
-    }
-    else
-    {
-      await chatService.AddMember(toUpdate.Conversation, newMember.User);
-    }
-
-    var updated = await Update(liane, updateDef);
-
-    var pointsToUpdate = new[] { newMember.From, newMember.To }.Where(r => toUpdate.WayPoints.Find(w => w.RallyingPoint.Id == r.Id) is null).ToImmutableList();
-    if (pointsToUpdate.Any()) await rallyingPointService.UpdateStats(pointsToUpdate, updated.DepartureTime);
-
-    var updatedLiane = await MapEntity(updated);
-    await postgisService.UpdateGeometry(updatedLiane);
-    await PushUpdate(updated);
-    return updatedLiane;
+    var memberAccepted = new LianeEvent.MemberAccepted(tripId, newMember.User, newMember.From, newMember.To, newMember.SeatCount, newMember.TakeReturnTrip);
+    await eventDispatcher.Dispatch(memberAccepted, trip.CreatedBy);
+    
+    return trip;
   }
 
   public async Task CancelAllTrips(Ref<Api.Auth.User> member)
@@ -394,6 +368,52 @@ public sealed class TripServiceImpl(
     await PushUpdate(updated);
   }
 
+  private async Task<Api.Trip.Trip> AddMemberSingle(Ref<Api.Trip.Trip> liane, TripMember newMember)
+  {
+    var toUpdate = await Mongo.GetCollection<LianeDb>()
+      .Find(l => l.Id == liane.Id)
+      .FirstOrDefaultAsync();
+
+    if (toUpdate is null)
+    {
+      throw ResourceNotFoundException.For(liane);
+    }
+
+    if (toUpdate.Members.Exists(m => m.User == newMember.User))
+    {
+      throw new ValidationException(ValidationMessage.AlreadyMember);
+    }
+
+    var updateDef = (await GetTripUpdate(toUpdate.DepartureTime, toUpdate.Driver.User, toUpdate.Members.Add(newMember)))
+      .Push(l => l.Members, newMember)
+      .Set(l => l.TotalSeatCount, toUpdate.TotalSeatCount + newMember.SeatCount);
+
+    // If Liane now has 2 users, create a conversation
+    if (toUpdate.Conversation is null)
+    {
+      var conv = await chatService.Create(ConversationGroup.CreateWithMembers(new[]
+      {
+        toUpdate.Members[0].User,
+        newMember.User
+      }, DateTime.UtcNow), toUpdate.CreatedBy!);
+      updateDef = updateDef.Set<LianeDb, Ref<ConversationGroup>?>(l => l.Conversation, conv.Id!);
+    }
+    else
+    {
+      await chatService.AddMember(toUpdate.Conversation, newMember.User);
+    }
+
+    var updated = await Update(liane, updateDef);
+
+    var pointsToUpdate = new[] { newMember.From, newMember.To }.Where(r => toUpdate.WayPoints.Find(w => w.RallyingPoint.Id == r.Id) is null).ToImmutableList();
+    if (pointsToUpdate.Any()) await rallyingPointService.UpdateStats(pointsToUpdate, updated.DepartureTime);
+
+    var updatedLiane = await MapEntity(updated);
+    await postgisService.UpdateGeometry(updatedLiane);
+    await PushUpdate(updated);
+    return updatedLiane;
+  }
+
   private async Task PushUpdate(LianeDb liane)
   {
     foreach (var lianeMember in liane.Members)
@@ -465,7 +485,7 @@ public sealed class TripServiceImpl(
       return new WayPoint(rallyingPoint, w.Duration, w.Distance, w.Eta);
     });
     var users = await liane.Members.SelectAsync(async m => m with { User = await userService.Get(m.User) });
-    return new Api.Trip.Trip(liane.Id, liane.Liane, liane.CreatedBy!, liane.CreatedAt, liane.DepartureTime, liane.Return, wayPoints, users, liane.Driver, liane.State, liane.Conversation);
+    return new Api.Trip.Trip(liane.Id, liane.Liane!, liane.CreatedBy!, liane.CreatedAt, liane.DepartureTime, liane.Return, wayPoints, users, liane.Driver, liane.State, liane.Conversation);
   }
 
   private async Task<ImmutableList<LianeSegment>> GetLianeSegments(IEnumerable<Api.Trip.Trip> lianes)

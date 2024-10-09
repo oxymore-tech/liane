@@ -7,13 +7,12 @@ import { FloatingBackButton } from "@/components/FloatingBackButton";
 import {
   capitalize,
   getBoundingBox,
-  JoinLianeRequestDetailed,
-  Liane,
-  LianeMatch,
   getTotalDistance,
-  getUserTrip,
+  getTripCostContribution,
   getTripFromMatch,
-  getTripCostContribution
+  getUserTrip,
+  Liane,
+  LianeMatch
 } from "@liane/common";
 import { useTripStatus } from "@/components/trip/trip";
 import { useAppNavigation } from "@/components/context/routing";
@@ -22,7 +21,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery } from "react-query";
-import { JoinRequestDetailQueryKey, LianeDetailQueryKey } from "@/screens/user/MyTripsScreen";
+import { LianeDetailQueryKey } from "@/screens/user/MyTripsScreen";
 import { AppText } from "@/components/base/AppText";
 import { TripGeolocationProvider, useCarDelay, useTrackingInfo } from "@/screens/detail/TripGeolocationProvider";
 import { LianeMatchUserRouteLayer } from "@/components/map/layers/LianeMatchRouteLayer";
@@ -42,22 +41,6 @@ import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { LocationMarker } from "@/screens/detail/components/LocationMarker";
 import { useObservable } from "@/util/hooks/subscription";
 import { AppLogger } from "@/api/logger";
-
-export const LianeJoinRequestDetailScreen = () => {
-  const { services } = useContext(AppContext);
-  const { route } = useAppNavigation<"LianeJoinRequestDetail">();
-  const lianeParam = route.params!.request;
-  const { data: request } = useQuery(JoinRequestDetailQueryKey(typeof lianeParam === "string" ? lianeParam : lianeParam.id!), () => {
-    if (typeof lianeParam === "string") {
-      return services.liane.getDetailedJoinRequest(lianeParam);
-    } else {
-      return lianeParam;
-    }
-  });
-  const match = useMemo(() => (request ? { trip: request.targetTrip, match: request.match, freeSeatsCount: request.seats } : undefined), [request]);
-
-  return <LianeDetailPage match={match} request={request} />;
-};
 
 export const LianeDetailScreen = () => {
   const { services, user } = useContext(AppContext);
@@ -91,7 +74,7 @@ export const LianeDetailScreen = () => {
   return <LianeDetailPage match={match} />;
 };
 
-const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; request?: JoinLianeRequestDetailed }) => {
+const LianeDetailPage = ({ match }: { match: LianeMatch | undefined }) => {
   const { height } = useAppWindowsDimensions();
   const { navigation } = useAppNavigation();
   const { services } = useContext(AppContext);
@@ -170,7 +153,7 @@ const LianeDetailPage = ({ match, request }: { match: LianeMatch | undefined; re
           }}>
           {match && (
             <AppBottomSheetScrollView style={{ paddingHorizontal: 12, backgroundColor: AppColors.lightGrayBackground }}>
-              <LianeDetailView liane={match} request={request?.id} />
+              <LianeDetailView liane={match} />
             </AppBottomSheetScrollView>
           )}
 
@@ -291,7 +274,7 @@ const StartingSoonView = (props: { liane: Liane; isDriver: boolean }) => {
     return null;
   }
 };
-const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; request?: string | undefined }) => {
+const LianeDetailView = ({ liane }: { liane: LianeMatch }) => {
   const { wayPoints: currentTrip } = useMemo(() => getTripFromMatch(liane), [liane]);
   const userTripDistance = Math.ceil(getTotalDistance(currentTrip) / 1000);
 
@@ -312,25 +295,21 @@ const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; re
         <LianeWithDateView liane={liane.trip} />
       </View>
 
-      {!["Finished", "Archived", "Canceled"].includes(liane.trip.state) && !request && (
+      {!["Finished", "Archived", "Canceled"].includes(liane.trip.state) && (
         <Row style={styles.statusLianeContainer}>
           <LianeStatusView liane={liane.trip} />
           <GeolocationSwitch liane={liane.trip} />
         </Row>
       )}
-      {!request && <StartingSoonView liane={liane.trip} isDriver={driver.id === user!.id!} />}
+      <StartingSoonView liane={liane.trip} isDriver={driver.id === user!.id!} />
 
       <Row style={styles.resumeContainer} spacing={4}>
         <Column style={{ flex: 1 }} spacing={4}>
           <Row>
-            {liane.trip.recurrence?.id ? (
-              <InfoItem icon={"sync-outline"} value={"Trajet régulier"} />
-            ) : (
-              <Row style={AppStyles.center}>
-                <AppIcon name={"arrow-forward-outline"} size={12} color={AppColorPalettes.gray[500]} />
-                <AppText style={styles.infoTravel}>Aller simple</AppText>
-              </Row>
-            )}
+            <Row style={AppStyles.center}>
+              <AppIcon name={"arrow-forward-outline"} size={12} color={AppColorPalettes.gray[500]} />
+              <AppText style={styles.infoTravel}>Aller simple</AppText>
+            </Row>
           </Row>
           <Row>
             <InfoItem icon={"twisting-arrow"} value={userTripDistance + " km"} />
@@ -365,7 +344,7 @@ const LianeDetailView = ({ liane, request = undefined }: { liane: LianeMatch; re
         </Column>
       </Row>
 
-      <LianeActionsView match={liane} request={request} />
+      <LianeActionsView match={liane} />
     </Column>
   );
 };

@@ -15,10 +15,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Liane.Web.Controllers;
 
-[Route("api/liane")]
+[Route("api/trip")]
 [ApiController]
 [RequiresAuth]
-public sealed class LianeController(
+public sealed class TripController(
   ITripService tripService,
   ICurrentContext currentContext,
   EventDispatcher eventDispatcher,

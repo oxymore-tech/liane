@@ -2,7 +2,7 @@ import React, { useContext, useMemo, useState } from "react";
 import { QueryClient, useQueryClient } from "react-query";
 import { Alert, View } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { DayOfWeekFlag, Liane, LianeMatch, TimeOnlyUtils } from "@liane/common";
+import { Liane, LianeMatch, TimeOnlyUtils } from "@liane/common";
 import { NavigationParamList, useAppNavigation } from "@/components/context/routing";
 import { AppServices } from "@/api/service";
 import { AppContext } from "@/components/context/ContextProvider";
@@ -10,8 +10,7 @@ import { Column } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { DebugIdView } from "@/components/base/DebugIdView";
 import { SlideUpModal } from "@/components/modal/SlideUpModal";
-import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker";
-import { JoinRequestsQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen";
+import { LianeQueryKey } from "@/screens/user/MyTripsScreen";
 import { AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { ChoiceModal } from "@/components/modal/ChoiceModal";
@@ -19,7 +18,7 @@ import { CommonActions } from "@react-navigation/native";
 import { TimeWheelPicker } from "@/components/TimeWheelPicker";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 
-export const LianeActionsView = ({ match, request }: { match: LianeMatch; request?: string }) => {
+export const LianeActionsView = ({ match }: { match: LianeMatch }) => {
   const liane = match.trip;
   const { user, services } = useContext(AppContext);
   //const creator = liane.members.find(m => m.user.id === liane.createdBy!)!.user;
@@ -31,14 +30,11 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
   const queryClient = useQueryClient();
 
   const [timeModalVisible, setTimeModalVisible] = useState(false);
-  const [recurrenceModalVisible, setRecurrenceModalVisible] = useState(false);
   const [editOptionsModalVisible, setEditOptionsModalVisible] = useState(false);
   const [date, setDate] = useState(new Date(liane.departureTime));
-  const [daysOfTheWeek, setDaysOfTheWeek] = useState(liane.recurrence?.days || "0000000");
 
   const initialMinDate = TimeOnlyUtils.fromDate(new Date(new Date().getTime() + 60000));
 
-  const lianeHasRecurrence = !!liane.recurrence;
   const editOptions = useMemo(() => {
     const buttonList: { text: string; action: () => void; danger?: boolean }[] = [
       {
@@ -47,32 +43,10 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
       }
     ];
 
-    if (lianeHasRecurrence) {
-      buttonList.push({
-        text: "Modifier la récurrence",
-        action: () => setRecurrenceModalVisible(true)
-      });
-    }
-
-    if (currentUserIsMember && (liane.state === "Finished" || liane.state === "Archived")) {
-      buttonList.push({
-        text: "Relancer le trajet",
-        action: () => relaunchLiane(navigation, match)
-      });
-    }
-
     if (currentUserIsOwner && liane.state === "NotStarted" && liane.members.length > 1) {
       buttonList.push({
         text: "Annuler ce trajet",
         action: () => cancelLiane(navigation, services, queryClient, liane),
-        danger: true
-      });
-    }
-
-    if (!currentUserIsMember && request) {
-      buttonList.push({
-        text: "Retirer la demande",
-        action: () => cancelDemand(navigation, services, queryClient, request!),
         danger: true
       });
     }
@@ -93,16 +67,8 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
       });
     }
 
-    if (lianeHasRecurrence) {
-      buttonList.push({
-        text: "Supprimer la récurrence",
-        action: () => deleteRecurrence(navigation, services, queryClient, liane),
-        danger: true
-      });
-    }
-
     return buttonList;
-  }, [lianeHasRecurrence]);
+  }, []);
 
   return (
     <Column style={{ marginTop: 16 }}>
@@ -124,16 +90,6 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
           text={"Quitter le trajet"}
         />
       )}
-      {request && !currentUserIsMember && (
-        <AppRoundedButton
-          color={defaultTextColor(AppColors.primaryColor)}
-          onPress={() => {
-            cancelDemand(navigation, services, queryClient, request);
-          }}
-          backgroundColor={ContextualColors.redAlert.bg}
-          text={"Annuler la demande"}
-        />
-      )}
       {liane.state === "Started" && (
         <AppRoundedButton
           color={defaultTextColor(AppColors.primaryColor)}
@@ -142,20 +98,6 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
           }}
           backgroundColor={ContextualColors.redAlert.bg}
           text={"Annuler ce trajet"}
-        />
-      )}
-      {["Finished", "Archived", "Canceled"].includes(liane.state) && (
-        <AppRoundedButton
-          color={defaultTextColor(AppColors.primaryColor)}
-          onPress={async () => {
-            if (currentUserIsDriver) {
-              relaunchLiane(navigation, match);
-            } else {
-              //TODO
-            }
-          }}
-          backgroundColor={AppColors.primaryColor}
-          text={"Relancer le trajet"}
         />
       )}
 
@@ -194,106 +136,8 @@ export const LianeActionsView = ({ match, request }: { match: LianeMatch; reques
           </View>
         </Column>
       </SlideUpModal>
-
-      {liane.recurrence && (
-        <SlideUpModal
-          actionText={"Modifier la récurrence"}
-          backgroundColor={AppColors.white}
-          onAction={() => updateRecurrence(navigation, services, queryClient, liane, daysOfTheWeek, setRecurrenceModalVisible)}
-          visible={recurrenceModalVisible}
-          setVisible={setRecurrenceModalVisible}>
-          <Column spacing={16} style={{ marginBottom: 16 }}>
-            <AppText style={{ ...AppStyles.title, marginVertical: 8, paddingLeft: 8 }}>Quels jours partez-vous ?</AppText>
-
-            <View>
-              <DayOfTheWeekPicker selectedDays={daysOfTheWeek} onChangeDays={setDaysOfTheWeek} />
-            </View>
-          </Column>
-        </SlideUpModal>
-      )}
     </Column>
   );
-};
-
-const pauseLiane = (services: AppServices, queryClient: QueryClient, liane: Liane, pause: boolean) => {
-  Alert.alert(
-    pause ? "Mettre en pause" : "Réactiver la liane",
-    pause ? "Voulez-vous vraiment mettre en pause cette liane ?" : "Voulez-vous vraiment réactiver cette liane ?",
-    [
-      {
-        text: "Annuler",
-        onPress: () => {},
-        style: "cancel"
-      },
-      {
-        text: pause ? "Pause" : "Réactiver",
-        onPress: async () => {
-          if (pause) {
-            await services.liane.pause(liane.id!);
-          } else {
-            await services.liane.unpause(liane.id!);
-          }
-
-          await queryClient.invalidateQueries(LianeQueryKey);
-        },
-        style: "default"
-      }
-    ]
-  );
-};
-
-const deleteRecurrence = async (
-  navigation: NativeStackNavigationProp<NavigationParamList, keyof NavigationParamList>,
-  services: AppServices,
-  queryClient: QueryClient,
-  liane: Liane
-) => {
-  Alert.alert(
-    "Supprimer la récurrence",
-    "Tous les trajets à venir sont supprimés, sauf ceux comportant des passagers qui devront être supprimés manuellement.",
-    [
-      {
-        text: "Annuler",
-        onPress: () => {},
-        style: "cancel"
-      },
-      {
-        text: "Supprimer",
-        onPress: async () => {
-          await services.liane.deleteRecurrence(liane.recurrence!.id!);
-          await queryClient.invalidateQueries(LianeQueryKey);
-          navigation.goBack();
-        },
-        style: "default"
-      }
-    ]
-  );
-};
-const updateRecurrence = async (
-  navigation: NativeStackNavigationProp<NavigationParamList, keyof NavigationParamList>,
-  services: AppServices,
-  queryClient: QueryClient,
-  liane: Liane,
-  daysOfTheWeek: DayOfWeekFlag,
-  setRecurrenceModalVisible: (v: boolean) => void
-) => {
-  await services.liane.updateRecurrence(liane.recurrence!.id!, daysOfTheWeek);
-  // Update current liane content
-  navigation.dispatch(CommonActions.setParams({ liane: { ...liane, recurrence: { ...liane.recurrence, days: daysOfTheWeek } } }));
-  // Update liane list
-  await queryClient.invalidateQueries(LianeQueryKey);
-  setRecurrenceModalVisible(false);
-  // Return to list if regularity is removed on the day of this trip
-  if (daysOfTheWeek[(new Date(liane.departureTime).getUTCDay() + 7) % 7] === "0") {
-    navigation.goBack();
-  }
-};
-
-const relaunchLiane = (navigation: NativeStackNavigationProp<NavigationParamList, keyof NavigationParamList>, match: LianeMatch) => {
-  // const fromPoint = getPoint(match, "pickup");
-  // const toPoint = getPoint(match, "deposit");
-  // const availableSeats = match.trip.members.find(m => m.user.id === match.trip.driver.user)!.seatCount;
-  // navigation.navigate("Publish", { initialValue: { from: fromPoint, to: toPoint, recurrence: match.trip.recurrence?.days, availableSeats } });
 };
 
 const deleteLiane = (
@@ -338,30 +182,6 @@ const cancelLiane = (
         await services.liane.cancel(liane.id!);
         navigation.goBack();
         //  await queryClient.invalidateQueries(LianeQueryKey);
-      },
-      style: "default"
-    }
-  ]);
-};
-
-const cancelDemand = (
-  navigation: NativeStackNavigationProp<NavigationParamList, keyof NavigationParamList>,
-  services: AppServices,
-  queryClient: QueryClient,
-  request: string
-) => {
-  Alert.alert("Retirer la demande", "Voulez-vous vraiment retirer votre demande ?", [
-    {
-      text: "Annuler",
-      onPress: () => {},
-      style: "cancel"
-    },
-    {
-      text: "Retirer",
-      onPress: async () => {
-        await services.liane.deleteJoinRequest(request);
-        await queryClient.invalidateQueries(JoinRequestsQueryKey);
-        navigation.goBack();
       },
       style: "default"
     }

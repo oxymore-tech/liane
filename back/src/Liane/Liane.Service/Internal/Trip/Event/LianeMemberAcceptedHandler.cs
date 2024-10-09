@@ -2,7 +2,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Event;
 using Liane.Api.Trip;
-using Liane.Api.Auth;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Util;
 
@@ -19,7 +18,7 @@ public sealed class LianeMemberAcceptedHandler(
   public async Task OnEvent(LianeEvent.MemberAccepted e, Ref<Api.Auth.User>? sender = null)
   {
     var liane = await tripService.Get(e.Liane);
-    var destination = liane.WayPoints.First(w => w.RallyingPoint.Id! == e.To).RallyingPoint.Label;
+    var destination = liane.WayPoints.First(w => w.RallyingPoint.Id! == e.To.Id).RallyingPoint.Label;
     await notificationService.SendEvent("Demande acceptée",
       "Vous avez rejoint la liane à destination de " + destination + ".",
       sender ?? currentContext.CurrentUser().Id,

@@ -2,8 +2,8 @@ import React, { PropsWithChildren, useContext, useEffect } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 import { InfiniteData, useQueryClient } from "react-query";
 import { NotificationQueryKey } from "@/screens/notifications/NotificationScreen";
-import { JoinLianeRequestDetailed, Liane, LianeState, Notification, PaginatedResponse, TripStatus } from "@liane/common";
-import { JoinRequestsQueryKey, LianeDetailQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen";
+import { Liane, Notification, PaginatedResponse, TripStatus } from "@liane/common";
+import { LianeDetailQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen";
 import { useSubscription } from "@/util/hooks/subscription";
 import { LianeGeolocation } from "@/api/service/location";
 
@@ -48,11 +48,6 @@ const updateNotificationPages = (old: InfiniteData<PaginatedResponse<Notificatio
   }
 };
 
-const updateJoinRequestsList = (old: PaginatedResponse<JoinLianeRequestDetailed>, liane: Liane) => {
-  const updatedData = old.data.filter(joinRequest => joinRequest.targetTrip.id !== liane.id);
-  return { pageSize: updatedData.length, data: updatedData };
-};
-
 const readNotifications = (old: InfiniteData<PaginatedResponse<Notification>>, userId: string) => {
   return {
     ...old!,
@@ -74,12 +69,6 @@ export const QueryUpdateProvider = (props: PropsWithChildren) => {
   // Update liane local cache
 
   useSubscription<Liane>(services.realTimeHub.lianeUpdates, liane => {
-    queryClient.setQueryData<PaginatedResponse<JoinLianeRequestDetailed>>(JoinRequestsQueryKey, old => {
-      if (!old) {
-        return { pageSize: 0, data: [] };
-      }
-      return updateJoinRequestsList(old, liane);
-    });
     queryClient.setQueryData<PaginatedResponse<Liane>>(LianeQueryKey, old => {
       if (!old) {
         return { pageSize: 1, data: [liane] };

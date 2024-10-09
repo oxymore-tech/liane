@@ -1,19 +1,8 @@
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { AppText } from "@/components/base/AppText.tsx";
-import { AppColorPalettes, AppColors } from "@/theme/colors.ts";
+import { AppColors } from "@/theme/colors.ts";
 import { AppLocalization } from "@/api/i18n.ts";
-import {
-  addSeconds,
-  capitalize,
-  CoLiane,
-  DayOfWeekFlag,
-  JoinLianeRequestDetailed,
-  Liane,
-  LianeMessage,
-  RallyingPoint,
-  TimeOnlyUtils,
-  TripMessage
-} from "@liane/common";
+import { addSeconds, capitalize, CoLiane, DayOfWeekFlag, Liane, LianeMessage, RallyingPoint, TimeOnlyUtils, TripMessage } from "@liane/common";
 import React, { useCallback, useContext, useMemo, useState } from "react";
 import { Center, Column, Row } from "@/components/base/AppLayout.tsx";
 import { UserPicture } from "@/components/UserPicture.tsx";
@@ -21,7 +10,7 @@ import { AppIcon } from "@/components/base/AppIcon.tsx";
 import { AppPressableIcon, AppPressableOverlay } from "@/components/base/AppPressable.tsx";
 import { WayPointView } from "@/components/trip/WayPointsView.tsx";
 import { useQuery, useQueryClient } from "react-query";
-import { JoinRequestDetailQueryKey, LianeDetailQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen.tsx";
+import { LianeDetailQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen.tsx";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
 import { AppStorage } from "@/api/storage.ts";
 import { LianeStatusView } from "@/components/trip/LianeStatusView.tsx";
@@ -43,11 +32,6 @@ export const TripSurveyView = ({ message, coLiane, color }: { message: LianeMess
     return { isMember: me };
   }, [trip.data, user]);
 
-  const joinRequest = useQuery(JoinRequestDetailQueryKey(message.content.value), async () => {
-    const joinRequests = (await services.liane.listJoinRequests()).data;
-    return joinRequests.find(j => j.targetTrip.id === message.content.value);
-  });
-
   const queryClient = useQueryClient();
 
   const handleJoinTrip = useCallback(async () => {
@@ -60,7 +44,6 @@ export const TripSurveyView = ({ message, coLiane, color }: { message: LianeMess
 
     const geolocationLevel = await AppStorage.getSetting("geolocation");
     await services.community.joinTrip({ liane: coLiane.id!, trip: trip.data.id!, geolocationLevel });
-    await queryClient.invalidateQueries(JoinRequestDetailQueryKey(message.content.value));
     await queryClient.invalidateQueries(LianeDetailQueryKey(message.content.value));
     await queryClient.invalidateQueries(LianeQueryKey);
   }, [trip.data, isMember, services.community, coLiane.id, queryClient, message.content.value]);
@@ -77,7 +60,7 @@ export const TripSurveyView = ({ message, coLiane, color }: { message: LianeMess
 
   return (
     <View>
-      {(trip.isLoading || joinRequest.isLoading) && <ActivityIndicator color={AppColors.white} />}
+      {trip.isLoading && <ActivityIndicator color={AppColors.white} />}
       {trip.isError && <AppText>Erreur de chargement</AppText>}
       {!!trip.data && (
         <>
@@ -101,9 +84,9 @@ export const TripSurveyView = ({ message, coLiane, color }: { message: LianeMess
             ))}
           </View>
           {isActive(trip.data) ? (
-            <ActiveView trip={trip.data} isMember={isMember} joinRequest={joinRequest.data} handleJoinTrip={handleJoinTrip} />
+            <ActiveView trip={trip.data} isMember={isMember} handleJoinTrip={handleJoinTrip} />
           ) : (
-            <LianeStatusView style={{ alignSelf: "flex-end" }} liane={trip.data} joinRequest={joinRequest.data} />
+            <LianeStatusView style={{ alignSelf: "flex-end" }} liane={trip.data} />
           )}
         </>
       )}
@@ -114,9 +97,9 @@ export const TripSurveyView = ({ message, coLiane, color }: { message: LianeMess
   );
 };
 
-type ActiveViewProps = { trip: Liane; isMember: boolean; joinRequest?: JoinLianeRequestDetailed; handleJoinTrip: () => void };
+type ActiveViewProps = { trip: Liane; isMember: boolean; handleJoinTrip: () => void };
 
-const ActiveView = ({ trip, isMember, joinRequest, handleJoinTrip }: ActiveViewProps) => {
+const ActiveView = ({ trip, isMember, handleJoinTrip }: ActiveViewProps) => {
   return (
     <Row style={{ marginTop: 8, justifyContent: "space-between", alignItems: "center" }}>
       <View style={{ marginLeft: 10, justifyContent: "flex-start", flexDirection: "row" }}>
@@ -124,13 +107,8 @@ const ActiveView = ({ trip, isMember, joinRequest, handleJoinTrip }: ActiveViewP
           <UserPicture key={m.user.id} url={m.user.pictureUrl} id={m.user.id} size={28} style={{ marginLeft: -10 }} />
         ))}
       </View>
-      {isMember && <LianeStatusView liane={trip} joinRequest={joinRequest} />}
-      {!isMember && joinRequest && (
-        <AppText style={{ fontStyle: "italic", color: AppColorPalettes.gray[500] }}>
-          {trip.state === "Started" ? "Trajet en cours" : "Demande en attente"}
-        </AppText>
-      )}
-      {!isMember && !joinRequest && (
+      {isMember && <LianeStatusView liane={trip} />}
+      {!isMember && (
         <Row spacing={6} style={{ justifyContent: "flex-end" }}>
           <AppPressableOverlay
             backgroundStyle={{ backgroundColor: AppColors.primaryColor, borderRadius: 8 }}
