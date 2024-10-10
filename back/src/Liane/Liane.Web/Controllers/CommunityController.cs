@@ -46,10 +46,10 @@ public sealed class CommunityController(ILianeService lianeService)
     return lianeService.JoinRequest(id, liane);
   }
 
-  [HttpPost("liane/{liane:guid}/accept/{id:guid}")]
-  public Task<Api.Community.Liane> Accept(Guid id, Guid liane)
+  [HttpPost("liane/{liane:guid}/accept/{lianeRequest:guid}")]
+  public Task<Api.Community.Liane> Accept(Guid liane, Guid lianeRequest)
   {
-    return lianeService.Accept(id, liane);
+    return lianeService.Accept(liane, lianeRequest);
   }
 
   [HttpPost("liane/join_trip")]
