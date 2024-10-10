@@ -11,7 +11,6 @@ using Liane.Api.Trip;
 using Liane.Api.Util;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Util;
-using Liane.Service.Internal.Util.Sql;
 using MoreLinq.Extensions;
 using LianeRequest = Liane.Api.Community.LianeRequest;
 using Match = Liane.Api.Community.Match;
@@ -29,10 +28,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     }
 
     var snapedPoints = await rallyingPointService.Snap(rawMatches.FilterSelectMany<LianeRawMatch, LatLng>(r => [r.Deposit, r.Pickup, r.DepositReverse, r.PickupReverse]).ToImmutableHashSet());
-    var askToJoins = (await connection.QueryAsync(
-        Query.Select<LianeMemberDb>().Where(m => m.LianeId, ComparisonOperator.Eq, from), tx))
-      .ToImmutableDictionary(m => m.LianeId, m => m.RequestedAt);
-    return await ToMatch(rawMatches, snapedPoints, askToJoins);
+    return await ToMatch(rawMatches, snapedPoints, ImmutableDictionary<Guid, DateTime>.Empty);
   }
 
   public async Task<ImmutableDictionary<Guid, ImmutableList<Match>>> FindMatches(IDbConnection connection, IEnumerable<Guid> linkedTo, IDbTransaction? tx = null)
