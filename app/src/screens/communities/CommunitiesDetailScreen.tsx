@@ -22,7 +22,6 @@ export const CommunitiesDetailScreen = () => {
   const [error, setError] = useState<Error | undefined>(undefined);
   const [myModalVisible, setMyModalVisible] = useState<boolean>(false);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
-  const [currentMember, setCurrentMember] = useState<User | undefined>(undefined);
 
   const MemberItem = ({ member }: { member: CoLianeMember }) => {
     const { to, from, steps } = useMemo(() => extractWaypointFromTo(member.lianeRequest.wayPoints), [member.lianeRequest]);
@@ -48,12 +47,10 @@ export const CommunitiesDetailScreen = () => {
 
   const openModalUser = (user: any) => {
     setModalVisible(true);
-    setCurrentMember(user);
   };
 
   const closeModalUser = () => {
     setModalVisible(false);
-    setCurrentMember(undefined);
   };
 
   const reportUser = () => {

@@ -24,9 +24,12 @@ export const DetachedLianeItem = ({ lianeRequest, state }: DetachedLianeItemProp
       style={{ flexDirection: "row", justifyContent: "flex-end", alignItems: "flex-end", flex: 1, paddingVertical: 5 }}
       onPress={() => navigation.navigate("ListGroups", { groups: state.matches, lianeRequest })}>
       <Row>
-        {/*<View style={styles.notificationDotContainer}>
-          <View style={styles.notificationDot} />
-        </View>*/}
+        {state.matches.some(match => match.type === "Single" && match.askToJoinAt !== undefined) ? (
+          <View style={styles.notificationDotContainer}>
+            <View style={styles.notificationDot} />
+          </View>
+        ) : null}
+
         <AppText
           style={{
             fontSize: 14,

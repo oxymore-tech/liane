@@ -27,6 +27,7 @@ export const LianeMapDetailScreen = () => {
   const daysReccurence = extractDays(lianeRequest?.weekDays);
   const appMapRef = useRef<AppMapViewController>(null);
 
+  console.log("DEBUG double LIane", group.liane, lianeRequest.id);
   const joinLiane = async () => {
     if (lianeRequest && lianeRequest.id) {
       try {
@@ -38,6 +39,21 @@ export const LianeMapDetailScreen = () => {
       }
     } else {
       AppLogger.debug("COMMUNITIES", "Pas de lianeRequest ID lors de la demande de rejoindre", lianeRequest);
+    }
+  };
+
+  const acceptLiane = async () => {
+    if (lianeRequest && lianeRequest.id) {
+      try {
+        console.log("BAD", lianeRequest.id, group.liane, lianeRequest.id === group.liane);
+        const result = await services.community.accept(lianeRequest.id, group.liane);
+        AppLogger.debug("COMMUNITIES", "Acceptation une liane avec succès", result);
+        navigation.navigate("Communities");
+      } catch (error) {
+        AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de l'acceptation d'une liane", error);
+      }
+    } else {
+      AppLogger.debug("COMMUNITIES", "Pas de lianeRequest ID lors de l'acceptation", lianeRequest);
     }
   };
 
@@ -66,14 +82,38 @@ export const LianeMapDetailScreen = () => {
           </View>
           <View style={{ width: "100%", height: "100%", backgroundColor: AppColors.white }}>
             <View style={{ paddingTop: 20 }}>
-              <View style={{ marginHorizontal: "20%" }}>
-                <AppRoundedButton
-                  color={defaultTextColor(AppColors.primaryColor)}
-                  onPress={joinLiane}
-                  backgroundColor={AppColors.primaryColor}
-                  text={"Rejoindre "}
-                />
-              </View>
+              {group.type === "Single" ? (
+                <View
+                  style={{
+                    justifyContent: "center",
+                    alignItems: "center"
+                  }}>
+                  <AppText
+                    style={{
+                      fontWeight: "bold",
+                      fontSize: 14,
+                      lineHeight: 27,
+                      color: AppColors.black
+                    }}>{`Cette personne souhaite rejoindre votre liane`}</AppText>
+                  <View style={{ marginHorizontal: "20%" }}>
+                    <AppRoundedButton
+                      color={defaultTextColor(AppColors.primaryColor)}
+                      onPress={acceptLiane}
+                      backgroundColor={AppColors.primaryColor}
+                      text={"Accepter "}
+                    />
+                  </View>
+                </View>
+              ) : (
+                <View style={{ marginHorizontal: "20%" }}>
+                  <AppRoundedButton
+                    color={defaultTextColor(AppColors.primaryColor)}
+                    onPress={joinLiane}
+                    backgroundColor={AppColors.primaryColor}
+                    text={"Rejoindre "}
+                  />
+                </View>
+              )}
               <DisplayDays days={lianeRequest.weekDays} />
               <DisplayWayPoints wayPoints={lianeRequest.wayPoints} endTime={lianeRequest.arriveBefore} />
               <DisplayWayPoints wayPoints={lianeRequest.wayPoints} inverseTravel startTime={lianeRequest.returnAfter} />
