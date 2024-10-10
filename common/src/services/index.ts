@@ -1,7 +1,6 @@
 export * from "./rallying_point";
 export * from "./liane";
 export * from "./community";
-export * from "./conversation";
 export * from "./routing";
 export * from "./location";
 export * from "./location";

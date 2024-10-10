@@ -16,9 +16,7 @@ import {
   LocationService,
   CommunityService,
   DEFAULT_TLS,
-  AppLogger,
-  ConversationService,
-  ConversationServiceClient
+  AppLogger
 } from "@liane/common";
 import { RNAppEnv } from "@/api/env";
 import { AppStorage } from "@/api/storage";
@@ -37,7 +35,6 @@ export type AppServices = {
   notification: NotificationService;
   reminder: ReminderService;
   community: CommunityService;
-  conversation: ConversationService;
 };
 
 const http = new HttpClient(RNAppEnv.baseUrl, logger as AppLogger, AppStorage);
@@ -52,6 +49,5 @@ export const CreateAppServices = (): AppServices => ({
   location: new ReactNativeLocationService(RNAppEnv, AppStorage, http, DEFAULT_TLS),
   routing: new RoutingServiceClient(http),
   notification: new NotificationServiceClient(http),
-  community: new CommunityServiceClient(http),
-  conversation: new ConversationServiceClient(http)
+  community: new CommunityServiceClient(http)
 });
