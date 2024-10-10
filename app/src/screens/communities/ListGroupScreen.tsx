@@ -20,8 +20,8 @@ export const ListGroupScreen = () => {
   const [error, setError] = useState<Error | undefined>(undefined);
   const { to, from } = useMemo(() => extractWaypointFromTo(lianeRequest?.wayPoints), [lianeRequest.wayPoints]);
   const daysReccurence = extractDays(lianeRequest.weekDays);
-  const localeTime = lianeRequest?.arriveBefore ? `${lianeRequest?.arriveBefore?.hour}h${lianeRequest?.arriveBefore?.minute}` : "";
 
+  console.log("########## GROUPPS", groups);
   return (
     <View style={styles.mainContainer}>
       {error && (
@@ -43,7 +43,7 @@ export const ListGroupScreen = () => {
               fontSize: 14,
               lineHeight: 27,
               color: AppColors.black
-            }}>{`${from.city} ➔ ${to.city}`}</AppText>
+            }}>{`${from.city} ➔ ${to.city} TOP`}</AppText>
           <AppText
             style={{
               paddingLeft: 15,
@@ -58,7 +58,7 @@ export const ListGroupScreen = () => {
         <FlatList
           data={groups}
           renderItem={({ item }) => (
-            <GroupItem group={item} onPress={() => navigation.navigate("LianeMapDetail", { group: item, request: lianeRequest })} />
+            <GroupItem key={item.liane} group={item} onPress={() => navigation.navigate("LianeMapDetail", { group: item, request: lianeRequest })} />
           )}
         />
       </View>
@@ -83,7 +83,12 @@ const GroupItem = ({ group, onPress }: GroupItemProps) => (
           )}
         </View>
       </View>
-      <View style={{ paddingRight: 10 }}>
+      <View style={{ paddingRight: 10, flexDirection: "row", justifyContent: "flex-end" }}>
+        {group.type === "Single" && group.askToJoinAt && (
+          <View style={styles.notificationDotContainer}>
+            <View style={styles.notificationDot} />
+          </View>
+        )}
         <AppIcon name={"arrow-right"} />
       </View>
     </View>
@@ -123,63 +128,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between"
   },
-  groupName: {
-    fontSize: 24,
-    fontWeight: "bold",
-    flexShrink: 1,
-    lineHeight: 27,
-    textAlign: "center",
-    color: AppColors.white
-  },
-  statsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    width: "100%",
-    paddingTop: 16,
-    backgroundColor: AppColors.primaryColor
-  },
-  statBox: {
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: AppColors.primaryColor,
-    borderRadius: 10,
-    padding: 10,
-    margin: 5,
-    width: "45%",
-    borderWidth: 2,
-    borderColor: AppColors.white
-  },
-  iconContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-    position: "relative",
-    marginBottom: 8,
-    width: 64,
-    height: 64
-  },
-  iconText: {
-    position: "absolute",
-    color: AppColors.black,
-    fontWeight: "bold",
-    fontSize: 18
-  },
-  labelText: {
-    fontSize: 14,
-    color: AppColors.white,
-    textAlign: "center"
-  },
   membersContainer: {
     marginTop: 170,
     height: "100%"
-  },
-  membersTitle: {
-    marginLeft: 5,
-    marginBottom: 10,
-    fontSize: 16,
-    fontWeight: "bold",
-    flexShrink: 1,
-    lineHeight: 24
   },
   memberContainer: {
     flexDirection: "row",
@@ -196,9 +147,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     flex: 1
-  },
-  avatarContainer: {
-    marginRight: 16
   },
   textContainer: {
     flex: 1
@@ -219,5 +167,15 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     lineHeight: 16,
     color: AppColors.black
+  },
+  notificationDotContainer: {
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  notificationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 6,
+    backgroundColor: AppColors.orange
   }
 });

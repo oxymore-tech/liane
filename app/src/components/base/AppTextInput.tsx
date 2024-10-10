@@ -21,7 +21,7 @@ export const AppTextInput = forwardRef(
           placeholder={placeholder}
           placeholderTextColor={placeholderTextColor ?? AppColorPalettes.gray[400]}
           ref={ref}
-          style={[AppStyles.text, AppStyles.input, style, { color: textColor ?? AppColors.fontColor }]}
+          style={[AppStyles.text, AppStyles.input, style, { color: textColor ?? AppColors.fontColor, flex: 1 }]}
           {...props}
         />
         {trailing}
@@ -33,6 +33,7 @@ export const AppTextInput = forwardRef(
 const styles = StyleSheet.create({
   input: {
     flex: 1,
-    alignItems: "center"
+    alignItems: "center",
+    justifyContent: "flex-end"
   }
 });

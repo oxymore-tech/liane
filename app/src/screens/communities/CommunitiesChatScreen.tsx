@@ -37,15 +37,14 @@ export const CommunitiesChatScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesChat">();
   const { user, services } = useContext(AppContext);
   const insets = useSafeAreaInsets();
+
   const [messages, setMessages] = useState<LianeMessage[]>([]);
   const [paginationCursor, setPaginationCursor] = useState<string>();
   const [chat, setChat] = useState<Chat<"Liane">>();
   const [inputValue, setInputValue] = useState<string>("");
   const [error, setError] = useState<Error | undefined>(undefined);
   const [isSending, setIsSending] = useState(false);
-  const [group, setGroup] = useState<CoMatch | undefined>(undefined);
   const [liane, setLiane] = useState<CoLiane | undefined>(undefined);
-  const [request, setRequest] = useState<CoLianeRequest | ResolvedLianeRequest | undefined>(undefined);
   const [tripModalVisible, setTripModalVisible] = useState(false);
 
   const members = useMemo(
@@ -58,27 +57,31 @@ export const CommunitiesChatScreen = () => {
   );
 
   const sendMessage = async (value: string) => {
+    let lianeTemp = liane;
     setIsSending(true);
 
-    if (!chat) {
-      // Dans le cas ou on envoie un message dans le chat et que nous avons juste l'information du group et non de la liane
-      // Cela signifie que nous n'avous pas encore rejoint le groupe
-      // Il faut donc le rejoindre avant d'envoyer le message
-      // Si c'est un MatchSingle, il faut faire un joinNew
-      // Si c'est un MatchGroup, il faut faire un join
-
-      // Dans le cas d'un MatchGroup
-      const lianeCible = group?.liane;
-      if (request && request.id && lianeCible) {
-        await services.community.joinRequest(request.id, group.liane);
-        setGroup(undefined);
+    if (lianeTemp && lianeTemp.id && value && value.length > 0) {
+      try {
+        await chat?.send({
+          type: "Text",
+          value: value
+        });
+        setInputValue("");
+      } catch (e) {
+        setError(new Error("Message non envoyé suite à une erreur"));
+        AppLogger.debug("COMMUNITIES", "Une erreur est survenu lors de l'entrée dans une nouvelle liane", e);
+        setIsSending(false);
       }
+    } else {
+      setError(new Error("Message non envoyé suite à une erreur"));
     }
 
     setIsSending(false);
   };
 
   const appendMessage = (m: LianeMessage) => {
+    console.log("appendMessage", m);
+
     setMessages(oldList => [m, ...oldList]);
     if (liane?.id && chat) {
       chat.readConversation(liane.id, new Date().toISOString()).catch(e => console.warn(e));
@@ -86,6 +89,7 @@ export const CommunitiesChatScreen = () => {
   };
 
   const onReceiveLatestMessages = (m: PaginatedResponse<LianeMessage>) => {
+    console.log("onReceiveLatestMessages", m);
     setMessages(m.data);
     setPaginationCursor(m.next);
   };
@@ -101,7 +105,6 @@ export const CommunitiesChatScreen = () => {
   };
 
   const me = useMemo(() => liane?.members.find(m => m.user.id === user!.id), [liane?.members, user]);
-
   const name = me ? `${me.lianeRequest.wayPoints[0].label}  ➔ ${me.lianeRequest.wayPoints[1].label}` : "???";
 
   const startDate = useMemo(() => {
@@ -143,8 +146,6 @@ export const CommunitiesChatScreen = () => {
 
   useEffect(() => {
     setLiane(undefined);
-    setGroup(undefined);
-    setRequest(undefined);
     setError(undefined);
 
     const fetchLiane = async (id: string) => {
@@ -161,17 +162,8 @@ export const CommunitiesChatScreen = () => {
       // Lorsqu'on arrive directement par une liane
       setLiane(route.params.liane);
     }
-    if (route.params.group) {
-      // Lorsqu'on arrive par un group mais qu'on ne la pas encore rejoint
-      setGroup(route.params.group);
-    }
-    if (route.params.request) {
-      // La requête permettant de rejoindre un groupe
-      setRequest(route.params.request);
-    }
     if (route.params.lianeId) {
       // Lorsqu'on arrive par une notification
-      //TODO recup Liane
       fetchLiane(route.params.lianeId).then();
     }
   }, [route.params, services.community]);
@@ -272,28 +264,6 @@ export const CommunitiesChatScreen = () => {
 
                 <AppText style={{ fontSize: 14, fontWeight: "400", flexShrink: 1, lineHeight: 16, color: AppColors.black }}>
                   {liane && liane.members?.map(item => item.user?.pseudo).join(", ")}
-                </AppText>
-              </View>
-            )}
-
-            {group && (
-              <View
-                style={{
-                  justifyContent: "center"
-                }}>
-                <AppText
-                  style={{
-                    fontSize: 16,
-                    fontWeight: "600",
-                    flexShrink: 1,
-                    lineHeight: 27,
-                    color: AppColors.primaryColor
-                  }}>
-                  {`${group?.pickup.label} ➔ ${group?.deposit.label}`}
-                </AppText>
-
-                <AppText style={{ fontSize: 14, fontWeight: "400", flexShrink: 1, lineHeight: 16, color: AppColors.black }}>
-                  {`${extractDays(group?.weekDays)} `}
                 </AppText>
               </View>
             )}
