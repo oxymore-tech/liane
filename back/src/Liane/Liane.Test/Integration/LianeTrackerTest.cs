@@ -47,8 +47,7 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
         new("63f7a5c90f65806b1adb3081", LabeledPositions.Tournefeuille, LabeledPositions.AireDesPyrénées)
       }.ToImmutableList(),
       new Driver(userId),
-      TripStatus.NotStarted,
-      null
+      TripStatus.NotStarted
     );
     return (liane, JsonSerializer.Deserialize<FeatureCollection>(AssertExtensions.ReadTestResource("Geolocation/test-tournefeuille-pointis-inard.json"))!);
   }

@@ -1,27 +1,27 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
-using Liane.Api.Util.Http;
+using Liane.Api.Auth;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Event;
 
-public interface INotificationService : ICrudService<Notification>
+public interface INotificationService
 {
-  Task<PaginatedResponse<Notification>> List(NotificationFilter notificationFilter, Pagination pagination);
+  Task<Notification> Notify(Ref<User>? sender, Ref<User> receipient, string title, string message, string? uri) =>
+    Notify(sender, ImmutableList.Create(receipient), title, message, uri);
 
-  Task<Notification> SendInfo(string title, string message, Ref<Auth.User> to, string? uri);
+  Task<Notification> Get(Guid id);
 
-  Task<Notification> SendEvent(string title, string message, Ref<Auth.User> createdBy, Ref<Auth.User> to, LianeEvent lianeEvent, params Answer[] answers);
-  
-  Task Answer(Ref<Notification> id, Answer answer);
+  Task<PaginatedResponse<Notification>> List(Pagination pagination);
 
-  Task MarkAsRead(Ref<Notification> id);
+  Task<Notification> Notify(Ref<User>? sender, ImmutableList<Ref<User>> recipients, string title, string message, string? uri);
 
-  Task MarkAsRead(IEnumerable<Ref<Notification>> ids);
+  Task MarkAsRead(Guid id);
 
-  Task<ImmutableList<Ref<Notification>>> GetUnread(Ref<Auth.User> userId);
+  Task MarkAsRead(IEnumerable<Guid> ids);
 
-  Task CleanNotifications(IEnumerable<Ref<Trip.Trip>> lianes);
+  Task<ImmutableList<Guid>> GetUnread();
 }

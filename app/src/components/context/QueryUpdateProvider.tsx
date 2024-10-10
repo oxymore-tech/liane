@@ -55,7 +55,7 @@ const readNotifications = (old: InfiniteData<PaginatedResponse<Notification>>, u
       ...p,
       data: p.data.map(item => {
         const userIndex = item.recipients.findIndex(r => r.user === userId);
-        item.recipients[userIndex] = { ...item.recipients[userIndex], seenAt: new Date().toISOString() };
+        item.recipients[userIndex] = { ...item.recipients[userIndex], readAt: new Date().toISOString() };
         return item;
       })
     }))

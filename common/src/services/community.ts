@@ -37,7 +37,20 @@ export type Attached = {
 
 export type LianeState = Detached | Pending | Attached;
 
-export type CoMatch = {
+export type Single = {
+  type: "Single";
+  liane: Ref<CoLiane>;
+  weekDays: DayOfWeekFlag;
+  when: TimeRange;
+  pickup: RallyingPoint;
+  deposit: RallyingPoint;
+  score: number;
+  isReverseDirection?: boolean;
+  askToJoinAt?: UTCDateTime;
+};
+
+export type Group = {
+  type: "Group";
   liane: Ref<CoLiane>;
   totalMembers: number;
   matches: Ref<CoLianeRequest>[];
@@ -48,6 +61,8 @@ export type CoMatch = {
   score: number;
   isReverseDirection?: boolean;
 };
+
+export type CoMatch = Single | Group;
 
 export type CoLiane = Identity & {
   members: CoLianeMember[];
@@ -85,11 +100,11 @@ export interface CommunityService {
 
   delete(lianeRequestId: string): Promise<void>;
 
-  joinRequest(mine: string, liane: string): Promise<void>;
+  joinRequest(mine: string, liane: string): Promise<boolean>;
 
-  accept(mine: string, liane: string): Promise<CoLiane>;
+  accept(lianeRequest: string, liane: string): Promise<CoLiane>;
 
-  joinTrip(query: JoinTripQuery): Promise<void>;
+  joinTrip(query: JoinTripQuery): Promise<boolean>;
 
   leave(liane: string): Promise<boolean>;
 
@@ -119,16 +134,16 @@ export class CommunityServiceClient implements CommunityService {
     return this.http.postAs<CoLianeRequest>(`/community/liane/request/${lianeRequestId}`, { body: request });
   }
 
-  async joinRequest(mine: string, liane: string) {
-    await this.http.post(`/community/liane/${liane}/join/${mine}`);
+  joinRequest(mine: string, liane: string) {
+    return this.http.postAs<boolean>(`/community/liane/${liane}/join/${mine}`);
   }
 
-  accept(mine: string, liane: string) {
-    return this.http.postAs<CoLiane>(`/community/liane/${liane}/accept/${mine}`);
+  accept(lianeRequest: string, liane: string) {
+    return this.http.postAs<CoLiane>(`/community/liane/${liane}/accept/${lianeRequest}`);
   }
 
-  async joinTrip(query: JoinTripQuery) {
-    await this.http.post("/community/liane/join_trip", { body: query });
+  joinTrip(query: JoinTripQuery) {
+    return this.http.postAs<boolean>("/community/liane/join_trip", { body: query });
   }
 
   leave(liane: string) {

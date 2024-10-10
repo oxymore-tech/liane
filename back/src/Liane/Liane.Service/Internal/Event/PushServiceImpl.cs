@@ -2,67 +2,54 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using Liane.Api.Chat;
+using Liane.Api.Auth;
 using Liane.Api.Community;
 using Liane.Api.Event;
 using Liane.Api.Util.Ref;
+using Liane.Service.Internal.Community;
 
 namespace Liane.Service.Internal.Event;
 
 public sealed class PushServiceImpl : IPushService
 {
   private readonly ImmutableList<IPushMiddleware> pushMiddlewares;
+  private readonly LianeFetcher lianeFetcher;
+  private readonly IUserService userService;
 
-  public PushServiceImpl(IEnumerable<IPushMiddleware> pushMiddlewares)
+  public PushServiceImpl(IEnumerable<IPushMiddleware> pushMiddlewares, LianeFetcher lianeFetcher, IUserService userService)
   {
+    this.lianeFetcher = lianeFetcher;
+    this.userService = userService;
     this.pushMiddlewares = pushMiddlewares.OrderBy(p => p.Priority)
       .ToImmutableList();
   }
 
-  public async Task<bool> SendChatMessage(Ref<Api.Auth.User> receiver, Ref<ConversationGroup> conversation, ChatMessage message)
+  public async Task PushMessage(Ref<Api.Community.Liane> liane, LianeMessage message)
   {
-    foreach (var pushService in pushMiddlewares)
+    var resolvedLiane = await lianeFetcher.Get(liane.IdAsGuid());
+    var sender = await userService.Get(message.CreatedBy);
+    foreach (var member in resolvedLiane.Members)
     {
-      if (await pushService.SendChatMessage(receiver, conversation, message))
-      {
-        return true;
-      }
+      await PushMessageInternal(sender, member.User, resolvedLiane, message);
     }
-
-    return false;
   }
 
-  public async Task<bool> SendLianeMessage(Ref<Api.Auth.User> receiver, Ref<Api.Community.Liane> conversation, LianeMessage message)
+  private async Task PushMessageInternal(Api.Auth.User sender, Ref<Api.Auth.User> receiver, Ref<Api.Community.Liane> liane, LianeMessage message)
   {
     foreach (var pushService in pushMiddlewares)
     {
-      if (await pushService.SendLianeMessage(receiver, conversation, message))
+      if (await pushService.PushMessage(sender, receiver, liane, message))
       {
-        return true;
+        return;
       }
     }
-
-    return false;
   }
 
-  public async Task<bool> SendChatMessage(Ref<Api.Auth.User> receiver, Ref<Api.Community.Liane> conversation, LianeMessage message)
+  public async Task<bool> Push(Ref<Api.Auth.User> receiver, Notification notification)
   {
     foreach (var pushService in pushMiddlewares)
     {
-      if (await pushService.SendLianeMessage(receiver, conversation, message))
-      {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  public async Task<bool> SendNotification(Ref<Api.Auth.User> receiver, Notification notification)
-  {
-    foreach (var pushService in pushMiddlewares)
-    {
-      if (await pushService.SendNotification(receiver, notification))
+      if (await pushService.Push(receiver, notification))
       {
         return true;
       }

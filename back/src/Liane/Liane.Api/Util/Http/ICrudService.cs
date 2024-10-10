@@ -34,9 +34,7 @@ public interface ICrudService<in TIn, TOut> : IResourceResolverService<TOut> whe
   Task<TOut> Create(TIn obj);
 }
 
-public interface ICrudService<T> : ICrudService<T, T> where T : class, IIdentity
-{
-}
+public interface ICrudService<T> : ICrudService<T, T> where T : class, IIdentity;
 
 public interface ICrudEntityService<in TIn, TOut> : IResourceResolverService<TOut> where TIn : class where TOut : class, IEntity<string>
 {
@@ -45,6 +43,4 @@ public interface ICrudEntityService<in TIn, TOut> : IResourceResolverService<TOu
   Task<TOut> Create(TIn entity, Ref<User>? owner = null);
 }
 
-public interface ICrudEntityService<T> : ICrudEntityService<T, T> where T : class, IEntity<string>
-{
-}
+public interface ICrudEntityService<T> : ICrudEntityService<T, T> where T : class, IEntity<string>;

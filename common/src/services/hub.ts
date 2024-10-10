@@ -1,7 +1,6 @@
-import { ChatMessage, ConversationGroup, FullUser, Liane, PaginatedRequestParams, PaginatedResponse, Ref, TrackingInfo } from "../api";
-import { Answer, Notification } from "./notification";
+import { FullUser, Liane, PaginatedResponse, Ref, TrackingInfo } from "../api";
+import { Notification } from "./notification";
 import { AppLogger } from "../logger";
-import { LianeEvent } from "../event";
 import { AppStorage } from "../storage";
 import { HttpClient } from "./http";
 import { HubConnection, HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
@@ -17,12 +16,6 @@ export interface HubService {
 
   start(): Promise<void>;
 
-  connectToTripChat(
-    conversationRef: Ref<ConversationGroup>,
-    onReceiveLatestMessages: OnLatestMessagesCallback<ChatMessage>,
-    onReceiveMessage: ConsumeMessage<ChatMessage>
-  ): Promise<Chat<"Group">>;
-
   connectToLianeChat(
     conversation: Ref<CoLiane>,
     onReceiveLatestMessages: OnLatestMessagesCallback<LianeMessage>,
@@ -33,17 +26,12 @@ export interface HubService {
 
   subscribeToNotifications(callback: OnNotificationCallback): SubscriptionLike;
 
-  postEvent(lianeEvent: LianeEvent): Promise<void>;
-
-  postAnswer(notificationId: string, answer: Answer): Promise<void>;
-
   updateActiveState(active: boolean): void;
 
   subscribeToTrackingInfo(lianeId: string, callback: OnLocationCallback): Promise<{ closed: boolean; unsubscribe: () => Promise<void> }>;
 
   readNotifications(ids?: Ref<Notification>[]): Promise<void>;
 
-  unreadConversations: Observable<Ref<ConversationGroup>[]>;
   unreadNotifications: Observable<Ref<Notification>[]>;
   lianeUpdates: Observable<Liane>;
   userUpdates: Observable<FullUser>;
@@ -58,12 +46,9 @@ export type OnLocationCallback = (l: TrackingInfo) => void;
 
 type UnreadOverview = Readonly<{
   notifications: Ref<Notification>[];
-  conversations: Ref<ConversationGroup>[];
 }>;
 
 export abstract class AbstractHubService implements HubService {
-  readonly unreadConversations: BehaviorSubject<Ref<ConversationGroup>[]> = new BehaviorSubject<Ref<ConversationGroup>[]>([]);
-
   protected readonly notificationSubject: Subject<Notification> = new Subject<Notification>();
   lianeUpdates = new Subject<Liane>();
   userUpdates = new Subject<FullUser>();
@@ -99,14 +84,6 @@ export abstract class AbstractHubService implements HubService {
 
   updateActiveState(active: boolean) {
     this.appStateActive = active;
-  }
-
-  connectToTripChat(
-    conversationRef: Ref<ConversationGroup>,
-    onReceiveLatestMessages: OnLatestMessagesCallback<ChatMessage>,
-    onReceiveMessage: ConsumeMessage<ChatMessage>
-  ) {
-    return this.connectToChat("Group", conversationRef, onReceiveLatestMessages, onReceiveMessage);
   }
 
   connectToLianeChat(
@@ -147,10 +124,6 @@ export abstract class AbstractHubService implements HubService {
     onReceiveMessage: ConsumeMessage<MessageTypeOf<TChatType>>
   ): Promise<Chat<TChatType>>;
 
-  abstract postEvent(lianeEvent: LianeEvent): Promise<void>;
-
-  abstract postAnswer(notificationId: string, answer: Answer): Promise<void>;
-
   abstract subscribeToTrackingInfo(lianeId: string, callback: OnLocationCallback): Promise<{ closed: boolean; unsubscribe: () => Promise<void> }>;
 }
 
@@ -158,6 +131,7 @@ export class HubServiceClient extends AbstractHubService {
   private readonly hub: HubConnection;
 
   private isStarted = false;
+
   constructor(
     baseUrl: string,
     logger: AppLogger,
@@ -195,9 +169,6 @@ export class HubServiceClient extends AbstractHubService {
       this.hubState.next("online");
     });
 
-    this.hub.on("ReceiveLatestGroupMessages", async (m: PaginatedResponse<ChatMessage>) => this.receiveLatestMessages("Group", m));
-    this.hub.on("ReceiveGroupMessage", async (c: string, m: ChatMessage) => this.receiveMessage("Group", c, m));
-
     this.hub.on("ReceiveLatestLianeMessages", async (m: PaginatedResponse<LianeMessage>) => this.receiveLatestMessages("Liane", m));
     this.hub.on("ReceiveLianeMessage", async (c: string, m: LianeMessage) => this.receiveMessage("Liane", c, m));
 
@@ -230,20 +201,13 @@ export class HubServiceClient extends AbstractHubService {
     }
   }
 
-  private async receiveMessage<TChatType extends ChatType>(chatType: TChatType, conversationId: string, message: MessageTypeOf<TChatType>) {
+  private receiveMessage<TChatType extends ChatType>(chatType: TChatType, conversationId: string, message: MessageTypeOf<TChatType>) {
     if (!this.currentChat) {
       this.logger.error("HUB", `Not connected to ${chatType} chat to receive message`);
       return false;
     }
     if (this.currentChat.name === chatType) {
-      const received = await this.currentChat?.receiveMessage(conversationId, message as any);
-      if (!received) {
-        if (!this.unreadConversations.getValue().includes(conversationId)) {
-          this.unreadConversations.next([...this.unreadConversations.getValue(), conversationId]);
-          return false;
-        }
-      }
-      return received;
+      return this.currentChat?.receiveMessage(conversationId, message as any);
     }
     return false;
   }
@@ -276,21 +240,9 @@ export class HubServiceClient extends AbstractHubService {
     this.isStarted = false;
   }
 
-  async list(id: Ref<ConversationGroup>, params: PaginatedRequestParams) {
-    return this.http.get<PaginatedResponse<ChatMessage>>(`/conversation/${id}/message`, { params });
-  }
-
   async readNotifications(ids?: Ref<Notification>[]) {
     await this.hub.invoke("ReadNotifications", ids ?? this.unreadNotifications.getValue());
     this.unreadNotifications.next([]);
-  }
-
-  async postEvent(lianeEvent: LianeEvent) {
-    await this.hub.invoke("PostEvent", lianeEvent);
-  }
-
-  async postAnswer(notificationId: string, answer: Answer) {
-    await this.hub.invoke("PostAnswer", notificationId, answer);
   }
 
   async subscribeToTrackingInfo(lianeId: string, callback: OnLocationCallback): Promise<{ closed: boolean; unsubscribe: () => Promise<void> }> {
@@ -319,11 +271,6 @@ export class HubServiceClient extends AbstractHubService {
     }
     const currentChat = new Chat<TChatType>(this.hub, name, this.logger);
     await currentChat.connect(conversationRef, onReceiveLatestMessages, onReceiveMessage);
-
-    // Remove from unread conversations
-    if (this.unreadConversations.getValue().includes(conversationRef)) {
-      this.unreadConversations.next(this.unreadConversations.getValue().filter(c => c !== conversationRef));
-    }
     this.currentChat = currentChat as AbstractChat;
 
     return currentChat;
@@ -332,7 +279,6 @@ export class HubServiceClient extends AbstractHubService {
   protected receiveUnreadOverview = async (unread: UnreadOverview) => {
     // Called when hub is started
     this.logger.info("HUB", "unread", unread);
-    this.unreadConversations.next(unread.conversations);
     this.unreadNotifications.next(unread.notifications);
   };
 

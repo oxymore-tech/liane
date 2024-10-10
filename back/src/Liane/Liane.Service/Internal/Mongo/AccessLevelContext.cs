@@ -38,14 +38,11 @@ internal class OwnerAccessLevelContext<TDb> : IMongoAccessLevelContext<TDb> wher
   }
 }
 
-internal class MemberAccessLevelContext<TDb, TMemberDb> : IMongoAccessLevelContext<TDb> where TDb : class, IIdentity, ISharedResource<TMemberDb> where TMemberDb : IResourceMember
+internal class MemberAccessLevelContext<TDb, TMemberDb>(string? currentUserId) : IMongoAccessLevelContext<TDb>
+  where TDb : class, IIdentity, ISharedResource<TMemberDb>
+  where TMemberDb : IResourceMember
 {
-  private readonly string currentUserId;
-
-  public MemberAccessLevelContext(string? currentUserId)
-  {
-    this.currentUserId = currentUserId!;
-  }
+  private readonly string currentUserId = currentUserId!;
 
   public ResourceAccessLevel AccessLevel => ResourceAccessLevel.Member;
 

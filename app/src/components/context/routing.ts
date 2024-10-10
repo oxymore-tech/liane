@@ -50,7 +50,7 @@ export const AppLinking: LinkingOptions<NavigationParamList> = {
     initialRouteName: "Home",
     screens: {
       LianeDetail: {
-        path: "liane/:liane"
+        path: "trip/:liane"
       },
       /*ShareTripLocationScreen: {
         path: "liane/:liane/start"
@@ -59,7 +59,7 @@ export const AppLinking: LinkingOptions<NavigationParamList> = {
         path: "chat/:conversationId"
       },
       CommunitiesChat: {
-        path: "community/:lianeId"
+        path: "liane/:lianeId"
       }
     }
   }
@@ -73,22 +73,10 @@ export const useAppNavigation = <ScreenName extends keyof NavigationParamList>()
 };
 
 export function getNotificationNavigation(notification: Notification) {
-  if (UnionUtils.isInstanceOf(notification, "Event")) {
-    if (UnionUtils.isInstanceOf(notification.payload, "JoinRequest")) {
-      return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
-        navigation.navigate("OpenJoinLianeRequest", { request: notification });
-    } else if (UnionUtils.isInstanceOf(notification.payload, "MemberAccepted")) {
-      return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
-        navigation.navigate("LianeDetail", { liane: notification.payload.liane });
-    }
-  } else if (UnionUtils.isInstanceOf(notification, "NewMessage")) {
-    return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
-      navigation.navigate("Chat", { conversationId: notification.conversation });
-  } else if (UnionUtils.isInstanceOf(notification, "LianeMessage")) {
-    return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) =>
-      navigation.navigate("CommunitiesChat", { lianeId: notification.liane });
+  if (!notification.uri) {
+    return;
   }
-  return undefined;
+  return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) => navigation.navigate(notification.uri!);
 }
 
 export const RootNavigation = createNavigationContainerRef<NavigationParamList>();

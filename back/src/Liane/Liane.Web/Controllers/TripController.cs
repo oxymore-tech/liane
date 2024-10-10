@@ -70,7 +70,6 @@ public sealed class TripController(
   {
     var memberId = currentContext.CurrentUser().Id;
     await tripService.RemoveMember(id, memberId);
-    await eventDispatcher.Dispatch(new LianeEvent.MemberHasLeft(id, memberId));
     return NoContent();
   }
 

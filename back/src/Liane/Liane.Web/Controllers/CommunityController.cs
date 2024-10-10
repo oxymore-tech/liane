@@ -53,7 +53,7 @@ public sealed class CommunityController(ILianeService lianeService)
   }
 
   [HttpPost("liane/join_trip")]
-  public Task JoinTrip([FromBody] JoinTripQuery query)
+  public Task<bool> JoinTrip([FromBody] JoinTripQuery query)
   {
     return lianeService.JoinTrip(query);
   }

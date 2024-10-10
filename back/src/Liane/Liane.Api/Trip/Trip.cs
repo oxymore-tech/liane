@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Immutable;
 using System.Linq;
-using Liane.Api.Chat;
+using Liane.Api.Auth;
 using Liane.Api.Routing;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Ref;
@@ -30,8 +30,7 @@ public sealed record Feedback(
 );
 
 public sealed record TripMember(
-  [property:SerializeAsResolvedRef]
-  Ref<Auth.User> User,
+  [property: SerializeAsResolvedRef] Ref<User> User,
   Ref<RallyingPoint> From,
   Ref<RallyingPoint> To,
   int SeatCount = -1, // Defaults to a passenger seat
@@ -42,24 +41,22 @@ public sealed record TripMember(
   bool TakeReturnTrip = false
 ) : IResourceMember;
 
-public sealed record Driver
-(
-  Ref<Auth.User> User,
+public sealed record Driver(
+  Ref<User> User,
   bool CanDrive = true
 );
 
 public sealed record Trip(
   string Id,
   Ref<Community.Liane> Liane,
-  Ref<Auth.User> CreatedBy,
+  Ref<User> CreatedBy,
   DateTime? CreatedAt,
   DateTime DepartureTime,
   Ref<Trip>? Return,
   ImmutableList<WayPoint> WayPoints,
   ImmutableList<TripMember> Members,
   Driver Driver,
-  TripStatus State,
-  Ref<ConversationGroup>? Conversation
+  TripStatus State
 ) : IEntity<string>, ISharedResource<TripMember>
 {
   public WayPoint GetWayPoint(int nextPointIndex)

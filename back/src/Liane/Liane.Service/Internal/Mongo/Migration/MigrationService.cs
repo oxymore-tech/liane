@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Liane.Api.Event;
 using Liane.Service.Internal.Trip;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
@@ -8,12 +9,17 @@ namespace Liane.Service.Internal.Mongo.Migration;
 
 public sealed class MigrationService(IMongoDatabase db, ILogger<MigrationService> logger)
 {
-  private const int Version = 18;
+  private const int Version = 19;
 
   private async Task Migrate()
   {
     await db.GetCollection<LianeDb>()
-      .UpdateManyAsync(Builders<LianeDb>.Filter.Empty, Builders<LianeDb>.Update.Unset("recurrence"));
+      .DeleteManyAsync(Builders<LianeDb>.Filter.Empty);
+
+    await db.DropCollectionAsync("notification");
+    await db.DropCollectionAsync("liane_recurrence");
+    await db.DropCollectionAsync("chat_message");
+    await db.DropCollectionAsync("conversation_group");
   }
 
   public async Task Execute()

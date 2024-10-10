@@ -7,7 +7,6 @@ using Liane.Api.Image;
 using Liane.Api.Trip;
 using Liane.Api.Util;
 using Liane.Service.Internal.Address;
-using Liane.Service.Internal.Chat;
 using Liane.Service.Internal.Community;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Image;
@@ -88,7 +87,6 @@ public static class Startup
     services.AddService<RallyingPointServiceImpl>();
     services.AddService<RallyingPointRequestServiceImpl>();
     services.AddService<RallyingPointGenerator>();
-    services.AddService<ChatServiceImpl>();
     services.AddService<TripServiceImpl>();
     services.AddService<LianeTrackerServiceImpl>();
     services.AddService<LianeTrackerCache>();

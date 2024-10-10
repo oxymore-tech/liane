@@ -13791,8 +13791,5 @@
       }
     }
   ],
-  "conversation": {
-    "$oid": "657ab40d5030769a55e8896c"
-  },
   "totalSeatCount": 2
 }

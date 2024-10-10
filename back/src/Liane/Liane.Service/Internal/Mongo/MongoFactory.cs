@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Immutable;
-using Liane.Api.Trip;
 using Liane.Api.Auth;
+using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
-using Liane.Service.Internal.Chat;
 using Liane.Service.Internal.Mongo.Serialization;
 using Liane.Service.Internal.User;
 using Microsoft.Extensions.DependencyInjection;
@@ -115,8 +114,6 @@ public static class MongoFactory
 
   public static void InitSchema(IMongoDatabase db)
   {
-    CreateIndex(db, "created_at_index", Builders<DbChatMessage>.IndexKeys.Descending(l => l.CreatedAt));
-
     db.GetCollection<DbUser>()
       .Indexes
       .CreateOne(new CreateIndexModel<DbUser>(Builders<DbUser>.IndexKeys.Ascending(l => l.Phone), new CreateIndexOptions { Name = "phone_index", Unique = true }));

@@ -12,16 +12,10 @@ public abstract record LianeEvent
   {
   }
 
-  public abstract Ref<Trip.Trip> Liane { get; init; }
-
   public sealed record JoinRequest(
-    Ref<Trip.Trip> Liane,
-    Ref<RallyingPoint> From,
-    Ref<RallyingPoint> To,
-    int Seats,
-    bool TakeReturnTrip,
-    string Message,
-    GeolocationLevel GeolocationLevel = GeolocationLevel.None
+    Ref<Community.Liane> Liane,
+    Ref<Community.LianeRequest> LianeRequest,
+    string Message
   ) : LianeEvent;
   
   public sealed record ChangeDepartureTimeRequest(
@@ -31,27 +25,15 @@ public abstract record LianeEvent
   ) : LianeEvent;
   
   public sealed record MemberAccepted(
-    Ref<Trip.Trip> Liane,
-    Ref<Auth.User> Member,
-    Ref<RallyingPoint> From,
-    Ref<RallyingPoint> To,
-    int Seats,
-    bool TakeReturnTrip
+    Ref<Community.Liane> Liane,
+    Ref<Community.LianeRequest> LianeRequest,
+    Ref<Auth.User> Member
   ) : LianeEvent;
 
   public sealed record MemberRejected(
     Ref<Trip.Trip> Liane,
-    Ref<Auth.User> Member,
-    Ref<RallyingPoint> From,
-    Ref<RallyingPoint> To,
-    int Seats,
-    bool TakeReturnTrip,
+    Ref<Community.LianeRequest> LianeRequest,
     string? Reason = null
-  ) : LianeEvent;
-
-  public sealed record MemberHasLeft(
-    Ref<Trip.Trip> Liane,
-    Ref<Auth.User> Member
   ) : LianeEvent;
 
   public sealed record MemberPing(

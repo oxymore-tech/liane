@@ -1,6 +1,5 @@
 {
   "_id": {"$oid": "6617deeb1766bd0c08459a34"},
-  "conversation": {"$oid": "6617df191766bd0c08459a36"},
   "createdAt": {"$date": "2024-04-11T13:00:27.546Z"},
   "createdBy": {"$oid": "65f2cbd9e94a0516ac1e6dac"},
   "departureTime": {"$date": "2024-04-11T13:10:00.000Z"},

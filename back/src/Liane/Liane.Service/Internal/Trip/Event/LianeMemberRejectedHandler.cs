@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using Liane.Api.Event;
-using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
+using Liane.Service.Internal.Community;
 using Liane.Service.Internal.Util;
 
 namespace Liane.Service.Internal.Trip.Event;
@@ -11,16 +11,18 @@ namespace Liane.Service.Internal.Trip.Event;
 public sealed class LianeMemberRejectedHandler(
   INotificationService notificationService,
   ICurrentContext currentContext,
-  IRallyingPointService rallyingPointService)
+  LianeRequestFetcher lianeRequestFetcher)
   : IEventListener<LianeEvent.MemberRejected>
 {
   public async Task OnEvent(LianeEvent.MemberRejected e, Ref<Api.Auth.User>? sender = null)
   {
-    var destination = await rallyingPointService.Get(e.To);
-    await notificationService.SendEvent("Demande déclinée",
-      $"Votre demande de trajet à destination de {destination.Label} n'a pas été acceptée.",
+    var lianeRequest = await lianeRequestFetcher.Get(e.LianeRequest.IdAsGuid());
+    await notificationService.Notify(
       sender ?? currentContext.CurrentUser().Id,
-      e.Member,
-      e);
+      lianeRequest.CreatedBy!,
+      "Demande déclinée",
+      $"Votre demande pour rejoindre la liane n'a pas été acceptée pour '{lianeRequest.Name}'",
+      $"liane://liane/{lianeRequest.Id}"
+    );
   }
 }

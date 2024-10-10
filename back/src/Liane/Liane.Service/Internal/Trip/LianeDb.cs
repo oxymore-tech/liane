@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Immutable;
 using System.Linq;
-using Liane.Api.Chat;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Http;
@@ -30,7 +29,6 @@ public sealed record LianeDb(
   TripStatus State,
   ImmutableList<WayPointDb> WayPoints,
   ImmutableList<UserPing> Pings,
-  Ref<ConversationGroup>? Conversation,
   Ref<Api.Community.Liane>? Liane
 ) : IEntity<string>, ISharedResource<TripMember>
 {

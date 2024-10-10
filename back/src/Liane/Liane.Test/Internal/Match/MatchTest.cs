@@ -19,7 +19,7 @@ public class MatchTest
       new(LabeledPositions.GorgesDuTarnCausses, 0, 0, DateTime.Now),
       new(LabeledPositions.BalsiegeParkingEglise, 0, 0, DateTime.Now),
       new(LabeledPositions.Mende, 0, 0, DateTime.Now)
-    }.ToImmutableList(), null, null, TripStatus.NotStarted, null);
+    }.ToImmutableList(), null, null, TripStatus.NotStarted);
 #pragma warning restore CS8625
 
     var m1 = new LianeMatch(liane1, 2, null, new Api.Trip.Match.Compatible(new Delta(0, 0), LabeledPositions.ChamperbouxEglise, LabeledPositions.Mende, new List<WayPoint>

@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import AppMapView from "@/components/map/AppMapView";
 import { AppBottomSheet, AppBottomSheetHandleHeight, AppBottomSheetScrollView, BottomSheetRefProps } from "@/components/base/AppBottomSheet";
 import { Column, Row } from "@/components/base/AppLayout";
@@ -39,7 +39,6 @@ import { WayPointsView } from "@/components/trip/WayPointsView";
 import { LianeProofDisplay } from "@/components/map/layers/LianeProofDisplay";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { LocationMarker } from "@/screens/detail/components/LocationMarker";
-import { useObservable } from "@/util/hooks/subscription";
 import { AppLogger } from "@/api/logger";
 
 export const LianeDetailScreen = () => {
@@ -77,8 +76,7 @@ export const LianeDetailScreen = () => {
 const LianeDetailPage = ({ match }: { match: LianeMatch | undefined }) => {
   const { height } = useAppWindowsDimensions();
   const { navigation } = useAppNavigation();
-  const { services } = useContext(AppContext);
-  const unread = useObservable(services.realTimeHub.unreadConversations, undefined);
+
   const ref = useRef<BottomSheetRefProps>(null);
   const { top: insetsTop } = useSafeAreaInsets();
 
@@ -159,15 +157,6 @@ const LianeDetailPage = ({ match }: { match: LianeMatch | undefined }) => {
 
           {!match && <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />}
         </AppBottomSheet>
-
-        {!!match?.trip.conversation && match?.trip.state !== "Archived" && match?.trip.state !== "Canceled" && (
-          <Pressable
-            onPress={() => navigation.navigate("Chat", { conversationId: match?.trip.conversation, liane: match?.trip })}
-            style={[styles.chatButton, styles.mapOverlay, AppStyles.shadow]}>
-            <AppIcon name={"message-circle-outline"} size={36} color={AppColors.secondaryColor} />
-            {unread?.includes(match?.trip.conversation) && <View style={styles.chatBadge} />}
-          </Pressable>
-        )}
         <FloatingBackButton onPress={navigation.goBack} />
       </View>
     </GestureHandlerRootView>

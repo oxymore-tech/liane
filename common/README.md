@@ -16,5 +16,6 @@ Lancer les tests e2e :
 # initialiser le back, prerequis utilisateur de test et les points ralliements
 liane purge
 liane dump_on_local
+# Start the back in local
 yarn test
 ```

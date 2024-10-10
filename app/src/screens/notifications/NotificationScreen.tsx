@@ -62,12 +62,8 @@ const NotificationScreen = WithFetchPaginatedResponse<Notification>(
         notification={item}
         read={async () => {
           await services.notification.markAsRead(item.id!);
-          if (item.answers && item.answers.length > 0) {
-            refresh();
-          } else {
-            const userIndex = item.recipients.findIndex(r => r.user === user?.id);
-            item.recipients[userIndex] = { ...item.recipients[userIndex], seenAt: new Date().toISOString() };
-          }
+          const userIndex = item.recipients.findIndex(r => r.user === user?.id);
+          item.recipients[userIndex] = { ...item.recipients[userIndex], readAt: new Date().toISOString() };
         }}
       />
     );
@@ -89,7 +85,6 @@ const NotificationScreen = WithFetchPaginatedResponse<Notification>(
             <View style={{ height: insets.bottom + 8 }} />
           )
         }
-        //ItemSeparatorComponent={() => <View style={{ borderBottomWidth: 1, borderBottomColor: AppColorPalettes.gray[200], marginHorizontal: 24 }} />}
         contentContainerStyle={{ flexGrow: 1 }}
         style={{ paddingTop: 8 }}
       />

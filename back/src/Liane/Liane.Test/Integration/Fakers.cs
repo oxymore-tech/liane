@@ -2,9 +2,8 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 using Bogus;
-using Liane.Api.Chat;
-using Liane.Api.Trip;
 using Liane.Api.Auth;
+using Liane.Api.Trip;
 using Liane.Service.Internal.User;
 using MongoDB.Bson;
 
@@ -20,19 +19,6 @@ public class Fakers
     );
 
   public static readonly ImmutableList<DbUser> FakeDbUsers = DbUserFaker.Generate(8).ToImmutableList();
-
-  public static Faker<ConversationGroup> ConversationFaker => new Faker<ConversationGroup>()
-    .CustomInstantiator(f =>
-    {
-      var memberUsers = f.PickRandom(FakeDbUsers, f.Random.Int(2, 3));
-      var members = memberUsers.Select(m => new GroupMemberInfo(m.Id.ToString(), DateTime.Now));
-      return new ConversationGroup(members.ToImmutableList(), null, f.PickRandom(FakeDbUsers.ToList()).Id.ToString(), DateTime.Today);
-    });
-
-  public static readonly Faker<ChatMessage> MessageFaker = new Faker<ChatMessage>()
-    .CustomInstantiator(f =>
-      new ChatMessage(ObjectId.GenerateNewId().ToString(), f.PickRandom(FakeDbUsers.ToList()).Id.ToString(), DateTime.Now, f.Lorem.Sentence())
-    );
 
   public static readonly Faker<TripRequest> LianeRequestFaker = new Faker<TripRequest>()
     .CustomInstantiator(f =>

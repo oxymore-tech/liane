@@ -53,7 +53,7 @@ public sealed record UpdateQuery<T>(Filter<T> Filter) : IQuery<T>
     return (stringBuilder.ToString(), namedParams.ToSqlParameters());
   }
 
-  public UpdateQuery<T> Where<TValue>(Expression<Func<T, TValue>> field, ComparisonOperator op, TValue operand) => Where(Filter<T>.Where(field, op, operand));
+  public UpdateQuery<T> Where(Expression<Func<T, object?>> field, ComparisonOperator op, object? operand) => Where(Filter<T>.Where(field, op, operand));
   public UpdateQuery<T> Where(Filter<T> filter) => this with { Filter = Filter & filter };
 
   public UpdateQuery<T> And(Filter<T> other) => this with { Filter = Filter & other };

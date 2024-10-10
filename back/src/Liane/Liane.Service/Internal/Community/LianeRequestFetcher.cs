@@ -8,13 +8,20 @@ using Liane.Api.Trip;
 using Liane.Api.Util;
 using Liane.Api.Util.Exception;
 using Liane.Api.Util.Ref;
+using Liane.Service.Internal.Postgis.Db;
 using Liane.Service.Internal.Util.Sql;
 using LianeRequest = Liane.Api.Community.LianeRequest;
 
 namespace Liane.Service.Internal.Community;
 
-public sealed class LianeRequestFetcher(IRallyingPointService rallyingPointService)
+public sealed class LianeRequestFetcher(IRallyingPointService rallyingPointService, PostgisDatabase db)
 {
+  public async Task<LianeRequest> Get(Guid lianeRequestId)
+  {
+    using var connection = db.NewConnection();
+    return await FetchLianeRequest(connection, lianeRequestId);
+  }
+
   public async Task<LianeRequest> FetchLianeRequest(IDbConnection connection, Guid lianeRequestId, IDbTransaction? tx = null)
   {
     var lianeRequest = (await FetchLianeRequests(connection, ImmutableList.Create(lianeRequestId), tx)).FirstOrDefault();

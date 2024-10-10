@@ -23,7 +23,6 @@ import { ArchivedTripsScreen } from "@/screens/user/ArchivedTripsScreen";
 import { SettingsScreen } from "@/screens/user/SettingsScreen";
 import { PublishScreen } from "@/screens/publish/PublishScreen";
 import { LianeDetailScreen } from "@/screens/detail/LianeDetailScreen";
-import { ChatScreen } from "@/screens/ChatScreen";
 import { CommunitiesChatScreen } from "@/screens/communities/CommunitiesChatScreen";
 import { ListGroupScreen } from "@/screens/communities/ListGroupScreen";
 import { CommunitiesDetailScreen } from "@/screens/communities/CommunitiesDetailScreen";
@@ -203,7 +202,6 @@ function Navigation() {
         <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="Publish" component={PublishScreen} options={{ headerShown: false, animation: "fade" }} />
         <Stack.Screen name="LianeDetail" component={LianeDetailScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Chat" component={ChatScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Communities" component={CommunitiesScreen} options={{ headerShown: false }} />
         <Stack.Screen name="CommunitiesChat" component={CommunitiesChatScreen} options={{ headerShown: false }} />
         <Stack.Screen name="LianeMapDetail" component={LianeMapDetailScreen} options={{ headerShown: false }} />

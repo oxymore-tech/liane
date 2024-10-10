@@ -4,15 +4,16 @@ import { LianeGeolocation } from "@/api/service/location";
 import { RootNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppStorage } from "@/api/storage";
-import { UnionUtils } from "@liane/common";
 import { GeolocationPermission } from "../../native-modules/geolocation";
 
-export interface IAppModalNavigation {
+export type AppModalNavigationProps = {
   showTutorial: (as: "passenger" | "driver", lianeId?: string) => void;
   shouldShow: undefined | "driver" | "passenger";
-}
+};
+
 // @ts-ignore
-export const AppModalNavigationContext = createContext<IAppModalNavigation>();
+export const AppModalNavigationContext = createContext<AppModalNavigationProps>();
+
 export const AppModalNavigationProvider = (props: PropsWithChildren) => {
   const { services, user: u } = useContext(AppContext);
   const [shouldShow, setShowTutorial] = useState<{ showAs: "driver" | "passenger"; lianeId?: undefined | string } | undefined>(undefined);
@@ -33,14 +34,6 @@ export const AppModalNavigationProvider = (props: PropsWithChildren) => {
 
       if (!setting) {
         setShowTutorial({ showAs: "driver" });
-        const sub = services.realTimeHub.subscribeToNotifications(async n => {
-          if (UnionUtils.isInstanceOf(n, "Event") && UnionUtils.isInstanceOf(n.payload, "MemberAccepted")) {
-            setShowTutorial({ showAs: "passenger", lianeId: n.payload.liane });
-            sub.unsubscribe();
-          }
-        });
-
-        return () => sub.unsubscribe();
       }
     });
   }, [services.realTimeHub, u]);

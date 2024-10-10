@@ -9,7 +9,6 @@ using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util;
 using Liane.Service.Internal.Address;
-using Liane.Service.Internal.Chat;
 using Liane.Service.Internal.Community;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Mongo;
@@ -34,7 +33,6 @@ using NLog.Layouts;
 using NLog.Targets;
 using NLog.Targets.Wrappers;
 using NLog.Web;
-using Npgsql;
 using NUnit.Framework;
 
 namespace Liane.Test.Integration;
@@ -107,7 +105,6 @@ public abstract class BaseIntegrationTest
     services.AddService<UserServiceImpl>();
     services.AddService<UserStatServiceImpl>();
     services.AddService<PushServiceImpl>();
-    services.AddService<ChatServiceImpl>();
     services.AddService<LianeStatusUpdate>();
     services.AddService<LianeTrackerServiceImpl>();
     services.AddService<MockAutomaticAnswerService>();

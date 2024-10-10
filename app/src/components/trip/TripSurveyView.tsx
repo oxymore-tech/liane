@@ -12,7 +12,6 @@ import { WayPointView } from "@/components/trip/WayPointsView.tsx";
 import { useQuery, useQueryClient } from "react-query";
 import { LianeDetailQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen.tsx";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
-import { AppStorage } from "@/api/storage.ts";
 import { LianeStatusView } from "@/components/trip/LianeStatusView.tsx";
 import { SimpleModal } from "@/components/modal/SimpleModal.tsx";
 import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker.tsx";
@@ -42,8 +41,7 @@ export const TripSurveyView = ({ message, coLiane, color }: { message: LianeMess
       return;
     }
 
-    const geolocationLevel = await AppStorage.getSetting("geolocation");
-    await services.community.joinTrip({ liane: coLiane.id!, trip: trip.data.id!, geolocationLevel });
+    await services.community.joinTrip({ liane: coLiane.id!, trip: trip.data.id!, takeReturnTrip: false });
     await queryClient.invalidateQueries(LianeDetailQueryKey(message.content.value));
     await queryClient.invalidateQueries(LianeQueryKey);
   }, [trip.data, isMember, services.community, coLiane.id, queryClient, message.content.value]);

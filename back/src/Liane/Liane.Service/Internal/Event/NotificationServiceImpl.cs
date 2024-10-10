@@ -6,145 +6,145 @@ using System.Threading.Tasks;
 using Liane.Api.Event;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
-using Liane.Service.Internal.Mongo;
+using Liane.Service.Internal.Postgis.Db;
 using Liane.Service.Internal.Util;
-using MongoDB.Driver;
+using Liane.Service.Internal.Util.Sql;
+using UuidExtensions;
 
 namespace Liane.Service.Internal.Event;
 
 public sealed class NotificationServiceImpl(
-  IMongoDatabase mongo,
+  PostgisDatabase db,
   ICurrentContext currentContext,
-  IPushService pushService,
-  EventDispatcher eventDispatcher
-) : MongoCrudService<Notification>(mongo), INotificationService
+  IPushService pushService
+) : INotificationService
 {
-  public Task<Notification> SendInfo(string title, string message, Ref<Api.Auth.User> to, string? uri) => Create(
-    new Notification.Info(
-      null, currentContext.CurrentUser().Id, DateTime.UtcNow, ImmutableList.Create(new Recipient(to)), ImmutableHashSet<Answer>.Empty, title, message, uri)
-  );
-
-  public Task<Notification> SendEvent(string title, string message, Ref<Api.Auth.User> createdBy, Ref<Api.Auth.User> to, LianeEvent lianeEvent, params Answer[] answers) => Create(
-    new Notification.Event(
-      null, createdBy, DateTime.UtcNow, ImmutableList.Create(new Recipient(to)), answers.ToImmutableHashSet(), title, message, lianeEvent)
-  );
-
-  public new async Task<Notification> Create(Notification obj)
+  public async Task<Notification> Notify(Ref<Api.Auth.User>? sender, ImmutableList<Ref<Api.Auth.User>> recipients, string title, string message, string? uri)
   {
-    if (obj.Recipients.IsEmpty)
+    using var connection = db.NewConnection();
+    using var tx = connection.BeginTransaction();
+
+    var id = Uuid7.Guid();
+    await connection.InsertAsync(new NotificationDb(id, sender, DateTime.UtcNow, title, message, uri), tx);
+    await connection.InsertMultipleAsync(recipients.Select(u => new RecipientDb(id, u, null)), tx);
+
+    tx.Commit();
+    var notification = await Get(id);
+    foreach (var recipient in recipients)
     {
-      throw new ArgumentException("At least one recipient must be specified");
+      await pushService.Push(recipient, notification);
     }
 
-    var (created, notify) = (await base.Create(obj), true);
-    if (notify)
-    {
-      await Task.WhenAll(obj.Recipients.Select(r => pushService.SendNotification(r.User, created)));
-    }
-
-    return created;
+    return notification;
   }
 
-  public async Task<PaginatedResponse<Notification>> List(NotificationFilter notificationFilter, Pagination pagination)
+  public async Task<Notification> Get(Guid id)
   {
-    var filter = Builders<Notification>.Filter.Empty;
-    if (notificationFilter.Recipient is not null)
-    {
-      filter &=
-        Builders<Notification>.Filter.ElemMatch(r => r.Recipients, r => r.User == notificationFilter.Recipient) &
-        // Filter unseen notifications or those just sent today
-        (Builders<Notification>.Filter.Where(n => n.CreatedAt > DateTime.UtcNow.Date) |
-         Builders<Notification>.Filter.ElemMatch(r => r.Recipients, r => r.SeenAt == null)
-         | (
-           Builders<Notification>.Filter.ElemMatch(r => r.Recipients, r => r.Answer == null)
-           & Builders<Notification>.Filter.SizeGt(r => r.Answers, 0)
-         ));
-    }
-
-    if (notificationFilter.Sender is not null)
-    {
-      filter &= Builders<Notification>.Filter.Eq(r => r.CreatedBy, notificationFilter.Sender);
-    }
-
-    if (notificationFilter.PayloadType is not null)
-    {
-      filter &= BuildTypeFilter(notificationFilter.PayloadType);
-    }
-
-    if (notificationFilter.Liane is not null)
-    {
-      filter &= Builders<Notification>.Filter.Eq("payload.liane", notificationFilter.Liane);
-    }
-
-    return await Collection.PaginateTime(pagination, r => r.CreatedAt, filter, false);
+    using var connection = db.NewConnection();
+    var notification = await connection.GetAsync<NotificationDb>(id);
+    var recipients = await connection.QueryAsync(
+      Query.Select<RecipientDb>().Where(r => r.NotificationId, ComparisonOperator.Eq, id)
+    );
+    return new Notification(
+      notification.Id,
+      notification.CreatedBy,
+      notification.CreatedAt,
+      recipients.Select(r => new Recipient(r.UserId, r.ReadAt)).ToImmutableList(),
+      notification.Title,
+      notification.Message,
+      notification.Uri
+    );
   }
 
-  public Task CleanNotifications(IEnumerable<Ref<Api.Trip.Trip>> lianes)
+  public async Task<PaginatedResponse<Notification>> List(Pagination pagination)
   {
-    return Mongo.GetCollection<Notification>()
-      .DeleteManyAsync(Builders<Notification>.Filter.In("Payload.Liane", lianes));
+    using var connection = db.NewConnection();
+    using var tx = connection.BeginTransaction();
+
+    var notificationFilter = await connection.QueryAsync<Guid>(
+      Query.Count<RecipientDb>().Where(r => r.UserId, ComparisonOperator.Eq, currentContext.CurrentUser().Id)
+        .And(r => r.ReadAt, ComparisonOperator.Eq, null)
+      , tx
+    );
+
+    var notificationDbs = await connection.QueryAsync(
+      Query.Select<NotificationDb>()
+        .Where(n => n.Id, ComparisonOperator.In, notificationFilter)
+        .And(pagination.ToFilter<NotificationDb>())
+        .OrderBy(m => m.Id, false)
+        .OrderBy(m => m.CreatedAt, false)
+        .Take(pagination.Limit + 1)
+      , tx
+    );
+
+    var allRecipients = (await connection.QueryAsync(
+        Query.Select<RecipientDb>()
+          .Where(r => r.NotificationId, ComparisonOperator.In, notificationDbs.Select(n => n.Id))
+        , tx)
+      )
+      .GroupBy(r => r.NotificationId)
+      .ToImmutableDictionary(g => g.Key, g => g.Select(r => new Recipient(r.UserId, r.ReadAt)).ToImmutableList());
+
+    var notifications = notificationDbs
+      .Take(pagination.Limit)
+      .Select(n =>
+      {
+        var recipients = allRecipients.GetValueOrDefault(n.Id, ImmutableList<Recipient>.Empty);
+        return new Notification(n.Id, n.CreatedBy, n.CreatedAt, recipients, n.Title, n.Message, n.Uri);
+      }).ToImmutableList();
+
+    var totalCount = notificationFilter.Count;
+    var hasNext = totalCount > pagination.Limit;
+    var next = hasNext ? notificationDbs.Last().ToCursor() : null;
+    return new PaginatedResponse<Notification>(notifications.Count, next, notifications, totalCount);
   }
 
-  private static FilterDefinition<Notification> BuildTypeFilter(PayloadType payloadType) => payloadType switch
+  public async Task MarkAsRead(Guid id)
   {
-    PayloadType.Info => Builders<Notification>.Filter.IsInstanceOf<Notification, Notification.Info>(),
-    PayloadType.Event lianeEvent => BuildLianeEventTypeFilter(lianeEvent),
-    PayloadType.Reminder => Builders<Notification>.Filter.IsInstanceOf<Notification, Notification.Reminder>(),
-    _ => throw new ArgumentOutOfRangeException(nameof(payloadType))
-  };
-
-  public async Task Answer(Ref<Notification> id, Answer answer)
-  {
-    var answerToEvent = await Get(id);
-    if (answerToEvent is Notification.Event lianeEvent)
-    {
-      await eventDispatcher.DispatchAnswer(lianeEvent, answer);
-    }
-
-    await Delete(id);
-  }
-
-  public async Task MarkAsRead(Ref<Notification> id)
-  {
-    var e = await Get(id);
-
     var userId = currentContext.CurrentUser().Id;
 
-    var memberIndex = e.Recipients.FindIndex(r => r.User.Id == userId);
-    await Mongo.GetCollection<Notification>()
-      .UpdateOneAsync(n => n.Id! == id.Id,
-        Builders<Notification>.Update.Set(n => n.Recipients[memberIndex].SeenAt, DateTime.UtcNow)
-      );
+    using var connection = db.NewConnection();
+    await connection.UpdateAsync(
+      Query.Update<RecipientDb>().Set(r => r.ReadAt, DateTime.UtcNow)
+        .Where(r => r.NotificationId, ComparisonOperator.Eq, id)
+        .And(r => r.UserId, ComparisonOperator.Eq, userId)
+    );
   }
 
-  public async Task MarkAsRead(IEnumerable<Ref<Notification>> ids)
+  public async Task MarkAsRead(IEnumerable<Guid> ids)
   {
-    await Parallel.ForEachAsync(ids, async (@ref, _) => await MarkAsRead(@ref));
+    var userId = currentContext.CurrentUser().Id;
+
+    using var connection = db.NewConnection();
+    await connection.UpdateAsync(
+      Query.Update<RecipientDb>().Set(r => r.ReadAt, DateTime.UtcNow)
+        .Where(r => r.NotificationId, ComparisonOperator.In, ids)
+        .And(r => r.UserId, ComparisonOperator.Eq, userId)
+    );
   }
 
-  public async Task<ImmutableList<Ref<Notification>>> GetUnread(Ref<Api.Auth.User> userId)
+  public async Task<ImmutableList<Guid>> GetUnread()
   {
-    var filter = Builders<Notification>.Filter.ElemMatch(n => n.Recipients, r => r.User == userId && r.SeenAt == null);
-    var unread = await Mongo.GetCollection<Notification>()
-      .Find(filter)
-      .Limit(100)
-      .ToListAsync();
-    return unread.Select(n => (Ref<Notification>)n.Id!).ToImmutableList();
-  }
+    using var connection = db.NewConnection();
 
-  private static FilterDefinition<Notification> BuildLianeEventTypeFilter(PayloadType.Event @event)
-  {
-    var filter = Builders<Notification>.Filter.IsInstanceOf<Notification, Notification.Event>();
-    if (@event.SubType is null)
-    {
-      return filter;
-    }
-
-    return filter & Builders<Notification>.Filter.IsInstanceOf("payload", @event.SubType);
-  }
-
-  protected override Notification ToDb(Notification inputDto, string originalId)
-  {
-    return inputDto with { Id = originalId };
+    return await connection.QueryAsync<Guid>(
+      Query.Select<RecipientDb>(r => r.NotificationId).Where(r => r.UserId, ComparisonOperator.Eq, currentContext.CurrentUser().Id)
+        .And(r => r.ReadAt, ComparisonOperator.Eq, null)
+    );
   }
 }
+
+public sealed record NotificationDb(
+  Guid Id,
+  Ref<Api.Auth.User>? CreatedBy,
+  DateTime? CreatedAt,
+  string Title,
+  string Message,
+  string? Uri
+) : IEntity<Guid>;
+
+public sealed record RecipientDb(
+  Guid NotificationId,
+  Ref<Api.Auth.User> UserId,
+  DateTime? ReadAt
+);

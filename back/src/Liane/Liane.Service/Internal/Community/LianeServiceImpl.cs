@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using Liane.Api.Community;
+using Liane.Api.Event;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util;
@@ -33,7 +34,8 @@ public sealed class LianeServiceImpl(
   LianeRequestFetcher lianeRequestFetcher,
   LianeMatcher matcher,
   IPushService pushService,
-  ITripService tripService) : ILianeService
+  ITripService tripService,
+  EventDispatcher eventDispatcher) : ILianeService
 {
   public async Task<LianeRequest> Create(LianeRequest request)
   {
@@ -201,13 +203,16 @@ public sealed class LianeServiceImpl(
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
 
+    var userId = currentContext.CurrentUser().Id;
     var foreignId = foreign.IdAsGuid();
 
     var foreignLiane = await lianeFetcher.FetchLiane(connection, foreignId, tx);
-    if (foreignLiane.Members.Count > 0 && foreignLiane.Members.All(m => m.User.Id != currentContext.CurrentUser().Id))
+    if (foreignLiane.Members.Count > 0 && foreignLiane.Members.All(m => m.User.Id != userId))
     {
       throw new UnauthorizedAccessException("User is not part of the liane");
     }
+
+    var resolvedLianeRequest = await connection.GetAsync<LianeRequestDb>(lianeRequest.IdAsGuid(), tx);
 
     var alreadyMember = await connection.FirstOrDefaultAsync(Query.Select<LianeMemberDb>().Where(m => m.LianeRequestId, ComparisonOperator.Eq, foreignId), tx);
 
@@ -229,6 +234,9 @@ public sealed class LianeServiceImpl(
 
     var liane = await lianeFetcher.FetchLiane(connection, lianeId, tx);
     tx.Commit();
+
+    var memberAccepted = new LianeEvent.MemberAccepted(liane.Id, resolvedLianeRequest.Id, resolvedLianeRequest.CreatedBy);
+    await eventDispatcher.Dispatch(memberAccepted, userId);
     return liane;
   }
 
@@ -246,7 +254,7 @@ public sealed class LianeServiceImpl(
     return liane;
   }
 
-  public async Task JoinTrip(JoinTripQuery query)
+  public async Task<bool> JoinTrip(JoinTripQuery query)
   {
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
@@ -255,8 +263,8 @@ public sealed class LianeServiceImpl(
     var trip = await tripService.Get(query.Trip);
     var liane = await lianeFetcher.FetchLiane(connection, trip.Liane.IdAsGuid(), tx);
 
-    var member = liane.Members.FirstOrDefault(m => m.User == userId);
-    var driver = liane.Members.FirstOrDefault(m => m.User == trip.Driver.User);
+    var member = liane.Members.FirstOrDefault(m => m.User.Id == userId);
+    var driver = liane.Members.FirstOrDefault(m => m.User.Id == trip.Driver.User.Id);
 
     if (member is null)
     {
@@ -268,11 +276,10 @@ public sealed class LianeServiceImpl(
       throw new UnauthorizedAccessException("Driver is not part of the liane");
     }
 
-    // TODO find best match with the trip itself
     var match = await matcher.FindMatchBetween(connection, member.LianeRequest.IdAsGuid(), driver.LianeRequest.IdAsGuid(), tx);
     if (match is null)
     {
-      return;
+      return false;
     }
 
     var direction = CheckDirection(ImmutableList.Create<Ref<RallyingPoint>>(match.Pickup, match.Deposit), trip.WayPoints);
@@ -281,6 +288,7 @@ public sealed class LianeServiceImpl(
       : (match.Deposit, match.Pickup);
 
     await tripService.AddMember(trip, new TripMember(userId, pickup, deposit));
+    return true;
   }
 
   private static Direction CheckDirection(ImmutableList<Ref<RallyingPoint>> lianeRequestWayPoints, ImmutableList<WayPoint> tripWayPoints)
@@ -343,10 +351,8 @@ public sealed class LianeServiceImpl(
     var now = DateTime.UtcNow;
     await connection.MergeAsync(new LianeMessageDb(id, lianeId, content, userId, now), tx);
     var lianeMessage = new LianeMessage(id.ToString(), userId, now, content);
-    var recipients = resolvedLiane.Members.Where(m => m.User.Id != userId)
-      .Select(m => m.User)
-      .ToImmutableList();
-    await pushService.SendLianeMessage(recipients, lianeId, lianeMessage);
+
+    await pushService.PushMessage(lianeId, lianeMessage);
     tx.Commit();
     return lianeMessage;
   }

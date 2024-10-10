@@ -8,7 +8,6 @@ using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
-using Liane.Service.Internal.Chat;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
@@ -38,7 +37,6 @@ public sealed class TripServiceImplTest : BaseIntegrationTest
   {
     services.AddService(Moq.Mock.Of<IHubService>());
     services.AddService<UserServiceImpl>();
-    services.AddService<ChatServiceImpl>();
     services.AddService<TripServiceImpl>();
     services.AddService<FirebaseMessagingImpl>();
   }

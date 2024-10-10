@@ -87,7 +87,7 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
 
     var currentLocation = tracker.GetCurrentLocation(ping.User.Id);
     var nextPointIndex = currentLocation?.NextPointIndex ?? tracker.GetFirstWayPoint(ping.User.Id);
-    
+
     if (ping.Coordinate is null)
     {
       await InsertMemberLocation(tracker, ping.User.Id, new(pingTime, nextPointIndex, ping.Delay, null, null, double.PositiveInfinity, ping.User));
@@ -155,7 +155,7 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
       await InsertMemberLocation(tracker, ping.User.Id, new(pingTime, pingNextPointIndex, delay, computedLocation, ping.Coordinate.Value, nextPointDistance, ping.User));
     }
   }
-  
+
   public async Task PushPing(Ref<Api.Trip.Trip> liane, UserPing ping)
   {
     var tracker = trackerCache.GetTracker(liane);
@@ -182,7 +182,13 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
       if (lastCarMove.TryGetValue(tracker.Trip.Id, out var lastMoveDate) && DateTime.UtcNow - lastMoveDate > TimeSpan.FromMinutes(StoppedDurationInMinutes))
       {
         // Notify driver
-        _ = notificationService.SendInfo("Votre trajet est-il toujours en cours ?", "", tracker.Trip.Driver.User, "liane://liane/" + tracker.Trip.Id);
+        _ = await notificationService.Notify(
+          null,
+          tracker.Trip.Driver.User,
+          "Votre trajet est-il toujours en cours ?",
+          "",
+          $"liane://trip/{tracker.Trip.Id}"
+        );
       }
 
       lastCarMove[tracker.Trip.Id] = info.Car.At;

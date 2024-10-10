@@ -26,7 +26,6 @@ import { TripGeolocationProvider, useCarDelay } from "@/screens/detail/TripGeolo
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { startGeolocationService } from "@/screens/detail/components/GeolocationSwitch";
 import { useTripStatus } from "@/components/trip/trip";
-import { useObservable } from "@/util/hooks/subscription";
 import { AppLogger } from "@/api/logger";
 
 export interface TripSection extends SectionBase<Liane> {
@@ -93,10 +92,8 @@ const convertToDateSections = (data: Liane[], member: Ref<User>, reverseSort: bo
     .sort((a, b) => (reverseSort ? -a.date.localeCompare(b.date) : a.date.localeCompare(b.date)));
 
 const LianeItem = ({ item }: { item: Liane }) => {
-  const { navigation } = useAppNavigation();
-  const { services, user } = useContext(AppContext);
+  const { user } = useContext(AppContext);
 
-  const unread = useObservable(services.realTimeHub.unreadConversations, undefined);
   const driver = useMemo(() => item.members.find(l => l.user.id === item.driver.user)!.user, [item]);
   const { wayPoints } = useMemo(() => getUserTrip(item, user!.id!), [item, user]);
   const carLocation = useCarDelay();
@@ -154,13 +151,6 @@ const LianeItem = ({ item }: { item: Liane }) => {
                     </View>
                   ))}
               </Row>
-            )}
-
-            {!!item.conversation && item.state !== "Archived" && item.state !== "Canceled" && (
-              <Pressable onPress={() => navigation.navigate("Chat", { conversationId: item.conversation, liane: item })} style={styles.chatButton}>
-                <AppIcon name={"message-circle-outline"} size={38} color={AppColorPalettes.gray[500]} />
-                {unread?.includes(item.conversation) && <View style={styles.chatBadge} />}
-              </Pressable>
             )}
           </Row>
         </Row>

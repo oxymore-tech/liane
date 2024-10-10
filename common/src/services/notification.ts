@@ -1,49 +1,21 @@
-import { ConversationGroup, PaginatedResponse, Ref, User, UTCDateTime } from "../api";
+import { PaginatedResponse, Ref, User, UTCDateTime } from "../api";
 import { BehaviorSubject, map, Observable, SubscriptionLike } from "rxjs";
-import { LianeEvent } from "../event";
 import { HttpClient } from "./http";
-import { IUnion } from "../union";
-import { CoLiane, MessageContent } from "./community";
 
-export type Notification = Info | Event | NewMessage | NewLianeMessage;
-
-export enum Answer {
-  Accept = "Accept",
-  Reject = "Reject"
-}
-
-export type Recipient = Readonly<{
-  user: Ref<User>;
-  seenAt?: UTCDateTime;
-}>;
-
-type AbstractNotification<Key extends string> = {
-  id?: string;
+export type Notification = {
+  id: string;
   createdBy: Ref<User>;
   createdAt: UTCDateTime;
   recipients: Recipient[];
-  answers: Answer[];
   title: string;
   message: string;
   uri?: string;
-} & IUnion<Key>;
-
-export type Info = AbstractNotification<"Info">;
-
-export type NewMessage = Readonly<{
-  conversation: Ref<ConversationGroup>;
-}> &
-  AbstractNotification<"NewMessage">;
-
-export type NewLianeMessage = AbstractNotification<"LianeMessage"> & {
-  content: MessageContent;
-  liane: Ref<CoLiane>;
 };
 
-export type Event<T extends LianeEvent = LianeEvent> = Readonly<{
-  payload: T;
-}> &
-  AbstractNotification<"Event">;
+export type Recipient = {
+  user: Ref<User>;
+  readAt?: UTCDateTime;
+};
 
 export interface NotificationService {
   receiveNotification(notification: Notification): Promise<void>;

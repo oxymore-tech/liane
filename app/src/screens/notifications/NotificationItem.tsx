@@ -1,4 +1,4 @@
-import { capitalize, Notification, UnionUtils } from "@liane/common";
+import { capitalize, Notification } from "@liane/common";
 import { AppLocalization } from "@/api/i18n";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { Center, Column, Row } from "@/components/base/AppLayout";
@@ -12,21 +12,11 @@ import { getNotificationNavigation, useAppNavigation } from "@/components/contex
 export const NotificationItem = ({ notification: item, read }: { notification: Notification; read: () => void }) => {
   const { user } = useContext(AppContext);
   const userIndex = item.recipients.findIndex(r => r.user === user?.id);
-  const seen = userIndex >= 0 && !!item.recipients[userIndex].seenAt;
+  const seen = userIndex >= 0 && !!item.recipients[userIndex].readAt;
   const datetime = capitalize(AppLocalization.toRelativeTimeString(new Date(item.createdAt!)));
   const { navigation } = useAppNavigation();
 
   let icon: IconName = "message-square-outline";
-  if (UnionUtils.isInstanceOf(item, "Event")) {
-    switch (item.payload.type) {
-      case "MemberAccepted":
-        icon = "calendar-outline";
-        break;
-      case "MemberHasLeft":
-        icon = "log-out-outline";
-        break;
-    }
-  }
   const nav = getNotificationNavigation(item);
   return (
     <AppPressableOverlay
@@ -37,9 +27,7 @@ export const NotificationItem = ({ notification: item, read }: { notification: N
         if (nav) {
           nav(navigation);
         }
-        if (item.answers.length > 0) {
-          read();
-        }
+        read();
       }}>
       <Column style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
         <Row>

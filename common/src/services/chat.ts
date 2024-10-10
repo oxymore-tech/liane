@@ -1,16 +1,16 @@
 import { ConsumeMessage, OnLatestMessagesCallback } from "./hub";
 import { HubConnection } from "@microsoft/signalr";
-import { ChatMessage, ConversationGroup, PaginatedResponse, Ref, UTCDateTime } from "../api";
+import { PaginatedResponse, Ref, UTCDateTime } from "../api";
 import { AppLogger } from "../logger";
 import { CoLiane, LianeMessage, MessageContent } from "./community";
 
-export type ChatType = "Group" | "Liane";
+export type ChatType = "Liane";
 
-export type AbstractChat = Chat<"Group"> | Chat<"Liane">;
+export type AbstractChat = Chat<"Liane">;
 
-export type GroupTypeOf<TChat extends ChatType> = TChat extends "Group" ? ConversationGroup : CoLiane;
-export type MessageContentTypeOf<TChat extends ChatType> = TChat extends "Group" ? ChatMessage : MessageContent;
-export type MessageTypeOf<TChat extends ChatType> = TChat extends "Group" ? ChatMessage : LianeMessage;
+export type GroupTypeOf<TChat extends ChatType> = TChat extends "Liane" ? CoLiane : never;
+export type MessageContentTypeOf<TChat extends ChatType> = TChat extends "Liane" ? MessageContent : never;
+export type MessageTypeOf<TChat extends ChatType> = TChat extends "Liane" ? LianeMessage : never;
 
 export class Chat<TChatType extends ChatType> {
   constructor(

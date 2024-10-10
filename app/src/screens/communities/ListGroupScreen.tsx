@@ -78,7 +78,9 @@ const GroupItem = ({ group, onPress }: GroupItemProps) => (
         <View style={styles.textContainer}>
           <AppText style={styles.nameText}>{`${group.pickup.label} ➔ ${group.deposit.label}`}</AppText>
           <AppText style={styles.locationText}>{`${extractDays(group.weekDays)}`}</AppText>
-          <AppText style={styles.timeText}>{`${group.matches?.length ?? 1} membre${group.matches?.length > 1 ? "s" : ""}`}</AppText>
+          {group.type === "Group" && (
+            <AppText style={styles.timeText}>{`${group.matches?.length ?? 1} membre${group.matches?.length > 1 ? "s" : ""}`}</AppText>
+          )}
         </View>
       </View>
       <View style={{ paddingRight: 10 }}>

@@ -105,7 +105,6 @@ export type Liane = Entity & {
   wayPoints: WayPoint[];
   members: LianeMember[];
   driver: { user: Ref<User>; canDrive: boolean };
-  conversation: Ref<ConversationGroup>;
   state: TripStatus;
 };
 
@@ -142,17 +141,6 @@ export type LianeUpdate = {
 };
 
 export type LianeMatchDisplay = { features: FeatureCollection; lianeMatches: LianeMatch[] };
-export type ChatMessage = {
-  text: string;
-} & Entity;
-
-export type ConversationGroup = {
-  members: {
-    user: User;
-    joinedAt: UTCDateTime;
-    lastReadAt: UTCDateTime;
-  }[];
-} & Identity;
 
 export type PaginatedResponse<T> = {
   pageSize: number;

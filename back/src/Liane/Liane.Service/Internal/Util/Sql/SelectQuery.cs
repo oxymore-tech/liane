@@ -63,7 +63,7 @@ public sealed record SelectQuery<T>(
   }
 
   public SelectQuery<T> Where(Filter<T> filter) => this with { Filter = Filter & filter };
-  public SelectQuery<T> Where<TValue>(Expression<Func<T, TValue>> field, ComparisonOperator op, TValue operand) => Where(Filter<T>.Where(field, op, operand));
+  public SelectQuery<T> Where(Expression<Func<T, object?>> field, ComparisonOperator op, object? operand) => Where(Filter<T>.Where(field, op, operand));
 
   public SelectQuery<T> Take(int? take) => this with { InternalTakeValue = take };
   public SelectQuery<T> Skip(int? skip) => this with { InternalSkipValue = skip };

@@ -1,13 +1,11 @@
 import { CreateServices, UserContext } from "./setup/services";
 import { faker } from "@faker-js/faker";
-import { addSeconds, Answer, LatLng, sleep, TrackingInfo, UnionUtils } from "../../src";
-import { readLianeFilteredTile, readLianeTile } from "./utils/tiles";
+import { addSeconds, LatLng, Liane, sleep, TrackingInfo } from "../../src";
 import fc from "fast-check";
 
 const users: UserContext[] = [];
 const userCount = 2;
-let tripId: string | undefined;
-let requestId: string | undefined;
+let trip: Liane | undefined;
 const pickup = "mairie:46185";
 const destination = "mairie:46309";
 beforeAll(async () => {
@@ -25,11 +23,37 @@ afterAll(async () => {
 
 vi.setConfig({ testTimeout: 10_000 });
 describe.sequential("Joining a trip", () => {
-  describe("User A", () => {
-    test("Should create new trip", async () => {
+  describe("User B", () => {
+    test("Should create a liane and post a new trip", async () => {
       const currentUser = users[0];
-      const posted = await currentUser.services.liane.post({
-        liane: "019233a0-5c48-7cfa-b12e-7e7f0eb9c69f",
+
+      const lianeRequest = await currentUser.services.community.create({
+        wayPoints: [pickup, destination],
+        arriveBefore: { hour: 9 },
+        returnAfter: { hour: 18 },
+        canDrive: true,
+        weekDays: "1110000",
+        isEnabled: true,
+        roundTrip: false,
+        name: "Test trip from A"
+      });
+
+      const secondUser = users[1];
+      const secondLianeRequest = await secondUser.services.community.create({
+        wayPoints: [pickup, destination],
+        arriveBefore: { hour: 9 },
+        returnAfter: { hour: 18 },
+        canDrive: true,
+        weekDays: "1110000",
+        isEnabled: true,
+        roundTrip: false,
+        name: "Test trip from B"
+      });
+      await currentUser.services.community.joinRequest(lianeRequest.id!, secondLianeRequest.id!);
+      const coLiane = await secondUser.services.community.accept(lianeRequest.id!, secondLianeRequest.id!);
+
+      const posted = await secondUser.services.liane.post({
+        liane: coLiane.id!,
         from: pickup,
         to: destination,
         departureTime: addSeconds(new Date(), 1800).toISOString(),
@@ -37,106 +61,45 @@ describe.sequential("Joining a trip", () => {
         availableSeats: 2,
         geolocationLevel: "None"
       });
-      const tripList = await currentUser.services.liane.list(["NotStarted", "Started"], { asc: true, cursor: undefined, limit: 20 });
+      const tripList = await secondUser.services.liane.list(["NotStarted", "Started"], { asc: true, cursor: undefined, limit: 20 });
       expect(tripList.data.length).toBe(2);
       expect(tripList.data[0]).toEqual(posted);
-      tripId = posted.id!;
+      trip = posted;
     });
   });
-  describe("User B", () => {
-    test("Should find created trip", async () => {
-      const currentUser = users[1];
-      let points = await readLianeTile(10, 516, 368, "rallying_point_display");
-      const arrivalOptions = points.features.map(f => f.properties.id);
-      expect(arrivalOptions).toContain(destination);
-      points = await readLianeFilteredTile(10, 516, 368, "rallying_point_display", destination, "deposit");
-      const departureOptions = points.features.map(f => f.properties.id);
-      expect(departureOptions).toContain(pickup);
-
-      const results = await currentUser.services.liane.match({
-        from: pickup,
-        to: destination,
-        targetTime: { dateTime: new Date().toISOString(), direction: "Departure" },
-        availableSeats: -1
-      });
-
-      const matchedTripsIds = results.lianeMatches.map(m => m.trip.id!);
-      expect(matchedTripsIds).toContain(tripId!);
-    });
-  });
-  describe.concurrent("Request", () => {
-    test("Should be sent by B", async () => {
-      const currentUser = users[1];
-      await currentUser.services.liane.join({
-        liane: tripId!,
-        from: pickup,
-        to: destination,
-        seats: -1,
-        type: "JoinRequest",
-        geolocationLevel: "None",
-        message: "Lorem ipsum",
+  describe.concurrent("Member added", () => {
+    test("User A join the trip", async () => {
+      const currentUser = users[0];
+      await currentUser.services.community.joinTrip({
+        liane: trip!.liane!,
+        trip: trip!.id!,
         takeReturnTrip: false
       });
-
-      const requestList = await currentUser.services.liane.listJoinRequests();
-      expect(requestList.data.length).toBe(1);
-      requestId = requestList.data[0].id!;
-    });
-    test("Should be received by A", () =>
-      new Promise<void>(done => {
-        const currentUser = users[0];
-        currentUser.services.hub.subscribeToNotifications(n => {
-          if (UnionUtils.isInstanceOf(n, "Event") && UnionUtils.isInstanceOf(n.payload, "JoinRequest")) {
-            expect(n.payload.liane).toEqual(tripId!);
-            done();
-          }
-        });
-      }));
-  });
-  describe.concurrent("Answer", () => {
-    test("Should be sent by A", async () => {
-      const currentUser = users[0];
-      await currentUser.services.hub.postAnswer(requestId!, Answer.Accept);
-    });
-    test("Should be received by B", () =>
-      new Promise<void>(done => {
-        const currentUser = users[1];
-        currentUser.services.hub.subscribeToNotifications(n => {
-          if (UnionUtils.isInstanceOf(n, "Event") && UnionUtils.isInstanceOf(n.payload, "MemberAccepted")) {
-            expect(n.payload.liane).toEqual(tripId!);
-            done();
-          }
-        });
-      }));
-  });
-  describe("User A", () => {
-    test("Should have a passenger", async () => {
-      const currentUser = users[0];
-      const tripList = await currentUser.services.liane.list(["NotStarted", "Started"], { asc: true, cursor: undefined, limit: 20 });
-      expect(tripList.data.length).toBe(2);
-      const trip = tripList.data.find(l => l.id! === tripId!);
-      expect(trip).not.undefined;
-      expect(trip!.members.length).toBe(2);
     });
   });
   describe("User B", () => {
-    test("Should be member of the trip", async () => {
+    test("Should have a passenger", async () => {
       const currentUser = users[1];
+      const tripList = await currentUser.services.liane.list(["NotStarted", "Started"], { asc: true, cursor: undefined, limit: 20 });
+      expect(tripList.data.length).toBe(2);
+      const foundTrip = tripList.data.find(l => l.id! === trip!.id!);
+      expect(foundTrip).not.undefined;
+      expect(foundTrip!.members.length).toBe(2);
+    });
+  });
+  describe("User 1", () => {
+    test("Should be member of the trip", async () => {
+      const currentUser = users[0];
       const tripList = await currentUser.services.liane.list(["NotStarted", "Started"], { asc: true, cursor: undefined, limit: 20 });
       expect(tripList.data.length).toBe(1);
       expect(tripList.data[0].members.length).toBe(2);
-    });
-    test("Should have no more request", async () => {
-      const currentUser = users[1];
-      const requestList = await currentUser.services.liane.listJoinRequests();
-      expect(requestList.data.length).toBe(0);
     });
   });
 
   describe("Both users", () => {
     test("Should start the trip", async () => {
       for (const currentUser of users) {
-        await currentUser.services.liane.start(tripId!);
+        await currentUser.services.liane.start(trip!.id!);
       }
     });
 
@@ -162,7 +125,7 @@ describe.sequential("Joining a trip", () => {
             { lat: 44.8558973, lng: 1.5835225 }
           ];
           for (const subscriber of users) {
-            const sub = await subscriber.services.hub.subscribeToTrackingInfo(tripId!, trackedMemberLocation => {
+            const sub = await subscriber.services.hub.subscribeToTrackingInfo(trip!.id!, trackedMemberLocation => {
               receivePing(subscriber.id, trackedMemberLocation);
             });
             subscriptions.push(sub);
@@ -173,7 +136,7 @@ describe.sequential("Joining a trip", () => {
               return () =>
                 sleep(50).then(() =>
                   driver.services.event.sendPing({
-                    liane: tripId!,
+                    liane: trip!.id!,
                     timestamp: new Date().getTime(),
                     coordinate,
                     type: "MemberPing"
@@ -186,7 +149,7 @@ describe.sequential("Joining a trip", () => {
               return () =>
                 sleep(50).then(() =>
                   passenger.services.event.sendPing({
-                    liane: tripId!,
+                    liane: trip!.id!,
                     timestamp: new Date().getTime(),
                     coordinate,
                     type: "MemberPing"
