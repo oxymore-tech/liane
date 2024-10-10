@@ -2,8 +2,6 @@ import {
   addSeconds,
   Chat,
   CoLiane,
-  CoLianeRequest,
-  CoMatch,
   DayOfWeekFlag,
   LianeMessage,
   PaginatedResponse,
@@ -25,7 +23,6 @@ import { useAppNavigation } from "@/components/context/routing";
 import { AppPressableIcon } from "@/components/base/AppPressable";
 import { DebugIdView } from "@/components/base/DebugIdView";
 import { AppStyles } from "@/theme/styles";
-import { extractDays } from "@/util/hooks/days";
 import { AppLogger } from "@/api/logger";
 import { SimpleModal } from "@/components/modal/SimpleModal.tsx";
 import { AppStorage } from "@/api/storage.ts";
@@ -80,8 +77,6 @@ export const CommunitiesChatScreen = () => {
   };
 
   const appendMessage = (m: LianeMessage) => {
-    console.log("appendMessage", m);
-
     setMessages(oldList => [m, ...oldList]);
     if (liane?.id && chat) {
       chat.readConversation(liane.id, new Date().toISOString()).catch(e => console.warn(e));
@@ -89,7 +84,6 @@ export const CommunitiesChatScreen = () => {
   };
 
   const onReceiveLatestMessages = (m: PaginatedResponse<LianeMessage>) => {
-    console.log("onReceiveLatestMessages", m);
     setMessages(m.data);
     setPaginationCursor(m.next);
   };
@@ -130,17 +124,15 @@ export const CommunitiesChatScreen = () => {
       geolocationLevel: geolocationLevel || "None",
       recurrence: undefined
     });
-    const goMessage = await services.community.sendMessage(liane!.id!, {
+    await services.community.sendMessage(liane!.id!, {
       type: "Trip",
       value: created.id!
     });
-    appendMessage(goMessage);
     if (created.return) {
-      const returnMessage = await services.community.sendMessage(liane!.id!, {
+      await services.community.sendMessage(liane!.id!, {
         type: "Trip",
         value: created.return
       });
-      appendMessage(returnMessage);
     }
   };
 
