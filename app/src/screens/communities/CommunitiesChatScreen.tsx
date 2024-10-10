@@ -12,7 +12,7 @@ import {
 } from "@liane/common";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from "react-native";
-import { AppColors, ContextualColors } from "@/theme/colors";
+import { AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
@@ -29,6 +29,7 @@ import { AppStorage } from "@/api/storage.ts";
 import { TimeWheelPicker } from "@/components/TimeWheelPicker.tsx";
 import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker.tsx";
 import { MessageBubble } from "@/screens/communities/MessageBubble.tsx";
+import { AppRoundedButton } from "@/components/base/AppRoundedButton.tsx";
 
 export const CommunitiesChatScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesChat">();
@@ -375,7 +376,7 @@ const LaunchTripModal = ({
   setTripModalVisible: (v: boolean) => void;
   launchTrip: (d: [Date, Date | undefined], from: string | undefined, to: string | undefined) => void;
 }) => {
-  const [launchTripStep, setLaunchTripStep] = useState(0);
+  const [launchTripStep, setLaunchTripStep] = useState(1);
   const [selectedTime, setSelectedTime] = useState<[Date, Date | undefined]>([new Date(), undefined]);
   const [selectedDay, setSelectedDay] = useState<DayOfWeekFlag>(getNextAvailableDay(lianeRequest.weekDays, startDate));
   const [from, setFrom] = useState<RallyingPoint>(lianeRequest.wayPoints[0]);
@@ -397,7 +398,7 @@ const LaunchTripModal = ({
     }
     const departureTime = addSeconds(selectedTime[0], firstDay * 3600 * 24);
     const returnTime =
-      launchTripStep === 2
+      launchTripStep === 1
         ? selectedTime[1]
           ? addSeconds(selectedTime[1], returnDay * 3600 * 24)
           : addSeconds(startDate, returnDay * 3600 * 24)
@@ -415,78 +416,76 @@ const LaunchTripModal = ({
   return (
     <SimpleModal visible={tripModalVisible} setVisible={setTripModalVisible} backgroundColor={AppColors.white} hideClose>
       <Column spacing={8}>
-        <AppText style={styles.modalText}>Proposer le trajet...</AppText>
-
-        {launchTripStep === 0 && (
-          <>
-            <Pressable
-              style={{ flexDirection: "row", marginHorizontal: 16, paddingVertical: 8 }}
-              onPress={() => {
-                setLaunchTripStep(1);
-              }}>
-              <AppIcon name={"car"} />
-              <AppText style={[{ marginLeft: 5 }, styles.modalText]}>Aller-simple</AppText>
-            </Pressable>
-            <Pressable style={{ flexDirection: "row", marginHorizontal: 16, paddingVertical: 8 }} onPress={() => setLaunchTripStep(2)}>
-              <AppIcon name={"car"} />
-              <AppText style={[{ marginLeft: 5 }, styles.modalText]}>Aller-retour</AppText>
-            </Pressable>
-          </>
-        )}
-        {launchTripStep === 1 && (
-          <Column spacing={8}>
-            <AppText style={styles.modalText}>Aller-simple</AppText>
-            <View>
-              <Row spacing={6}>
-                <AppText style={[{ marginTop: 5 }, styles.modalText]}>{from.label}</AppText>
-                <AppPressableIcon name={"flip-2-outline"} onPress={switchDestination} />
-                <AppText style={[{ marginTop: 5 }, styles.modalText]}>{to.label}</AppText>
-              </Row>
-            </View>
-            <View>
-              <Row spacing={6}>
-                <DayOfTheWeekPicker selectedDays={selectedDay} onChangeDays={setSelectedDay} enabledDays={"1111111"} singleOptionMode={true} />
-              </Row>
-            </View>
-            <AppText style={styles.modalText}>Départ à :</AppText>
-            <Center>
-              <TimeWheelPicker
-                date={TimeOnlyUtils.fromDate(startDate)}
-                minuteStep={5}
-                onChange={d => setSelectedTime([TimeOnlyUtils.toDate(d, startDate), undefined])}
-              />
-            </Center>
-            <Row style={{ justifyContent: "flex-end" }}>
-              <AppPressableIcon name={"checkmark-outline"} onPress={launch} />
+        <AppText style={{ fontSize: 22, fontWeight: "bold", lineHeight: 24 }}>Lancer un trajet</AppText>
+        <Column spacing={8}>
+          <View>
+            <Row spacing={6}>
+              <AppText style={[{ marginTop: 5 }, styles.modalText]}>{from.label}</AppText>
+              <AppPressableIcon name={"flip-2-outline"} onPress={switchDestination} />
+              <AppText style={[{ marginTop: 5 }, styles.modalText]}>{to.label}</AppText>
             </Row>
-          </Column>
-        )}
-        {launchTripStep === 2 && (
-          <Column spacing={8}>
-            <AppText style={styles.modalText}>Aller-retour</AppText>
-            <View>
-              <Row spacing={6}>
-                <AppText style={[{ marginTop: 5 }, styles.modalText]}>{from.label}</AppText>
-                <AppPressableIcon name={"flip-2-outline"} onPress={switchDestination} />
-                <AppText style={[{ marginTop: 5 }, styles.modalText]}>{to.label}</AppText>
-              </Row>
-            </View>
-            <View>
-              <Row spacing={6}>
-                <DayOfTheWeekPicker selectedDays={selectedDay} onChangeDays={setSelectedDay} enabledDays={"1111111"} dualOptionMode={true} />
-              </Row>
-            </View>
-            <Row spacing={8} style={{ justifyContent: "space-evenly" }}>
-              <Column>
-                <AppText style={styles.modalText}>Départ à :</AppText>
-                <Center>
-                  <TimeWheelPicker
-                    date={TimeOnlyUtils.fromDate(startDate)}
-                    minuteStep={5}
-                    onChange={d => setSelectedTime(v => [TimeOnlyUtils.toDate(d, startDate), v[1]])}
-                  />
-                </Center>
-              </Column>
+          </View>
+          <View>
+            <Row spacing={6}>
+              <DayOfTheWeekPicker selectedDays={selectedDay} onChangeDays={setSelectedDay} enabledDays={"1111111"} dualOptionMode={true} />
+            </Row>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start" }}>
+            <AppText style={[{ marginLeft: 5 }, styles.modalText]}>Aller-retour ?</AppText>
+
+            <Pressable
+              style={{
+                flexDirection: "row",
+                marginHorizontal: 16,
+                padding: 10,
+                borderRadius: 15,
+                borderWidth: 2,
+                borderColor: AppColors.lightGrayBackground
+              }}
+              onPress={() => {
+                setLaunchTripStep(0);
+              }}>
+              <AppText
+                style={{
+                  color: AppColors.black,
+                  fontSize: 16,
+                  fontWeight: "bold",
+                  lineHeight: 24
+                }}>
+                Non
+              </AppText>
+            </Pressable>
+            <Pressable
+              style={{
+                flexDirection: "row",
+                padding: 10,
+                borderRadius: 15,
+                backgroundColor: AppColors.primaryColor
+              }}
+              onPress={() => setLaunchTripStep(1)}>
+              <AppText
+                style={{
+                  color: defaultTextColor(AppColors.primaryColor),
+                  fontSize: 16,
+                  fontWeight: "bold",
+                  lineHeight: 24
+                }}>
+                Oui
+              </AppText>
+            </Pressable>
+          </View>
+          <Row spacing={8} style={{ justifyContent: "space-evenly" }}>
+            <Column>
+              <AppText style={styles.modalText}>Départ à :</AppText>
+              <Center>
+                <TimeWheelPicker
+                  date={TimeOnlyUtils.fromDate(startDate)}
+                  minuteStep={5}
+                  onChange={d => setSelectedTime(v => [TimeOnlyUtils.toDate(d, startDate), v[1]])}
+                />
+              </Center>
+            </Column>
+            {launchTripStep === 1 && (
               <Column>
                 <AppText style={styles.modalText}>Retour à :</AppText>
                 <Center>
@@ -497,12 +496,33 @@ const LaunchTripModal = ({
                   />
                 </Center>
               </Column>
-            </Row>
-            <Row style={{ justifyContent: "flex-end" }}>
-              <AppPressableIcon name={"checkmark-outline"} onPress={launch} />
-            </Row>
-          </Column>
-        )}
+            )}
+          </Row>
+          <Row style={{ justifyContent: "center", alignItems: "center" }}>
+            <Pressable
+              style={{
+                flexDirection: "row",
+                paddingVertical: 10,
+                marginHorizontal: 20,
+                width: "100%",
+                borderRadius: 25,
+                backgroundColor: AppColors.primaryColor,
+                justifyContent: "center",
+                alignItems: "center"
+              }}
+              onPress={launch}>
+              <AppText
+                style={{
+                  color: defaultTextColor(AppColors.primaryColor),
+                  fontSize: 16,
+                  fontWeight: "bold",
+                  lineHeight: 24
+                }}>
+                Valider
+              </AppText>
+            </Pressable>
+          </Row>
+        </Column>
       </Column>
     </SimpleModal>
   );
