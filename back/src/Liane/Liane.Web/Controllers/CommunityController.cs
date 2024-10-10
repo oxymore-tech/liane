@@ -41,7 +41,7 @@ public sealed class CommunityController(ILianeService lianeService)
   }
 
   [HttpPost("liane/{liane:guid}/join/{id:guid}")]
-  public Task JoinRequest(Guid id, Guid liane)
+  public Task<bool> JoinRequest(Guid id, Guid liane)
   {
     return lianeService.JoinRequest(id, liane);
   }

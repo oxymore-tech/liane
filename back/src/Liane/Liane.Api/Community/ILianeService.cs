@@ -14,7 +14,7 @@ public interface ILianeService
   Task<ImmutableList<LianeMatch>> List();
 
   Task<Liane> Get(Ref<Liane> id);
-  Task JoinRequest(Ref<LianeRequest> mine, Ref<Liane> liane);
+  Task<bool> JoinRequest(Ref<LianeRequest> mine, Ref<Liane> liane);
   Task<Liane> Accept(Ref<LianeRequest> mine, Ref<Liane> liane);
   Task<bool> Leave(Ref<Liane> liane);
   

@@ -169,38 +169,45 @@ public sealed class LianeServiceImpl(
     }
   }
 
-  public async Task JoinRequest(Ref<LianeRequest> mine, Ref<Api.Community.Liane> foreign)
+  public async Task<bool> JoinRequest(Ref<LianeRequest> mine, Ref<Api.Community.Liane> foreign)
   {
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
+
+    var mineId = mine.IdAsGuid();
+
+    var iAmAlreadyMember = await connection.FirstOrDefaultAsync(Query.Select<LianeMemberDb>().Where(m => m.LianeRequestId, ComparisonOperator.Eq, mineId), tx);
+    if (iAmAlreadyMember?.JoinedAt is not null)
+    {
+      return false;
+    }
 
     var foreignId = foreign.IdAsGuid();
 
     var alreadyMember = await connection.FirstOrDefaultAsync(Query.Select<LianeMemberDb>().Where(m => m.LianeRequestId, ComparisonOperator.Eq, foreignId), tx);
 
     var lianeId = alreadyMember?.LianeId ?? foreignId;
-    var from = await connection.GetAsync<LianeRequestDb, Guid>(Guid.Parse(mine.Id), tx);
 
-    var count = await connection.CountAsync(Query.Count<LianeMemberDb>()
-      .Where(Filter<LianeMemberDb>.Where(m => m.LianeRequestId, ComparisonOperator.Eq, mine.IdAsGuid())
-             & Filter<LianeMemberDb>.Where(m => m.LianeId, ComparisonOperator.Eq, lianeId)), tx);
-
-    if (count > 0)
-    {
-      return;
-    }
+    var from = await connection.GetAsync<LianeRequestDb, Guid>(mineId, tx);
 
     await connection.MergeAsync(new LianeMemberDb(from.Id, lianeId, DateTime.UtcNow, null, null), tx);
 
     tx.Commit();
+    return true;
   }
 
-  public async Task<Api.Community.Liane> Accept(Ref<LianeRequest> mine, Ref<Api.Community.Liane> foreign)
+  public async Task<Api.Community.Liane> Accept(Ref<LianeRequest> lianeRequest, Ref<Api.Community.Liane> foreign)
   {
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
 
-    var foreignId = Guid.Parse(foreign);
+    var foreignId = foreign.IdAsGuid();
+
+    var foreignLiane = await lianeFetcher.FetchLiane(connection, foreignId, tx);
+    if (foreignLiane.Members.Count > 0 && foreignLiane.Members.All(m => m.User.Id != currentContext.CurrentUser().Id))
+    {
+      throw new UnauthorizedAccessException("User is not part of the liane");
+    }
 
     var alreadyMember = await connection.FirstOrDefaultAsync(Query.Select<LianeMemberDb>().Where(m => m.LianeRequestId, ComparisonOperator.Eq, foreignId), tx);
 
@@ -211,13 +218,13 @@ public sealed class LianeServiceImpl(
     }
 
     var updated = await connection.UpdateAsync(Query.Update<LianeMemberDb>()
-      .Where(m => m.LianeRequestId, ComparisonOperator.Eq, mine.IdAsGuid())
+      .Where(m => m.LianeRequestId, ComparisonOperator.Eq, lianeRequest.IdAsGuid())
       .And(m => m.LianeId, ComparisonOperator.Eq, lianeId)
       .Set(m => m.JoinedAt, DateTime.UtcNow), tx);
 
     if (updated == 0)
     {
-      throw new ResourceNotFoundException($"No join request found between {mine} and {lianeId}");
+      throw new ResourceNotFoundException($"No join request found between {lianeRequest} and {lianeId}");
     }
 
     var liane = await lianeFetcher.FetchLiane(connection, lianeId, tx);

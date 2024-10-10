@@ -11,6 +11,7 @@ using Liane.Api.Trip;
 using Liane.Api.Util;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Util;
+using Liane.Service.Internal.Util.Sql;
 using MoreLinq.Extensions;
 using LianeRequest = Liane.Api.Community.LianeRequest;
 using Match = Liane.Api.Community.Match;
@@ -29,23 +30,35 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     }
 
     var snapedPoints = await rallyingPointService.Snap(rawMatches.FilterSelectMany<LianeRawMatch, LatLng>(r => [r.Deposit, r.Pickup, r.DepositReverse, r.PickupReverse]).ToImmutableHashSet());
-
-    return await ToMatch(rawMatches, snapedPoints);
+    var askToJoins = (await connection.QueryAsync(
+        Query.Select<LianeMemberDb>().Where(m => m.LianeId, ComparisonOperator.Eq, from), tx))
+      .ToImmutableDictionary(m => m.LianeId, m => m.RequestedAt);
+    return await ToMatch(rawMatches, snapedPoints, askToJoins);
   }
 
-  public async Task<ImmutableDictionary<Guid, ImmutableList<Match>>> FindMatches(IDbConnection connection, IEnumerable<Guid> linkedTo)
+  public async Task<ImmutableDictionary<Guid, ImmutableList<Match>>> FindMatches(IDbConnection connection, IEnumerable<Guid> linkedTo, IDbTransaction? tx = null)
   {
     var userId = currentContext.CurrentUser().Id;
-    var rawMatches = await FindRawMatches(connection, userId, linkedTo);
+    var rawMatches = await FindRawMatches(connection, userId, linkedTo, tx: tx);
+    var askToJoins = (await connection.QueryAsync<LianeMemberDb>(
+        """
+        SELECT liane_member.*
+        FROM liane_request
+                 INNER JOIN liane_member ON liane_request.id = liane_member.liane_id
+        WHERE liane_request.created_by = @userId
+        """,
+        new { userId }, tx)
+      ).ToImmutableDictionary(m => m.LianeId, m => m.RequestedAt);
     var snapedPoints = await rallyingPointService.Snap(rawMatches.FilterSelectMany<LianeRawMatch, LatLng>(r => [r.Deposit, r.Pickup, r.DepositReverse, r.PickupReverse]).ToImmutableHashSet());
     return await rawMatches
       .GroupByAsync(m => m.From, async g =>
       {
         var matches = await g.GroupBy(m => m.LinkedTo ?? m.LianeRequest)
-          .FilterSelectAsync(r => ToMatch(r.ToImmutableList(), snapedPoints));
+          .FilterSelectAsync(r => ToMatch(r.ToImmutableList(), snapedPoints, askToJoins));
         return matches
           .OrderByDescending(m => m.Score)
-          .ThenByDescending(m => m.Matches.Count)
+          .ThenByDescending(m => m is Match.Group group ? group.TotalMembers : 0)
+          .ThenByDescending(m => m is Match.Single { AskToJoinAt: not null })
           .ThenBy(m => m.Liane.IdAsGuid())
           .ToImmutableList();
       });
@@ -121,10 +134,16 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     return result.ToImmutableList();
   }
 
-  private async Task<Match?> ToMatch(ImmutableList<LianeRawMatch> rawMatches, ImmutableDictionary<LatLng, RallyingPoint> snapedPoints)
+  private async Task<Match?> ToMatch(
+    ImmutableList<LianeRawMatch> rawMatches,
+    ImmutableDictionary<LatLng, RallyingPoint> snapedPoints,
+    ImmutableDictionary<Guid, DateTime> askToJoins
+  )
   {
-    var first = rawMatches.First();
-    var liane = (Ref<Api.Community.Liane>)first.LinkedTo ?? first.LianeRequest;
+    if (rawMatches.IsEmpty)
+    {
+      return null;
+    }
 
     var matchingPoints = rawMatches.Select(m => GetBestMatch(m, snapedPoints))
       .Where(m => m is not null)
@@ -135,25 +154,50 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
       return null;
     }
 
+    var pickup = await matchingPoints.Value.Pickup.Resolve(rallyingPointService.Get);
+    var deposit = await matchingPoints.Value.Deposit.Resolve(rallyingPointService.Get);
+
     var weekDays = rawMatches.Select(m => m.WeekDays)
       .AggregateRight((a, b) => a | b);
 
     var when = rawMatches.Select(m => new TimeRange(m.ArriveBefore, m.ReturnAfter))
       .AggregateRight((a, b) => a.Merge(b));
 
-    var matches = rawMatches.Select(m => (Ref<LianeRequest>)m.LianeRequest).ToImmutableList();
+    if (rawMatches.Count == 1)
+    {
+      var first = rawMatches.First();
+      var askToJoinAt = askToJoins.TryGetValue(first.LianeRequest, out var value) ? value : (DateTime?)null;
 
-    return new Match(
-      liane,
-      first.TotalMembers,
-      matches,
-      weekDays,
-      when,
-      await matchingPoints.Value.Pickup.Resolve(rallyingPointService.Get),
-      await matchingPoints.Value.Deposit.Resolve(rallyingPointService.Get),
-      matchingPoints.Value.Score,
-      matchingPoints.Value.Reverse
-    );
+      return new Match.Single(
+        first.LianeRequest,
+        weekDays,
+        when,
+        pickup,
+        deposit,
+        matchingPoints.Value.Score,
+        matchingPoints.Value.Reverse,
+        askToJoinAt
+      );
+    }
+
+    {
+      var first = rawMatches.First();
+      var liane = (Ref<Api.Community.Liane>)first.LinkedTo ?? first.LianeRequest;
+
+      var matches = rawMatches.Select(m => (Ref<LianeRequest>)m.LianeRequest).ToImmutableList();
+
+      return new Match.Group(
+        liane,
+        first.TotalMembers,
+        matches,
+        weekDays,
+        when,
+        await matchingPoints.Value.Pickup.Resolve(rallyingPointService.Get),
+        await matchingPoints.Value.Deposit.Resolve(rallyingPointService.Get),
+        matchingPoints.Value.Score,
+        matchingPoints.Value.Reverse
+      );
+    }
   }
 
   private (Ref<RallyingPoint> Pickup, Ref<RallyingPoint> Deposit, float Score, bool Reverse)? GetBestMatch(LianeRawMatch match, ImmutableDictionary<LatLng, RallyingPoint> snapedPoints)
