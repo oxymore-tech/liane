@@ -35,8 +35,7 @@ public sealed class ChatHub(
 
   public async Task SendToLiane(MessageContent lianeMessage, string lianeId)
   {
-    var sent = await lianeService.SendMessage(lianeId, lianeMessage);
-    await Clients.Caller.ReceiveLianeMessage(lianeId, sent);
+    await lianeService.SendMessage(lianeId, lianeMessage);
   }
 
   public async Task<Api.Community.Liane> JoinLianeChat(string lianeId)
