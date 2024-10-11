@@ -19,6 +19,7 @@ namespace Liane.Web.Hubs;
 [Authorize(Policy = Startup.RequireAuthPolicy)]
 public sealed class ChatHub(
   ILogger<ChatHub> logger,
+  ILianeMessageService lianeMessageService,
   ILianeService lianeService,
   ICurrentContext currentContext,
   IUserService userService,
@@ -35,7 +36,7 @@ public sealed class ChatHub(
 
   public async Task SendToLiane(MessageContent lianeMessage, string lianeId)
   {
-    await lianeService.SendMessage(lianeId, lianeMessage);
+    await lianeMessageService.SendMessage(lianeId, lianeMessage);
   }
 
   public async Task<Api.Community.Liane> JoinLianeChat(string lianeId)
@@ -46,7 +47,7 @@ public sealed class ChatHub(
     var caller = Clients.Caller;
     _ = Task.Run(async () =>
     {
-      var latestMessages = await lianeService.GetMessages(lianeId);
+      var latestMessages = await lianeMessageService.GetMessages(lianeId);
       logger.LogInformation("Sending {count} liane messages", latestMessages.Data.Count);
       await caller.ReceiveLatestLianeMessages(latestMessages);
     });
@@ -55,7 +56,7 @@ public sealed class ChatHub(
 
   public async Task ReadLiane(string lianeId, DateTime timestamp)
   {
-    await lianeService.MarkAsRead(lianeId, timestamp);
+    await lianeMessageService.MarkAsRead(lianeId, timestamp);
   }
 
   public override async Task OnConnectedAsync()

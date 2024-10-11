@@ -1,4 +1,4 @@
-import { capitalize, CoLiane, LianeMessage, MemberRequested, Ref, User } from "@liane/common";
+import { capitalize, CoLiane, LianeMessage, Ref, TripAdded, User } from "@liane/common";
 import React from "react";
 import { View } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
@@ -6,7 +6,7 @@ import { Column, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { AppLocalization } from "@/api/i18n.ts";
 import { UserPicture } from "@/components/UserPicture.tsx";
-import { MemberRequestedButton } from "@/components/trip/MemberRequestedButton.tsx";
+import { TripSurveyView } from "@/components/trip/TripSurveyView.tsx";
 
 export const MessageBubble = ({
   coLiane,
@@ -55,24 +55,15 @@ export const MessageBubble = ({
             marginLeft: isSender ? 56 : 0
           }}
           spacing={4}>
-          {message.content.type === "Text" && (
+          {message.content.type === "Text" ? (
             <>
               <AppText numberOfLines={-1} style={{ fontSize: 15, color }}>
                 {message.content.value}
               </AppText>
               <AppText style={{ fontSize: 12, alignSelf: isSender ? "flex-end" : "flex-start", color }}>{date}</AppText>
             </>
-          )}
-          {message.content.type !== "Text" && (
-            <>
-              <AppText numberOfLines={-1} style={{ fontSize: 12 }}>
-                {message.content.value}
-              </AppText>
-              {message.content.type === "MemberRequested" && (
-                <MemberRequestedButton message={message as LianeMessage<MemberRequested>} coLiane={coLiane} />
-              )}
-              <AppText style={{ fontSize: 12, alignSelf: isSender ? "flex-end" : "flex-start", color }}>{date}</AppText>
-            </>
+          ) : (
+            <TripSurveyView message={message as LianeMessage<TripAdded>} coLiane={coLiane} color={color} />
           )}
         </Column>
       </Column>
