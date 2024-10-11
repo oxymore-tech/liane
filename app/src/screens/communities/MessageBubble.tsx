@@ -63,7 +63,12 @@ export const MessageBubble = ({
               <AppText style={{ fontSize: 12, alignSelf: isSender ? "flex-end" : "flex-start", color }}>{date}</AppText>
             </>
           ) : (
-            <TripSurveyView message={message as LianeMessage<TripAdded>} coLiane={coLiane} color={color} />
+            <>
+              <AppText numberOfLines={-1} style={{ fontSize: 12 }}>
+                {message.content.value}
+              </AppText>
+              <AppText style={{ fontSize: 12, alignSelf: isSender ? "flex-end" : "flex-start", color }}>{date}</AppText>
+            </>
           )}
         </Column>
       </Column>
