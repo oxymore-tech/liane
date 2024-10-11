@@ -15,7 +15,7 @@ export const HOME_TRIPS = "Calendrier";
 export type NavigationParamList = {
   Home: undefined;
   [HOME_TRIPS]: undefined;
-  Publish: { initialValue?: Partial<CoLianeRequest> };
+  Publish: { initialValue?: ResolvedLianeRequest };
   SignUp: undefined;
   Chat: { conversationId: string; liane?: Liane };
   Communities: undefined;

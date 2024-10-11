@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useMemo, useState } from "react";
+import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import Animated, { FadeIn, FadeOut, FadeOutRight, SlideInLeft, SlideOutLeft } from "react-native-reanimated";
 import { useQueryClient } from "react-query";
@@ -13,7 +13,7 @@ import { LianeQueryKey } from "@/screens/user/MyTripsScreen";
 
 import { AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
-import { CoLianeRequest, DayOfWeekFlag, TimeOnly, TimeOnlyUtils, Trip } from "@liane/common";
+import { CoLiane, CoLianeRequest, DayOfWeekFlag, TimeOnly, TimeOnlyUtils, Trip } from "@liane/common";
 import { AppModalNavigationContext } from "@/components/AppModalNavigationProvider";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppLocalization } from "@/api/i18n";
@@ -23,6 +23,7 @@ import { Accordion } from "@/screens/publish/Accordion.tsx";
 import { PageHeader } from "@/components/context/Navigation.tsx";
 import { ItinerarySearchForm } from "@/screens/ItinerarySearchForm.tsx";
 import { AppButton } from "@/components/base/AppButton.tsx";
+import { AppLogger } from "@/api/logger.ts";
 
 type StepProps<T> = {
   onChange: (v: T) => void;
@@ -32,7 +33,8 @@ type StepProps<T> = {
 export const PublishScreen = () => {
   const { services } = useContext(AppContext);
   const queryClient = useQueryClient();
-  const { navigation } = useAppNavigation<"Publish">();
+  const { navigation, route } = useAppNavigation<"Publish">();
+  const initialValue = route.params.initialValue;
   const { showTutorial, shouldShow } = useContext(AppModalNavigationContext);
 
   const [trip, setTrip] = useState<Partial<Trip>>({});
@@ -46,24 +48,47 @@ export const PublishScreen = () => {
     isEnabled: true
   });
 
-  const [step, setStep] = useState<number>(0);
+  const [step, setStep] = useState<number>(initialValue ? 6 : 0);
   const [previousStep, setPreviousStep] = useState<number>(0);
   const [pending, setPending] = useState(false);
+
+  useEffect(() => {
+    // Set initial value if exist
+    if (route.params.initialValue) {
+      setLianeRequest({
+        ...route.params.initialValue,
+        wayPoints: route.params.initialValue.wayPoints.map(object => object.id)
+      } as CoLianeRequest);
+
+      setTrip({
+        to: route.params.initialValue.wayPoints[route.params.initialValue.wayPoints.length - 1],
+        from: route.params.initialValue.wayPoints[0]
+      });
+    }
+  }, [route.params]);
 
   const handleDone = useCallback(async () => {
     setPending(true);
     try {
-      await queryClient.invalidateQueries(LianeQueryKey);
-      const created = await services.community.create({
-        ...lianeRequest,
-        wayPoints: [trip.from!.id!, trip.to!.id!]
-      } as CoLianeRequest);
-
-      navigation.popToTop();
-      if (shouldShow) {
-        showTutorial("driver", created.id);
-      } else {
+      if (initialValue && lianeRequest.id) {
+        await services.community.update(lianeRequest.id, {
+          ...lianeRequest,
+          wayPoints: [trip.from!.id!, trip.to!.id!]
+        } as CoLianeRequest);
         navigation.navigate("Communities");
+      } else {
+        await queryClient.invalidateQueries(LianeQueryKey);
+        const created = await services.community.create({
+          ...lianeRequest,
+          wayPoints: [trip.from!.id!, trip.to!.id!]
+        } as CoLianeRequest);
+
+        navigation.popToTop();
+        if (shouldShow) {
+          showTutorial("driver", created.id);
+        } else {
+          navigation.navigate("Communities");
+        }
       }
     } finally {
       setPending(false);

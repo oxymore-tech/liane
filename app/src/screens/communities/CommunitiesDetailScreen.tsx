@@ -13,6 +13,7 @@ import { AppLogger } from "@/api/logger";
 import { CoLianeMember, User } from "@liane/common";
 import { extractDaysTimes, extractWaypointFromTo } from "@/util/hooks/lianeRequest";
 import { AppContext } from "@/components/context/ContextProvider";
+import { set } from "react-hook-form";
 
 export const CommunitiesDetailScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesDetails">();
@@ -110,10 +111,18 @@ export const CommunitiesDetailScreen = () => {
       </View>
       <SimpleModal visible={myModalVisible} setVisible={setMyModalVisible} backgroundColor={AppColors.white} hideClose>
         <Column>
-          {/*<Pressable style={{ marginHorizontal: 16, marginBottom: 10, flexDirection: "row" }} onPress={changeParams}>
+          <Pressable
+            style={{ marginHorizontal: 16, marginBottom: 10, flexDirection: "row" }}
+            onPress={() => {
+              setMyModalVisible(false);
+              user &&
+                navigation.navigate("Publish", {
+                  initialValue: group.members.find(member => member.user?.id === user.id)?.lianeRequest
+                });
+            }}>
             <AppIcon name={"swap"} />
             <AppText style={{ marginLeft: 5, fontSize: 16, fontWeight: "bold", lineHeight: 24 }}>Modifier mes contraintes</AppText>
-          </Pressable>*/}
+          </Pressable>
           <Pressable style={{ margin: 16, flexDirection: "row" }} onPress={leaveLiane}>
             <AppIcon color={AppColors.primaryColor} name={"log-out"} />
             <AppText style={{ marginLeft: 5, fontSize: 16, fontWeight: "bold", lineHeight: 24, color: AppColors.primaryColor }}>
