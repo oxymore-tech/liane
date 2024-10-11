@@ -1,4 +1,4 @@
-import { capitalize, CoLiane, LianeMessage, Ref, TripAdded, User } from "@liane/common";
+import { capitalize, CoLiane, LianeMessage, Ref, User } from "@liane/common";
 import React from "react";
 import { View } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
@@ -6,7 +6,6 @@ import { Column, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { AppLocalization } from "@/api/i18n.ts";
 import { UserPicture } from "@/components/UserPicture.tsx";
-import { TripSurveyView } from "@/components/trip/TripSurveyView.tsx";
 
 export const MessageBubble = ({
   coLiane,
