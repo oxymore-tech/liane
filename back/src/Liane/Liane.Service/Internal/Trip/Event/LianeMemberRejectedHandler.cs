@@ -19,7 +19,7 @@ public sealed class LianeMemberRejectedHandler(
     var lianeRequest = await lianeRequestFetcher.Get(e.LianeRequest.IdAsGuid());
     await notificationService.Notify(
       sender ?? currentContext.CurrentUser().Id,
-      lianeRequest.CreatedBy!,
+      e.User,
       "Demande déclinée",
       $"Votre demande pour rejoindre la liane n'a pas été acceptée pour '{lianeRequest.Name}'",
       $"liane://liane/{lianeRequest.Id}"

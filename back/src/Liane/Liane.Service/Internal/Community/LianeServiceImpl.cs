@@ -240,6 +240,40 @@ public sealed class LianeServiceImpl(
     return liane;
   }
 
+  public async Task<Api.Community.Liane> Reject(Ref<LianeRequest> lianeRequest, Ref<Api.Community.Liane> foreign)
+  {
+    using var connection = db.NewConnection();
+    using var tx = connection.BeginTransaction();
+
+    var userId = currentContext.CurrentUser().Id;
+    var lianeId = foreign.IdAsGuid();
+
+    var foreignLiane = await lianeFetcher.FetchLiane(connection, lianeId, tx);
+    if (foreignLiane.Members.Count > 0 && foreignLiane.Members.All(m => m.User.Id != userId))
+    {
+      throw new UnauthorizedAccessException("User is not part of the liane");
+    }
+
+    var deleted = await connection.DeleteAsync(Filter<LianeMemberDb>
+      .Where(m => m.LianeRequestId, ComparisonOperator.Eq, lianeRequest.IdAsGuid())
+      .And(m => m.LianeId, ComparisonOperator.Eq, lianeId)
+      .And(m => m.JoinedAt, ComparisonOperator.Eq, null), tx);
+
+    if (deleted == 0)
+    {
+      throw new ResourceNotFoundException($"No join request found between {lianeRequest} and {lianeId}");
+    }
+
+    var resolvedLianeRequest = await connection.GetAsync<LianeRequestDb>(lianeRequest.IdAsGuid(), tx);
+
+    var liane = await lianeFetcher.FetchLiane(connection, lianeId, tx);
+    tx.Commit();
+
+    var memberRejected = new LianeEvent.MemberRejected(liane.Id, resolvedLianeRequest.Id, resolvedLianeRequest.CreatedBy, null);
+    await eventDispatcher.Dispatch(memberRejected, userId);
+    return liane;
+  }
+
   public async Task<Api.Community.Liane> Get(Ref<Api.Community.Liane> id)
   {
     using var connection = db.NewConnection();
