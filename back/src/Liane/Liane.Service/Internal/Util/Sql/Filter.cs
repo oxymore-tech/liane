@@ -78,8 +78,8 @@ public abstract record Filter<T>
       {
         ComparisonOperator.Ilike => $"{fd} ILIKE {operand}",
         ComparisonOperator.Like => $"{fd} LIKE {operand}",
-        ComparisonOperator.Eq => $"{fd} = {operand}",
-        ComparisonOperator.Ne => $"{fd} <> {operand}",
+        ComparisonOperator.Eq => Operand is null ? $"{fd} IS NULL" : $"{fd} = {operand}",
+        ComparisonOperator.Ne => Operand is null ? $"{fd} IS NOT NULL" : $"{fd} <> {operand}",
         ComparisonOperator.Gt => $"{fd} > {operand}",
         ComparisonOperator.Gte => $"{fd} >= {operand}",
         ComparisonOperator.Lt => $"{fd} < {operand}",

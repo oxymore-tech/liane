@@ -62,7 +62,8 @@ public sealed class NotificationServiceImpl(
     using var tx = connection.BeginTransaction();
 
     var notificationFilter = await connection.QueryAsync<Guid>(
-      Query.Count<RecipientDb>().Where(r => r.UserId, ComparisonOperator.Eq, currentContext.CurrentUser().Id)
+      Query.Select<RecipientDb>()
+        .Where(r => r.UserId, ComparisonOperator.Eq, currentContext.CurrentUser().Id)
         .And(r => r.ReadAt, ComparisonOperator.Eq, null)
       , tx
     );
