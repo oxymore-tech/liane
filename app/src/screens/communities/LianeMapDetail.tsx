@@ -115,8 +115,17 @@ export const LianeMapDetailScreen = () => {
                 </View>
               )}
               <DisplayDays days={lianeRequest.weekDays} />
-              <DisplayRallyingPoints wayPoints={lianeRequest.wayPoints} endTime={lianeRequest.arriveBefore} />
-              <DisplayRallyingPoints wayPoints={lianeRequest.wayPoints} inverseTravel startTime={lianeRequest.returnAfter} />
+              <DisplayRallyingPoints
+                wayPoints={lianeRequest.wayPoints}
+                endTime={lianeRequest.arriveBefore}
+                style={{ backgroundColor: AppColors.gray100, borderRadius: 20 }}
+              />
+              <DisplayRallyingPoints
+                wayPoints={lianeRequest.wayPoints}
+                inverseTravel
+                startTime={lianeRequest.returnAfter}
+                style={{ backgroundColor: AppColors.gray100, borderRadius: 20 }}
+              />
             </View>
           </View>
         </View>

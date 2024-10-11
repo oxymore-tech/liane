@@ -32,6 +32,7 @@ import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker.tsx";
 import { MessageBubble } from "@/screens/communities/MessageBubble.tsx";
 import { useSubscription } from "@/util/hooks/subscription.ts";
 import { AppLocalization } from "@/api/i18n.ts";
+import { DisplayWayPoints } from "@/components/communities/displayWaypointsView.tsx";
 
 export const CommunitiesChatScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesChat">();
@@ -342,13 +343,13 @@ export const CommunitiesChatScreen = () => {
               </Pressable>
             </View>
           </View>
-          <View style={{ backgroundColor: AppColors.white, height: 200, flexDirection: "column" }}>
+          <View style={{ backgroundColor: AppColors.white, flexDirection: "column" }}>
             <View
               style={{
                 flexDirection: "row",
                 justifyContent: "space-between",
                 paddingHorizontal: 20,
-                paddingVertical: 10,
+                paddingTop: 10,
                 alignItems: "center"
               }}>
               <AppText
@@ -376,16 +377,12 @@ export const CommunitiesChatScreen = () => {
                 </AppText>
               </Pressable>
             </View>
-            <AppText
+            <View
               style={{
-                fontSize: 18,
-                fontWeight: "normal",
-                flexShrink: 1,
-                lineHeight: 27,
-                color: AppColors.black
+                paddingBottom: 10
               }}>
-              {currentTrip?.id}
-            </AppText>
+              {currentTrip?.wayPoints && <DisplayWayPoints wayPoints={currentTrip.wayPoints} />}
+            </View>
           </View>
           <View>{chat?.currentGroup && <DebugIdView object={chat?.currentGroup} />}</View>
         </View>
