@@ -16,7 +16,7 @@ describe("Displaying trips", () => {
       liane: "019233a0-5c48-7cfa-b12e-7e7f0eb9c69f",
       from: "mairie:46185",
       to: "mairie:46309",
-      departureTime: addSeconds(new Date(), 3600 * 5).toISOString(),
+      arriveAt: addSeconds(new Date(), 3600 * 5).toISOString(),
       availableSeats: 2,
       geolocationLevel: "None"
     });

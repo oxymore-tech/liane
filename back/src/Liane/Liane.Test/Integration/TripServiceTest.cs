@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Pagination;
-using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
@@ -69,7 +68,7 @@ public sealed class TripServiceImplTest : BaseIntegrationTest
     var createdLianes = new List<Api.Trip.Trip>();
     for (var i = 0; i < baseLianes.Length; i++)
     {
-      var lianeRequest = Fakers.LianeRequestFaker.Generate() with { From = baseLianes[i].From, To = baseLianes[i].To, DepartureTime = tomorrow, AvailableSeats = 2 };
+      var lianeRequest = Fakers.LianeRequestFaker.Generate() with { From = baseLianes[i].From, To = baseLianes[i].To, ArriveAt = tomorrow, AvailableSeats = 2 };
       createdLianes.Add(await testedService.Create(lianeRequest, userA));
     }
 
@@ -108,13 +107,6 @@ public sealed class TripServiceImplTest : BaseIntegrationTest
     Assert.AreEqual("Cboux_Eglise", ((Match.Compatible)compatible).Deposit.Id);
   }
 
-  private async Task<Api.Trip.Trip> InsertLiane(string id, DbUser userA, Ref<RallyingPoint> from, Ref<RallyingPoint> to)
-  {
-    var departureTime = DateTime.UtcNow.AddHours(9);
-    currentContext.SetCurrentUser(userA);
-    return await testedService.Create(new TripRequest(id, Guid.Parse("019233a0-5c48-7cfa-b12e-7e7f0eb9c69f"), departureTime, null, 4, from, to, GeolocationLevel.None), userA.Id);
-  }
-
   public static TripRequest[] CreateBaseLianeRequests()
   {
     var tomorrow = DateTime.Now.AddDays(1);
@@ -129,7 +121,7 @@ public sealed class TripServiceImplTest : BaseIntegrationTest
     var requests = new TripRequest[baseLianes.Length];
     for (var i = 0; i < baseLianes.Length; i++)
     {
-      var lianeRequest = Fakers.LianeRequestFaker.Generate() with { From = baseLianes[i].From, To = baseLianes[i].To, DepartureTime = tomorrow, AvailableSeats = 2 };
+      var lianeRequest = Fakers.LianeRequestFaker.Generate() with { From = baseLianes[i].From, To = baseLianes[i].To, ArriveAt = tomorrow, AvailableSeats = 2 };
       requests[i] = lianeRequest;
     }
 
@@ -311,12 +303,12 @@ public sealed class TripServiceImplTest : BaseIntegrationTest
 
     currentContext.SetCurrentUser(samuel);
     var liane = await testedService.Create(
-      new TripRequest(null, Guid.Parse("019233a0-5c48-7cfa-b12e-7e7f0eb9c69f"), DateTime.UtcNow.AddHours(24), null, 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille,
+      new TripRequest(null, Guid.Parse("019233a0-5c48-7cfa-b12e-7e7f0eb9c69f"), DateTime.UtcNow.AddHours(23), null, 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille,
         GeolocationLevel.None), samuel.Id);
 
     currentContext.SetCurrentUser(bertrand);
     var actual = await testedService.Match(
-      new Filter(LabeledPositions.Alan, LabeledPositions.Tournefeuille, new DepartureOrArrivalTime(DateTime.UtcNow.AddHours(23), Direction.Departure)),
+      new Filter(LabeledPositions.Alan, LabeledPositions.Tournefeuille, new DepartureOrArrivalTime(DateTime.UtcNow.AddHours(24), Direction.Arrival)),
       new Pagination());
 
     // await DebugGeoJson(LabeledPositions.Cocures, LabeledPositions.Mende);

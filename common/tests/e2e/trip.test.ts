@@ -58,8 +58,8 @@ describe.sequential("Joining a trip", () => {
         liane: coLiane.id!,
         from: pickup,
         to: destination,
-        departureTime: addSeconds(new Date(), 1800).toISOString(),
-        returnTime: addSeconds(new Date(), 3600 * 5).toISOString(),
+        arriveAt: addSeconds(new Date(), 1830).toISOString(),
+        returnAt: addSeconds(new Date(), 3600 * 5).toISOString(),
         availableSeats: 2,
         geolocationLevel: "None"
       });

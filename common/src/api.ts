@@ -89,8 +89,8 @@ export type DayOfWeekFlag = `${DayBoolean}${DayBoolean}${DayBoolean}${DayBoolean
 
 export type LianeRequest = Identity & {
   liane: Ref<CoLiane>;
-  departureTime: UTCDateTime;
-  returnTime?: UTCDateTime | null;
+  arriveAt: UTCDateTime;
+  returnAt?: UTCDateTime;
   availableSeats: number;
   from: Ref<RallyingPoint>;
   to: Ref<RallyingPoint>;
@@ -124,8 +124,8 @@ export type LianeMember = {
   to: Ref<RallyingPoint>;
   seatCount: number;
   geolocationLevel: GeolocationLevel;
-  cancellation: UTCDateTime | undefined | null;
-  departure: UTCDateTime | undefined | null;
+  cancellation?: UTCDateTime;
+  departure?: UTCDateTime;
 };
 
 // A date time in ISO 8601 format

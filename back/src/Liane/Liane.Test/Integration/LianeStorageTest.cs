@@ -12,7 +12,7 @@ using NUnit.Framework;
 namespace Liane.Test.Integration;
 
 [TestFixture(Category = "Integration")]
-public class LianeStorageTest: BaseIntegrationTest
+public class LianeStorageTest : BaseIntegrationTest
 {
   private ITripService tripService = null!;
   private IPostgisService postgisService = null!;
@@ -22,7 +22,7 @@ public class LianeStorageTest: BaseIntegrationTest
     tripService = ServiceProvider.GetRequiredService<ITripService>();
     postgisService = ServiceProvider.GetRequiredService<IPostgisService>();
   }
-  
+
   private async Task<ImmutableList<Api.Trip.Trip>> CreateLianes(string creatorId)
   {
     var tomorrow = DateTime.Now.AddDays(1);
@@ -37,7 +37,7 @@ public class LianeStorageTest: BaseIntegrationTest
     var requests = new TripRequest[baseLianes.Length];
     for (var i = 0; i < baseLianes.Length; i++)
     {
-      var lianeRequest = Fakers.LianeRequestFaker.Generate() with { From = baseLianes[i].From, To = baseLianes[i].To, DepartureTime = tomorrow, AvailableSeats = 2 };
+      var lianeRequest = Fakers.LianeRequestFaker.Generate() with { From = baseLianes[i].From, To = baseLianes[i].To, ArriveAt = tomorrow, AvailableSeats = 2 };
       requests[i] = lianeRequest;
     }
 
@@ -55,16 +55,15 @@ public class LianeStorageTest: BaseIntegrationTest
   {
     var userA = Fakers.FakeDbUsers[0].Id;
     var createdLianes = await CreateLianes(userA);
-  
+
     var searchable = await postgisService.ListSearchableLianes();
-    
+
     Assert.AreEqual(createdLianes.Count, searchable.Count);
 
     await tripService.ForceSyncDatabase();
 
     var updatedSearchable = await postgisService.ListSearchableLianes();
-    
-    CollectionAssert.AreEquivalent(searchable, updatedSearchable);
 
+    CollectionAssert.AreEquivalent(searchable, updatedSearchable);
   }
 }

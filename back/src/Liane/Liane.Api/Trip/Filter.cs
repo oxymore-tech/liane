@@ -9,8 +9,8 @@ public enum Direction
   Arrival
 }
 
-public record DepartureOrArrivalTime(
-  DateTime DateTime,
+public sealed record DepartureOrArrivalTime(
+  DateTime At,
   Direction Direction
 )
 {
@@ -18,8 +18,8 @@ public record DepartureOrArrivalTime(
   {
     return Direction switch
     {
-      Direction.Departure => $"Starting at {DateTime}",
-      _ => $"Arriving at {DateTime}"
+      Direction.Departure => $"Starting at {At}",
+      _ => $"Arriving at {At}"
     };
   }
 }
