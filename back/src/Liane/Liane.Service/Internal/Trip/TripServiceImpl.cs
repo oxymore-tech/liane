@@ -81,7 +81,10 @@ public sealed class TripServiceImpl(
 
     await userStatService.IncrementTotalCreatedTrips(createdBy);
     await rallyingPointService.UpdateStats([entity.From, entity.To], entity.ReturnAt ?? created.DepartureTime, entity.ReturnAt is null ? 1 : 2);
-    return await Get(created.Id);
+    
+    var trip = await Get(created.Id);
+    await lianeMessageService.SendMessage(trip.Liane, new MessageContent.TripAdded("", trip));
+    return trip;
   }
 
   public async Task<Api.Trip.Trip> GetForCurrentUser(Ref<Api.Trip.Trip> l, Ref<Api.Auth.User>? user = null)
