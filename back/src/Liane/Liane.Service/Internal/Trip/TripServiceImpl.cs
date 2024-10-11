@@ -35,7 +35,7 @@ public sealed class TripServiceImpl(
   ILogger<TripServiceImpl> logger,
   IUserService userService,
   IPostgisService postgisService,
-  ILianeUpdateObserver lianeUpdateObserver,
+  ITripUpdateObserver lianeUpdateObserver,
   IUserStatService userStatService,
   LianeTrackerCache trackerCache)
   : BaseMongoCrudService<LianeDb, Api.Trip.Trip>(mongo), ITripService
@@ -80,22 +80,6 @@ public sealed class TripServiceImpl(
     await userStatService.IncrementTotalCreatedTrips(createdBy);
     await rallyingPointService.UpdateStats([entity.From, entity.To], entity.ReturnAt ?? created.DepartureTime, entity.ReturnAt is null ? 1 : 2);
     return await Get(created.Id);
-  }
-
-
-  private async Task<LianeDb> ToDb(TripRequest tripRequest, DepartureOrArrivalTime at, string originalId, DateTime createdAt, string createdBy)
-  {
-    if (tripRequest.From == tripRequest.To)
-    {
-      throw new ValidationException("To", ValidationMessage.WrongFormat);
-    }
-
-    var members = new List<TripMember> { new(createdBy, tripRequest.From, tripRequest.To, tripRequest.AvailableSeats, GeolocationLevel: tripRequest.GeolocationLevel) };
-    var driverData = new Driver(createdBy, tripRequest.AvailableSeats > 0);
-    var wayPoints = await GetWayPoints(at, driverData.User, members);
-    var wayPointDbs = wayPoints.Select(w => new WayPointDb(w.RallyingPoint, w.Duration, w.Distance, w.Eta)).ToImmutableList();
-    return new LianeDb(originalId, createdBy, createdAt, wayPoints[0].Eta, null, members.ToImmutableList(), driverData,
-      TripStatus.NotStarted, wayPointDbs, ImmutableList<UserPing>.Empty, tripRequest.Liane);
   }
 
   public async Task<Api.Trip.Trip> GetForCurrentUser(Ref<Api.Trip.Trip> l, Ref<Api.Auth.User>? user = null)
@@ -200,6 +184,16 @@ public sealed class TripServiceImpl(
     return await paginatedLianes.SelectAsync(MapEntity) with { TotalCount = await Count(filter) };
   }
 
+  public async Task<ImmutableList<Api.Trip.Trip>> GetIncomingTrips(Guid liane, CancellationToken cancellationToken = default)
+  {
+    return await Collection.Find(l =>
+        l.Liane == liane
+        && (l.State == TripStatus.NotStarted || l.State == TripStatus.Started)
+        && l.DepartureTime > DateTime.UtcNow)
+      .SortBy(l => l.DepartureTime)
+      .SelectAsync(MapEntity, cancellationToken: cancellationToken);
+  }
+
   private FilterDefinition<LianeDb> BuildFilter(LianeFilter lianeFilter)
   {
     FilterDefinition<LianeDb> filter;
@@ -219,6 +213,21 @@ public sealed class TripServiceImpl(
     }
 
     return filter;
+  }
+
+  private async Task<LianeDb> ToDb(TripRequest tripRequest, DepartureOrArrivalTime at, string originalId, DateTime createdAt, string createdBy)
+  {
+    if (tripRequest.From == tripRequest.To)
+    {
+      throw new ValidationException("To", ValidationMessage.WrongFormat);
+    }
+
+    var members = new List<TripMember> { new(createdBy, tripRequest.From, tripRequest.To, tripRequest.AvailableSeats, GeolocationLevel: tripRequest.GeolocationLevel) };
+    var driverData = new Driver(createdBy, tripRequest.AvailableSeats > 0);
+    var wayPoints = await GetWayPoints(at, driverData.User, members);
+    var wayPointDbs = wayPoints.Select(w => new WayPointDb(w.RallyingPoint, w.Duration, w.Distance, w.Eta)).ToImmutableList();
+    return new LianeDb(originalId, createdBy, createdAt, wayPoints[0].Eta, null, members.ToImmutableList(), driverData,
+      TripStatus.NotStarted, wayPointDbs, ImmutableList<UserPing>.Empty, tripRequest.Liane);
   }
 
   public async Task<Api.Trip.Trip> AddMember(Ref<Api.Trip.Trip> tripId, TripMember newMember)

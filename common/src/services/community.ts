@@ -104,6 +104,10 @@ export interface CommunityService {
 
   accept(lianeRequest: string, liane: string): Promise<CoLiane>;
 
+  reject(lianeRequest: string, liane: string): Promise<CoLiane>;
+
+  getIncomingTrips(liane: string): Promise<Liane[]>;
+
   joinTrip(query: JoinTripQuery): Promise<boolean>;
 
   leave(liane: string): Promise<boolean>;
@@ -140,6 +144,14 @@ export class CommunityServiceClient implements CommunityService {
 
   accept(lianeRequest: string, liane: string) {
     return this.http.postAs<CoLiane>(`/community/liane/${liane}/accept/${lianeRequest}`);
+  }
+
+  reject(lianeRequest: string, liane: string) {
+    return this.http.postAs<CoLiane>(`/community/liane/${liane}/reject/${lianeRequest}`);
+  }
+
+  getIncomingTrips(liane: string) {
+    return this.http.postAs<Liane[]>(`/community/liane/${liane}/incoming_trip`);
   }
 
   joinTrip(query: JoinTripQuery) {

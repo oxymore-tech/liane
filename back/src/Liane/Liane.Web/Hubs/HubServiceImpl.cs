@@ -18,7 +18,7 @@ public sealed class HubServiceImpl(
   IHubContext<ChatHub, IHubClient> hubContext,
   ILogger<HubServiceImpl> logger,
   ILianeTrackerCache trackerCache
-) : IHubService, IPushMiddleware, ILianeUpdatePushService, ILianeUpdateObserver
+) : IHubService, IPushMiddleware, ILianeUpdatePushService, ITripUpdateObserver, ILianeUpdateObserver
 {
   private MemoryCache CurrentConnections { get; } = new(new MemoryCacheOptions());
 
@@ -108,14 +108,23 @@ public sealed class HubServiceImpl(
     await hubContext.Clients.Client(connectionId).ReceiveTrackingInfo(update);
   }
 
-
   public async Task Push(Trip trip, Ref<User> recipient)
   {
     var connectionId = GetConnectionId(recipient);
     if (connectionId is not null)
     {
-      logger.LogInformation("Pushing liane update to {user} : {update}", recipient, trip);
-      await hubContext.Clients.Client(connectionId).ReceiveLianeUpdate(trip);
+      logger.LogInformation("Pushing trip update to {user} : {update}", recipient, trip);
+      await hubContext.Clients.Client(connectionId).ReceiveTripUpdate(trip);
+    }
+  }
+
+  public async Task Push(Api.Community.Liane liane, Ref<User> recipient)
+  {
+    var connectionId = GetConnectionId(recipient);
+    if (connectionId is not null)
+    {
+      logger.LogInformation("Pushing liane update to {user} : {update}", recipient, liane);
+      await hubContext.Clients.Client(connectionId).ReceiveLianeUpdate(liane);
     }
   }
 

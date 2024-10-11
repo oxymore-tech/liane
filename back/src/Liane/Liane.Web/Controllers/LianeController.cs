@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Immutable;
+using System.Threading;
 using System.Threading.Tasks;
 using Liane.Api.Community;
+using Liane.Api.Trip;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Web.Internal.Auth;
 using Microsoft.AspNetCore.Mvc;
+using LianeMatch = Liane.Api.Community.LianeMatch;
 using LianeRequest = Liane.Api.Community.LianeRequest;
 
 namespace Liane.Web.Controllers;
@@ -13,7 +16,7 @@ namespace Liane.Web.Controllers;
 [Route("api/community")]
 [ApiController]
 [RequiresAuth]
-public sealed class CommunityController(ILianeService lianeService)
+public sealed class LianeController(ILianeService lianeService, ITripService tripService)
   : ControllerBase
 {
   [HttpGet("liane")]
@@ -62,6 +65,12 @@ public sealed class CommunityController(ILianeService lianeService)
   public Task<Api.Community.Liane> GetLiane(Guid id)
   {
     return lianeService.Get(id);
+  }
+
+  [HttpGet("liane/{id:guid}/incoming_trip")]
+  public Task<ImmutableList<Trip>> GetIncomingTrips(Guid id, CancellationToken cancellationToken)
+  {
+    return tripService.GetIncomingTrips(id, cancellationToken);
   }
 
   [HttpPost("liane/{id:guid}/leave")]

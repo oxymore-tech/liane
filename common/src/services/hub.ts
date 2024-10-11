@@ -33,7 +33,7 @@ export interface HubService {
   readNotifications(ids?: Ref<Notification>[]): Promise<void>;
 
   unreadNotifications: Observable<Ref<Notification>[]>;
-  lianeUpdates: Observable<Liane>;
+  tripUpdates: Observable<Liane>;
   userUpdates: Observable<FullUser>;
   hubState: Observable<HubState>;
 }
@@ -50,7 +50,8 @@ type UnreadOverview = Readonly<{
 
 export abstract class AbstractHubService implements HubService {
   protected readonly notificationSubject: Subject<Notification> = new Subject<Notification>();
-  lianeUpdates = new Subject<Liane>();
+  tripUpdates = new Subject<Liane>();
+  lianeUpdates = new Subject<CoLiane>();
   userUpdates = new Subject<FullUser>();
   unreadNotifications = new BehaviorSubject<Ref<Notification>[]>([]);
   hubState = new Subject<HubState>();
@@ -109,7 +110,11 @@ export abstract class AbstractHubService implements HubService {
     }
   };
 
-  protected receiveLianeUpdate = (liane: Liane) => {
+  protected receiveTripUpdate = (trip: Liane) => {
+    this.tripUpdates.next(trip);
+  };
+
+  protected receiveLianeUpdate = (liane: CoLiane) => {
     this.lianeUpdates.next(liane);
   };
 
@@ -180,6 +185,7 @@ export class HubServiceClient extends AbstractHubService {
     this.hub.on("ReceiveNotification", this.receiveNotification);
     this.hub.on("ReceiveTrackingInfo", this.receiveLocationUpdateCallback);
     this.hub.on("ReceiveLianeUpdate", this.receiveLianeUpdate);
+    this.hub.on("ReceiveTripUpdate", this.receiveTripUpdate);
     this.hub.onclose(err => {
       this.isStarted = false;
       this.hubState.next("offline");
