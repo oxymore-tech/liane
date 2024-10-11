@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using GeoJSON.Text.Feature;
 using GeoJSON.Text.Geometry;
 using Liane.Api.Auth;
+using Liane.Api.Community;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util;
@@ -37,7 +38,8 @@ public sealed class TripServiceImpl(
   IPostgisService postgisService,
   ITripUpdateObserver lianeUpdateObserver,
   IUserStatService userStatService,
-  LianeTrackerCache trackerCache)
+  LianeTrackerCache trackerCache,
+  ILianeMessageService lianeMessageService)
   : BaseMongoCrudService<LianeDb, Api.Trip.Trip>(mongo), ITripService
 {
   private const int MaxDeltaInSeconds = 15 * 60; // 15 min
@@ -242,7 +244,9 @@ public sealed class TripServiceImpl(
 
     await AddMemberSingle(trip.Return!, member with { From = newMember.To, To = newMember.From });
     await userStatService.IncrementTotalJoinedTrips(newMember.User);
-
+    
+    await lianeMessageService.SendMessage(trip.Liane, new MessageContent.MemberJoinedTrip("", newMember.User, trip, newMember.TakeReturnTrip));
+    
     return trip;
   }
 
@@ -312,6 +316,9 @@ public sealed class TripServiceImpl(
 
     var updatedLiane = await MapEntity(updated);
     await postgisService.UpdateGeometry(updatedLiane);
+    
+    await lianeMessageService.SendMessage(updatedLiane.Liane, new MessageContent.MemberLeftTrip("", foundMember.User, updatedLiane));
+    
     await PushUpdate(updated);
     return updatedLiane;
   }
@@ -384,6 +391,7 @@ public sealed class TripServiceImpl(
     var updatedLiane = await MapEntity(updated);
     await postgisService.UpdateGeometry(updatedLiane);
     await PushUpdate(updated);
+    
     return updatedLiane;
   }
 

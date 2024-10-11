@@ -6,7 +6,6 @@ using Liane.Api.Community;
 using Liane.Api.Trip;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
-using Liane.Service.Internal.Community;
 using Liane.Service.Internal.User;
 using Liane.Test.Util;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,6 +24,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   private static readonly TimeRange DefaultTimeRange = new(new TimeOnly(9, 0), new TimeOnly(18, 0));
 
   private ILianeService tested = null!;
+  private ILianeMessageService messageService = null!;
   private MockCurrentContext currentContext = null!;
 
   private DbUser gugu = null!;
@@ -38,7 +38,8 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
 
   protected override void Setup(IMongoDatabase db)
   {
-    tested = ServiceProvider.GetRequiredService<LianeServiceImpl>();
+    tested = ServiceProvider.GetRequiredService<ILianeService>();
+    messageService = ServiceProvider.GetRequiredService<ILianeMessageService>();
     currentContext = ServiceProvider.GetRequiredService<MockCurrentContext>();
   }
 
@@ -409,7 +410,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     // Bertrand cannot send a message in this liane
     {
       currentContext.SetCurrentUser(bertrand);
-      Assert.ThrowsAsync<UnauthorizedAccessException>(() => tested.SendMessage(liane, "Hello there !"));
+      Assert.ThrowsAsync<UnauthorizedAccessException>(() => messageService.SendMessage(liane, "Hello there !"));
     }
   }
 
@@ -423,13 +424,14 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     {
       currentContext.SetCurrentUser(mathilde);
       await tested.JoinRequest(lianeMathilde, lianeJayBee.Id);
+      currentContext.SetCurrentUser(jayBee);
       liane = await tested.Accept(lianeMathilde, lianeJayBee.Id);
     }
 
     // Mathilde send a message in the liane
     {
       currentContext.SetCurrentUser(mathilde);
-      var message = await tested.SendMessage(liane, "Salut JB, ça te dit de covoiturer demain ?");
+      var message = await messageService.SendMessage(liane, "Salut JB, ça te dit de covoiturer demain ?");
       Assert.NotNull(message);
     }
 
@@ -437,23 +439,24 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     {
       currentContext.SetCurrentUser(jayBee);
       {
-        var unread = await tested.GetUnreadLianes();
-        CollectionAssert.AreEquivalent(ImmutableList.Create(
-          (liane.Id, 1)
+        var unread = await messageService.GetUnreadLianes();
+        CollectionAssert.AreEqual(ImmutableList.Create(
+          (liane.Id, 2)
         ), unread.Select(l => (l.Key.IdAsGuid(), l.Value)));
       }
-      var messages = await tested.GetMessages(liane, new Pagination(SortAsc: false));
-      Assert.AreEqual(1, messages.TotalCount);
-      CollectionAssert.AreEquivalent(
+      var messages = await messageService.GetMessages(liane, new Pagination(SortAsc: false));
+      Assert.AreEqual(2, messages.TotalCount);
+      CollectionAssert.AreEqual(
         ImmutableList.Create(
-          (mathilde.Id, "Salut JB, ça te dit de covoiturer demain ?")
+          (mathilde.Id, "Salut JB, ça te dit de covoiturer demain ?"),
+          (jayBee.Id, $"{jayBee.UserInfo?.FirstName} a accepté {mathilde.UserInfo?.FirstName} dans la liane.")
         ), messages.Data.Select(ToTuple)
       );
       {
-        var unread = await tested.GetUnreadLianes();
+        var unread = await messageService.GetUnreadLianes();
         Assert.IsEmpty(unread.Select(l => (l.Key.IdAsGuid(), l.Value)));
       }
-      await tested.SendMessage(liane, "Bonjour Mathilde, je suis partant !");
+      await messageService.SendMessage(liane, "Bonjour Mathilde, je suis partant !");
     }
 
     // Gugu join JayBee : gugu join the existing liane
@@ -467,15 +470,15 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     // Gugu send a message in the liane
     {
       currentContext.SetCurrentUser(gugu);
-      var message = await tested.SendMessage(liane, "Bonjour à tous 🚘, vroum !");
+      var message = await messageService.SendMessage(liane, "Bonjour à tous 🚘, vroum !");
       Assert.NotNull(message);
-      await tested.SendMessage(liane, "Comment ça marche ici ?");
+      await messageService.SendMessage(liane, "Comment ça marche ici ?");
 
       currentContext.SetCurrentUser(mathilde);
-      await tested.SendMessage(liane, "Bienvenue gugu, tu as bien fait de nous rejoindre, avec Jb on fait la route demain matin !");
+      await messageService.SendMessage(liane, "Bienvenue gugu, tu as bien fait de nous rejoindre, avec Jb on fait la route demain matin !");
 
       currentContext.SetCurrentUser(gugu);
-      await tested.SendMessage(liane, "Super je dois aller à Mende demain pour 9h30");
+      await messageService.SendMessage(liane, "Super je dois aller à Mende demain pour 9h30");
     }
 
     ImmutableList<LianeMessage> allMessages;
@@ -483,21 +486,24 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     {
       currentContext.SetCurrentUser(jayBee);
       {
-        var unread = await tested.GetUnreadLianes();
-        CollectionAssert.AreEquivalent(ImmutableList.Create(
-          (liane.Id, 5)
+        var unread = await messageService.GetUnreadLianes();
+        CollectionAssert.AreEqual(ImmutableList.Create(
+          (liane.Id, 7)
         ), unread.Select(l => (l.Key.IdAsGuid(), l.Value)));
       }
-      var messages = await tested.GetMessages(liane, new Pagination(SortAsc: false));
-      Assert.AreEqual(6, messages.TotalCount);
-      CollectionAssert.AreEquivalent(
+      var messages = await messageService.GetMessages(liane, new Pagination(SortAsc: false));
+      Assert.AreEqual(9, messages.TotalCount);
+      CollectionAssert.AreEqual(
         ImmutableList.Create(
           (gugu.Id, "Super je dois aller à Mende demain pour 9h30"),
           (mathilde.Id, "Bienvenue gugu, tu as bien fait de nous rejoindre, avec Jb on fait la route demain matin !"),
           (gugu.Id, "Comment ça marche ici ?"),
           (gugu.Id, "Bonjour à tous 🚘, vroum !"),
+          (jayBee.Id, $"{jayBee.UserInfo?.FirstName} a accepté {gugu.UserInfo?.FirstName} dans la liane."),
+          (gugu.Id, $"{gugu.UserInfo?.FirstName} souhaite rejoindre la liane."),
           (jayBee.Id, "Bonjour Mathilde, je suis partant !"),
-          (mathilde.Id, "Salut JB, ça te dit de covoiturer demain ?")
+          (mathilde.Id, "Salut JB, ça te dit de covoiturer demain ?"),
+          (jayBee.Id, $"{jayBee.UserInfo?.FirstName} a accepté {mathilde.UserInfo?.FirstName} dans la liane.")
         ), messages.Data.Select(ToTuple)
       );
       allMessages = messages.Data;
@@ -506,14 +512,15 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     // Gugu list all messages
     {
       currentContext.SetCurrentUser(gugu);
-      var messages = await tested.GetMessages(liane, new Pagination(SortAsc: false));
-      Assert.AreEqual(4, messages.TotalCount);
-      CollectionAssert.AreEquivalent(
+      var messages = await messageService.GetMessages(liane, new Pagination(SortAsc: false));
+      Assert.AreEqual(5, messages.TotalCount);
+      CollectionAssert.AreEqual(
         ImmutableList.Create(
           (gugu.Id, "Super je dois aller à Mende demain pour 9h30"),
           (mathilde.Id, "Bienvenue gugu, tu as bien fait de nous rejoindre, avec Jb on fait la route demain matin !"),
           (gugu.Id, "Comment ça marche ici ?"),
-          (gugu.Id, "Bonjour à tous 🚘, vroum !")
+          (gugu.Id, "Bonjour à tous 🚘, vroum !"),
+          (jayBee.Id, $"{jayBee.UserInfo?.FirstName} a accepté {gugu.UserInfo?.FirstName} dans la liane.")
         ), messages.Data.Select(ToTuple)
       );
       Assert.IsNull(messages.Next);
@@ -522,9 +529,9 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     // Jaybee list messages with pagination
     {
       currentContext.SetCurrentUser(jayBee);
-      var messages = await tested.GetMessages(liane, new Pagination(null, 3, SortAsc: false));
-      Assert.AreEqual(6, messages.TotalCount);
-      CollectionAssert.AreEquivalent(
+      var messages = await messageService.GetMessages(liane, new Pagination(null, 3, SortAsc: false));
+      Assert.AreEqual(9, messages.TotalCount);
+      CollectionAssert.AreEqual(
         ImmutableList.Create(
           (gugu.Id, "Super je dois aller à Mende demain pour 9h30"),
           (mathilde.Id, "Bienvenue gugu, tu as bien fait de nous rejoindre, avec Jb on fait la route demain matin !"),
@@ -537,16 +544,18 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     // Jaybee list messages with pagination
     {
       currentContext.SetCurrentUser(jayBee);
-      var messages = await tested.GetMessages(liane, new Pagination(allMessages[3].ToCursor(), 3, SortAsc: false));
-      Assert.AreEqual(6, messages.TotalCount);
-      CollectionAssert.AreEquivalent(
+      var messages = await messageService.GetMessages(liane, new Pagination(allMessages[3].ToCursor(), 5, SortAsc: false));
+      Assert.AreEqual(9, messages.TotalCount);
+      CollectionAssert.AreEqual(
         ImmutableList.Create(
           (gugu.Id, "Bonjour à tous 🚘, vroum !"),
+          (jayBee.Id, $"{jayBee.UserInfo?.FirstName} a accepté {gugu.UserInfo?.FirstName} dans la liane."),
+          (gugu.Id, $"{gugu.UserInfo?.FirstName} souhaite rejoindre la liane."),
           (jayBee.Id, "Bonjour Mathilde, je suis partant !"),
           (mathilde.Id, "Salut JB, ça te dit de covoiturer demain ?")
         ), messages.Data.Select(ToTuple)
       );
-      Assert.IsNull(messages.Next);
+      Assert.IsNotNull(messages.Next);
     }
   }
 
@@ -653,12 +662,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       true, weekDays, true, null, null));
   }
 
-  private static (string User, string Text) ToTuple(LianeMessage message) => message.Content switch
-  {
-    MessageContent.Text text => (message.CreatedBy.Id, text.Value),
-    MessageContent.Trip => (message.CreatedBy.Id, "!!NOUVEAU TRIP PROPOSE!!"),
-    _ => throw new ArgumentOutOfRangeException(nameof(message))
-  };
+  private static (string User, string Text) ToTuple(LianeMessage message) => (message.CreatedBy.Id, message.Content.Value);
 
   private static void AssertMatchesEquals(ImmutableList<LianeMatch> list, params LianeMatch[] expected)
   {

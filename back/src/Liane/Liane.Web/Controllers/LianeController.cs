@@ -4,8 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Liane.Api.Community;
 using Liane.Api.Trip;
-using Liane.Api.Util.Pagination;
-using Liane.Api.Util.Ref;
 using Liane.Web.Internal.Auth;
 using Microsoft.AspNetCore.Mvc;
 using LianeMatch = Liane.Api.Community.LianeMatch;
@@ -83,23 +81,5 @@ public sealed class LianeController(ILianeService lianeService, ITripService tri
   public Task<bool> Leave(Guid id)
   {
     return lianeService.Leave(id);
-  }
-
-  [HttpGet("liane/{id:guid}/message")]
-  public Task<PaginatedResponse<LianeMessage>> GetMessages(Guid id, [FromQuery] Pagination pagination)
-  {
-    return lianeService.GetMessages(id, pagination);
-  }
-
-  [HttpPost("liane/{id:guid}/message")]
-  public Task<LianeMessage> SendMessage(Guid id, [FromBody] MessageContent content)
-  {
-    return lianeService.SendMessage(id, content);
-  }
-
-  [HttpGet("liane/unread")]
-  public Task<ImmutableDictionary<Ref<Api.Community.Liane>, int>> GetUnreadLianes()
-  {
-    return lianeService.GetUnreadLianes();
   }
 }

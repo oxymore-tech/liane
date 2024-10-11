@@ -95,6 +95,7 @@ public static class Startup
     services.AddService<LianeFetcher>();
     services.AddService<LianeMatcher>();
     services.AddService<LianeServiceImpl>();
+    services.AddService<LianeMessageServiceImpl>();
 
     services.AddService<PushServiceImpl>();
     services.AddService<NotificationServiceImpl>();

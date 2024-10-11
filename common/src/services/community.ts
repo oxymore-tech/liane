@@ -82,10 +82,28 @@ export type JoinTripQuery = {
   takeReturnTrip: boolean;
 };
 
-export type TextMessage = { type: "Text"; value: string };
-export type TripMessage = { type: "Trip"; value: Ref<Liane> };
+export type Text = { type: "Text"; value: string };
+export type LianeRequestModified = { type: "LianeRequestModified"; value: string; lianeRequest: Ref<CoLianeRequest> };
+export type TripAdded = { type: "TripAdded"; value: string; trip: Ref<Liane> };
+export type TripRemoved = { type: "TripRemoved"; value: string; trip: Ref<Liane> };
+export type MemberRequested = { type: "MemberRequested"; value: string; user: Ref<User>; lianeRequest: Ref<CoLianeRequest> };
+export type MemberAdded = { type: "MemberAdded"; value: string; user: Ref<User>; lianeRequest: Ref<CoLianeRequest> };
+export type MemberRejected = { type: "MemberRejected"; value: string; user: Ref<User> };
+export type MemberLeft = { type: "MemberLeft"; value: string; user: Ref<User> };
+export type MemberJoinedTrip = { type: "MemberJoinedTrip"; value: string; user: Ref<User>; trip: Ref<Liane>; takeReturn: boolean };
+export type MemberLeftTrip = { type: "MemberLeftTrip"; value: string; user: Ref<User>; trip: Ref<Liane> };
 
-export type MessageContent = TextMessage | TripMessage;
+export type MessageContent =
+  | Text
+  | LianeRequestModified
+  | TripAdded
+  | TripRemoved
+  | MemberRequested
+  | MemberAdded
+  | MemberRejected
+  | MemberLeft
+  | MemberJoinedTrip
+  | MemberLeftTrip;
 
 export type LianeMessage<T extends MessageContent = MessageContent> = Entity & { content: T };
 

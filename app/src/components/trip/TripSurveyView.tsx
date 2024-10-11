@@ -2,7 +2,7 @@ import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { AppText } from "@/components/base/AppText.tsx";
 import { AppColors } from "@/theme/colors.ts";
 import { AppLocalization } from "@/api/i18n.ts";
-import { addSeconds, capitalize, CoLiane, DayOfWeekFlag, Liane, LianeMessage, RallyingPoint, TimeOnlyUtils, TripMessage } from "@liane/common";
+import { addSeconds, capitalize, CoLiane, DayOfWeekFlag, Liane, LianeMessage, RallyingPoint, TimeOnlyUtils, TripAdded } from "@liane/common";
 import React, { useCallback, useContext, useMemo, useState } from "react";
 import { Center, Column, Row } from "@/components/base/AppLayout.tsx";
 import { UserPicture } from "@/components/UserPicture.tsx";
@@ -17,7 +17,7 @@ import { SimpleModal } from "@/components/modal/SimpleModal.tsx";
 import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker.tsx";
 import { TimeWheelPicker } from "@/components/TimeWheelPicker.tsx";
 
-export const TripSurveyView = ({ message, coLiane, color }: { message: LianeMessage<TripMessage>; coLiane: CoLiane; color: string }) => {
+export const TripSurveyView = ({ message, coLiane, color }: { message: LianeMessage<TripAdded>; coLiane: CoLiane; color: string }) => {
   const { services, user } = useContext(AppContext);
 
   const trip = useQuery(LianeDetailQueryKey(message.content.value), () => services.liane.get(message.content.value));

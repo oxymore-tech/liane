@@ -29,7 +29,6 @@ import { AppStorage } from "@/api/storage.ts";
 import { TimeWheelPicker } from "@/components/TimeWheelPicker.tsx";
 import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker.tsx";
 import { MessageBubble } from "@/screens/communities/MessageBubble.tsx";
-import { AppRoundedButton } from "@/components/base/AppRoundedButton.tsx";
 
 export const CommunitiesChatScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesChat">();
@@ -115,7 +114,7 @@ export const CommunitiesChatScreen = () => {
     setTripModalVisible(false);
     const geolocationLevel = await AppStorage.getSetting("geolocation");
 
-    const created = await services.liane.post({
+    await services.liane.post({
       liane: liane!.id!,
       arriveAt: time[0].toISOString(),
       returnAt: time[1]?.toISOString(),
@@ -125,16 +124,6 @@ export const CommunitiesChatScreen = () => {
       geolocationLevel: geolocationLevel || "None",
       recurrence: undefined
     });
-    await services.community.sendMessage(liane!.id!, {
-      type: "Trip",
-      value: created.id!
-    });
-    if (created.return) {
-      await services.community.sendMessage(liane!.id!, {
-        type: "Trip",
-        value: created.return
-      });
-    }
   };
 
   useEffect(() => {

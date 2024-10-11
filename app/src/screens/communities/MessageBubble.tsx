@@ -1,4 +1,4 @@
-import { capitalize, CoLiane, LianeMessage, Ref, TripMessage, User } from "@liane/common";
+import { capitalize, CoLiane, LianeMessage, Ref, TripAdded, User } from "@liane/common";
 import React from "react";
 import { View } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
@@ -63,7 +63,7 @@ export const MessageBubble = ({
               <AppText style={{ fontSize: 12, alignSelf: isSender ? "flex-end" : "flex-start", color }}>{date}</AppText>
             </>
           ) : (
-            <TripSurveyView message={message as LianeMessage<TripMessage>} coLiane={coLiane} color={color} />
+            <TripSurveyView message={message as LianeMessage<TripAdded>} coLiane={coLiane} color={color} />
           )}
         </Column>
       </Column>

@@ -110,6 +110,7 @@ public abstract class BaseIntegrationTest
     services.AddService<MockAutomaticAnswerService>();
     services.AddService<DeleteAccountServiceImpl>();
     services.AddService<LianeTrackerCache>();
+    services.AddService<LianeMessageServiceImpl>();
 
     services.AddService<LianeRequestFetcher>();
     services.AddService<LianeFetcher>();
