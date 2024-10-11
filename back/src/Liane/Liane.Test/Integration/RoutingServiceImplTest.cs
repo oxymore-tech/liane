@@ -24,14 +24,13 @@ public sealed class RoutingServiceImplTest : BaseIntegrationTest
     var departureTime = DateTime.Parse("2023-03-02T08:00:00+01:00");
 
     RouteSegment driver = (LabeledPositions.SaintEnimieParking, LabeledPositions.Mende);
-    var result = await tested.GetTrip(departureTime, driver, new[] { (RouteSegment)(LabeledPositions.Mende, LabeledPositions.SaintEnimieParking) });
+    var result = await tested.GetTrip(departureTime, driver, [(LabeledPositions.Mende, LabeledPositions.SaintEnimieParking)]);
     Assert.Null(result);
 
-    var result2 = await tested.GetTrip(departureTime, driver, new[]
-    {
-      (RouteSegment)(LabeledPositions.ChamperbouxEglise, LabeledPositions.SaintEnimieParking),
+    var result2 = await tested.GetTrip(departureTime, driver, [
+      (LabeledPositions.ChamperbouxEglise, LabeledPositions.SaintEnimieParking),
       (LabeledPositions.Mende, LabeledPositions.ChamperbouxEglise)
-    });
+    ]);
     Assert.Null(result2);
   }
 

@@ -117,8 +117,8 @@ export const CommunitiesChatScreen = () => {
 
     const created = await services.liane.post({
       liane: liane!.id!,
-      departureTime: time[0].toISOString(),
-      returnTime: time[1]?.toISOString(),
+      arriveAt: time[0].toISOString(),
+      returnAt: time[1]?.toISOString(),
       from: from ?? me!.lianeRequest.wayPoints[0].id!,
       to: to ?? me!.lianeRequest.wayPoints[1].id!,
       availableSeats: me!.lianeRequest.canDrive ? 1 : -1,

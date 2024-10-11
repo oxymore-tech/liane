@@ -55,10 +55,11 @@ public sealed class TripServiceImpl(
   {
     var toCreate = new List<LianeDb>();
     // Handle return here
-    if (entity.ReturnTime is not null)
+    if (entity.ReturnAt is not null)
     {
       var createdReturn = await ToDb(
-        entity with { DepartureTime = entity.ReturnTime.Value, From = entity.To, To = entity.From, ReturnTime = null },
+        entity with { From = entity.To, To = entity.From },
+        new DepartureOrArrivalTime(entity.ReturnAt.Value, Direction.Departure),
         ObjectId.GenerateNewId().ToString()!,
         createdAt,
         createdBy
@@ -66,18 +67,8 @@ public sealed class TripServiceImpl(
       toCreate.Add(createdReturn);
     }
 
-    var created = await ToDb(entity with { ReturnTime = null }, ObjectId.GenerateNewId().ToString()!, createdAt, createdBy);
-    toCreate.Add(entity.ReturnTime is null ? created : created with { Return = toCreate[0].Id });
-
-    if (!currentContext.AllowPastResourceCreation())
-    {
-      toCreate = toCreate.Where(l => l.DepartureTime > createdAt).ToList();
-    }
-
-    if (toCreate.Count == 0)
-    {
-      throw new ArgumentException($"Cannot create liane with departure time: {entity.DepartureTime}");
-    }
+    var created = await ToDb(entity, new DepartureOrArrivalTime(entity.ArriveAt, Direction.Arrival), ObjectId.GenerateNewId().ToString()!, createdAt, createdBy);
+    toCreate.Add(entity.ReturnAt is null ? created : created with { Return = toCreate[0].Id });
 
     await Mongo.GetCollection<LianeDb>().InsertManyAsync(toCreate);
     foreach (var lianeDb in toCreate)
@@ -87,12 +78,12 @@ public sealed class TripServiceImpl(
     }
 
     await userStatService.IncrementTotalCreatedTrips(createdBy);
-    await rallyingPointService.UpdateStats([entity.From, entity.To], entity.ReturnTime ?? entity.DepartureTime, entity.ReturnTime is null ? 1 : 2);
+    await rallyingPointService.UpdateStats([entity.From, entity.To], entity.ReturnAt ?? created.DepartureTime, entity.ReturnAt is null ? 1 : 2);
     return await Get(created.Id);
   }
 
 
-  private async Task<LianeDb> ToDb(TripRequest tripRequest, string originalId, DateTime createdAt, string createdBy)
+  private async Task<LianeDb> ToDb(TripRequest tripRequest, DepartureOrArrivalTime at, string originalId, DateTime createdAt, string createdBy)
   {
     if (tripRequest.From == tripRequest.To)
     {
@@ -101,9 +92,9 @@ public sealed class TripServiceImpl(
 
     var members = new List<TripMember> { new(createdBy, tripRequest.From, tripRequest.To, tripRequest.AvailableSeats, GeolocationLevel: tripRequest.GeolocationLevel) };
     var driverData = new Driver(createdBy, tripRequest.AvailableSeats > 0);
-    var wayPoints = await GetWayPoints(tripRequest.DepartureTime, driverData.User, members);
+    var wayPoints = await GetWayPoints(at, driverData.User, members);
     var wayPointDbs = wayPoints.Select(w => new WayPointDb(w.RallyingPoint, w.Duration, w.Distance, w.Eta)).ToImmutableList();
-    return new LianeDb(originalId, createdBy, createdAt, tripRequest.DepartureTime, null, members.ToImmutableList(), driverData,
+    return new LianeDb(originalId, createdBy, createdAt, wayPoints[0].Eta, null, members.ToImmutableList(), driverData,
       TripStatus.NotStarted, wayPointDbs, ImmutableList<UserPing>.Empty, tripRequest.Liane);
   }
 
@@ -136,13 +127,13 @@ public sealed class TripServiceImpl(
     DateTime lowerBound, upperBound;
     if (filter.TargetTime.Direction == Direction.Departure)
     {
-      lowerBound = filter.TargetTime.DateTime;
-      upperBound = filter.TargetTime.DateTime.AddHours(LianeMatchPageDeltaInHours);
+      lowerBound = filter.TargetTime.At;
+      upperBound = filter.TargetTime.At.AddHours(LianeMatchPageDeltaInHours);
     }
     else
     {
-      lowerBound = filter.TargetTime.DateTime.AddHours(-LianeMatchPageDeltaInHours);
-      upperBound = filter.TargetTime.DateTime;
+      lowerBound = filter.TargetTime.At.AddHours(-LianeMatchPageDeltaInHours);
+      upperBound = filter.TargetTime.At;
     }
 
     var timer = new Stopwatch();
@@ -409,10 +400,10 @@ public sealed class TripServiceImpl(
     return m.Phone;
   }
 
-  private async Task<ImmutableList<WayPoint>> GetWayPoints(DateTime departureTime, Ref<Api.Auth.User> driver, IEnumerable<TripMember> lianeMembers)
+  private async Task<ImmutableList<WayPoint>> GetWayPoints(DepartureOrArrivalTime at, Ref<Api.Auth.User> driver, IEnumerable<TripMember> lianeMembers)
   {
     var (driverSegment, segments) = await ExtractRouteSegments(driver, lianeMembers);
-    var result = await routingService.GetTrip(departureTime, driverSegment, segments);
+    var result = await routingService.GetTrip(at, driverSegment, segments);
     if (result == null)
     {
       throw new ValidationException("members", ValidationMessage.WrongFormat);
@@ -495,7 +486,7 @@ public sealed class TripServiceImpl(
 
   private async Task<UpdateDefinition<LianeDb>> GetTripUpdate(DateTime departureTime, Ref<Api.Auth.User> driver, IEnumerable<TripMember> members)
   {
-    var wayPoints = await GetWayPoints(departureTime, driver, members);
+    var wayPoints = await GetWayPoints(new DepartureOrArrivalTime(departureTime, Direction.Departure), driver, members);
     return Builders<LianeDb>.Update
       .Set(l => l.WayPoints, wayPoints.ToDb());
   }
@@ -507,7 +498,7 @@ public sealed class TripServiceImpl(
 
     var liane = await MapEntity(lianeDb);
     var initialTripDuration = liane.WayPoints.TotalDuration();
-    if (filter.TargetTime.Direction == Direction.Arrival && lianeDb.DepartureTime.AddSeconds(initialTripDuration) > filter.TargetTime.DateTime)
+    if (filter.TargetTime.Direction == Direction.Arrival && lianeDb.DepartureTime.AddSeconds(initialTripDuration) > filter.TargetTime.At)
     {
       // For filters on arrival types, filter here using trip duration
       return null;

@@ -12,19 +12,8 @@ using Route = Liane.Api.Routing.Route;
 
 namespace Liane.Service.Internal.Routing;
 
-using LngLatTuple = Tuple<double, double>;
-
-public sealed class RoutingServiceImpl : IRoutingService
+public sealed class RoutingServiceImpl(IOsrmService osrmService, ILogger<RoutingServiceImpl> logger) : IRoutingService
 {
-  private readonly IOsrmService osrmService;
-  private readonly ILogger<RoutingServiceImpl> logger;
-
-  public RoutingServiceImpl(IOsrmService osrmService, ILogger<RoutingServiceImpl> logger)
-  {
-    this.osrmService = osrmService;
-    this.logger = logger;
-  }
-
   public Task<Route> GetRoute(RoutingQuery query, CancellationToken cancellationToken = default) => GetRoute(query.Coordinates, cancellationToken);
 
   public Task<Route> GetRoute(LatLng from, LatLng to, CancellationToken cancellationToken = default) => GetRoute(GetFromTo(from, to), cancellationToken);
@@ -115,10 +104,10 @@ public sealed class RoutingServiceImpl : IRoutingService
     return matrix;
   }
 
-  public async Task<ImmutableList<WayPoint>?> GetTrip(DateTime departureTime, RouteSegment extremities, IEnumerable<RouteSegment> segments)
+  public async Task<ImmutableList<WayPoint>?> GetTrip(DateTime departureTime, RouteSegment endpoints, IEnumerable<RouteSegment> segments)
   {
-    var start = extremities.From;
-    var end = extremities.To;
+    var start = endpoints.From;
+    var end = endpoints.To;
     // A dictionary holding each point's constraints
     // The HashSet contains all points that must be visited before this point can be added to the trip.
     // If the hashset of a given point P contains P, it indicates this point is no longer visitable.
@@ -145,7 +134,7 @@ public sealed class RoutingServiceImpl : IRoutingService
     }
 
     // End is marked with precedence constraints from all other points except itself and start
-    pointsDictionary[end] = pointsDictionary.Keys.Except(new[] { start, end }).ToHashSet();
+    pointsDictionary[end] = pointsDictionary.Keys.Except([start, end]).ToHashSet();
 
     // Get distance matrix for points
     if (pointsDictionary.Keys.Count < 2)
@@ -153,7 +142,7 @@ public sealed class RoutingServiceImpl : IRoutingService
       return null;
     }
 
-    var matrix = await GetDurationMatrix(pointsDictionary.Keys.ToImmutableArray());
+    var matrix = await GetDurationMatrix([..pointsDictionary.Keys]);
 
     var eta = departureTime;
 
@@ -166,7 +155,7 @@ public sealed class RoutingServiceImpl : IRoutingService
     var visitable = pointsDictionary.Where(kv => kv.Value.Count == 0).Select(kv => kv.Key).ToHashSet();
     var currentPoint = start;
 
-    while (visitable.Any())
+    while (visitable.Count != 0)
     {
       // Get next point amongst visitable
       var nextPointData = matrix[currentPoint].IntersectBy(visitable, kv => kv.Key).MinBy(kv => kv.Value);
