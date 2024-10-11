@@ -180,6 +180,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       currentContext.SetCurrentUser(gugu);
 
       await tested.JoinRequest(lianeGugu, lianeJayBee.Id);
+      currentContext.SetCurrentUser(jayBee);
       joinedLiane = await tested.Accept(lianeGugu, lianeJayBee.Id);
 
       ImmutableList.Create(gugu.Id, jayBee.Id)
@@ -207,6 +208,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     {
       currentContext.SetCurrentUser(gugu);
       await tested.JoinRequest(lianeGugu, lianeJayBee.Id);
+      currentContext.SetCurrentUser(jayBee);
       joinedLiane = await tested.Accept(lianeGugu, lianeJayBee.Id);
     }
 
@@ -257,6 +259,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     {
       currentContext.SetCurrentUser(mathilde);
       await tested.JoinRequest(lianeMathilde, lianeJayBee.Id);
+      currentContext.SetCurrentUser(jayBee);
       exisitingLiane = await tested.Accept(lianeMathilde, lianeJayBee.Id);
     }
 
@@ -308,6 +311,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     {
       currentContext.SetCurrentUser(mathilde);
       await tested.JoinRequest(lianeMathilde, lianeJayBee.Id);
+      currentContext.SetCurrentUser(jayBee);
       exisitingLiane = await tested.Accept(lianeMathilde, lianeJayBee.Id);
     }
 
@@ -336,6 +340,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     {
       currentContext.SetCurrentUser(mathilde);
       await tested.JoinRequest(lianeMathilde, lianeJayBee.Id);
+      currentContext.SetCurrentUser(jayBee);
       exisitingLiane = await tested.Accept(lianeMathilde, lianeJayBee.Id);
     }
 
@@ -394,6 +399,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     {
       currentContext.SetCurrentUser(mathilde);
       await tested.JoinRequest(lianeMathilde, lianeJayBee.Id);
+      currentContext.SetCurrentUser(jayBee);
       liane = await tested.Accept(lianeMathilde, lianeJayBee.Id);
     }
 
@@ -588,6 +594,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     {
       currentContext.SetCurrentUser(gugu);
       await tested.JoinRequest(lianeGugu, lianeJayBee.Id);
+      currentContext.SetCurrentUser(jayBee);
       joinedLiane = await tested.Accept(lianeGugu, lianeJayBee.Id);
     }
 
