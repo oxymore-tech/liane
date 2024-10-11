@@ -214,7 +214,7 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
             onPress={() => {
               navigation.navigate("Publish", {
                 initialValue: filterHasFullTrip(state.context.filter)
-                  ? { wayPoints: [state.context.filter.from!.id!, state.context.filter.to!.id!] }
+                  ? { wayPoints: [state.context.filter.from!, state.context.filter.to!] }
                   : undefined
               });
             }}

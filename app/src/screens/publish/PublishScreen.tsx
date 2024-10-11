@@ -57,13 +57,15 @@ export const PublishScreen = () => {
     if (route.params.initialValue) {
       setLianeRequest({
         ...route.params.initialValue,
-        wayPoints: route.params.initialValue.wayPoints.map(object => object.id)
+        wayPoints: route.params.initialValue.wayPoints && route.params.initialValue.wayPoints.map(object => object.id)
       } as CoLianeRequest);
 
-      setTrip({
-        to: route.params.initialValue.wayPoints[route.params.initialValue.wayPoints.length - 1],
-        from: route.params.initialValue.wayPoints[0]
-      });
+      if (route.params.initialValue.wayPoints) {
+        setTrip({
+          to: route.params.initialValue.wayPoints[route.params.initialValue.wayPoints.length - 1],
+          from: route.params.initialValue.wayPoints[0]
+        });
+      }
     }
   }, [route.params]);
 
