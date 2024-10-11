@@ -21,6 +21,7 @@ export type NavigationParamList = {
   Communities: undefined;
   CommunitiesChat: { group?: CoMatch; liane?: CoLiane; request?: CoLianeRequest | ResolvedLianeRequest; lianeId?: string };
   LianeMapDetail: { group: CoMatch; request: ResolvedLianeRequest };
+  LianeTripDetail: { trip: Liane };
   LianeDetail: { liane: Liane | string };
   Profile: { user: User } | undefined;
   ProfileEdit: undefined;

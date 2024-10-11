@@ -24,10 +24,7 @@ export const LianeMapDetailScreen = () => {
 
   const insets = useSafeAreaInsets();
   const [error, setError] = useState<Error | undefined>(undefined);
-  const daysReccurence = extractDays(lianeRequest?.weekDays);
-  const appMapRef = useRef<AppMapViewController>(null);
 
-  console.log("DEBUG double LIane", group.liane, lianeRequest.id);
   const joinLiane = async () => {
     if (lianeRequest && lianeRequest.id) {
       try {
@@ -45,7 +42,6 @@ export const LianeMapDetailScreen = () => {
   const acceptLiane = async () => {
     if (lianeRequest && lianeRequest.id) {
       try {
-        console.log("BAD", lianeRequest.id, group.liane, lianeRequest.id === group.liane);
         const result = await services.community.accept(lianeRequest.id, group.liane);
         AppLogger.debug("COMMUNITIES", "Acceptation une liane avec succès", result);
         navigation.navigate("Communities");

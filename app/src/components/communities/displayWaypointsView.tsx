@@ -10,12 +10,21 @@ import { AppIcon, IconName } from "@/components/base/AppIcon.tsx";
 type DisplayWayPointsProps = {
   wayPoints: WayPoint[];
   style?: object;
+  hideLabel?: boolean;
 };
 
-export const DisplayWayPoints = ({ wayPoints }: DisplayWayPointsProps) => {
+export const DisplayWayPoints = ({ wayPoints, hideLabel, style }: DisplayWayPointsProps) => {
   const startTime = TimeOnlyUtils.fromDate(new Date(wayPoints[0].eta));
   const endTime = TimeOnlyUtils.fromDate(new Date(wayPoints[wayPoints.length - 1].eta));
-  return <DisplayRallyingPoints wayPoints={wayPoints.map(w => w.rallyingPoint)} startTime={startTime} endTime={endTime} hideLabel />;
+  return (
+    <DisplayRallyingPoints
+      wayPoints={wayPoints.map(w => w.rallyingPoint)}
+      startTime={startTime}
+      endTime={endTime}
+      hideLabel={hideLabel}
+      style={style}
+    />
+  );
 };
 
 export type DisplayRallyingPointsProps = {
