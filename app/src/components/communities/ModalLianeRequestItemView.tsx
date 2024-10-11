@@ -1,7 +1,7 @@
 import React, { useContext, useMemo, useState } from "react";
 
 import { Pressable, View } from "react-native";
-import { CoLianeMatch } from "@liane/common";
+import { CoLianeMatch, CoLianeRequest } from "@liane/common";
 import { AppContext } from "@/components/context/ContextProvider";
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
@@ -58,7 +58,10 @@ export const ModalLianeRequestItem = ({ item, onRefresh, myModalVisible, setMyMo
       try {
         let newLiane = lianeRequest;
         newLiane.name = name;
-        const result = await services.community.update(lianeRequest.id, newLiane);
+        const result = await services.community.update(lianeRequest.id, {
+          ...newLiane,
+          wayPoints: newLiane.wayPoints.map(object => object.id)
+        } as CoLianeRequest);
         AppLogger.debug("COMMUNITIES", "Suppression d'une liane avec succès", result);
         setLianeNameInputVisible(false);
         setMyModalVisible(false);
@@ -90,7 +93,14 @@ export const ModalLianeRequestItem = ({ item, onRefresh, myModalVisible, setMyMo
               Renommer la liane
             </AppText>
           </Pressable>
-          <Pressable style={{ margin: 16, flexDirection: "row" }} onPress={() => setMyModalVisible(false)}>
+          <Pressable
+            style={{ margin: 16, flexDirection: "row" }}
+            onPress={() => {
+              setMyModalVisible(false);
+              navigation.navigate("Publish", {
+                initialValue: item.lianeRequest
+              });
+            }}>
             <AppText style={{ marginLeft: 5, fontSize: 16, fontWeight: "bold", lineHeight: 24, color: AppColors.darkGray }}>
               Modifier la liane
             </AppText>

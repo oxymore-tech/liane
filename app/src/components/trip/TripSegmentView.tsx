@@ -91,7 +91,7 @@ export const TripViewStyles = StyleSheet.create({
   },
   intermediateWayPointLabel: {
     fontSize: 15,
-    fontWeight: "500",
+    fontWeight: "bold",
     color: AppColorPalettes.gray[700]
   },
   intermediateFromWayPointLabelColor: {
@@ -134,7 +134,7 @@ export const TripViewStyles = StyleSheet.create({
   },
   mainWayPointLabel2: {
     fontSize: 15,
-    fontWeight: "500",
+    fontWeight: "bold",
     textAlignVertical: "center",
     flexShrink: 1
   },

@@ -85,7 +85,7 @@ export const AppRoundedButtonOutline = ({ color, text, onPress, opacity = 1, ena
       <View style={styles.buttonPadding}>
         <AppText
           style={{
-            fontWeight: "600",
+            fontWeight: "bold",
             fontSize: 14,
             color,
             textAlign: "center",

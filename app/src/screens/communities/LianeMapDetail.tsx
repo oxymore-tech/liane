@@ -24,10 +24,7 @@ export const LianeMapDetailScreen = () => {
 
   const insets = useSafeAreaInsets();
   const [error, setError] = useState<Error | undefined>(undefined);
-  const daysReccurence = extractDays(lianeRequest?.weekDays);
-  const appMapRef = useRef<AppMapViewController>(null);
 
-  console.log("DEBUG double LIane", group.liane, lianeRequest.id);
   const joinLiane = async () => {
     if (lianeRequest && lianeRequest.id) {
       try {
@@ -45,7 +42,6 @@ export const LianeMapDetailScreen = () => {
   const acceptLiane = async () => {
     if (lianeRequest && lianeRequest.id) {
       try {
-        console.log("BAD", lianeRequest.id, group.liane, lianeRequest.id === group.liane);
         const result = await services.community.accept(lianeRequest.id, group.liane);
         AppLogger.debug("COMMUNITIES", "Acceptation une liane avec succès", result);
         navigation.navigate("Communities");
@@ -115,8 +111,17 @@ export const LianeMapDetailScreen = () => {
                 </View>
               )}
               <DisplayDays days={lianeRequest.weekDays} />
-              <DisplayRallyingPoints wayPoints={lianeRequest.wayPoints} endTime={lianeRequest.arriveBefore} />
-              <DisplayRallyingPoints wayPoints={lianeRequest.wayPoints} inverseTravel startTime={lianeRequest.returnAfter} />
+              <DisplayRallyingPoints
+                wayPoints={lianeRequest.wayPoints}
+                endTime={lianeRequest.arriveBefore}
+                style={{ backgroundColor: AppColors.gray100, borderRadius: 20 }}
+              />
+              <DisplayRallyingPoints
+                wayPoints={lianeRequest.wayPoints}
+                inverseTravel
+                startTime={lianeRequest.returnAfter}
+                style={{ backgroundColor: AppColors.gray100, borderRadius: 20 }}
+              />
             </View>
           </View>
         </View>
