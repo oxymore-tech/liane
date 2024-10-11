@@ -3,6 +3,7 @@ import {
   Chat,
   CoLiane,
   DayOfWeekFlag,
+  Liane,
   LianeMessage,
   PaginatedResponse,
   RallyingPoint,
@@ -42,6 +43,7 @@ export const CommunitiesChatScreen = () => {
   const [error, setError] = useState<Error | undefined>(undefined);
   const [isSending, setIsSending] = useState(false);
   const [liane, setLiane] = useState<CoLiane | undefined>(undefined);
+  const [trips, setTrips] = useState<Liane[]>([]);
   const [tripModalVisible, setTripModalVisible] = useState(false);
 
   const members = useMemo(
@@ -140,13 +142,25 @@ export const CommunitiesChatScreen = () => {
       }
     };
 
+    const fetchTrip = async (id: string) => {
+      try {
+        const tripsTemp = await services.community.getIncomingTrips(id);
+        console.log("###### trips", tripsTemp);
+        setTrips(tripsTemp);
+      } catch (e) {
+        AppLogger.debug("COMMUNITIES", "Au moment de récupérer les trajets prévus, une erreur c'est produite", e);
+      }
+    };
+
     if (route.params.liane) {
       // Lorsqu'on arrive directement par une liane
       setLiane(route.params.liane);
+      route.params.liane.id && fetchTrip(route.params.liane.id).then();
     }
     if (route.params.lianeId) {
       // Lorsqu'on arrive par une notification
       fetchLiane(route.params.lianeId).then();
+      fetchTrip(route.params.lianeId).then();
     }
   }, [route.params, services.community]);
 
