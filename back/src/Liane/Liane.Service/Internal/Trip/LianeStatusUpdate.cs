@@ -12,7 +12,7 @@ using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Trip;
 
-public sealed class LianeStatusUpdate(ILogger<LianeStatusUpdate> logger, IMongoDatabase mongo, ITripService tripService, ILianeUpdateObserver lianeUpdateObserver)
+public sealed class LianeStatusUpdate(ILogger<LianeStatusUpdate> logger, IMongoDatabase mongo, ITripService tripService, ITripUpdateObserver lianeUpdateObserver)
   : CronJobService(logger, "* * * * *", false)
 {
   private const int StartedDelayInMinutes = 5;
@@ -54,7 +54,7 @@ public sealed class LianeStatusUpdate(ILogger<LianeStatusUpdate> logger, IMongoD
     var filterTimedOut = Builders<LianeDb>.Filter.Where(l => l.State == TripStatus.Started)
                          & !Builders<LianeDb>.Filter.ElemMatch(l => l.WayPoints, w => w.Eta > limitStarted)
                          & !Builders<LianeDb>.Filter.ElemMatch(l => l.Pings, w => w.At > limitStarted);
-    ;
+    
     var finishedLianes = await mongo.GetCollection<LianeDb>()
       .Find(filterNotStarted | filterTimedOut)
       .ToListAsync();

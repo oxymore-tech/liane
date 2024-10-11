@@ -68,7 +68,7 @@ export const QueryUpdateProvider = (props: PropsWithChildren) => {
 
   // Update liane local cache
 
-  useSubscription<Liane>(services.realTimeHub.lianeUpdates, liane => {
+  useSubscription<Liane>(services.realTimeHub.tripUpdates, liane => {
     queryClient.setQueryData<PaginatedResponse<Liane>>(LianeQueryKey, old => {
       if (!old) {
         return { pageSize: 1, data: [liane] };

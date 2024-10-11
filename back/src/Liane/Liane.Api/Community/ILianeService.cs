@@ -17,7 +17,7 @@ public interface ILianeService
   Task<bool> JoinRequest(Ref<LianeRequest> mine, Ref<Liane> liane);
   Task<Liane> Accept(Ref<LianeRequest> mine, Ref<Liane> liane);
   Task<bool> Leave(Ref<Liane> liane);
-  
+
   Task<bool> JoinTrip(JoinTripQuery query);
 
   Task<PaginatedResponse<LianeMessage>> GetMessages(Ref<Liane> liane) => GetMessages(liane, Pagination.Empty);

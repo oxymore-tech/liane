@@ -20,5 +20,7 @@ public interface IHubClient
 
   Task ReceiveTrackingInfo(TrackingInfo update);
 
-  Task ReceiveLianeUpdate(Trip.Trip trip);
+  Task ReceiveTripUpdate(Trip.Trip trip);
+
+  Task ReceiveLianeUpdate(Community.Liane liane);
 }
