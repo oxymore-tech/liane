@@ -1,4 +1,6 @@
 using System;
+using Liane.Api.Auth;
+using Liane.Api.Community;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
@@ -14,26 +16,27 @@ public abstract record LianeEvent
 
   public sealed record JoinRequest(
     Ref<Community.Liane> Liane,
-    Ref<Community.LianeRequest> LianeRequest,
+    Ref<LianeRequest> LianeRequest,
     string Message
   ) : LianeEvent;
-  
+
   public sealed record ChangeDepartureTimeRequest(
     Ref<Trip.Trip> Liane,
     Ref<RallyingPoint> From,
     DateTime At
   ) : LianeEvent;
-  
+
   public sealed record MemberAccepted(
     Ref<Community.Liane> Liane,
-    Ref<Community.LianeRequest> LianeRequest,
-    Ref<Auth.User> Member
+    Ref<LianeRequest> LianeRequest,
+    Ref<User> Member
   ) : LianeEvent;
 
   public sealed record MemberRejected(
-    Ref<Trip.Trip> Liane,
-    Ref<Community.LianeRequest> LianeRequest,
-    string? Reason = null
+    Ref<Community.Liane> Liane,
+    Ref<LianeRequest> LianeRequest,
+    Ref<User> User,
+    string? Reason
   ) : LianeEvent;
 
   public sealed record MemberPing(
@@ -42,14 +45,14 @@ public abstract record LianeEvent
     TimeSpan? Delay,
     LatLng? Coordinate = null
   ) : LianeEvent;
-  
+
   public sealed record MemberHasCanceled(
     Ref<Trip.Trip> Liane,
-    Ref<Auth.User> Member
+    Ref<User> Member
   ) : LianeEvent;
-  
+
   public sealed record MemberHasStarted(
     Ref<Trip.Trip> Liane,
-    Ref<Auth.User> Member
+    Ref<User> Member
   ) : LianeEvent;
 }

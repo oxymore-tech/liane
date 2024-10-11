@@ -55,6 +55,12 @@ public sealed class LianeController(ILianeService lianeService, ITripService tri
     return lianeService.Accept(liane, lianeRequest);
   }
 
+  [HttpPost("liane/{liane:guid}/reject/{lianeRequest:guid}")]
+  public Task<Api.Community.Liane> Reject(Guid liane, Guid lianeRequest)
+  {
+    return lianeService.Reject(liane, lianeRequest);
+  }
+
   [HttpPost("liane/join_trip")]
   public Task<bool> JoinTrip([FromBody] JoinTripQuery query)
   {

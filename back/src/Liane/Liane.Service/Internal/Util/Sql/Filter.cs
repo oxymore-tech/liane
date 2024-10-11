@@ -35,10 +35,15 @@ public abstract record Filter<T>
   public static Filter<T> operator |(Filter<T> left, Filter<T> right) => left.Or(right);
 
   public static Filter<T> Empty => new EmptyFilter();
+  
   public static Filter<T> Regex(Expression<Func<T, object?>> field, object? operand) => new Condition(field, ComparisonOperator.Regex, operand);
+  
   public static Filter<T> Where<TValue>(Expression<Func<T, TValue>> field, ComparisonOperator op, TValue operand) => new Condition(FieldDefinition<T>.From(field), op, operand);
   public static Filter<T> Where(Expression<Func<T, object?>> field, ComparisonOperator op, object? operand) => Where<object?>(field, op, operand);
   public static Filter<T> Where(FieldDefinition<T> field, ComparisonOperator op, object? operand) => new Condition(field, op, operand);
+  
+  public Filter<T> And(Expression<Func<T, object?>> field, ComparisonOperator op, object? operand) => this & Where<object?>(field, op, operand);
+  public Filter<T> Or(Expression<Func<T, object?>> field, ComparisonOperator op, object? operand) => this | Where<object?>(field, op, operand);
 
   public static Filter<T> Near(Expression<Func<T, LatLng?>> func, LatLng point, int radius)
   {
@@ -108,10 +113,10 @@ public abstract record Filter<T>
     internal override string ToSql(NamedParams namedParams) => $"({string.Join($" {Operator.ToString().ToUpper()} ", Operands.Select(o => o.ToSql(namedParams)))})";
   }
 
-  private Filter<T> And(Filter<T> right) => Combine(right, BooleanOperator.And);
-  private Filter<T> Or(Filter<T> right) => Combine(right, BooleanOperator.Or);
+  public Filter<T> And(Filter<T> right) => Combine(right, BooleanOperator.And);
+  public Filter<T> Or(Filter<T> right) => Combine(right, BooleanOperator.Or);
 
-  private Filter<T> Combine(Filter<T> right, BooleanOperator booleanOperator) => this switch
+  public Filter<T> Combine(Filter<T> right, BooleanOperator booleanOperator) => this switch
   {
     EmptyFilter => right,
     _ when right is EmptyFilter => this,
