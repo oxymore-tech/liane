@@ -18,7 +18,8 @@ import PositionEnd from "@/assets/icons/position-end.svg";
 import RallyingPoint from "@/assets/icons/liane_rallying_point.svg";
 import Seat from "@/assets/icons/seat.svg";
 import ArrowSwitch from "@/assets/icons/arrow-switch.svg";
-import ArrowRight from "@/assets/icons/arrow-ios-right.svg";
+import ArrowRight from "@/assets/icons/eva--arrow-ios-forward-fill.svg";
+import ArrowLeft from "@/assets/icons/arrow-left.svg";
 import Trash from "@/assets/icons/trash.svg";
 import Info from "@/assets/icons/info.svg";
 import Book from "@/assets/icons/book-fill.svg";
@@ -70,6 +71,8 @@ export function AppIcon({ name, color = AppColorPalettes.gray[800], size = AppDi
       return <ArrowSwitch {...props} opacity={opacity} width={size} height={size} fill={color} />;
     case "arrow-right":
       return <ArrowRight {...props} opacity={opacity} width={size} height={size} fill={color} />;
+    case "arrow2-left":
+      return <ArrowLeft {...props} opacity={opacity} width={size} height={size} fill={color} />;
     case "trash":
       return <Trash {...props} opacity={opacity} width={size} height={size} fill={color} />;
     case "info":
@@ -131,6 +134,7 @@ const EvaIconsNames = [
   "arrow-ios-forward",
   "arrow-ios-upward",
   "arrow-left",
+  "arrow2-left",
   "arrow-right",
   "arrow-up",
   "arrow-upward",

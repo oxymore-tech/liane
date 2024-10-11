@@ -42,7 +42,7 @@ export const DisplayDays = ({ days }: DisplayDaysProps) => {
         <View style={char === "0" ? styles.dayNotSelected : styles.daySelected}>
           <AppText
             style={{
-              fontWeight: "400",
+              fontWeight: "normal",
               fontSize: 18,
               lineHeight: 27,
               color: AppColors.white

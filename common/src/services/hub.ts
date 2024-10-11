@@ -34,6 +34,7 @@ export interface HubService {
 
   unreadNotifications: Observable<Ref<Notification>[]>;
   tripUpdates: Observable<Liane>;
+  lianeUpdates: Observable<CoLiane>;
   userUpdates: Observable<FullUser>;
   hubState: Observable<HubState>;
 }

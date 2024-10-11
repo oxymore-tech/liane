@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 16,
-    fontWeight: "600"
+    fontWeight: "bold"
   },
   item: {
     padding: 16,

@@ -30,6 +30,8 @@ import { AppStorage } from "@/api/storage.ts";
 import { TimeWheelPicker } from "@/components/TimeWheelPicker.tsx";
 import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker.tsx";
 import { MessageBubble } from "@/screens/communities/MessageBubble.tsx";
+import { useSubscription } from "@/util/hooks/subscription.ts";
+import { AppLocalization } from "@/api/i18n.ts";
 
 export const CommunitiesChatScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesChat">();
@@ -44,7 +46,28 @@ export const CommunitiesChatScreen = () => {
   const [isSending, setIsSending] = useState(false);
   const [liane, setLiane] = useState<CoLiane | undefined>(undefined);
   const [trips, setTrips] = useState<Liane[]>([]);
+  const [currentTripIndex, setCurrentTripIndex] = useState<number>(0);
   const [tripModalVisible, setTripModalVisible] = useState(false);
+  const currentTrip = trips[currentTripIndex];
+
+  useSubscription<CoLiane>(services.realTimeHub.lianeUpdates, updatedLiane => {
+    if (updatedLiane.id === liane?.id) {
+      setLiane(updatedLiane);
+      console.log("TODO // Update Liane / Check if trips number is updated");
+      fetchTrip(updatedLiane.id!).then();
+    }
+  });
+
+  console.log("messages", messages);
+
+  const fetchTrip = async (id: string) => {
+    try {
+      const tripsTemp = await services.community.getIncomingTrips(id);
+      setTrips(tripsTemp);
+    } catch (e) {
+      AppLogger.debug("COMMUNITIES", "Au moment de récupérer les trajets prévus, une erreur c'est produite", e);
+    }
+  };
 
   const members = useMemo(
     () =>
@@ -54,6 +77,22 @@ export const CommunitiesChatScreen = () => {
       }, {} as { [k: string]: User }),
     [chat?.currentGroup?.members]
   );
+
+  const getDayOfWeek = (liane: Liane): string => {
+    const daysOfWeek = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
+    const departureDate = new Date(liane.departureTime);
+    return daysOfWeek[departureDate.getUTCDay()];
+  };
+
+  const goToNextLiane = () => {
+    const newTripIndex = (currentTripIndex + 1) % trips.length;
+    setCurrentTripIndex(newTripIndex);
+  };
+
+  const goToPreviousLiane = () => {
+    const newTripIndex = currentTripIndex - 1;
+    setCurrentTripIndex(newTripIndex < 0 ? trips.length - 1 : newTripIndex);
+  };
 
   const sendMessage = async (value: string) => {
     let lianeTemp = liane;
@@ -86,6 +125,7 @@ export const CommunitiesChatScreen = () => {
   };
 
   const onReceiveLatestMessages = (m: PaginatedResponse<LianeMessage>) => {
+    console.log("onReceiveLatestMessages", m);
     setMessages(m.data);
     setPaginationCursor(m.next);
   };
@@ -101,7 +141,7 @@ export const CommunitiesChatScreen = () => {
   };
 
   const me = useMemo(() => liane?.members.find(m => m.user.id === user!.id), [liane?.members, user]);
-  const name = me ? `${me.lianeRequest.wayPoints[0].label}  ➔ ${me.lianeRequest.wayPoints[1].label}` : "???";
+  const name = me && me.lianeRequest ? me?.lianeRequest.name : `${me?.lianeRequest.wayPoints[0].label}  ➔ ${me?.lianeRequest.wayPoints[1].label}`;
 
   const startDate = useMemo(() => {
     const d = new Date();
@@ -139,16 +179,6 @@ export const CommunitiesChatScreen = () => {
         return l;
       } catch (e) {
         AppLogger.debug("COMMUNITIES", "Au moment de récupérer la liane, une erreur c'est produite", e);
-      }
-    };
-
-    const fetchTrip = async (id: string) => {
-      try {
-        const tripsTemp = await services.community.getIncomingTrips(id);
-        console.log("###### trips", tripsTemp);
-        setTrips(tripsTemp);
-      } catch (e) {
-        AppLogger.debug("COMMUNITIES", "Au moment de récupérer les trajets prévus, une erreur c'est produite", e);
       }
     };
 
@@ -235,31 +265,28 @@ export const CommunitiesChatScreen = () => {
           top: 0,
           left: 0,
           right: 0,
-          paddingTop: 16 + insets.top,
-          padding: 16
+          paddingTop: 16 + insets.top
         }}>
         <Row spacing={8} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-          <Row>
+          <Row style={{ flex: 1 }}>
             <AppPressableIcon onPress={() => navigation.goBack()} name={"arrow-ios-back-outline"} color={AppColors.primaryColor} size={32} />
 
             {!!liane && (
               <View
                 style={{
-                  justifyContent: "center"
+                  justifyContent: "center",
+                  alignItems: "center",
+                  flex: 1
                 }}>
                 <AppText
                   style={{
-                    fontSize: 16,
-                    fontWeight: "600",
+                    fontSize: 22,
+                    fontWeight: "bold",
                     flexShrink: 1,
                     lineHeight: 27,
                     color: AppColors.primaryColor
                   }}>
                   {name}
-                </AppText>
-
-                <AppText style={{ fontSize: 14, fontWeight: "400", flexShrink: 1, lineHeight: 16, color: AppColors.black }}>
-                  {liane && liane.members?.map(item => item.user?.pseudo).join(", ")}
                 </AppText>
               </View>
             )}
@@ -267,12 +294,101 @@ export const CommunitiesChatScreen = () => {
           <Row>
             {liane && (
               <Pressable onPress={() => navigation.navigate("CommunitiesDetails", { liane: liane })}>
-                <AppIcon name={"info"} />
+                <AppIcon name={"edit-2-outline"} />
               </Pressable>
             )}
           </Row>
         </Row>
-        {chat?.currentGroup && <DebugIdView object={chat?.currentGroup} />}
+        <View style={{ flex: 1, backgroundColor: AppColors.grayBackground }}>
+          <View
+            style={{
+              flex: 1,
+              flexDirection: "row",
+              justifyContent: "space-between",
+              paddingHorizontal: 16,
+              paddingVertical: 5
+            }}>
+            <AppText
+              style={{
+                fontSize: 18,
+                fontWeight: "normal",
+                flexShrink: 1,
+                lineHeight: 27,
+                color: AppColors.black
+              }}>
+              {`${trips.length} trajets prévus`}
+            </AppText>
+            <View
+              style={{
+                flexDirection: "row"
+              }}>
+              <Pressable onPress={goToPreviousLiane}>
+                <AppIcon name={"arrow2-left"} />
+              </Pressable>
+              <Pressable onPress={() => console.log("click")}>
+                <AppText
+                  style={{
+                    fontSize: 18,
+                    fontWeight: "normal",
+                    flexShrink: 1,
+                    lineHeight: 27,
+                    color: AppColors.black
+                  }}>
+                  {currentTrip && getDayOfWeek(currentTrip)}
+                </AppText>
+              </Pressable>
+              <Pressable onPress={goToNextLiane}>
+                <AppIcon name={"arrow-right"} />
+              </Pressable>
+            </View>
+          </View>
+          <View style={{ backgroundColor: AppColors.white, height: 200, flexDirection: "column" }}>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                paddingHorizontal: 20,
+                paddingVertical: 10,
+                alignItems: "center"
+              }}>
+              <AppText
+                style={{
+                  fontSize: 18,
+                  fontWeight: "normal",
+                  flexShrink: 1,
+                  lineHeight: 27,
+                  color: AppColors.black
+                }}>
+                {currentTrip?.departureTime && AppLocalization.formatMonthDay(new Date(currentTrip?.departureTime))}
+              </AppText>
+              <Pressable
+                onPress={() => console.log("click")}
+                style={{ backgroundColor: AppColors.primaryColor, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5 }}>
+                <AppText
+                  style={{
+                    fontSize: 18,
+                    fontWeight: "normal",
+                    flexShrink: 1,
+                    lineHeight: 27,
+                    color: AppColors.white
+                  }}>
+                  {"Rejoindre"}
+                </AppText>
+              </Pressable>
+            </View>
+            <AppText
+              style={{
+                fontSize: 18,
+                fontWeight: "normal",
+                flexShrink: 1,
+                lineHeight: 27,
+                color: AppColors.black
+              }}>
+              {currentTrip?.id}
+            </AppText>
+          </View>
+          <View>{chat?.currentGroup && <DebugIdView object={chat?.currentGroup} />}</View>
+        </View>
       </View>
 
       <KeyboardAvoidingView behavior={Platform.OS === "android" ? "height" : "padding"}>

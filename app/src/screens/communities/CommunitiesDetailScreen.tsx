@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontSize: 14,
-    fontWeight: "400",
+    fontWeight: "normal",
     lineHeight: 16,
     color: AppColors.black
   }

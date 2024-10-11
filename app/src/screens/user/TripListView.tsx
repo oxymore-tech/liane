@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
   },
   driverText: {
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: "bold",
     alignSelf: "center"
   },
   geolocText: {

@@ -172,7 +172,7 @@ export const LianeMatchListView = ({ loading = false }: { loading?: boolean }) =
             }}>
             <Row style={{ alignItems: "center", marginBottom: 8 }} spacing={8}>
               <UserPicture url={driver.pictureUrl} size={38} id={driver.id} />
-              <AppText style={{ fontSize: 16, fontWeight: "500" }}>{driver.pseudo}</AppText>
+              <AppText style={{ fontSize: 16, fontWeight: "bold" }}>{driver.pseudo}</AppText>
             </Row>
             <View style={{ paddingHorizontal: 8 }}>
               <LianeMatchItemView
