@@ -30,7 +30,7 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
     var departureTime = DateTime.Parse("2023-08-08T16:12:53.061Z");
     var liane = new Api.Trip.Trip(
       "6410edc1e02078e7108a5895",
-      Guid.Parse("019233a0-5c48-7cfa-b12e-7e7f0eb9c69f"),
+      null!,
       userId,
       DateTime.Today,
       departureTime,

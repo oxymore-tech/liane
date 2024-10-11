@@ -83,7 +83,11 @@ public sealed class TripServiceImpl(
     await rallyingPointService.UpdateStats([entity.From, entity.To], entity.ReturnAt ?? created.DepartureTime, entity.ReturnAt is null ? 1 : 2);
     
     var trip = await Get(created.Id);
-    await lianeMessageService.SendMessage(trip.Liane, new MessageContent.TripAdded("", trip));
+    
+    if (trip.Liane is not null)
+    {
+      await lianeMessageService.SendMessage(trip.Liane, new MessageContent.TripAdded("", trip));
+    }
     return trip;
   }
 

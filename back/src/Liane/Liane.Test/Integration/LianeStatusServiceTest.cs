@@ -108,6 +108,6 @@ public sealed class LianeStatusServiceTest : BaseIntegrationTest
   private async Task<Api.Trip.Trip> InsertLiane(string id, DbUser userA, Ref<RallyingPoint> from, Ref<RallyingPoint> to, DateTime departureTime)
   {
     currentContext.SetCurrentUser(userA);
-    return await tripService.Create(new TripRequest(id, Guid.Parse("019233a0-5c48-7cfa-b12e-7e7f0eb9c69f"), departureTime, null, 4, from, to, GeolocationLevel.None), userA.Id);
+    return await tripService.Create(new TripRequest(id, null!, departureTime, null, 4, from, to, GeolocationLevel.None), userA.Id);
   }
 }
