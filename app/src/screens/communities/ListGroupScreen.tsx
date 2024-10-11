@@ -47,7 +47,7 @@ export const ListGroupScreen = () => {
           <AppText
             style={{
               paddingLeft: 15,
-              fontWeight: "400",
+              fontWeight: "normal",
               fontSize: 12,
               lineHeight: 27,
               color: AppColors.black
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontSize: 14,
-    fontWeight: "400",
+    fontWeight: "normal",
     lineHeight: 16,
     color: AppColors.black
   },

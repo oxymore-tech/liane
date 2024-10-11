@@ -1,4 +1,4 @@
-import { capitalize, CoLiane, LianeMessage, MemberRequested, Ref, User } from "@liane/common";
+import { capitalize, CoLiane, LianeMessage, Ref, MemberRequested, User } from "@liane/common";
 import React from "react";
 import { View } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";

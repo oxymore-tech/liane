@@ -237,7 +237,7 @@ const ModalButton = ({ color, backgroundColor, text, onPress, opacity = 1 }: Mod
       }}>
       <AppText
         style={{
-          fontWeight: "600",
+          fontWeight: "bold",
           fontSize: 14,
           color,
           textAlign: "center",
@@ -321,12 +321,12 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: AppDimensions.textSize.default,
-    fontWeight: "400",
+    fontWeight: "normal",
     marginBottom: 8
   },
   value: {
     fontSize: AppDimensions.textSize.medium,
-    fontWeight: "600"
+    fontWeight: "bold"
   },
   cancelPressable: {
     width: 32,

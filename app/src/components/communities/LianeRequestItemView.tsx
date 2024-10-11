@@ -45,7 +45,7 @@ export const LianeRequestItem = ({ item, onRefresh, unreadLianes }: LianeRequest
                     <AppText
                       style={{
                         fontSize: 22,
-                        fontWeight: "500",
+                        fontWeight: "bold",
                         flexShrink: 1,
                         lineHeight: 27,
                         color: "black"
@@ -75,7 +75,7 @@ export const LianeRequestItem = ({ item, onRefresh, unreadLianes }: LianeRequest
                     <AppText
                       style={{
                         fontSize: 15,
-                        fontWeight: "500",
+                        fontWeight: "bold",
                         flexShrink: 1,
                         lineHeight: 20,
                         color: AppColors.darkGray

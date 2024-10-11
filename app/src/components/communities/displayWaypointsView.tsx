@@ -9,12 +9,22 @@ import { AppIcon, IconName } from "@/components/base/AppIcon.tsx";
 
 type DisplayWayPointsProps = {
   wayPoints: WayPoint[];
+  style?: object;
+  hideLabel?: boolean;
 };
 
-export const DisplayWayPoints = ({ wayPoints }: DisplayWayPointsProps) => {
+export const DisplayWayPoints = ({ wayPoints, hideLabel, style }: DisplayWayPointsProps) => {
   const startTime = TimeOnlyUtils.fromDate(new Date(wayPoints[0].eta));
   const endTime = TimeOnlyUtils.fromDate(new Date(wayPoints[wayPoints.length - 1].eta));
-  return <DisplayRallyingPoints wayPoints={wayPoints.map(w => w.rallyingPoint)} startTime={startTime} endTime={endTime} />;
+  return (
+    <DisplayRallyingPoints
+      wayPoints={wayPoints.map(w => w.rallyingPoint)}
+      startTime={startTime}
+      endTime={endTime}
+      hideLabel={hideLabel}
+      style={style}
+    />
+  );
 };
 
 export type DisplayRallyingPointsProps = {
@@ -22,12 +32,14 @@ export type DisplayRallyingPointsProps = {
   inverseTravel?: boolean;
   startTime?: TimeOnly;
   endTime?: TimeOnly;
+  style?: object;
+  hideLabel?: boolean;
 };
 
-export const DisplayRallyingPoints = ({ wayPoints, inverseTravel = false, startTime, endTime }: DisplayRallyingPointsProps) => {
+export const DisplayRallyingPoints = ({ wayPoints, inverseTravel = false, startTime, endTime, style, hideLabel }: DisplayRallyingPointsProps) => {
   const { to, from, steps } = inverseTravel ? extractWaypointFromTo(wayPoints.slice().reverse()) : extractWaypointFromTo(wayPoints);
 
-  const travelRow = (step: RallyingPoint, time?: TimeOnly, icon?: string): ReactNode => {
+  const tripRow = (step: RallyingPoint, time?: TimeOnly, icon?: string): ReactNode => {
     return (
       <View
         style={{
@@ -35,8 +47,8 @@ export const DisplayRallyingPoints = ({ wayPoints, inverseTravel = false, startT
           justifyContent: "flex-start",
           alignItems: "center",
           width: "100%",
-          marginTop: 15,
-          marginBottom: 15
+          marginTop: 5,
+          marginBottom: 5
         }}>
         {time ? (
           <AppText
@@ -53,19 +65,27 @@ export const DisplayRallyingPoints = ({ wayPoints, inverseTravel = false, startT
         {icon ? <AppIcon style={styles.separateIcon} name={icon as IconName} /> : <AppText style={styles.separateNoIcon}>{"|"}</AppText>}
         <View style={{ flexDirection: "column", justifyContent: "center" }}>
           <AppText
-            style={{
-              fontWeight: "bold",
-              fontSize: 20,
-              lineHeight: 25,
-              color: AppColors.black
-            }}>{`${step.city}`}</AppText>
-          <AppText
-            style={{
-              fontWeight: "400",
-              fontSize: 20,
-              lineHeight: 25,
-              color: AppColors.black
-            }}>{`${step.label}`}</AppText>
+            style={[
+              {
+                fontSize: 20,
+                lineHeight: 25,
+                color: AppColors.black
+              },
+              hideLabel
+                ? {
+                    fontWeight: "normal"
+                  }
+                : { fontWeight: "bold" }
+            ]}>{`${step.city}`}</AppText>
+          {hideLabel ? null : (
+            <AppText
+              style={{
+                fontWeight: "normal",
+                fontSize: 20,
+                lineHeight: 25,
+                color: AppColors.black
+              }}>{`${step.label}`}</AppText>
+          )}
         </View>
       </View>
     );
@@ -79,25 +99,22 @@ export const DisplayRallyingPoints = ({ wayPoints, inverseTravel = false, startT
         paddingHorizontal: 20
       }}>
       <View
-        style={{
-          width: "100%",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          alignItems: "center",
-          backgroundColor: AppColors.gray100,
-          borderRadius: 20
-        }}>
+        style={[
+          {
+            width: "100%",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            alignItems: "center"
+          },
+          style
+        ]}>
         {startTime
-          ? travelRow(from, startTime, "position-marker")
+          ? tripRow(from, startTime, "position-marker")
           : endTime
-          ? travelRow(from, adjustMinutesToTime(endTime, 65, "subtract"), "position-marker")
+          ? tripRow(from, adjustMinutesToTime(endTime, 65, "subtract"), "position-marker")
           : null}
-        {steps.map(step => travelRow(step))}
-        {endTime
-          ? travelRow(to, endTime, "position-end")
-          : startTime
-          ? travelRow(to, adjustMinutesToTime(startTime, 65, "add"), "position-end")
-          : null}
+        {steps.map(step => tripRow(step))}
+        {endTime ? tripRow(to, endTime, "position-end") : startTime ? tripRow(to, adjustMinutesToTime(startTime, 65, "add"), "position-end") : null}
       </View>
     </View>
   );

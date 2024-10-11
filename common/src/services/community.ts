@@ -114,7 +114,7 @@ export interface CommunityService {
 
   create(lianeRequest: CoLianeRequest): Promise<CoLianeRequest>;
 
-  update(lianeRequestId: string, request: ResolvedLianeRequest): Promise<CoLianeRequest>;
+  update(lianeRequestId: string, request: CoLianeRequest): Promise<CoLianeRequest>;
 
   delete(lianeRequestId: string): Promise<void>;
 
@@ -152,7 +152,7 @@ export class CommunityServiceClient implements CommunityService {
     await this.http.del(`/community/liane/request/${lianeRequestId}`);
   }
 
-  update(lianeRequestId: string, request: ResolvedLianeRequest) {
+  update(lianeRequestId: string, request: CoLianeRequest) {
     return this.http.postAs<CoLianeRequest>(`/community/liane/request/${lianeRequestId}`, { body: request });
   }
 

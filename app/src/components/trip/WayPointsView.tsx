@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   },
   intermediateWayPointLabel: {
     fontSize: 15,
-    fontWeight: "500",
+    fontWeight: "bold",
     color: AppColorPalettes.gray[700]
   },
   intermediateFromWayPointLabelColor: {

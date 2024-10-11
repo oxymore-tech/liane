@@ -15,12 +15,13 @@ export const HOME_TRIPS = "Calendrier";
 export type NavigationParamList = {
   Home: undefined;
   [HOME_TRIPS]: undefined;
-  Publish: { initialValue?: Partial<CoLianeRequest> };
+  Publish: { initialValue?: Partial<ResolvedLianeRequest> };
   SignUp: undefined;
   Chat: { conversationId: string; liane?: Liane };
   Communities: undefined;
   CommunitiesChat: { group?: CoMatch; liane?: CoLiane; request?: CoLianeRequest | ResolvedLianeRequest; lianeId?: string };
   LianeMapDetail: { group: CoMatch; request: ResolvedLianeRequest };
+  LianeTripDetail: { trip: Liane };
   LianeDetail: { liane: Liane | string };
   Profile: { user: User } | undefined;
   ProfileEdit: undefined;
