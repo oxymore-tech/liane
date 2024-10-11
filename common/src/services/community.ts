@@ -169,7 +169,7 @@ export class CommunityServiceClient implements CommunityService {
   }
 
   getIncomingTrips(liane: string) {
-    return this.http.postAs<Liane[]>(`/community/liane/${liane}/incoming_trip`);
+    return this.http.get<Liane[]>(`/community/liane/${liane}/incoming_trip`);
   }
 
   joinTrip(query: JoinTripQuery) {
