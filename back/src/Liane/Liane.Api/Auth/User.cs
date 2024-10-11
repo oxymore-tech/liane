@@ -41,12 +41,7 @@ public sealed record FullUser(
       return "Utilisateur inconnu";
     }
 
-    if (lastName is null || lastName.Length == 0)
-    {
-      return firstName;
-    }
-
-    return $"{firstName} {lastName[0]}.";
+    return firstName;
   }
 
   public static FullUser Unknown(string userId) => new(

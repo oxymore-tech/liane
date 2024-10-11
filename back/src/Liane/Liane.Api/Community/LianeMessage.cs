@@ -19,17 +19,27 @@ public abstract record MessageContent
   {
   }
 
-  public string AsText() =>
-    this switch
-    {
-      Text text => text.Value,
-      Trip => "Nouveau trajet",
-      _ => throw new ArgumentOutOfRangeException()
-    };
+  public abstract string Value { get; init; }
 
   public static implicit operator MessageContent(string value) => new Text(value);
 
   public sealed record Text(string Value) : MessageContent;
 
-  public sealed record Trip(Ref<ApiTrip> Value) : MessageContent;
+  public sealed record LianeRequestModified(string Value, Ref<LianeRequest> LianeRequest) : MessageContent;
+
+  public sealed record MemberRequested(string Value, Ref<User> User, Ref<LianeRequest> LianeRequest) : MessageContent;
+
+  public sealed record MemberAdded(string Value, Ref<User> User, Ref<LianeRequest> LianeRequest) : MessageContent;
+
+  public sealed record MemberRejected(string Value, Ref<User> User) : MessageContent;
+  
+  public sealed record MemberLeft(string Value, Ref<User> User) : MessageContent;
+  
+  public sealed record TripAdded(string Value, Ref<ApiTrip> Trip) : MessageContent;
+  
+  public sealed record TripRemoved(string Value, Ref<ApiTrip> Trip) : MessageContent;
+  
+  public sealed record MemberJoinedTrip(string Value, Ref<User> User, Ref<ApiTrip> Trip, bool TakeReturn) : MessageContent;
+  
+  public sealed record MemberLeftTrip(string Value, Ref<User> User, Ref<ApiTrip> Trip) : MessageContent;
 }

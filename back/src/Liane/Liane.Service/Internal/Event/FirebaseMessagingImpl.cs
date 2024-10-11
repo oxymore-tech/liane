@@ -47,7 +47,7 @@ public sealed class FirebaseMessagingImpl : IPushMiddleware
       message.CreatedAt!.Value,
       ImmutableList<Recipient>.Empty,
       sender.Pseudo,
-      message.Content.AsText(),
+      message.Content.Value,
       $"liane://liane/{liane.Id}"
     ));
   }

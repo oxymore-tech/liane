@@ -66,7 +66,8 @@ public sealed class LianeFetcher(LianeRequestFetcher lianeRequestFetcher, IUserS
           return new Api.Community.Liane(
             lianeRequestId,
             lianeMembers.ToImmutableList(),
-            lianePendingMembers.ToImmutableList()
+            lianePendingMembers.ToImmutableList(),
+            lianeRequest.CreatedBy!
           );
         }))
       .ToImmutableDictionary(l => l.Id);

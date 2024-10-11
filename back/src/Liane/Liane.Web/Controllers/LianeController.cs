@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Immutable;
+using System.Threading;
 using System.Threading.Tasks;
 using Liane.Api.Community;
-using Liane.Api.Util.Pagination;
-using Liane.Api.Util.Ref;
+using Liane.Api.Trip;
 using Liane.Web.Internal.Auth;
 using Microsoft.AspNetCore.Mvc;
+using LianeMatch = Liane.Api.Community.LianeMatch;
 using LianeRequest = Liane.Api.Community.LianeRequest;
 
 namespace Liane.Web.Controllers;
@@ -13,7 +14,7 @@ namespace Liane.Web.Controllers;
 [Route("api/community")]
 [ApiController]
 [RequiresAuth]
-public sealed class CommunityController(ILianeService lianeService)
+public sealed class LianeController(ILianeService lianeService, ITripService tripService)
   : ControllerBase
 {
   [HttpGet("liane")]
@@ -52,6 +53,12 @@ public sealed class CommunityController(ILianeService lianeService)
     return lianeService.Accept(liane, lianeRequest);
   }
 
+  [HttpPost("liane/{liane:guid}/reject/{lianeRequest:guid}")]
+  public Task<Api.Community.Liane> Reject(Guid liane, Guid lianeRequest)
+  {
+    return lianeService.Reject(liane, lianeRequest);
+  }
+
   [HttpPost("liane/join_trip")]
   public Task<bool> JoinTrip([FromBody] JoinTripQuery query)
   {
@@ -64,27 +71,15 @@ public sealed class CommunityController(ILianeService lianeService)
     return lianeService.Get(id);
   }
 
+  [HttpGet("liane/{id:guid}/incoming_trip")]
+  public Task<ImmutableList<Trip>> GetIncomingTrips(Guid id, CancellationToken cancellationToken)
+  {
+    return tripService.GetIncomingTrips(id, cancellationToken);
+  }
+
   [HttpPost("liane/{id:guid}/leave")]
   public Task<bool> Leave(Guid id)
   {
     return lianeService.Leave(id);
-  }
-
-  [HttpGet("liane/{id:guid}/message")]
-  public Task<PaginatedResponse<LianeMessage>> GetMessages(Guid id, [FromQuery] Pagination pagination)
-  {
-    return lianeService.GetMessages(id, pagination);
-  }
-
-  [HttpPost("liane/{id:guid}/message")]
-  public Task<LianeMessage> SendMessage(Guid id, [FromBody] MessageContent content)
-  {
-    return lianeService.SendMessage(id, content);
-  }
-
-  [HttpGet("liane/unread")]
-  public Task<ImmutableDictionary<Ref<Api.Community.Liane>, int>> GetUnreadLianes()
-  {
-    return lianeService.GetUnreadLianes();
   }
 }

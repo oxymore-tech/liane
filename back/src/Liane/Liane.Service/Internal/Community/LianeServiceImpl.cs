@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Immutable;
-using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
@@ -10,7 +9,6 @@ using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util;
 using Liane.Api.Util.Exception;
-using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Postgis.Db;
@@ -33,7 +31,7 @@ public sealed class LianeServiceImpl(
   LianeFetcher lianeFetcher,
   LianeRequestFetcher lianeRequestFetcher,
   LianeMatcher matcher,
-  IPushService pushService,
+  LianeMessageServiceImpl lianeMessageService,
   ITripService tripService,
   EventDispatcher eventDispatcher) : ILianeService
 {
@@ -192,9 +190,17 @@ public sealed class LianeServiceImpl(
 
     var from = await connection.GetAsync<LianeRequestDb, Guid>(mineId, tx);
 
+    var userId = currentContext.CurrentUser().Id;
+    if (from.CreatedBy.Id != userId)
+    {
+      throw new UnauthorizedAccessException("User is not the owner of the liane request");
+    }
+
     await connection.MergeAsync(new LianeMemberDb(from.Id, lianeId, DateTime.UtcNow, null, null), tx);
 
     tx.Commit();
+
+    await lianeMessageService.SendMessage(foreign, new MessageContent.MemberRequested("", userId, mineId));
     return true;
   }
 
@@ -207,7 +213,7 @@ public sealed class LianeServiceImpl(
     var foreignId = foreign.IdAsGuid();
 
     var foreignLiane = await lianeFetcher.FetchLiane(connection, foreignId, tx);
-    if (foreignLiane.Members.Count > 0 && foreignLiane.Members.All(m => m.User.Id != userId))
+    if (foreignLiane.CreatedBy.Id != userId && foreignLiane.Members.All(m => m.User.Id != userId))
     {
       throw new UnauthorizedAccessException("User is not part of the liane");
     }
@@ -235,8 +241,11 @@ public sealed class LianeServiceImpl(
     var liane = await lianeFetcher.FetchLiane(connection, lianeId, tx);
     tx.Commit();
 
+    await lianeMessageService.SendMessage(foreign, new MessageContent.MemberAdded("", resolvedLianeRequest.CreatedBy, resolvedLianeRequest.Id));
+    
     var memberAccepted = new LianeEvent.MemberAccepted(liane.Id, resolvedLianeRequest.Id, resolvedLianeRequest.CreatedBy);
     await eventDispatcher.Dispatch(memberAccepted, userId);
+    
     return liane;
   }
 
@@ -268,6 +277,8 @@ public sealed class LianeServiceImpl(
 
     var liane = await lianeFetcher.FetchLiane(connection, lianeId, tx);
     tx.Commit();
+
+    await lianeMessageService.SendMessage(foreign, new MessageContent.MemberRejected("", resolvedLianeRequest.CreatedBy));
 
     var memberRejected = new LianeEvent.MemberRejected(liane.Id, resolvedLianeRequest.Id, resolvedLianeRequest.CreatedBy, null);
     await eventDispatcher.Dispatch(memberRejected, userId);
@@ -357,7 +368,7 @@ public sealed class LianeServiceImpl(
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
     var lianeId = Guid.Parse(liane.Id);
-    var lianeMemberDb = await TryGetMember(connection, lianeId, userId, tx);
+    var lianeMemberDb = await lianeMessageService.TryGetMember(connection, lianeId, userId, tx);
     if (lianeMemberDb is null)
     {
       return false;
@@ -367,126 +378,6 @@ public sealed class LianeServiceImpl(
       new { liane_id = lianeMemberDb.LianeId, liane_request_id = lianeMemberDb.LianeRequestId }, tx);
     tx.Commit();
     return true;
-  }
-
-  public async Task<LianeMessage> SendMessage(Ref<Api.Community.Liane> liane, MessageContent content)
-  {
-    using var connection = db.NewConnection();
-    using var tx = connection.BeginTransaction();
-    var userId = currentContext.CurrentUser().Id;
-    var lianeId = Guid.Parse(liane.Id);
-    var resolvedLiane = await lianeFetcher.FetchLiane(connection, lianeId, tx);
-    if (!resolvedLiane.IsMember(userId))
-    {
-      throw new UnauthorizedAccessException("User is not part of the liane");
-    }
-
-    var id = Uuid7.Guid();
-    var now = DateTime.UtcNow;
-    await connection.MergeAsync(new LianeMessageDb(id, lianeId, content, userId, now), tx);
-    var lianeMessage = new LianeMessage(id.ToString(), userId, now, content);
-
-    await pushService.PushMessage(lianeId, lianeMessage);
-    tx.Commit();
-    return lianeMessage;
-  }
-
-  public async Task<PaginatedResponse<LianeMessage>> GetMessages(Ref<Api.Community.Liane> liane, Pagination pagination)
-  {
-    using var connection = db.NewConnection();
-    using var tx = connection.BeginTransaction();
-
-    var lianeId = liane.IdAsGuid();
-    var member = await MarkAsRead(connection, lianeId, tx, DateTime.UtcNow);
-
-    var filter = Filter<LianeMessageDb>.Where(m => m.LianeId, ComparisonOperator.Eq, lianeId)
-                 & Filter<LianeMessageDb>.Where(m => m.CreatedAt, ComparisonOperator.Gt, member.JoinedAt);
-
-    var query = Query.Select<LianeMessageDb>()
-      .Where(filter)
-      .And(pagination.ToFilter<LianeMessageDb>())
-      .OrderBy(m => m.Id, false)
-      .OrderBy(m => m.CreatedAt, false)
-      .Take(pagination.Limit + 1);
-
-    var total = await connection.QuerySingleAsync<int>(Query.Count<LianeMessageDb>().Where(filter), tx);
-    var result = await connection.QueryAsync(query, tx);
-
-    tx.Commit();
-
-    var hasNext = result.Count > pagination.Limit;
-    var cursor = hasNext ? result.Last().ToCursor() : null;
-    return new PaginatedResponse<LianeMessage>(
-      Math.Min(result.Count, pagination.Limit),
-      cursor,
-      result.Take(pagination.Limit)
-        .Select(m => new LianeMessage(m.Id.ToString(), m.CreatedBy, m.CreatedAt, m.Content))
-        .ToImmutableList(),
-      total);
-  }
-
-  public async Task<ImmutableDictionary<Ref<Api.Community.Liane>, int>> GetUnreadLianes()
-  {
-    using var connection = db.NewConnection();
-    var userId = currentContext.CurrentUser().Id;
-    var unread = await connection.QueryAsync<(Guid, int)>("""
-                                                          SELECT m.liane_id, COUNT(msg.id) AS unread
-                                                          FROM liane_member m
-                                                            INNER JOIN liane_request r ON m.liane_request_id = r.id
-                                                            LEFT JOIN liane_message msg ON msg.liane_id = m.liane_id AND msg.created_at > m.joined_at
-                                                          WHERE m.joined_at IS NOT NULL AND r.created_by = @userId
-                                                            AND (m.last_read_at IS NULL OR msg.created_at > m.last_read_at)
-                                                          GROUP BY m.liane_id
-                                                          """,
-      new { userId }
-    );
-    return unread.ToImmutableDictionary(m => (Ref<Api.Community.Liane>)m.Item1.ToString(), m => m.Item2);
-  }
-
-  public async Task MarkAsRead(Ref<Api.Community.Liane> liane, DateTime timestamp)
-  {
-    using var connection = db.NewConnection();
-    using var tx = connection.BeginTransaction();
-    var lianeId = Guid.Parse(liane.Id);
-    await MarkAsRead(connection, lianeId, tx, timestamp);
-    tx.Commit();
-  }
-
-  private async Task<LianeMemberDb> MarkAsRead(IDbConnection connection, Guid lianeId, IDbTransaction tx, DateTime now)
-  {
-    var lianeMemberDb = await CheckIsMember(connection, lianeId, tx: tx);
-
-    var update = Query.Update<LianeMemberDb>()
-      .Set(m => m.LastReadAt, now)
-      .Where(l => l.LianeRequestId, ComparisonOperator.Eq, lianeMemberDb.LianeRequestId)
-      .And(l => l.LianeId, ComparisonOperator.Eq, lianeMemberDb.LianeId);
-    await connection.UpdateAsync(update, tx);
-
-    return lianeMemberDb with { LastReadAt = now };
-  }
-
-  private async Task<LianeMemberDb> CheckIsMember(IDbConnection connection, Guid lianeId, string? userId = null, IDbTransaction? tx = null)
-  {
-    var lianeMemberDb = await TryGetMember(connection, lianeId, userId, tx);
-
-    if (lianeMemberDb is null)
-    {
-      throw new UnauthorizedAccessException("User is not part of the liane");
-    }
-
-    return lianeMemberDb;
-  }
-
-  private async Task<LianeMemberDb?> TryGetMember(IDbConnection connection, Guid lianeId, string? userId, IDbTransaction? tx)
-  {
-    var userIdValue = userId ?? currentContext.CurrentUser().Id;
-    var lianeMemberDb = await connection.QueryFirstOrDefaultAsync<LianeMemberDb>("""
-                                                                                 SELECT liane_member.liane_request_id, liane_member.liane_id, liane_member.requested_at, liane_member.joined_at, liane_member.last_read_at
-                                                                                 FROM liane_member
-                                                                                   INNER JOIN liane_request ON liane_member.liane_request_id = liane_request.id
-                                                                                 WHERE liane_member.liane_id = @lianeId AND liane_request.created_by = @userId
-                                                                                 """, new { userId = userIdValue, lianeId }, tx);
-    return lianeMemberDb;
   }
 }
 

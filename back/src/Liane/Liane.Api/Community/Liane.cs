@@ -10,7 +10,8 @@ namespace Liane.Api.Community;
 public sealed record Liane(
   Guid Id,
   ImmutableList<LianeMember> Members,
-  ImmutableList<LianeMember> PendingMembers
+  ImmutableList<LianeMember> PendingMembers,
+  Ref<User> CreatedBy
 ) : IIdentity<Guid>, ISharedResource<LianeMember>
 {
   public bool IsMember(Ref<User> user) => Members.Any(m => m.User.Id == user.Id) || PendingMembers.Any(m => m.User.Id == user.Id);

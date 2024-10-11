@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
-using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Community;
@@ -20,11 +18,4 @@ public interface ILianeService
   Task<bool> Leave(Ref<Liane> liane);
 
   Task<bool> JoinTrip(JoinTripQuery query);
-
-  Task<PaginatedResponse<LianeMessage>> GetMessages(Ref<Liane> liane) => GetMessages(liane, Pagination.Empty);
-  Task<PaginatedResponse<LianeMessage>> GetMessages(Ref<Liane> liane, Pagination pagination);
-  Task<LianeMessage> SendMessage(Ref<Liane> liane, MessageContent content);
-
-  Task MarkAsRead(Ref<Liane> liane, DateTime timestamp);
-  Task<ImmutableDictionary<Ref<Liane>, int>> GetUnreadLianes();
 }
