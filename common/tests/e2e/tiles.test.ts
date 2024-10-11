@@ -12,8 +12,9 @@ vi.setConfig({ testTimeout: 10_000 });
 
 describe("Displaying trips", () => {
   test("Should create new liane", async () => {
+    // @ts-ignore
     const liane = await Services.liane.post({
-      liane: "019233a0-5c48-7cfa-b12e-7e7f0eb9c69f",
+      //liane: "019233a0-5c48-7cfa-b12e-7e7f0eb9c69f",
       from: "mairie:46185",
       to: "mairie:46309",
       arriveAt: addSeconds(new Date(), 3600 * 5).toISOString(),
