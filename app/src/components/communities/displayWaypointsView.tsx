@@ -1,27 +1,30 @@
-import React, { ReactNode, useContext, useMemo } from "react";
+import React, { ReactNode } from "react";
 
-import { Pressable, StyleSheet, View } from "react-native";
-import { CoLianeMatch, DayOfWeekFlag, Hours, Minutes, RallyingPoint, TimeOnly, WayPoint } from "@liane/common";
-import { AppContext } from "@/components/context/ContextProvider";
-import { Row } from "@/components/base/AppLayout";
+import { StyleSheet, View } from "react-native";
+import { Hours, Minutes, RallyingPoint, TimeOnly, TimeOnlyUtils, WayPoint } from "@liane/common";
 import { AppText } from "@/components/base/AppText";
 import { AppColors } from "@/theme/colors";
-import { JoinedLianeView } from "@/components/communities/JoinedLianeView";
-import { AppLogger } from "@/api/logger";
-import { extractDaysOnly, extractWaypointFromTo } from "@/util/hooks/lianeRequest";
-import { DetachedLianeItem } from "@/components/communities/DetachedLianeItem.tsx";
-import { useAppNavigation } from "@/components/context/routing.ts";
+import { extractWaypointFromTo } from "@/util/hooks/lianeRequest";
 import { AppIcon, IconName } from "@/components/base/AppIcon.tsx";
-import App from "@/App.tsx";
 
-type DisplayDaysProps = {
+type DisplayWayPointsProps = {
+  wayPoints: WayPoint[];
+};
+
+export const DisplayWayPoints = ({ wayPoints }: DisplayWayPointsProps) => {
+  const startTime = TimeOnlyUtils.fromDate(new Date(wayPoints[0].eta));
+  const endTime = TimeOnlyUtils.fromDate(new Date(wayPoints[wayPoints.length - 1].eta));
+  return <DisplayRallyingPoints wayPoints={wayPoints.map(w => w.rallyingPoint)} startTime={startTime} endTime={endTime} />;
+};
+
+export type DisplayRallyingPointsProps = {
   wayPoints: RallyingPoint[];
   inverseTravel?: boolean;
   startTime?: TimeOnly;
   endTime?: TimeOnly;
 };
 
-export const DisplayWayPoints = ({ wayPoints, inverseTravel = false, startTime, endTime }: DisplayDaysProps) => {
+export const DisplayRallyingPoints = ({ wayPoints, inverseTravel = false, startTime, endTime }: DisplayRallyingPointsProps) => {
   const { to, from, steps } = inverseTravel ? extractWaypointFromTo(wayPoints.slice().reverse()) : extractWaypointFromTo(wayPoints);
 
   const travelRow = (step: RallyingPoint, time?: TimeOnly, icon?: string): ReactNode => {
@@ -89,7 +92,7 @@ export const DisplayWayPoints = ({ wayPoints, inverseTravel = false, startTime, 
           : endTime
           ? travelRow(from, adjustMinutesToTime(endTime, 65, "subtract"), "position-marker")
           : null}
-        {steps.map((step, position) => travelRow(step))}
+        {steps.map(step => travelRow(step))}
         {endTime
           ? travelRow(to, endTime, "position-end")
           : startTime

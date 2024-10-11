@@ -14,7 +14,7 @@ import { AppContext } from "@/components/context/ContextProvider.tsx";
 import { DisplayDays } from "@/components/communities/displayDaysView.tsx";
 import { AppIcon } from "@/components/base/AppIcon.tsx";
 import { extractWaypointFromTo } from "@/util/hooks/lianeRequest.ts";
-import { DisplayWayPoints } from "@/components/communities/displayWaypointsView.tsx";
+import { DisplayRallyingPoints } from "@/components/communities/displayWaypointsView.tsx";
 
 export const LianeMapDetailScreen = () => {
   const { navigation, route } = useAppNavigation<"LianeMapDetail">();
@@ -115,8 +115,8 @@ export const LianeMapDetailScreen = () => {
                 </View>
               )}
               <DisplayDays days={lianeRequest.weekDays} />
-              <DisplayWayPoints wayPoints={lianeRequest.wayPoints} endTime={lianeRequest.arriveBefore} />
-              <DisplayWayPoints wayPoints={lianeRequest.wayPoints} inverseTravel startTime={lianeRequest.returnAfter} />
+              <DisplayRallyingPoints wayPoints={lianeRequest.wayPoints} endTime={lianeRequest.arriveBefore} />
+              <DisplayRallyingPoints wayPoints={lianeRequest.wayPoints} inverseTravel startTime={lianeRequest.returnAfter} />
             </View>
           </View>
         </View>
