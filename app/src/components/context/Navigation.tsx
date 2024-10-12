@@ -23,6 +23,7 @@ import { ArchivedTripsScreen } from "@/screens/user/ArchivedTripsScreen";
 import { SettingsScreen } from "@/screens/user/SettingsScreen";
 import { PublishScreen } from "@/screens/publish/PublishScreen";
 import { LianeDetailScreen } from "@/screens/detail/LianeDetailScreen";
+import { LianeTripDetailScreen } from "@/screens/communities/LianeTripDetail.tsx";
 import { CommunitiesChatScreen } from "@/screens/communities/CommunitiesChatScreen";
 import { ListGroupScreen } from "@/screens/communities/ListGroupScreen";
 import { CommunitiesDetailScreen } from "@/screens/communities/CommunitiesDetailScreen";
@@ -205,6 +206,7 @@ function Navigation() {
         <Stack.Screen name="Communities" component={CommunitiesScreen} options={{ headerShown: false }} />
         <Stack.Screen name="CommunitiesChat" component={CommunitiesChatScreen} options={{ headerShown: false }} />
         <Stack.Screen name="LianeMapDetail" component={LianeMapDetailScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="LianeTripDetail" component={LianeTripDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="CommunitiesDetails" component={CommunitiesDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
         <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} options={{ headerShown: false }} />

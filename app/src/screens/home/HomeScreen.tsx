@@ -157,7 +157,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
                 ? {
                     icon: "play-circle-outline",
                     title: "Proposer un trajet vers ce point",
-                    onPress: () => navigation.navigate("Publish", { initialValue: { wayPoints: [state.context.filter!.to!.id!] } })
+                    onPress: () => navigation.navigate("Publish", { initialValue: { wayPoints: [state.context.filter!.to!] } })
                   }
                 : null
             }
