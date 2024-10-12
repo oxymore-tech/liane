@@ -78,7 +78,7 @@ export const LianeMapDetailScreen = () => {
           </View>
           <View style={{ width: "100%", height: "100%", backgroundColor: AppColors.white }}>
             <View style={{ paddingTop: 20 }}>
-              {group.type === "Single" ? (
+              {group.type === "Single" && group.askToJoinAt ? (
                 <View
                   style={{
                     justifyContent: "center",
