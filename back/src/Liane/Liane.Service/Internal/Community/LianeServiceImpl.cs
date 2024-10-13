@@ -156,17 +156,28 @@ public sealed class LianeServiceImpl(
   {
     var userId = currentContext.CurrentUser().Id;
     using var connection = db.NewConnection();
+    using var tx = connection.BeginTransaction();
     var lianeRequestId = Guid.Parse(id);
 
-    var deleted = await connection.DeleteAsync(
+    var lianeRequest = await connection.FirstOrDefaultAsync(
+      Query.Select<LianeRequestDb>()
+        .Where(r => r.Id, ComparisonOperator.Eq, lianeRequestId)
+        .And(r => r.CreatedBy, ComparisonOperator.Eq, userId)
+      , tx);
+    
+    if (lianeRequest is null)
+    {
+      return;
+    }
+
+    await connection.DeleteAsync(Filter<LianeMemberDb>.Where(m => m.LianeRequestId, ComparisonOperator.Eq, lianeRequestId), tx);
+
+    await connection.DeleteAsync(
       Filter<LianeRequestDb>.Where(r => r.Id, ComparisonOperator.Eq, lianeRequestId)
       & Filter<LianeRequestDb>.Where(r => r.CreatedBy, ComparisonOperator.Eq, userId)
-    );
-
-    if (deleted == 0)
-    {
-      throw new ResourceNotFoundException($"Liane request '{lianeRequestId}' not found or not belong to current user");
-    }
+      , tx);
+    
+    tx.Commit();
   }
 
   public async Task<bool> JoinRequest(Ref<LianeRequest> mine, Ref<Api.Community.Liane> foreign)
@@ -242,10 +253,10 @@ public sealed class LianeServiceImpl(
     tx.Commit();
 
     await lianeMessageService.SendMessage(foreign, new MessageContent.MemberAdded("", resolvedLianeRequest.CreatedBy, resolvedLianeRequest.Id));
-    
+
     var memberAccepted = new LianeEvent.MemberAccepted(liane.Id, resolvedLianeRequest.Id, resolvedLianeRequest.CreatedBy);
     await eventDispatcher.Dispatch(memberAccepted, userId);
-    
+
     return liane;
   }
 
