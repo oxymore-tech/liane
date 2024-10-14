@@ -1,13 +1,13 @@
-import React from "react";
+import React, { DependencyList } from "react";
 import { BehaviorSubject, Observable, Subject, Subscribable, SubscriptionLike } from "rxjs";
 
-export const useSubscription = <T>(observable: Subscribable<T>, callback: (v: T) => void) => {
+export const useSubscription = <T>(observable: Subscribable<T>, callback: (v: T) => void, deps: DependencyList) => {
   React.useEffect(() => {
     const sub = observable.subscribe({ next: callback });
     return () => {
       sub.unsubscribe();
     };
-  }, []);
+  }, deps);
 };
 
 export const useSubscriptionValue = <T>(subscribe: (callback: (v: T) => void) => SubscriptionLike) => {

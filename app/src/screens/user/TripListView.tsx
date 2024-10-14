@@ -48,6 +48,7 @@ export const TripListView = ({ data, isFetching, onRefresh, reverseSort, loadMor
   const sections = useMemo(() => {
     return convertToDateSections(data, userId, reverseSort);
   }, [data, userId, reverseSort]);
+
   return (
     <SectionList
       style={{ flex: 1 }}
@@ -93,35 +94,32 @@ const convertToDateSections = (data: Liane[], member: Ref<User>, reverseSort: bo
 
 const LianeItem = ({ item }: { item: Liane }) => {
   const { user } = useContext(AppContext);
+  const { navigation } = useAppNavigation();
 
   const driver = useMemo(() => item.members.find(l => l.user.id === item.driver.user)!.user, [item]);
   const { wayPoints } = useMemo(() => getUserTrip(item, user!.id!), [item, user]);
   const carLocation = useCarDelay();
   const me = useMemo(() => item.members.find(l => l.user.id === user!.id)!, [item.members, user]);
-  const geolocationDisabled = !me.geolocationLevel || me.geolocationLevel === "None";
   const status = useTripStatus(item);
   return (
-    <View>
+    <View style={{ paddingBottom: 10 }}>
       <View>
         <Row style={styles.driverContainer}>
-          <Row spacing={8} style={{ flex: 4 }}>
-            <UserPicture url={driver.pictureUrl} size={38} id={driver.id} />
-            <AppText style={styles.driverText}>{driver.id === user!.id ? "Moi" : driver.pseudo}</AppText>
+          <Row>
+            <AppPressableOverlay
+              style={{
+                borderRadius: 20,
+                borderWidth: 2,
+                borderColor: AppColors.lightGrayBackground
+              }}
+              onPress={e => {
+                navigation.navigate("CommunitiesChat", { lianeId: item.liane });
+                e.preventDefault();
+              }}>
+              <AppText style={{ color: AppColors.black, fontSize: 18, paddingHorizontal: 8, paddingVertical: 4 }}>Rejoindre le chat</AppText>
+            </AppPressableOverlay>
           </Row>
           {!["Finished", "Archived", "Canceled"].includes(item.state) && <LianeStatusView liane={item} />}
-          {/* <Row spacing={8} style={{ flex: 3 }}>
-            <AppText style={[styles.geolocText, { color: geolocalisationEnabled ? AppColors.primaryColor : AppColorPalettes.gray[400] }]}>
-              Géolocalisation
-            </AppText>
-            <Switch
-              style={styles.geolocSwitch}
-              trackColor={{ false: AppColors.grayBackground, true: AppColors.primaryColor }}
-              thumbColor={geolocalisationEnabled ? AppColors.primaryColor : AppColors.grayBackground}
-              ios_backgroundColor={AppColors.grayBackground}
-              value={geolocalisationEnabled}
-              onValueChange={() => setGeolocalisationEnabled(!geolocalisationEnabled)}
-            />
-          </Row>*/}
         </Row>
 
         <View style={styles.lianeContainer}>
@@ -129,27 +127,18 @@ const LianeItem = ({ item }: { item: Liane }) => {
         </View>
       </View>
 
-      {!["Finished", "Archived", "Canceled"].includes(item.state) && (
+      {!["Finished", "Archived", "Canceled"].includes(item.state) && item.members.length > 1 && (
         <Row style={styles.infoRowContainer} spacing={8}>
-          <Row style={{ alignItems: "center" }}>
-            <AppIcon name={"navigation-2-outline"} color={geolocationDisabled ? AppColorPalettes.gray[400] : AppColors.primaryColor} size={16} />
-            <AppText style={{ color: geolocationDisabled ? AppColorPalettes.gray[400] : AppColors.primaryColor }}>
-              Géolocalisation {geolocationDisabled ? "désactivée" : "activée"}
-            </AppText>
-          </Row>
-
           <Row style={styles.statusRowContainer} spacing={8}>
             {["NotStarted", "Started"].includes(item.state) && (
               <Row style={{ position: "absolute", right: 42 }}>
-                {item.members
-                  .filter(m => m.user.id !== driver.id)
-                  .map((m, i) => (
-                    <View
-                      key={m.user.id}
-                      style={{ position: "absolute", top: -16, right: 18 * (item.members.filter(m => m.user.id !== driver.id).length - (1 + i)) }}>
-                      <UserPicture size={32} url={m.user.pictureUrl} id={m.user.id} />
-                    </View>
-                  ))}
+                {item.members.map((m, i) => (
+                  <View
+                    key={m.user.id}
+                    style={{ position: "absolute", top: -16, right: 18 * (item.members.filter(m => m.user.id !== driver.id).length - (1 + i)) }}>
+                    <UserPicture size={32} url={m.user.pictureUrl} id={m.user.id} />
+                  </View>
+                ))}
               </Row>
             )}
           </Row>
@@ -205,7 +194,9 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
         index === section.data.length - 1 ? styles.itemLast : {},
         index === 0 ? styles.itemFirst : {}
       ]}
-      onPress={() => navigation.navigate({ name: "LianeDetail", params: { liane: item } })}>
+      onPress={() => {
+        navigation.navigate({ name: "LianeDetail", params: { liane: item } });
+      }}>
       <TripGeolocationProvider liane={item}>
         <LianeItem item={item} />
       </TripGeolocationProvider>
@@ -256,8 +247,7 @@ const styles = StyleSheet.create({
   },
   driverContainer: {
     alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 8
+    justifyContent: "space-between"
   },
   driverText: {
     fontSize: 16,

@@ -1,4 +1,4 @@
-import { capitalize, CoLiane, LianeMessage, MemberRequested, Ref, User } from "@liane/common";
+import { capitalize, CoLiane, CoLianeMember, LianeMessage, MemberRequested, Ref, User } from "@liane/common";
 import React, { useMemo } from "react";
 import { View } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
@@ -19,13 +19,13 @@ export const MessageBubble = ({
   isSender: boolean;
   previousSender?: Ref<User> | undefined;
 }) => {
-  const allMembers = useMemo(() => {
+  const allMembers = useMemo<Record<Ref<User>, CoLianeMember>>(() => {
     return Object.fromEntries([...coLiane.members, ...coLiane.pendingMembers].map(m => [m.user.id, m]));
   }, [coLiane.members, coLiane.pendingMembers]);
 
   const sender = allMembers[message.createdBy!];
 
-  const firstBySender = previousSender !== sender.id;
+  const firstBySender = previousSender !== sender?.user.id;
   const date = capitalize(AppLocalization.toRelativeTimeString(new Date(message.createdAt!)));
   const backgroundColor = message.content.type === "Text" ? (isSender ? AppColors.primaryColor : AppColors.secondaryColor) : AppColors.white;
   const color = message.content.type === "Text" ? AppColors.white : isSender ? AppColors.primaryColor : AppColors.secondaryColor;
@@ -37,12 +37,12 @@ export const MessageBubble = ({
         alignSelf: isSender ? "flex-end" : "flex-start",
         marginTop: firstBySender ? 6 : 0
       }}>
-      {!isSender && firstBySender && <UserPicture url={sender.pictureUrl} id={sender.id} size={32} />}
+      {!isSender && firstBySender && <UserPicture url={sender?.user.pictureUrl} id={sender?.user.id} size={32} />}
       {!isSender && !firstBySender && <View style={{ width: 32 }} />}
       <Column spacing={2}>
         {!isSender && firstBySender && (
           <AppText style={{ marginLeft: 6, alignSelf: "flex-start", fontSize: 14, fontWeight: "bold", color: AppColorPalettes.blue[800] }}>
-            {sender.pseudo}
+            {sender?.user.pseudo}
           </AppText>
         )}
         <Column
@@ -72,7 +72,7 @@ export const MessageBubble = ({
               <AppText numberOfLines={-1} style={{ fontSize: 12 }}>
                 {message.content.value}
               </AppText>
-              {message.content.type === "MemberRequested" && (
+              {message.content.type === "MemberRequested" && coLiane.pendingMembers.find(u => u.user.id === message.createdBy) && (
                 <MemberRequestedButton message={message as LianeMessage<MemberRequested>} coLiane={coLiane} />
               )}
               <AppText style={{ fontSize: 12, alignSelf: isSender ? "flex-end" : "flex-start", color }}>{date}</AppText>

@@ -54,12 +54,16 @@ export const CommunitiesChatScreen = () => {
   const [tripModalVisible, setTripModalVisible] = useState(false);
   const currentTrip = trips[currentTripIndex];
 
-  useSubscription<CoLiane>(services.realTimeHub.lianeUpdates, updatedLiane => {
-    if (updatedLiane.id === liane?.id) {
-      setLiane(updatedLiane);
-      fetchTrip(updatedLiane.id!).then();
-    }
-  });
+  useSubscription<CoLiane>(
+    services.realTimeHub.lianeUpdates,
+    updatedLiane => {
+      if (updatedLiane.id === liane?.id) {
+        setLiane(updatedLiane);
+        fetchTrip(updatedLiane.id!).then();
+      }
+    },
+    [liane?.id]
+  );
 
   const fetchTrip = async (id: string) => {
     try {

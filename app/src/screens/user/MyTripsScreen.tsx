@@ -122,20 +122,10 @@ const MyTripsScreen = () => {
     <Column style={{ backgroundColor: AppColors.lightGrayBackground, height: "100%" }}>
       <Column style={[styles.headerContainer, { paddingTop: insets.top }]} spacing={16}>
         <Header />
-        <AppTabs
-          items={["Trajets à venir", "Trajets passés"]}
-          onSelect={setSelectedTab}
-          selectedIndex={selectedTab}
-          isSelectable={() => true}
-          fontSize={16}
-        />
       </Column>
       <Column spacing={16} style={styles.container}>
-        {selectedTab === 0 && list.length === 0 && <NoFutureTrip />}
-        {selectedTab === 0 && list.length > 0 && (
-          <TripListView data={list} isFetching={trip.isFetching} onRefresh={() => trip.refetch()} reverseSort={false} />
-        )}
-        {selectedTab === 1 && <PastLianeListView />}
+        {list.length === 0 && <NoFutureTrip />}
+        {list.length > 0 && <TripListView data={list} isFetching={trip.isFetching} onRefresh={() => trip.refetch()} reverseSort={false} />}
       </Column>
     </Column>
   );
@@ -179,9 +169,7 @@ const PastLianeListView = WithFetchPaginatedResponse<Liane>(
 const styles = StyleSheet.create({
   headerContainer: {
     padding: 12,
-    backgroundColor: AppColors.backgroundColor,
-    borderBottomRightRadius: 24,
-    borderBottomLeftRadius: 24
+    backgroundColor: AppColors.backgroundColor
   },
   container: {
     marginHorizontal: 16,

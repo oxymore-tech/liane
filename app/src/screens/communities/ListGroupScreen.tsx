@@ -21,7 +21,6 @@ export const ListGroupScreen = () => {
   const { to, from } = useMemo(() => extractWaypointFromTo(lianeRequest?.wayPoints), [lianeRequest.wayPoints]);
   const daysReccurence = extractDays(lianeRequest.weekDays);
 
-  console.log("########## GROUPPS", groups);
   return (
     <View style={styles.mainContainer}>
       {error && (

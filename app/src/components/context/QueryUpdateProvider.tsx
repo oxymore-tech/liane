@@ -68,29 +68,33 @@ export const QueryUpdateProvider = (props: PropsWithChildren) => {
 
   // Update liane local cache
 
-  useSubscription<Liane>(services.realTimeHub.tripUpdates, liane => {
-    queryClient.setQueryData<PaginatedResponse<Liane>>(LianeQueryKey, old => {
-      if (!old) {
-        return { pageSize: 1, data: [liane] };
+  useSubscription<Liane>(
+    services.realTimeHub.tripUpdates,
+    liane => {
+      queryClient.setQueryData<PaginatedResponse<Liane>>(LianeQueryKey, old => {
+        if (!old) {
+          return { pageSize: 1, data: [liane] };
+        }
+        return updateLianeList(old, liane);
+      });
+      queryClient.setQueryData<Liane>(LianeDetailQueryKey(liane.id!), _ => liane);
+      if (liane.state !== "NotStarted") {
+        // Cancel eventual reminder
+        services.reminder.cancelReminder(liane.id!);
       }
-      return updateLianeList(old, liane);
-    });
-    queryClient.setQueryData<Liane>(LianeDetailQueryKey(liane.id!), _ => liane);
-    if (liane.state !== "NotStarted") {
-      // Cancel eventual reminder
-      services.reminder.cancelReminder(liane.id!);
-    }
 
-    // Cancel pings if necessary
-    LianeGeolocation.currentLiane().then(async current => {
-      if (!current) {
-        return;
-      }
-      if (current === liane.id && liane.state !== "Started") {
-        await LianeGeolocation.stopSendingPings();
-      }
-    });
-  });
+      // Cancel pings if necessary
+      LianeGeolocation.currentLiane().then(async current => {
+        if (!current) {
+          return;
+        }
+        if (current === liane.id && liane.state !== "Started") {
+          await LianeGeolocation.stopSendingPings();
+        }
+      });
+    },
+    []
+  );
 
   // Update notifications local cache
   useEffect(() => {
