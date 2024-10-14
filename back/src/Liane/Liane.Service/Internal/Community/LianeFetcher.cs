@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Auth;
 using Liane.Api.Community;
+using Liane.Api.Trip;
 using Liane.Api.Util;
 using Liane.Api.Util.Exception;
 using Liane.Service.Internal.Postgis.Db;
@@ -13,7 +14,7 @@ using Liane.Service.Internal.Util.Sql;
 
 namespace Liane.Service.Internal.Community;
 
-public sealed class LianeFetcher(LianeRequestFetcher lianeRequestFetcher, IUserService userService, PostgisDatabase db)
+public sealed class LianeFetcher(LianeRequestFetcher lianeRequestFetcher, IUserService userService, PostgisDatabase db, IRallyingPointService rallyingPointService)
 {
   public async Task<Api.Community.Liane> Get(Guid lianeRequestId)
   {
@@ -63,10 +64,16 @@ public sealed class LianeFetcher(LianeRequestFetcher lianeRequestFetcher, IUserS
             .FilterSelectAsync(m => ToLianeMember(lianeRequestsFetcher, m, m.JoinedAt!.Value));
           var lianePendingMembers = await pendingMembers
             .FilterSelectAsync(m => ToLianeMember(lianeRequestsFetcher, m, m.RequestedAt));
+
           return new Api.Community.Liane(
             lianeRequestId,
             lianeMembers.ToImmutableList(),
             lianePendingMembers.ToImmutableList(),
+            await lianeRequest.WayPoints.SelectAsync(rallyingPointService.Get),
+            lianeRequest.RoundTrip,
+            lianeRequest.ArriveBefore,
+            lianeRequest.ReturnAfter,
+            lianeRequest.WeekDays,
             lianeRequest.CreatedBy!
           );
         }))
