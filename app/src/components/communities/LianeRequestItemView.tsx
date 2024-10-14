@@ -84,7 +84,7 @@ export const LianeRequestItem = ({ item, onRefresh, unreadLianes }: LianeRequest
                     </AppText>
                     <Pressable
                       style={{ position: "absolute", top: 10, right: 10 }}
-                      onPress={event => {
+                      onPress={() => {
                         setMyModalVisible(true);
                       }}>
                       <AppIcon name={"edit-2-outline"} color={AppColors.darkGray} size={22} />

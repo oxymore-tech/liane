@@ -1,9 +1,9 @@
-import React, { useContext, useMemo, useState } from "react";
+import React, { useContext, useState } from "react";
 
 import { Pressable, View } from "react-native";
 import { CoLianeMatch, CoLianeRequest } from "@liane/common";
 import { AppContext } from "@/components/context/ContextProvider";
-import { Column, Row } from "@/components/base/AppLayout";
+import { Column } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { AppColors, defaultTextColor } from "@/theme/colors";
 import { AppLogger } from "@/api/logger";
@@ -26,12 +26,12 @@ export const ModalLianeRequestItem = ({ item, onRefresh, myModalVisible, setMyMo
   const { navigation } = useAppNavigation();
   const [showLianeNameInput, setLianeNameInputVisible] = useState<boolean>(false);
 
-  const [hasError, setError] = useState<any>();
+  const [error, setError] = useState<any>();
   const methods = useForm<FormValues>({
     //   mode: "onChange",
     defaultValues: { name: item.lianeRequest.name }
   });
-  const { setValue, watch, reset, formState, handleSubmit } = methods;
+  const { formState, handleSubmit } = methods;
 
   const deleteLiane = async () => {
     const lianeRequest = item.lianeRequest;
@@ -43,7 +43,7 @@ export const ModalLianeRequestItem = ({ item, onRefresh, myModalVisible, setMyMo
         if (onRefresh) {
           onRefresh();
         }
-      } catch (error) {
+      } catch (e) {
         AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de la suppression d'une liane", error);
       }
     } else {
@@ -68,7 +68,7 @@ export const ModalLianeRequestItem = ({ item, onRefresh, myModalVisible, setMyMo
         if (onRefresh) {
           onRefresh();
         }
-      } catch (error) {
+      } catch (e) {
         AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de la suppression d'une liane", error);
       }
     } else {

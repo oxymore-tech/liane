@@ -200,7 +200,6 @@ export class HubServiceClient extends AbstractHubService {
 
   private async receiveLatestMessages<TChatType extends ChatType>(chatType: TChatType, m: PaginatedResponse<MessageTypeOf<TChatType>>) {
     if (!this.currentChat) {
-      this.logger.error("HUB", `Not connected to ${chatType} chat to receive latest messages`);
       return;
     }
     if (this.currentChat.name === chatType) {
@@ -210,7 +209,6 @@ export class HubServiceClient extends AbstractHubService {
 
   private receiveMessage<TChatType extends ChatType>(chatType: TChatType, conversationId: string, message: MessageTypeOf<TChatType>) {
     if (!this.currentChat) {
-      this.logger.error("HUB", `Not connected to ${chatType} chat to receive message`);
       return false;
     }
     if (this.currentChat.name === chatType) {

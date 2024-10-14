@@ -3,7 +3,7 @@ import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useQueries, UseQueryResult } from "react-query";
 import { CoLianeMatch, UnauthorizedError } from "@liane/common";
 import { AppText } from "@/components/base/AppText";
-import { Center, Column, Row, Space } from "@/components/base/AppLayout";
+import { Center, Column } from "@/components/base/AppLayout";
 import { AppButton } from "@/components/base/AppButton";
 import { AppContext } from "@/components/context/ContextProvider";
 import { LianeListView } from "@/components/communities/LianeListView";
