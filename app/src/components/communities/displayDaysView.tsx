@@ -13,22 +13,13 @@ import { DetachedLianeItem } from "@/components/communities/DetachedLianeItem.ts
 import { useAppNavigation } from "@/components/context/routing.ts";
 import { AppIcon } from "@/components/base/AppIcon.tsx";
 import App from "@/App.tsx";
+import { weekDays } from "@/util/hooks/days.ts";
 
 type DisplayDaysProps = {
   days: DayOfWeekFlag;
 };
 
 export const DisplayDays = ({ days }: DisplayDaysProps) => {
-  const DaysOfWeek: { [key: number]: string } = {
-    0: "Lu", // Lundi
-    1: "Ma", // Mardi
-    2: "Me", // Mercredi
-    3: "Je", // Jeudi
-    4: "Ve", // Vendredi
-    5: "Sa", // Samedi
-    6: "Di" // Dimanche
-  };
-
   return (
     <View
       style={{
@@ -46,7 +37,7 @@ export const DisplayDays = ({ days }: DisplayDaysProps) => {
               fontSize: 18,
               lineHeight: 27,
               color: AppColors.white
-            }}>{`${DaysOfWeek[position]}`}</AppText>
+            }}>{`${weekDays[position]}`}</AppText>
         </View>
       ))}
     </View>

@@ -33,6 +33,7 @@ import { MessageBubble } from "@/screens/communities/MessageBubble.tsx";
 import { useSubscription } from "@/util/hooks/subscription.ts";
 import { AppLocalization } from "@/api/i18n.ts";
 import { DisplayWayPoints } from "@/components/communities/displayWaypointsView.tsx";
+import { weekDays } from "@/util/hooks/days.ts";
 
 export const CommunitiesChatScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesChat">();
@@ -79,9 +80,8 @@ export const CommunitiesChatScreen = () => {
   );
 
   const getDayOfWeek = (liane: Liane): string => {
-    const daysOfWeek = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
     const departureDate = new Date(liane.departureTime);
-    return daysOfWeek[departureDate.getUTCDay()];
+    return weekDays[departureDate.getUTCDay()];
   };
 
   const goToNextLiane = () => {
