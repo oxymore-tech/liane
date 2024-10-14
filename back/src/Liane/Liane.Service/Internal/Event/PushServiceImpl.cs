@@ -28,6 +28,11 @@ public sealed class PushServiceImpl : IPushService
   {
     var resolvedLiane = await lianeFetcher.Get(liane.IdAsGuid());
     var sender = await userService.Get(message.CreatedBy);
+    if (resolvedLiane.Members.Count == 0)
+    {
+      await PushMessageInternal(sender, resolvedLiane.CreatedBy, resolvedLiane, message);
+    }
+
     foreach (var member in resolvedLiane.Members)
     {
       await PushMessageInternal(sender, member.User, resolvedLiane, message);
