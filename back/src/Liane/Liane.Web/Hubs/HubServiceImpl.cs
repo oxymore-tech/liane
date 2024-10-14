@@ -48,10 +48,7 @@ public sealed class HubServiceImpl(
     var liane = await lianeFetcher.Get(lianeId.IdAsGuid());
     foreach (var member in liane.Members)
     {
-      if (member.User.Id != sender.Id)
-      {
-        await PushLianeUpdateTo(liane, member.User);
-      }
+      await PushLianeUpdateTo(liane, member.User);
     }
   }
 
