@@ -29,7 +29,7 @@ export function LianeDisplayLayer({ date }: LianeDisplayLayerProps) {
         source: "liane_display",
         type: "line",
         paint: {
-          "line-color": "#131870",
+          "line-color": "#0B79F9",
           "line-width": 3
         }
       });

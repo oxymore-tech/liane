@@ -76,7 +76,6 @@ const RPIconLayer = ({
   // Load layer icons
   useEffect(() => {
     map.current?.once("load", () => {
-      // if (!map.current?.getImage("rp_active"))
       map.current?.loadImage("/rp_pink.png", function (error, image) {
         if (error) throw error;
 
@@ -87,7 +86,16 @@ const RPIconLayer = ({
         }
       });
 
-      //  if (!map.current?.getImage("rp_inactive"))
+      map.current?.loadImage("/rp_pink_blank.png", function (error, image) {
+        if (error) throw error;
+
+        if (!image) console.warn("No image found");
+        else {
+          if (!map.current?.getImage("rp_pink_blank")) map.current?.addImage("rp_pink_blank", image);
+          setImages(old => [...old, "rp_pink_blank"]);
+        }
+      });
+
       map.current?.loadImage("/rp_gray.png", function (error, image) {
         if (error) throw error;
 
@@ -100,6 +108,7 @@ const RPIconLayer = ({
     });
     return () => {
       if (map.current?.getImage("rp_active")) map.current?.removeImage("rp_active");
+      if (map.current?.getImage("rp_pink_blank")) map.current?.removeImage("rp_pink_blank");
       if (map.current?.getImage("rp_inactive")) map.current?.removeImage("rp_inactive");
     };
   }, [map]);
@@ -111,11 +120,39 @@ const RPIconLayer = ({
     //WebLogger.debug(ready, map.current?.getSource("rallying_point_display"), !map.current?.getLayer("rallying_point_display"));
     if (ready && map.current?.getSource("rallying_point_display") && !map.current?.getLayer("rallying_point_display")) {
       map.current?.addLayer({
+        id: "rallying_point_display_cluster",
+        "source-layer": "rallying_point_display",
+        source: "rallying_point_display",
+        type: "symbol",
+        minzoom: 8,
+        filter: ["has", "point_count"],
+        layout: {
+          "icon-image": "rp_pink_blank",
+          "text-size": 14,
+          "icon-size": ["interpolate", ["linear"], ["zoom"], 7, 0.16, 9, 0.24, 11, 0.36],
+          "text-field": ["get", "point_count"],
+          "text-allow-overlap": false,
+          "icon-allow-overlap": true,
+          "text-anchor": "center",
+          "text-offset": [0, -1.05],
+          "text-max-width": 5.4,
+          "text-optional": true,
+          "icon-optional": false,
+          "icon-anchor": "bottom"
+        },
+        paint: {
+          "text-color": "#ffffff",
+          "text-halo-color": "rgba(255, 255, 255)",
+          "text-halo-width": 0.2
+        }
+      });
+      map.current?.addLayer({
         id: "rallying_point_display",
         "source-layer": "rallying_point_display",
         source: "rallying_point_display",
         type: "symbol",
         minzoom: 8,
+        filter: ["!", ["has", "point_count"]],
         layout: {
           "icon-image": "rp_active",
           "text-size": 12,

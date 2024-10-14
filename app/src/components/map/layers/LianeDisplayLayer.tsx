@@ -75,7 +75,7 @@ export const LianeDisplayLayer = ({
           //@ts-ignore
           lineSortKey: ["get", "count"],
           lineCap: "round",
-          lineColor: AppColors.darkBlue,
+          lineColor: AppColors.blue,
           lineWidth: 3
         }}
       />
