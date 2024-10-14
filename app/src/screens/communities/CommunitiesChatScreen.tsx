@@ -235,17 +235,14 @@ export const CommunitiesChatScreen = () => {
           style={{ paddingHorizontal: 16, marginTop: insets.top + 72 }}
           data={messages}
           keyExtractor={m => m.id!}
-          renderItem={({ item, index }) =>
-            members && !!members[item.createdBy!] ? (
-              <MessageBubble
-                coLiane={liane}
-                message={item}
-                sender={members[item.createdBy!]}
-                isSender={item.createdBy === user?.id}
-                previousSender={index < messages.length - 1 ? messages[index + 1].createdBy : undefined}
-              />
-            ) : null
-          }
+          renderItem={({ item, index }) => (
+            <MessageBubble
+              coLiane={liane}
+              message={item}
+              isSender={item.createdBy === user?.id}
+              previousSender={index < messages.length - 1 ? messages[index + 1].createdBy : undefined}
+            />
+          )}
           inverted={true}
           onEndReachedThreshold={0.2}
           onEndReached={() => fetchNextPage()}

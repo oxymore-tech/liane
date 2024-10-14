@@ -1,5 +1,5 @@
 import { capitalize, CoLiane, LianeMessage, MemberRequested, Ref, User } from "@liane/common";
-import React from "react";
+import React, { useMemo } from "react";
 import { View } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { Column, Row } from "@/components/base/AppLayout";
@@ -11,16 +11,21 @@ import { MemberRequestedButton } from "@/components/trip/MemberRequestedButton.t
 export const MessageBubble = ({
   coLiane,
   message,
-  sender,
   isSender,
   previousSender
 }: {
   coLiane: CoLiane;
   message: LianeMessage;
-  sender: User;
   isSender: boolean;
   previousSender?: Ref<User> | undefined;
 }) => {
+  const allMembers = useMemo(() => {
+    return Object.fromEntries([...coLiane.members, ...coLiane.pendingMembers].map(m => [m.user.id, m]));
+  }, [coLiane.members, coLiane.pendingMembers]);
+
+  const sender = allMembers[message.createdBy!];
+
+  console.log("MEssage Requested", message.content.type);
   const firstBySender = previousSender !== sender.id;
   const date = capitalize(AppLocalization.toRelativeTimeString(new Date(message.createdAt!)));
   const backgroundColor = message.content.type === "Text" ? (isSender ? AppColors.primaryColor : AppColors.secondaryColor) : AppColors.white;

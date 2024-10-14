@@ -108,8 +108,10 @@ export const PublishScreen = () => {
 
   const updateAndNext = useCallback(
     (data: Partial<CoLianeRequest>) => {
+      console.log("################ maj horaire: ", data);
       setLianeRequest({ ...lianeRequest, ...data });
       stepDone();
+      console.log("lianeRequest");
     },
     [stepDone, lianeRequest]
   );
@@ -148,7 +150,7 @@ export const PublishScreen = () => {
             render: () => (
               <TimeStepView
                 title={`Je souhaite arriver à ${trip.to?.city ?? ""} avant ?`}
-                value={lianeRequest.arriveBefore ?? { hour: 9 }}
+                value={lianeRequest.arriveBefore ?? { hour: 8 }}
                 onChange={arriveBefore => updateAndNext({ arriveBefore })}
               />
             )
@@ -158,7 +160,7 @@ export const PublishScreen = () => {
             render: () => (
               <TimeStepView
                 title={`Je souhaite repartir de ${trip.to?.city ?? ""} après ?`}
-                value={lianeRequest.returnAfter ?? { hour: 18 }}
+                value={lianeRequest.returnAfter ?? { hour: 19 }}
                 onChange={returnAfter => updateAndNext({ returnAfter })}
               />
             )
