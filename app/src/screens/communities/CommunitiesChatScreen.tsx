@@ -295,129 +295,131 @@ export const CommunitiesChatScreen = () => {
             )}
           </Row>
         </Row>
-        <View style={{ flex: 1, backgroundColor: AppColors.grayBackground }}>
-          <View
-            style={[
-              {
-                flex: 1,
-                flexDirection: "row",
-                justifyContent: "space-between",
-                paddingHorizontal: 16,
-                marginTop: 12
-              },
-              showTripDetail ? null : { paddingBottom: 12 }
-            ]}>
-            <AppText
-              style={{
-                fontSize: 18,
-                fontWeight: "normal",
-                flexShrink: 1,
-                lineHeight: 27,
-                color: AppColors.black
-              }}>
-              {`${trips.length} trajets prévus`}
-            </AppText>
+        {trips.length > 0 && (
+          <View style={{ flex: 1, backgroundColor: AppColors.grayBackground }}>
             <View
-              style={{
-                flexDirection: "row"
-              }}>
-              <Pressable onPress={goToPreviousLiane} style={{ paddingHorizontal: 10 }}>
-                <AppIcon name={"arrow2-left"} />
-              </Pressable>
-              <Pressable
-                onPress={() => setShowTripDetail(!showTripDetail)}
-                style={[
-                  { minWidth: 110, alignItems: "center" },
-                  showTripDetail
-                    ? { backgroundColor: AppColors.white, borderTopLeftRadius: 15, borderTopRightRadius: 15, paddingBottom: 8 }
-                    : { backgroundColor: AppColors.grayBackground, borderRadius: 15, borderWidth: 2, borderColor: AppColors.darkGray }
-                ]}>
-                <AppText
-                  style={{
-                    fontSize: 18,
-                    fontWeight: "normal",
-                    flexShrink: 1,
-                    lineHeight: 27,
-                    color: AppColors.black
-                  }}>
-                  {currentTrip && getDayOfWeek(currentTrip)}
-                </AppText>
-              </Pressable>
-              <Pressable onPress={goToNextLiane} style={{ paddingHorizontal: 10 }}>
-                <AppIcon name={"arrow-right"} />
-              </Pressable>
-            </View>
-          </View>
-          {showTripDetail ? (
-            <View style={{ backgroundColor: AppColors.white, flexDirection: "column" }}>
-              <View
-                style={{
+              style={[
+                {
+                  flex: 1,
                   flexDirection: "row",
                   justifyContent: "space-between",
-                  paddingHorizontal: 20,
-                  paddingTop: 10,
-                  alignItems: "center"
+                  paddingHorizontal: 16,
+                  marginTop: 12
+                },
+                showTripDetail ? null : { paddingBottom: 12 }
+              ]}>
+              <AppText
+                style={{
+                  fontSize: 18,
+                  fontWeight: "normal",
+                  flexShrink: 1,
+                  lineHeight: 27,
+                  color: AppColors.black
                 }}>
-                <AppText
-                  style={{
-                    fontSize: 18,
-                    fontWeight: "normal",
-                    flexShrink: 1,
-                    lineHeight: 27,
-                    color: AppColors.black
-                  }}>
-                  {currentTrip?.departureTime && AppLocalization.formatMonthDay(new Date(currentTrip?.departureTime))}
-                </AppText>
-                {currentTrip && currentTrip.members.some(member => member.user.id === user?.id) ? (
-                  <Pressable
-                    onPress={() => console.log("quitter")}
-                    style={{
-                      backgroundColor: AppColors.white,
-                      borderRadius: 20,
-                      paddingHorizontal: 12,
-                      paddingVertical: 5,
-                      borderWidth: 2,
-                      borderColor: AppColors.darkGray
-                    }}>
-                    <AppText
-                      style={{
-                        fontSize: 18,
-                        fontWeight: "normal",
-                        flexShrink: 1,
-                        lineHeight: 27,
-                        color: AppColors.black
-                      }}>
-                      {"Quitter"}
-                    </AppText>
-                  </Pressable>
-                ) : (
-                  <Pressable
-                    onPress={() => navigation.navigate("LianeTripDetail", { trip: currentTrip })}
-                    style={{ backgroundColor: AppColors.primaryColor, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5 }}>
-                    <AppText
-                      style={{
-                        fontSize: 18,
-                        fontWeight: "normal",
-                        flexShrink: 1,
-                        lineHeight: 27,
-                        color: AppColors.white
-                      }}>
-                      {"Rejoindre"}
-                    </AppText>
-                  </Pressable>
-                )}
-              </View>
+                {`${trips.length} trajets prévus`}
+              </AppText>
               <View
                 style={{
-                  paddingBottom: 10
+                  flexDirection: "row"
                 }}>
-                {currentTrip?.wayPoints && <DisplayWayPoints wayPoints={currentTrip.wayPoints} />}
+                <Pressable onPress={goToPreviousLiane} style={{ paddingHorizontal: 10 }}>
+                  <AppIcon name={"arrow2-left"} />
+                </Pressable>
+                <Pressable
+                  onPress={() => setShowTripDetail(!showTripDetail)}
+                  style={[
+                    { minWidth: 110, alignItems: "center" },
+                    showTripDetail
+                      ? { backgroundColor: AppColors.white, borderTopLeftRadius: 15, borderTopRightRadius: 15, paddingBottom: 8 }
+                      : { backgroundColor: AppColors.grayBackground, borderRadius: 15, borderWidth: 2, borderColor: AppColors.darkGray }
+                  ]}>
+                  <AppText
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "normal",
+                      flexShrink: 1,
+                      lineHeight: 27,
+                      color: AppColors.black
+                    }}>
+                    {currentTrip && getDayOfWeek(currentTrip)}
+                  </AppText>
+                </Pressable>
+                <Pressable onPress={goToNextLiane} style={{ paddingHorizontal: 10 }}>
+                  <AppIcon name={"arrow-right"} />
+                </Pressable>
               </View>
             </View>
-          ) : null}
+            {showTripDetail ? (
+              <View style={{ backgroundColor: AppColors.white, flexDirection: "column" }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    paddingHorizontal: 20,
+                    paddingTop: 10,
+                    alignItems: "center"
+                  }}>
+                  <AppText
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "normal",
+                      flexShrink: 1,
+                      lineHeight: 27,
+                      color: AppColors.black
+                    }}>
+                    {currentTrip?.departureTime && AppLocalization.formatMonthDay(new Date(currentTrip?.departureTime))}
+                  </AppText>
+                  {currentTrip && currentTrip.members.some(member => member.user.id === user?.id) ? (
+                    <Pressable
+                      onPress={() => console.log("quitter")}
+                      style={{
+                        backgroundColor: AppColors.white,
+                        borderRadius: 20,
+                        paddingHorizontal: 12,
+                        paddingVertical: 5,
+                        borderWidth: 2,
+                        borderColor: AppColors.darkGray
+                      }}>
+                      <AppText
+                        style={{
+                          fontSize: 18,
+                          fontWeight: "normal",
+                          flexShrink: 1,
+                          lineHeight: 27,
+                          color: AppColors.black
+                        }}>
+                        {"Quitter"}
+                      </AppText>
+                    </Pressable>
+                  ) : (
+                    <Pressable
+                      onPress={() => navigation.navigate("LianeTripDetail", { trip: currentTrip })}
+                      style={{ backgroundColor: AppColors.primaryColor, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5 }}>
+                      <AppText
+                        style={{
+                          fontSize: 18,
+                          fontWeight: "normal",
+                          flexShrink: 1,
+                          lineHeight: 27,
+                          color: AppColors.white
+                        }}>
+                        {"Rejoindre"}
+                      </AppText>
+                    </Pressable>
+                  )}
+                </View>
+                <View
+                  style={{
+                    paddingBottom: 10
+                  }}>
+                  {currentTrip?.wayPoints && <DisplayWayPoints wayPoints={currentTrip.wayPoints} />}
+                </View>
+              </View>
+            ) : null}
 
-          <View>{chat?.currentGroup && <DebugIdView object={chat?.currentGroup} />}</View>
-        </View>
+            <View>{chat?.currentGroup && <DebugIdView object={chat?.currentGroup} />}</View>
+          </View>
+        )}
       </View>
 
       <KeyboardAvoidingView behavior={Platform.OS === "android" ? "height" : "padding"}>
