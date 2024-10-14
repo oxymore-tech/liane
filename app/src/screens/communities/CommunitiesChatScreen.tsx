@@ -230,77 +230,12 @@ export const CommunitiesChatScreen = () => {
 
   return (
     <View style={{ backgroundColor: AppColors.lightGrayBackground, justifyContent: "flex-end", flex: 1 }}>
-      {chat && liane && (
-        <FlatList
-          style={{ paddingHorizontal: 16, marginTop: insets.top + 72 }}
-          data={messages}
-          keyExtractor={m => m.id!}
-          renderItem={({ item, index }) => (
-            <MessageBubble
-              coLiane={liane}
-              message={item}
-              isSender={item.createdBy === user?.id}
-              previousSender={index < messages.length - 1 ? messages[index + 1].createdBy : undefined}
-            />
-          )}
-          inverted={true}
-          onEndReachedThreshold={0.2}
-          onEndReached={() => fetchNextPage()}
-        />
-      )}
-      {!chat && liane && <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />}
-      {error && (
-        <Center style={{ flex: 1 }}>
-          <AppText style={{ color: ContextualColors.redAlert.text }}>{error.message}</AppText>
-        </Center>
-      )}
-      <View
-        style={{
-          backgroundColor: AppColors.white,
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          paddingTop: 16 + insets.top
-        }}>
-        <Row spacing={8} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-          <Row style={{ flex: 1 }}>
-            <AppPressableIcon onPress={() => navigation.goBack()} name={"arrow-ios-back-outline"} color={AppColors.primaryColor} size={32} />
-
-            {!!liane && (
-              <View
-                style={{
-                  justifyContent: "center",
-                  alignItems: "center",
-                  flex: 1
-                }}>
-                <AppText
-                  style={{
-                    fontSize: 22,
-                    fontWeight: "bold",
-                    flexShrink: 1,
-                    lineHeight: 27,
-                    color: AppColors.primaryColor
-                  }}>
-                  {name}
-                </AppText>
-              </View>
-            )}
-          </Row>
-          <Row>
-            {liane && (
-              <Pressable onPress={() => navigation.navigate("CommunitiesDetails", { liane: liane })}>
-                <AppIcon name={"edit-2-outline"} />
-              </Pressable>
-            )}
-          </Row>
-        </Row>
+      <View style={{ marginTop: insets.top + 52 }}>
         {trips.length > 0 && (
-          <View style={{ flex: 1, backgroundColor: AppColors.grayBackground }}>
+          <View style={{ width: "100%" }}>
             <View
               style={[
                 {
-                  flex: 1,
                   flexDirection: "row",
                   justifyContent: "space-between",
                   paddingHorizontal: 16,
@@ -420,6 +355,72 @@ export const CommunitiesChatScreen = () => {
             <View>{chat?.currentGroup && <DebugIdView object={chat?.currentGroup} />}</View>
           </View>
         )}
+      </View>
+      {chat && liane && (
+        <FlatList
+          style={{ paddingHorizontal: 16 }}
+          data={messages}
+          keyExtractor={m => m.id!}
+          renderItem={({ item, index }) => (
+            <MessageBubble
+              coLiane={liane}
+              message={item}
+              isSender={item.createdBy === user?.id}
+              previousSender={index < messages.length - 1 ? messages[index + 1].createdBy : undefined}
+            />
+          )}
+          inverted={true}
+          onEndReachedThreshold={0.2}
+          onEndReached={() => fetchNextPage()}
+        />
+      )}
+      {!chat && liane && <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />}
+      {error && (
+        <Center style={{ flex: 1 }}>
+          <AppText style={{ color: ContextualColors.redAlert.text }}>{error.message}</AppText>
+        </Center>
+      )}
+      <View
+        style={{
+          backgroundColor: AppColors.white,
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          paddingTop: 16 + insets.top
+        }}>
+        <Row spacing={8} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+          <Row style={{ flex: 1 }}>
+            <AppPressableIcon onPress={() => navigation.goBack()} name={"arrow-ios-back-outline"} color={AppColors.primaryColor} size={32} />
+
+            {!!liane && (
+              <View
+                style={{
+                  justifyContent: "center",
+                  alignItems: "center",
+                  flex: 1
+                }}>
+                <AppText
+                  style={{
+                    fontSize: 22,
+                    fontWeight: "bold",
+                    flexShrink: 1,
+                    lineHeight: 27,
+                    color: AppColors.primaryColor
+                  }}>
+                  {name}
+                </AppText>
+              </View>
+            )}
+          </Row>
+          <Row>
+            {liane && (
+              <Pressable onPress={() => navigation.navigate("CommunitiesDetails", { liane: liane })}>
+                <AppIcon name={"edit-2-outline"} />
+              </Pressable>
+            )}
+          </Row>
+        </Row>
       </View>
 
       <KeyboardAvoidingView behavior={Platform.OS === "android" ? "height" : "padding"}>

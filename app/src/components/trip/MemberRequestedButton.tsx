@@ -6,6 +6,7 @@ import { Row } from "@/components/base/AppLayout.tsx";
 import { AppIcon } from "@/components/base/AppIcon.tsx";
 import { AppPressableOverlay } from "@/components/base/AppPressable.tsx";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
+import { View } from "react-native";
 
 export const MemberRequestedButton = ({ message, coLiane }: { message: LianeMessage<MemberRequested>; coLiane: CoLiane }) => {
   const { services } = useContext(AppContext);
@@ -19,25 +20,30 @@ export const MemberRequestedButton = ({ message, coLiane }: { message: LianeMess
   }, [coLiane.id, message.content.lianeRequest, services.community]);
 
   return (
-    <Row>
-      <AppPressableOverlay
-        backgroundStyle={{ backgroundColor: AppColors.primaryColor, borderRadius: 8 }}
-        style={{ paddingHorizontal: 12, paddingVertical: 6 }}
-        onPress={handleAccept}>
-        <Row style={{ alignItems: "center" }} spacing={6}>
-          <AppIcon name={"thumb-up"} color={AppColors.white} size={28} />
-          <AppText style={{ color: AppColors.white, fontWeight: "bold", fontSize: 18 }}>Accepter</AppText>
-        </Row>
-      </AppPressableOverlay>
-      <AppPressableOverlay
-        backgroundStyle={{ backgroundColor: AppColors.primaryColor, borderRadius: 8 }}
-        style={{ paddingHorizontal: 12, paddingVertical: 6 }}
-        onPress={handleReject}>
-        <Row style={{ alignItems: "center" }} spacing={6}>
-          <AppIcon name={"thumb-up"} color={AppColors.white} size={28} />
-          <AppText style={{ color: AppColors.white, fontWeight: "bold", fontSize: 18 }}>Décliner</AppText>
-        </Row>
-      </AppPressableOverlay>
+    <Row
+      style={{
+        justifyContent: "space-between"
+      }}>
+      <View style={{ marginRight: 7 }}>
+        <AppPressableOverlay
+          backgroundStyle={{ backgroundColor: AppColors.primaryColor, borderRadius: 8 }}
+          style={{ paddingHorizontal: 12, paddingVertical: 6 }}
+          onPress={handleAccept}>
+          <Row style={{ alignItems: "center" }} spacing={6}>
+            <AppText style={{ color: AppColors.white, fontWeight: "bold", fontSize: 18 }}>Accepter</AppText>
+          </Row>
+        </AppPressableOverlay>
+      </View>
+      <View>
+        <AppPressableOverlay
+          backgroundStyle={{ backgroundColor: AppColors.grayBackground, borderRadius: 8 }}
+          style={{ paddingHorizontal: 12, paddingVertical: 6 }}
+          onPress={handleReject}>
+          <Row style={{ alignItems: "center" }} spacing={6}>
+            <AppText style={{ color: AppColors.white, fontWeight: "bold", fontSize: 18 }}>Décliner</AppText>
+          </Row>
+        </AppPressableOverlay>
+      </View>
     </Row>
   );
 };

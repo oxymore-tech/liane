@@ -25,7 +25,6 @@ export const MessageBubble = ({
 
   const sender = allMembers[message.createdBy!];
 
-  console.log("MEssage Requested", message.content.type);
   const firstBySender = previousSender !== sender.id;
   const date = capitalize(AppLocalization.toRelativeTimeString(new Date(message.createdAt!)));
   const backgroundColor = message.content.type === "Text" ? (isSender ? AppColors.primaryColor : AppColors.secondaryColor) : AppColors.white;
