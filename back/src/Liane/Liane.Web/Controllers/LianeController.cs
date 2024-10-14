@@ -48,15 +48,15 @@ public sealed class LianeController(ILianeService lianeService, ITripService tri
   }
 
   [HttpPost("liane/{liane:guid}/accept/{lianeRequest:guid}")]
-  public Task<Api.Community.Liane> Accept(Guid liane, Guid lianeRequest)
+  public Task<Api.Community.Liane> Accept(Guid lianeRequest, Guid liane)
   {
-    return lianeService.Accept(liane, lianeRequest);
+    return lianeService.Accept(lianeRequest, liane);
   }
 
   [HttpPost("liane/{liane:guid}/reject/{lianeRequest:guid}")]
-  public Task<Api.Community.Liane> Reject(Guid liane, Guid lianeRequest)
+  public Task<Api.Community.Liane> Reject(Guid lianeRequest, Guid liane)
   {
-    return lianeService.Reject(liane, lianeRequest);
+    return lianeService.Reject(lianeRequest, liane);
   }
 
   [HttpPost("liane/join_trip")]
