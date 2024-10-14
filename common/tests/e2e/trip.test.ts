@@ -52,7 +52,7 @@ describe.sequential("Joining a trip", () => {
       });
 
       await secondUser.services.community.joinRequest(secondLianeRequest.id!, lianeRequest.id!);
-      const coLiane = await currentUser.services.community.accept(lianeRequest.id!, secondLianeRequest.id!);
+      const coLiane = await currentUser.services.community.accept(secondLianeRequest.id!, lianeRequest.id!);
 
       const posted = await secondUser.services.liane.post({
         liane: coLiane.id!,
