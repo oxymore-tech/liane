@@ -54,6 +54,11 @@ public sealed class FirebaseMessagingImpl : IPushMiddleware
 
   public async Task<bool> Push(Ref<Api.Auth.User> receiver, Notification notification)
   {
+    if (receiver.Id == notification.CreatedBy?.Id)
+    {
+      return false;
+    }
+    
     var receiverUser = await userService.GetFullUser(receiver);
     if (receiverUser == null)
     {

@@ -33,7 +33,7 @@ public sealed class PushServiceImpl : IPushService
       await PushMessageInternal(sender, resolvedLiane.CreatedBy, resolvedLiane, message);
     }
 
-    foreach (var member in resolvedLiane.Members.Where(m => m.User.Id != message.CreatedBy))
+    foreach (var member in resolvedLiane.Members)
     {
       await PushMessageInternal(sender, member.User, resolvedLiane, message);
     }
