@@ -38,17 +38,6 @@ export const WayPointView = ({
 }) => {
   return (
     <Row style={{ alignItems: "center" }} spacing={8}>
-      {type === "step" && (
-        <View style={{ backgroundColor: isPast ? AppColorPalettes.gray[500] : AppColors.primaryColor, borderRadius: 16, margin: 5, padding: 4 }} />
-      )}
-      {type !== "step" && (
-        <AppIcon
-          name={type === "pickup" ? "pin" : "flag"}
-          color={isPast ? AppColorPalettes.gray[500] : AppColors.primaryColor}
-          size={18}
-          style={{ width: 18 }}
-        />
-      )}
       {(!delay || isPast) && (
         <TimeView
           style={[styles.mainWayPointTime, { color: isPast ? AppColorPalettes.gray[400] : AppColors.primaryColor }]}
@@ -67,6 +56,17 @@ export const WayPointView = ({
             value={wayPoint.effectiveTime ?? wayPoint.eta}
           />
         </Column>
+      )}
+      {type === "step" && (
+        <View style={{ backgroundColor: isPast ? AppColorPalettes.gray[500] : AppColors.primaryColor, borderRadius: 16, margin: 5, padding: 4 }} />
+      )}
+      {type !== "step" && (
+        <AppIcon
+          name={type === "pickup" ? "pin" : "flag"}
+          color={isPast ? AppColorPalettes.gray[500] : AppColors.primaryColor}
+          size={18}
+          style={{ width: 18 }}
+        />
       )}
       <Column>
         <AppText style={[styles.mainWayPointCity]}>{wayPoint.rallyingPoint.city}</AppText>

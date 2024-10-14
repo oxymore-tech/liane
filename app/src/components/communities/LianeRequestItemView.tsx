@@ -26,7 +26,7 @@ export const LianeRequestItem = ({ item, onRefresh, unreadLianes }: LianeRequest
   return (
     <View>
       <Pressable
-        style={{ justifyContent: "center", display: "flex", marginRight: 20 }}
+        style={{ justifyContent: "center", display: "flex" }}
         onPress={() => item.state.type === "Attached" && navigation.navigate("CommunitiesChat", { liane: item.state.liane })}>
         <View>
           <Row style={styles.driverContainer}>

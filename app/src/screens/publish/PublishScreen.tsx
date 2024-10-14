@@ -148,7 +148,7 @@ export const PublishScreen = () => {
             render: () => (
               <TimeStepView
                 title={`Je souhaite arriver à ${trip.to?.city ?? ""} avant ?`}
-                value={lianeRequest.arriveBefore ?? { hour: 9 }}
+                value={lianeRequest.arriveBefore ?? { hour: 10 }}
                 onChange={arriveBefore => updateAndNext({ arriveBefore })}
               />
             )
@@ -271,7 +271,7 @@ const TimeStepView = ({ title, onChange, value }: TimeStepProps) => {
   const [internalValue, setInternalValue] = useState(value);
 
   return (
-    <StepForm title={title} onValidate={() => onChange(value)}>
+    <StepForm title={title} onValidate={() => onChange(internalValue)}>
       <TimeConstraintView value={internalValue} onChange={setInternalValue} />
     </StepForm>
   );
