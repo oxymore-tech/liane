@@ -4,7 +4,7 @@ import { Column, Row } from "@/components/base/AppLayout";
 import { TimeView } from "@/components/TimeView";
 import { AppText } from "@/components/base/AppText";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
-import { addSeconds, Car, substractSeconds, WayPoint } from "@liane/common";
+import { addSeconds, Car, WayPoint } from "@liane/common";
 import { AppIcon } from "@/components/base/AppIcon";
 
 export interface WayPointsViewProps {
