@@ -211,6 +211,14 @@ export const LianeMatchUserRouteLayer = ({ loadingFeatures, match }: { loadingFe
   return <RouteLayer wayPoints={wayPoints} loadingFeatures={loadingFeatures} id={match.trip.id} />;
 };
 
-export const LianeMatchGroupRouteLayer = ({ loadingFeatures, liane }: { loadingFeatures?: FeatureCollection; liane: ResolvedLianeRequest }) => {
-  return <RouteLianeLayer wayPoints={liane.wayPoints} loadingFeatures={loadingFeatures} id={liane.id} />;
+export const LianeMatchLianeRouteLayer = ({
+  loadingFeatures,
+  wayPoints,
+  lianeId
+}: {
+  loadingFeatures?: FeatureCollection;
+  wayPoints: RallyingPoint[];
+  lianeId: string;
+}) => {
+  return <RouteLianeLayer wayPoints={wayPoints} loadingFeatures={loadingFeatures} id={lianeId} />;
 };

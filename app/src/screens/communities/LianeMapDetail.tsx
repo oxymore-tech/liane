@@ -15,7 +15,7 @@ import { DisplayDays } from "@/components/communities/displayDaysView.tsx";
 import { AppIcon } from "@/components/base/AppIcon.tsx";
 import { extractWaypointFromTo } from "@/util/hooks/lianeRequest.ts";
 import { DisplayRallyingPoints } from "@/components/communities/displayWaypointsView.tsx";
-import { LianeMatchGroupRouteLayer, LianeMatchUserRouteLayer } from "@/components/map/layers/LianeMatchRouteLayer.tsx";
+import { LianeMatchLianeRouteLayer } from "@/components/map/layers/LianeMatchRouteLayer.tsx";
 import { LocationMarker } from "@/screens/detail/components/LocationMarker.tsx";
 import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay.tsx";
 import { LianeProofDisplay } from "@/components/map/layers/LianeProofDisplay.tsx";
@@ -91,7 +91,7 @@ export const LianeMapDetailScreen = () => {
         </View>
         <View style={{ flex: 1, flexDirection: "column", alignItems: "flex-end", justifyContent: "space-between", height: "100%", width: "100%" }}>
           <AppMapView bounds={mapBounds}>
-            {lianeRequest && <LianeMatchGroupRouteLayer liane={lianeRequest} />}
+            {lianeRequest && lianeRequest.id && <LianeMatchLianeRouteLayer wayPoints={lianeRequest.wayPoints} lianeId={lianeRequest.id} />}
 
             {lianeRequest?.wayPoints.map((w, i) => {
               let type: "to" | "from" | "step";
