@@ -48,6 +48,7 @@ export const TripListView = ({ data, isFetching, onRefresh, reverseSort, loadMor
   const sections = useMemo(() => {
     return convertToDateSections(data, userId, reverseSort);
   }, [data, userId, reverseSort]);
+  const isTripStarted = data.some(liane => liane.state === "Started");
 
   return (
     <SectionList
@@ -55,7 +56,7 @@ export const TripListView = ({ data, isFetching, onRefresh, reverseSort, loadMor
       refreshControl={<RefreshControl refreshing={isFetching || false} onRefresh={onRefresh} />}
       sections={sections}
       showsVerticalScrollIndicator={false}
-      renderItem={renderLianeItem}
+      renderItem={props => renderLianeItem({ ...props, isTripStarted })}
       keyExtractor={item => item.id!}
       renderSectionHeader={renderSectionHeader}
       onEndReachedThreshold={0.2}
@@ -92,7 +93,7 @@ const convertToDateSections = (data: Liane[], member: Ref<User>, reverseSort: bo
     )
     .sort((a, b) => (reverseSort ? -a.date.localeCompare(b.date) : a.date.localeCompare(b.date)));
 
-const LianeItem = ({ item }: { item: Liane }) => {
+const LianeItem = ({ item, isTripStarted }: { item: Liane; isTripStarted: boolean }) => {
   const { user } = useContext(AppContext);
   const { navigation } = useAppNavigation();
 
@@ -101,6 +102,7 @@ const LianeItem = ({ item }: { item: Liane }) => {
   const carLocation = useCarDelay();
   const me = useMemo(() => item.members.find(l => l.user.id === user!.id)!, [item.members, user]);
   const status = useTripStatus(item);
+
   return (
     <View style={{ paddingBottom: 10 }}>
       <View>
@@ -116,10 +118,22 @@ const LianeItem = ({ item }: { item: Liane }) => {
                 navigation.navigate("CommunitiesChat", { lianeId: item.liane });
                 e.preventDefault();
               }}>
-              <AppText style={{ color: AppColors.black, fontSize: 18, paddingHorizontal: 8, paddingVertical: 4 }}>Rejoindre le chat</AppText>
+              <AppText style={{ color: AppColors.black, fontSize: 18, paddingVertical: 6, paddingHorizontal: 16 }}>Accéder au chat</AppText>
             </AppPressableOverlay>
           </Row>
-          {!["Finished", "Archived", "Canceled"].includes(item.state) && <LianeStatusView liane={item} />}
+          {status === "StartingSoon" && (isTripStarted ? <LianeStatusView liane={item} /> : <StartButton item={item} />)}
+          {status === "Started" && (
+            <View
+              style={{
+                backgroundColor: AppColors.primaryColor,
+                borderRadius: 20
+              }}>
+              <Row style={{ paddingVertical: 6, paddingHorizontal: 16 }} spacing={8}>
+                <AppText style={{ color: AppColors.white, fontSize: 18 }}>En cours</AppText>
+              </Row>
+            </View>
+          )}
+          {["Finished", "Archived", "Canceled"].includes(item.state) && <LianeStatusView liane={item} />}
         </Row>
 
         <View style={styles.lianeContainer}>
@@ -144,8 +158,6 @@ const LianeItem = ({ item }: { item: Liane }) => {
           </Row>
         </Row>
       )}
-      {status === "StartingSoon" && <View style={{ height: 44 }} />}
-      {status === "StartingSoon" || (status === "Started" && item.state === "NotStarted" && <StartButton item={item} />)}
     </View>
   );
 };
@@ -156,13 +168,8 @@ const StartButton = ({ item }: { item: Liane }) => {
   return (
     <AppPressableOverlay
       backgroundStyle={{
-        position: "absolute",
-        bottom: 0,
-        left: -16,
-        right: -16,
         backgroundColor: AppColors.primaryColor,
-        borderBottomRightRadius: 16,
-        borderBottomLeftRadius: 16
+        borderRadius: 20
       }}
       onPress={() => {
         setLoading(true);
@@ -174,15 +181,13 @@ const StartButton = ({ item }: { item: Liane }) => {
           })
           .finally(() => setLoading(false));
       }}>
-      <Row style={{ paddingVertical: 8, paddingHorizontal: 16 }} spacing={8}>
-        {!loading && <AppIcon name={"play-circle"} color={AppColors.white} />}
-        {loading && <ActivityIndicator size="small" color={AppColors.white} />}
-        <AppText style={{ color: AppColors.white, fontSize: 18 }}>Démarrer maintenant</AppText>
+      <Row style={{ paddingVertical: 6, paddingHorizontal: 16 }} spacing={8}>
+        <AppText style={{ color: AppColors.white, fontSize: 18 }}>C'est parti ?</AppText>
       </Row>
     </AppPressableOverlay>
   );
 };
-const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Liane, TripSection>) => {
+const renderLianeItem = ({ item, index, section, isTripStarted }: SectionListRenderItemInfo<Liane, TripSection> & { isTripStarted: boolean }) => {
   const { navigation } = useAppNavigation();
 
   return (
@@ -198,7 +203,7 @@ const renderLianeItem = ({ item, index, section }: SectionListRenderItemInfo<Lia
         navigation.navigate({ name: "LianeDetail", params: { liane: item } });
       }}>
       <TripGeolocationProvider liane={item}>
-        <LianeItem item={item} />
+        <LianeItem item={item} isTripStarted={isTripStarted} />
       </TripGeolocationProvider>
     </Pressable>
   );
@@ -247,7 +252,8 @@ const styles = StyleSheet.create({
   },
   driverContainer: {
     alignItems: "center",
-    justifyContent: "space-between"
+    justifyContent: "space-between",
+    paddingBottom: 10
   },
   driverText: {
     fontSize: 16,

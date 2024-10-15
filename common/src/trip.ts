@@ -126,7 +126,7 @@ function getTimeForUser(liane: Liane, user: Ref<User>, type: "to" | "from"): [Da
 export function getLiveTripStatus(liane: Liane, user: Ref<User>): { status: LiveTripStatus; nextUpdateMillis?: number } {
   if (liane.state === "NotStarted") {
     const [, delta] = getTimeForUser(liane, user, "from");
-    if (delta > 0 && (delta <= 24 * 60 * 60 || delta > 2 * 60 * 60)) {
+    if (delta <= 24 * 60 * 60 && delta > -1 * 2 * 60 * 60) {
       return { status: "StartingSoon", nextUpdateMillis: delta * 1000 };
     }
   }

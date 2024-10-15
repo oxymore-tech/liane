@@ -137,11 +137,10 @@ const LianeDetailPage = ({ match }: { match: LianeMatch | undefined }) => {
           {driver && tripMatch && trackingInfo?.car && <LocationMarker isCar={true} user={driver} info={trackingInfo?.car} />}
           {match && ["Finished", "Archived"].includes(match.trip.state) && <LianeProofDisplay id={match.trip.id!} />}
         </AppMapView>
-
         <AppBottomSheet
           onScrolled={v => setBSheetTop(v)}
           ref={ref}
-          stops={[AppBottomSheetHandleHeight + 96, 0.5, 1]}
+          stops={[AppBottomSheetHandleHeight + 96, 0.45, 1]}
           padding={{ top: 80 }}
           initialStop={1}
           backgroundStyle={{
@@ -222,47 +221,6 @@ export const LianeWithDateView = (props: { liane: Liane }) => {
   );
 };
 
-const StartButton = ({ startAction, isDriver }: { startAction: () => Promise<void>; isDriver: boolean }) => {
-  const [loading, setLoading] = useState(false);
-  return (
-    <AppPressableOverlay
-      backgroundStyle={{
-        backgroundColor: loading ? AppColorPalettes.gray[500] : AppColors.primaryColor,
-        position: "relative",
-        left: -8,
-        borderTopRightRadius: 16
-      }}
-      onPress={() => {
-        setLoading(true);
-        startAction()
-          .catch(e => {
-            AppLogger.error("GEOPINGS", e);
-          })
-          .finally(() => setLoading(false));
-      }}>
-      <Row style={{ paddingVertical: 8, paddingHorizontal: 16 }} spacing={8}>
-        {!loading && <AppIcon name={"play-circle"} color={AppColors.white} />}
-        {loading && <ActivityIndicator size="small" color={AppColors.white} />}
-        <AppText style={{ color: AppColors.white, fontSize: 18 }}>{isDriver ? "Démarrer le trajet" : "Partager sa position"}</AppText>
-      </Row>
-    </AppPressableOverlay>
-  );
-};
-
-const StartingSoonView = (props: { liane: Liane; isDriver: boolean }) => {
-  const status = useTripStatus(props.liane);
-  const { services } = useContext(AppContext);
-  if (status === "StartingSoon" || (status === "Started" && props.liane.state === "NotStarted")) {
-    return (
-      <StartButton
-        startAction={() => services.liane.start(props.liane.id!).then(() => startGeolocationService(props.liane))}
-        isDriver={props.isDriver}
-      />
-    );
-  } else {
-    return null;
-  }
-};
 const LianeDetailView = ({ liane }: { liane: LianeMatch }) => {
   const { wayPoints: currentTrip } = useMemo(() => getTripFromMatch(liane), [liane]);
   const userTripDistance = Math.ceil(getTotalDistance(currentTrip) / 1000);
@@ -290,7 +248,6 @@ const LianeDetailView = ({ liane }: { liane: LianeMatch }) => {
           <GeolocationSwitch liane={liane.trip} />
         </Row>
       )}
-      <StartingSoonView liane={liane.trip} isDriver={driver.id === user!.id!} />
 
       <Row style={styles.resumeContainer} spacing={4}>
         <Column style={{ flex: 1 }} spacing={4}>
@@ -332,8 +289,6 @@ const LianeDetailView = ({ liane }: { liane: LianeMatch }) => {
           </Row>
         </Column>
       </Row>
-
-      <LianeActionsView match={liane} />
     </Column>
   );
 };

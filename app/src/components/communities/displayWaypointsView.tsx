@@ -54,7 +54,7 @@ export const DisplayRallyingPoints = ({ wayPoints, inverseTravel = false, startT
           <AppText
             style={{
               fontWeight: "bold",
-              fontSize: 20,
+              fontSize: 17,
               lineHeight: 27,
               color: AppColors.primaryColor,
               marginLeft: 20
@@ -67,7 +67,7 @@ export const DisplayRallyingPoints = ({ wayPoints, inverseTravel = false, startT
           <AppText
             style={[
               {
-                fontSize: 20,
+                fontSize: 17,
                 lineHeight: 25,
                 color: AppColors.black
               },
@@ -81,7 +81,7 @@ export const DisplayRallyingPoints = ({ wayPoints, inverseTravel = false, startT
             <AppText
               style={{
                 fontWeight: "normal",
-                fontSize: 20,
+                fontSize: 17,
                 lineHeight: 25,
                 color: AppColors.black
               }}>{`${step.label}`}</AppText>

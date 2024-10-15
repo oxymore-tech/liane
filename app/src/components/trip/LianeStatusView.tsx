@@ -20,11 +20,14 @@ export const LianeStatusView = ({ style, liane }: LianeStatusViewProps) => {
     <AppText
       style={[
         {
-          paddingHorizontal: 6,
+          paddingHorizontal: 16,
           paddingVertical: 6,
           color: AppColorPalettes.gray[400],
           fontWeight: "bold",
-          fontStyle: "italic"
+          fontStyle: "italic",
+          borderWidth: 1,
+          borderRadius: 20,
+          borderColor: AppColorPalettes.gray[400]
         },
         style
       ]}>
@@ -38,7 +41,7 @@ const getLianeStatusStyle = (lianeStatus: LiveTripStatus): [string | undefined, 
   let color: ColorValue = AppColors.grayBackground;
   switch (lianeStatus) {
     case "StartingSoon":
-      status = "Départ imminent";
+      status = "Départ à venir";
       //  color = AppColorPalettes.yellow[100];
       break;
     case "Started":

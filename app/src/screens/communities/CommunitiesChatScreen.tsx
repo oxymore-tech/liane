@@ -232,6 +232,20 @@ export const CommunitiesChatScreen = () => {
     </View>
   );
 
+  const quitTrip = async () => {
+    /*if (liane && liane.id) {
+      try {
+        const result = await services.community.leave(liane.id);
+        AppLogger.debug("COMMUNITIES", "A quitter une liane avec succès", result);
+        navigation.goBack();
+      } catch (error) {
+        AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de la demande pour quitter une liane", error);
+      }
+    } else {
+      AppLogger.debug("COMMUNITIES", "Pas de lianeRequest ID lors de la demande pour quitter une liane", liane);
+    }*/
+  };
+
   return (
     <View style={{ backgroundColor: AppColors.lightGrayBackground, justifyContent: "flex-end", flex: 1 }}>
       <View style={{ marginTop: insets.top + 52 }}>
@@ -310,7 +324,7 @@ export const CommunitiesChatScreen = () => {
                   </AppText>
                   {currentTrip && currentTrip.members.some(member => member.user.id === user?.id) ? (
                     <Pressable
-                      onPress={() => console.log("quitter")}
+                      onPress={quitTrip}
                       style={{
                         backgroundColor: AppColors.white,
                         borderRadius: 20,

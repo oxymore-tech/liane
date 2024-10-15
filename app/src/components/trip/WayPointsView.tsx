@@ -4,7 +4,7 @@ import { Column, Row } from "@/components/base/AppLayout";
 import { TimeView } from "@/components/TimeView";
 import { AppText } from "@/components/base/AppText";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
-import { addSeconds, Car, WayPoint } from "@liane/common";
+import { addSeconds, Car, substractSeconds, WayPoint } from "@liane/common";
 import { AppIcon } from "@/components/base/AppIcon";
 
 export interface WayPointsViewProps {
@@ -84,7 +84,10 @@ function computeDelay(carLocation: Car | undefined, wayPoints: WayPoint[]) {
   if (!nextWayPoint) {
     return;
   }
-  return (new Date(carLocation.at).getTime() + 1000 * carLocation.delay - new Date(nextWayPoint.eta).getTime()) / 1000;
+  // Delay = current time - Next point timing
+  const delay = (new Date().getTime() - new Date(nextWayPoint.eta).getTime()) / 1000;
+  const errorMargin = 600;
+  return delay < errorMargin && delay > -1 * errorMargin ? undefined : delay;
 }
 
 export const WayPointsView = ({ wayPoints, carLocation }: WayPointsViewProps) => {
@@ -101,8 +104,10 @@ export const WayPointsView = ({ wayPoints, carLocation }: WayPointsViewProps) =>
               directionsMode: "walk"
             })
  */
+
   const nextWayPointIndex = carLocation ? wayPoints.findIndex(w => w.rallyingPoint.id === carLocation.nextPoint) : undefined;
   const delay = computeDelay(carLocation, wayPoints);
+
   return (
     <Column style={{ flexGrow: 1, flexShrink: 1 }}>
       <WayPointView wayPoint={from} type={"pickup"} isPast={!!nextWayPointIndex && nextWayPointIndex > 0} delay={delay} />
