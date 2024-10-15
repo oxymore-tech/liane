@@ -186,21 +186,21 @@ public sealed class LianeServiceImpl(
 
     var mineId = mine.IdAsGuid();
 
-    var iAmAlreadyMember = await connection.FirstOrDefaultAsync(Query.Select<LianeMemberDb>().Where(m => m.LianeRequestId, ComparisonOperator.Eq, mineId), tx);
-    if (iAmAlreadyMember?.JoinedAt is not null)
-    {
-      return false;
-    }
-
     var foreignId = foreign.IdAsGuid();
 
     var alreadyMember = await connection.FirstOrDefaultAsync(Query.Select<LianeMemberDb>().Where(m => m.LianeRequestId, ComparisonOperator.Eq, foreignId), tx);
 
     var lianeId = alreadyMember?.LianeId ?? foreignId;
 
+    var liane = await lianeFetcher.TryFetchLiane(connection, lianeId, tx);
+    var userId = currentContext.CurrentUser().Id;
+    if (liane is not null && liane.Members.Any(m => m.User.Id == userId))
+    {
+      return false;
+    }
+
     var from = await connection.GetAsync<LianeRequestDb, Guid>(mineId, tx);
 
-    var userId = currentContext.CurrentUser().Id;
     if (from.CreatedBy.Id != userId)
     {
       throw new UnauthorizedAccessException("User is not the owner of the liane request");
@@ -210,7 +210,8 @@ public sealed class LianeServiceImpl(
 
     tx.Commit();
 
-    await eventDispatcher.Dispatch(foreign, new MessageContent.MemberRequested("", userId, mineId));
+    var recipient = liane is not null ? liane.CreatedBy.Id : userId;
+    await eventDispatcher.Dispatch(foreign, new MessageContent.MemberRequested("", recipient, mineId));
     return true;
   }
 

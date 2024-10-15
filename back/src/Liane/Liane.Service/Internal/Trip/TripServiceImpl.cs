@@ -690,35 +690,48 @@ public sealed class TripServiceImpl(
     await eventDispatcher.Dispatch(updated.Liane!, new MessageContent.GeolocationLevelChanged(updated.Id, level));
   }
 
-  public async Task CancelTrip(Ref<Api.Trip.Trip> lianeRef)
+  public async Task CancelTrip(Ref<Api.Trip.Trip> tripRef)
   {
-    var liane = await Get(lianeRef);
+    var trip = await Get(tripRef);
     var sender = currentContext.CurrentUser().Id;
     var now = DateTime.UtcNow;
-    if (sender == liane.Driver.User)
+
+    var alreadyCanceled = trip.Members.FirstOrDefault(m => m.User.Id == sender && m.Cancellation is not null);
+    if (alreadyCanceled is not null)
     {
-      // Cancel trip
-      await UpdateState(liane, TripStatus.Canceled);
+      return;
     }
 
-    await Update(lianeRef, Builders<LianeDb>.Update.Set(l => l.Members, liane.Members.Select(m => m.User.Id == sender ? m with { Cancellation = now } : m)));
+    if (sender == trip.Driver.User)
+    {
+      await UpdateState(trip, TripStatus.Canceled);
+    }
 
-    await eventDispatcher.Dispatch(liane.Liane, new MessageContent.MemberLeftTrip("", sender, liane));
+    await Update(tripRef, Builders<LianeDb>.Update.Set(l => l.Members, trip.Members.Select(m => m.User.Id == sender ? m with { Cancellation = now } : m)));
+
+    await eventDispatcher.Dispatch(trip.Liane, new MessageContent.MemberLeftTrip("", sender, trip));
   }
 
-  public async Task StartTrip(Ref<Api.Trip.Trip> lianeRef)
+  public async Task StartTrip(Ref<Api.Trip.Trip> tripRef)
   {
-    var liane = await Get(lianeRef);
+    var trip = await Get(tripRef);
     var sender = currentContext.CurrentUser().Id;
     var now = DateTime.UtcNow;
-    if (liane.State == TripStatus.NotStarted)
+
+    var alreadyStarted = trip.Members.FirstOrDefault(m => m.User.Id == sender && m.Departure is not null);
+    if (alreadyStarted is not null)
     {
-      await UpdateState(liane, TripStatus.Started);
+      return;
     }
 
-    await Update(lianeRef, Builders<LianeDb>.Update.Set(l => l.Members, liane.Members.Select(m => m.User.Id == sender ? m with { Departure = now } : m)));
+    if (trip.State == TripStatus.NotStarted)
+    {
+      await UpdateState(trip, TripStatus.Started);
+    }
 
-    await eventDispatcher.Dispatch(liane.Liane, new MessageContent.MemberHasStarted(liane));
+    await Update(tripRef, Builders<LianeDb>.Update.Set(l => l.Members, trip.Members.Select(m => m.User.Id == sender ? m with { Departure = now } : m)));
+
+    await eventDispatcher.Dispatch(trip.Liane, new MessageContent.MemberHasStarted("", trip));
   }
 
   private TripStatus GetUserState(Api.Trip.Trip trip, TripMember member)

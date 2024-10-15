@@ -91,6 +91,7 @@ export type MemberRejected = { type: "MemberRejected"; value: string; user: Ref<
 export type MemberLeft = { type: "MemberLeft"; value: string; user: Ref<User> };
 export type MemberJoinedTrip = { type: "MemberJoinedTrip"; value: string; user: Ref<User>; trip: Ref<Liane>; takeReturn: boolean };
 export type MemberLeftTrip = { type: "MemberLeftTrip"; value: string; user: Ref<User>; trip: Ref<Liane> };
+export type MemberHasStarted = { type: "MemberHasStarted"; value: string; user: Ref<User>; trip: Ref<Liane> };
 
 export type MessageContent =
   | Text
@@ -99,6 +100,7 @@ export type MessageContent =
   | MemberRequested
   | MemberAdded
   | MemberRejected
+  | MemberHasStarted
   | MemberLeft
   | MemberJoinedTrip
   | MemberLeftTrip;

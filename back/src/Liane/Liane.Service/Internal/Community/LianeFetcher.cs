@@ -22,9 +22,14 @@ public sealed class LianeFetcher(LianeRequestFetcher lianeRequestFetcher, IUserS
     return await FetchLiane(connection, lianeRequestId);
   }
 
+  public async Task<Api.Community.Liane?> TryFetchLiane(IDbConnection connection, Guid lianeId, IDbTransaction? tx = null)
+  {
+    return (await FetchLianes(connection, ImmutableList.Create(lianeId), tx)).GetValueOrDefault(lianeId);
+  }
+
   public async Task<Api.Community.Liane> FetchLiane(IDbConnection connection, Guid lianeId, IDbTransaction? tx = null)
   {
-    var liane = (await FetchLianes(connection, ImmutableList.Create(lianeId), tx)).GetValueOrDefault(lianeId);
+    var liane = await TryFetchLiane(connection, lianeId, tx);
     if (liane is null)
     {
       throw new ResourceNotFoundException($"Liane {liane} not found");
