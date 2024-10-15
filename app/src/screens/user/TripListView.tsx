@@ -101,6 +101,8 @@ const LianeItem = ({ item }: { item: Liane }) => {
   const carLocation = useCarDelay();
   const me = useMemo(() => item.members.find(l => l.user.id === user!.id)!, [item.members, user]);
   const status = useTripStatus(item);
+  console.log("useTripStatus", status);
+
   return (
     <View style={{ paddingBottom: 10 }}>
       <View>
@@ -145,7 +147,19 @@ const LianeItem = ({ item }: { item: Liane }) => {
         </Row>
       )}
       {status === "StartingSoon" && <View style={{ height: 44 }} />}
-      {status === "StartingSoon" || (status === "Started" && item.state === "NotStarted" && <StartButton item={item} />)}
+      {status === "StartingSoon" && <StartButton item={item} />}
+      {status === "Started" && (
+        <View
+          style={{
+            backgroundColor: AppColors.primaryColor,
+            borderBottomRightRadius: 16,
+            borderBottomLeftRadius: 16
+          }}>
+          <Row style={{ paddingVertical: 8, paddingHorizontal: 16 }} spacing={8}>
+            <AppText style={{ color: AppColors.white, fontSize: 18 }}>En cours</AppText>
+          </Row>
+        </View>
+      )}
     </View>
   );
 };
