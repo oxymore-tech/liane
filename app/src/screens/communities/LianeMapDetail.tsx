@@ -9,18 +9,27 @@ import { AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
 import { extractDays } from "@/util/hooks/days";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton.tsx";
 import { AppLogger } from "@/api/logger.ts";
-import { AppMapViewController } from "@/components/map/AppMapView.tsx";
+import AppMapView, { AppMapViewController } from "@/components/map/AppMapView.tsx";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
 import { DisplayDays } from "@/components/communities/displayDaysView.tsx";
 import { AppIcon } from "@/components/base/AppIcon.tsx";
 import { extractWaypointFromTo } from "@/util/hooks/lianeRequest.ts";
 import { DisplayRallyingPoints } from "@/components/communities/displayWaypointsView.tsx";
+import { LianeMatchGroupRouteLayer, LianeMatchUserRouteLayer } from "@/components/map/layers/LianeMatchRouteLayer.tsx";
+import { LocationMarker } from "@/screens/detail/components/LocationMarker.tsx";
+import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay.tsx";
+import { LianeProofDisplay } from "@/components/map/layers/LianeProofDisplay.tsx";
+import { getBoundingBox } from "@liane/common";
+import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider.tsx";
 
 export const LianeMapDetailScreen = () => {
   const { navigation, route } = useAppNavigation<"LianeMapDetail">();
   const group = route.params.group;
   const lianeRequest = route.params.request;
   const { services } = useContext(AppContext);
+  const { height } = useAppWindowsDimensions();
+  const { top: insetsTop } = useSafeAreaInsets();
+  const mapRatioHeigt = 0.45;
 
   const insets = useSafeAreaInsets();
   const [error, setError] = useState<Error | undefined>(undefined);
@@ -53,6 +62,20 @@ export const LianeMapDetailScreen = () => {
     }
   };
 
+  const mapBounds = useMemo(() => {
+    if (!lianeRequest) {
+      return undefined;
+    }
+
+    const bSheetTopPixels = height * (mapRatioHeigt + 0.45);
+    const bbox = getBoundingBox(lianeRequest!.wayPoints.map(w => [w.location.lng, w.location.lat]));
+    bbox.paddingTop = bSheetTopPixels < height / 2 ? insetsTop + 96 : 22;
+    bbox.paddingLeft = 72;
+    bbox.paddingRight = 72;
+    bbox.paddingBottom = Math.min(bSheetTopPixels + 40, (height - bbox.paddingTop) / 2 + 24);
+    return bbox;
+  }, [lianeRequest.id, insetsTop, height]);
+
   return (
     <View style={styles.mainContainer}>
       {error && (
@@ -67,16 +90,22 @@ export const LianeMapDetailScreen = () => {
           </View>
         </View>
         <View style={{ flex: 1, flexDirection: "column", alignItems: "flex-end", justifyContent: "space-between", height: "100%", width: "100%" }}>
-          <View style={{ height: "30%", backgroundColor: AppColors.darkGray, width: "100%" }}>
-            <AppText
-              style={{
-                fontWeight: "bold",
-                fontSize: 14,
-                lineHeight: 27,
-                color: AppColors.black
-              }}>{`Map`}</AppText>
-          </View>
-          <View style={{ width: "100%", height: "100%", backgroundColor: AppColors.white }}>
+          <AppMapView bounds={mapBounds}>
+            {lianeRequest && <LianeMatchGroupRouteLayer liane={lianeRequest} />}
+
+            {lianeRequest?.wayPoints.map((w, i) => {
+              let type: "to" | "from" | "step";
+              if (i === 0) {
+                type = "from";
+              } else if (i === lianeRequest.wayPoints.length - 1) {
+                type = "to";
+              } else {
+                type = "step";
+              }
+              return <WayPointDisplay key={w.id} rallyingPoint={w} type={type} />;
+            })}
+          </AppMapView>
+          <View style={{ width: "100%", height: "100%", backgroundColor: AppColors.white, position: "absolute", top: height * mapRatioHeigt }}>
             <View style={{ paddingTop: 20 }}>
               {group.type === "Single" && group.askToJoinAt ? (
                 <View

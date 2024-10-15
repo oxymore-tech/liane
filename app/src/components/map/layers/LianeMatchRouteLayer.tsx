@@ -1,4 +1,4 @@
-import { getPoint, getTripFromMatch, getTripMatch, LianeMatch, RallyingPoint, WayPoint } from "@liane/common";
+import { CoLianeMatch, getPoint, getTripFromMatch, getTripMatch, LianeMatch, RallyingPoint, ResolvedLianeRequest, WayPoint } from "@liane/common";
 import { FeatureCollection } from "geojson";
 import React, { useContext, useMemo } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
@@ -147,7 +147,70 @@ export const RouteLayer = ({
     </ShapeSource>
   );
 };
+
+export const RouteLianeLayer = ({
+  wayPoints,
+  id,
+  loadingFeatures,
+  style
+}: {
+  wayPoints: RallyingPoint[];
+  id?: string;
+  loadingFeatures?: FeatureCollection;
+  style?: StyleProp<LineLayerStyle>;
+}) => {
+  const { services } = useContext(AppContext);
+  const { data, isLoading } = useQuery(["match", wayPoints[0].id, wayPoints[wayPoints.length - 1].id], () => {
+    const wp = wayPoints.map(w => w.location);
+
+    return services.routing.getRoute(wp);
+  });
+  const mapFeatures: GeoJSON.FeatureCollection | undefined = useMemo(() => {
+    if (!data || data.geometry.coordinates.length === 0) {
+      return undefined;
+    }
+
+    const features: GeoJSON.FeatureCollection = {
+      type: "FeatureCollection",
+      features: data.geometry.coordinates.map((line): GeoJSON.Feature => {
+        return {
+          type: "Feature",
+          properties: {},
+          geometry: {
+            type: "LineString",
+            coordinates: line
+          }
+        };
+      })
+    };
+
+    return features;
+  }, [data]);
+
+  if (!mapFeatures || isLoading) {
+    return <LianeShapeDisplayLayer lianeDisplay={loadingFeatures} loading={true} useWidth={3} />;
+  }
+
+  const argStyle = (style ?? {}) as object; // MapLibre doesn't support passing an array of style objects
+  return (
+    <ShapeSource id={"match_trip_source"} shape={mapFeatures}>
+      <LineLayer
+        aboveLayerID="Highway"
+        id={"match_route_display" + (id ? "_" + id : "")}
+        style={{
+          lineColor: AppColors.darkBlue,
+          lineWidth: 3,
+          ...argStyle
+        }}
+      />
+    </ShapeSource>
+  );
+};
 export const LianeMatchUserRouteLayer = ({ loadingFeatures, match }: { loadingFeatures?: FeatureCollection; match: LianeMatch }) => {
   const { wayPoints } = useMemo(() => getTripFromMatch(match), [match]);
   return <RouteLayer wayPoints={wayPoints} loadingFeatures={loadingFeatures} id={match.trip.id} />;
+};
+
+export const LianeMatchGroupRouteLayer = ({ loadingFeatures, liane }: { loadingFeatures?: FeatureCollection; liane: ResolvedLianeRequest }) => {
+  return <RouteLianeLayer wayPoints={liane.wayPoints} loadingFeatures={loadingFeatures} id={liane.id} />;
 };
