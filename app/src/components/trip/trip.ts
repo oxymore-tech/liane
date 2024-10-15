@@ -1,23 +1,23 @@
-import { DetailedTripStatus, getTripStatus, Liane } from "@liane/common";
+import { LiveTripStatus, getLiveTripStatus, Liane } from "@liane/common";
 import { useContext, useEffect, useState } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 
-export const useTripStatus = (liane?: Liane): DetailedTripStatus | undefined => {
+export const useTripStatus = (liane?: Liane): LiveTripStatus | undefined => {
   const { user } = useContext(AppContext);
   const userId = user!.id!;
 
-  const [status, setStatus] = useState(liane ? getTripStatus(liane, userId) : undefined);
+  const [status, setStatus] = useState(liane ? getLiveTripStatus(liane, userId) : undefined);
 
   useEffect(() => {
     if (!liane) {
       return;
     }
-    setStatus(getTripStatus(liane, userId));
+    setStatus(getLiveTripStatus(liane, userId));
   }, [liane, userId]);
   useEffect(() => {
     if (liane && status?.nextUpdateMillis !== undefined) {
       const timeout = setTimeout(() => {
-        setStatus(getTripStatus(liane, userId));
+        setStatus(getLiveTripStatus(liane, userId));
       }, status.nextUpdateMillis);
       return () => clearTimeout(timeout);
     }

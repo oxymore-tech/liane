@@ -113,14 +113,7 @@ export function getTripMatch(to: RallyingPoint, from: RallyingPoint, originalTri
   };
 }
 
-export type DetailedTripStatus =
-  | TripStatus
-  | "StartingSoon"
-  | "AwaitingPassengers"
-  | "AwaitingDriver"
-  | "RequestAccepted"
-  | "RequestSent"
-  | "RequestReceived";
+export type LiveTripStatus = TripStatus | "StartingSoon";
 
 function getTimeForUser(liane: Liane, user: Ref<User>, type: "to" | "from"): [Date, number] {
   const pointId = liane.members.find(m => m.user.id === user)![type];
@@ -130,28 +123,11 @@ function getTimeForUser(liane: Liane, user: Ref<User>, type: "to" | "from"): [Da
   return [time, delta];
 }
 
-export function getTripStatus(liane: Liane, user: Ref<User>): { status: DetailedTripStatus; nextUpdateMillis?: number | undefined } {
+export function getLiveTripStatus(liane: Liane, user: Ref<User>): { status: LiveTripStatus; nextUpdateMillis?: number } {
   if (liane.state === "NotStarted") {
     const [, delta] = getTimeForUser(liane, user, "from");
-
-    if (delta > 0 && delta <= 120 * 60) {
-      if (liane.members.length > 1) {
-        return { status: "StartingSoon", nextUpdateMillis: delta * 1000 };
-      }
-    } else if (delta <= 0) {
-      const [, deltaArrival] = getTimeForUser(liane, user, "to");
-      if (deltaArrival <= 0) {
-        return { status: "Started" };
-      } else {
-        return { status: "Started", nextUpdateMillis: deltaArrival * 1000 };
-      }
-    }
-    if (liane.members.length < 2) {
-      if (liane.driver.canDrive) {
-        return { status: "AwaitingPassengers" };
-      } else {
-        return { status: "AwaitingDriver" };
-      }
+    if (delta > 0 && (delta <= 24 * 60 * 60 || delta > 2 * 60 * 60)) {
+      return { status: "StartingSoon", nextUpdateMillis: delta * 1000 };
     }
   }
   return { status: liane.state };

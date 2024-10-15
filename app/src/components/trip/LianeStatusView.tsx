@@ -1,4 +1,4 @@
-import { DetailedTripStatus, Liane } from "@liane/common";
+import { LiveTripStatus, Liane } from "@liane/common";
 import { useTripStatus } from "@/components/trip/trip";
 import { AppText } from "@/components/base/AppText";
 import React from "react";
@@ -33,7 +33,7 @@ export const LianeStatusView = ({ style, liane }: LianeStatusViewProps) => {
   );
 };
 
-const getLianeStatusStyle = (lianeStatus: DetailedTripStatus): [string | undefined, ColorValue] => {
+const getLianeStatusStyle = (lianeStatus: LiveTripStatus): [string | undefined, ColorValue] => {
   let status;
   let color: ColorValue = AppColors.grayBackground;
   switch (lianeStatus) {
@@ -52,14 +52,6 @@ const getLianeStatusStyle = (lianeStatus: DetailedTripStatus): [string | undefin
     case "Canceled":
       status = "Annulé";
       // color = ContextualColors.redAlert.light;
-      break;
-    case "AwaitingDriver":
-      status = "Sans conducteur";
-      //  color = ContextualColors.redAlert.light;
-      break;
-    case "AwaitingPassengers":
-      status = "En attente de passagers";
-      // color = AppColorPalettes.gray[100];
       break;
     case "Archived":
       status = "Archivé";

@@ -7,6 +7,7 @@ export const useSubscription = <T>(observable: Subscribable<T>, callback: (v: T)
     return () => {
       sub.unsubscribe();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 };
 

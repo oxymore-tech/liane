@@ -1,6 +1,6 @@
 import { LatLng, User } from "@liane/common";
 import { StyleSheet, Text, View } from "react-native";
-import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { UserPicture } from "@/components/UserPicture";
 import React from "react";
 import { MarkerView, useAppMapViewController } from "../AppMapView";
