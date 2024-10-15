@@ -203,12 +203,10 @@ function Navigation() {
         <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="Publish" component={PublishScreen} options={{ headerShown: false, animation: "fade" }} />
         <Stack.Screen name="LianeDetail" component={LianeDetailScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Communities" component={CommunitiesScreen} options={{ headerShown: false }} />
         <Stack.Screen name="CommunitiesChat" component={CommunitiesChatScreen} options={{ headerShown: false }} />
         <Stack.Screen name="LianeMapDetail" component={LianeMapDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="LianeTripDetail" component={LianeTripDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="CommunitiesDetails" component={CommunitiesDetailScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
         <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} options={{ headerShown: false }} />
         <Stack.Screen
           name="TripGeolocationWizard"
