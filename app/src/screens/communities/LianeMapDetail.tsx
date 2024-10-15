@@ -39,7 +39,7 @@ export const LianeMapDetailScreen = () => {
       try {
         const result = await services.community.joinRequest(lianeRequest.id, group.liane);
         AppLogger.debug("COMMUNITIES", "Demande de rejoindre une liane avec succès", result);
-        navigation.navigate("Communities");
+        navigation.navigate("Lianes");
       } catch (error) {
         AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de la demande de rejoindre d'une liane", error);
       }
@@ -51,9 +51,9 @@ export const LianeMapDetailScreen = () => {
   const acceptLiane = async () => {
     if (lianeRequest && lianeRequest.id) {
       try {
-        const result = await services.community.accept(lianeRequest.id, group.liane);
+        const result = await services.community.accept(group.liane, lianeRequest.id);
         AppLogger.debug("COMMUNITIES", "Acceptation une liane avec succès", result);
-        navigation.navigate("Communities");
+        navigation.navigate("Lianes");
       } catch (error) {
         AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de l'acceptation d'une liane", error);
       }

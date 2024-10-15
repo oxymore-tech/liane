@@ -65,6 +65,9 @@ export const CommunitiesChatScreen = () => {
     [liane?.id]
   );
 
+  // subscriptionTrip
+  // Invalidate cache
+
   const fetchTrip = async (id: string) => {
     try {
       const tripsTemp = await services.community.getIncomingTrips(id);

@@ -77,7 +77,7 @@ export const PublishScreen = () => {
           ...lianeRequest,
           wayPoints: [trip.from!.id!, trip.to!.id!]
         } as CoLianeRequest);
-        navigation.navigate("Communities");
+        navigation.navigate("Lianes");
       } else {
         await queryClient.invalidateQueries(LianeQueryKey);
         const created = await services.community.create({
@@ -89,7 +89,7 @@ export const PublishScreen = () => {
         if (shouldShow) {
           showTutorial("driver", created.id);
         } else {
-          navigation.navigate("Communities");
+          navigation.navigate("Lianes");
         }
       }
     } finally {

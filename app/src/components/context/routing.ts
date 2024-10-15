@@ -18,7 +18,7 @@ export type NavigationParamList = {
   Publish: { initialValue?: Partial<ResolvedLianeRequest> };
   SignUp: undefined;
   Chat: { conversationId: string; liane?: Liane };
-  Communities: undefined;
+  Lianes: undefined;
   CommunitiesChat: { group?: CoMatch; liane?: CoLiane; request?: CoLianeRequest | ResolvedLianeRequest; lianeId?: string };
   LianeMapDetail: { group: CoMatch; request: ResolvedLianeRequest };
   LianeTripDetail: { trip: Liane };
