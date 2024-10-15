@@ -25,15 +25,9 @@ public sealed class ChatHub(
   IUserService userService,
   IHubService hubService,
   INotificationService notificationService,
-  EventDispatcher eventDispatcher,
   ILianeUpdatePushService lianeUpdatePushService)
   : Hub<IHubClient>
 {
-  public async Task PostEvent(LianeEvent lianeEvent)
-  {
-    await eventDispatcher.Dispatch(lianeEvent);
-  }
-
   public async Task SendToLiane(MessageContent lianeMessage, string lianeId)
   {
     await lianeMessageService.SendMessage(lianeId, lianeMessage);
@@ -84,7 +78,7 @@ public sealed class ChatHub(
     var now = DateTime.Now;
     var userId = currentContext.CurrentUser().Id;
     logger.LogInformation(exception, "User '{user}' disconnect from hub", userId);
-    await hubService.RemoveUser(userId, Context.ConnectionId);
+    await hubService.RemoveUser(userId);
     await base.OnDisconnectedAsync(exception);
     await userService.UpdateLastConnection(userId, now);
   }

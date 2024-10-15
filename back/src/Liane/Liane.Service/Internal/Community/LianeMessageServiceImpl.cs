@@ -29,83 +29,6 @@ public sealed class LianeMessageServiceImpl(
   private static readonly TimeZoneInfo TimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Paris");
   private static readonly CultureInfo Culture = new("fr-FR");
 
-  public async Task<LianeMessage> SendMessage(Ref<Api.Community.Liane> liane, MessageContent content)
-  {
-    using var connection = db.NewConnection();
-    using var tx = connection.BeginTransaction();
-    var userId = currentContext.CurrentUser().Id;
-    var lianeId = Guid.Parse(liane.Id);
-    var resolvedLiane = await lianeFetcher.FetchLiane(connection, lianeId, tx);
-    if (!resolvedLiane.IsMember(userId))
-    {
-      throw new UnauthorizedAccessException("User is not part of the liane");
-    }
-
-    var id = Uuid7.Guid();
-    var now = DateTime.UtcNow;
-
-    content = content with { Value = await FormatMessage(userId, content) };
-
-    await connection.MergeAsync(new LianeMessageDb(id, lianeId, content, userId, now), tx);
-    var lianeMessage = new LianeMessage(id.ToString(), userId, now, content);
-
-    await pushService.PushMessage(lianeId, lianeMessage);
-    tx.Commit();
-    return lianeMessage;
-  }
-
-  private async Task<string> FormatMessage(Ref<Api.Auth.User> sender, MessageContent content)
-  {
-    var value = content.Value.Trim();
-    if (!value.IsNullOrEmpty())
-    {
-      return value;
-    }
-
-    var sentBy = await FormatUser(await sender.Resolve(userService.Get));
-    return content switch
-    {
-      MessageContent.LianeRequestModified => $"{sentBy} a modifié son annonce.",
-      MessageContent.TripAdded m => $"{sentBy} lance un covoit pour le {FormatDate(m.Trip.Value?.DepartureTime)}",
-      MessageContent.TripRemoved m => $"{sentBy} a supprimé son covoit pour le {FormatDate(m.Trip.Value?.DepartureTime)}",
-      MessageContent.MemberRequested => $"{sentBy} souhaite rejoindre la liane.",
-      MessageContent.MemberAdded m => $"{sentBy} a accepté {await FormatUser(m.User)} dans la liane.",
-      MessageContent.MemberRejected m => $"{sentBy} a rejeté la demande de {await FormatUser(m.User)} pour rejoindre la liane.",
-      MessageContent.MemberLeft m => $"{await FormatUser(m.User)} a quitté la liane",
-      MessageContent.MemberJoinedTrip m => await FormatJoinedTrip(m),
-      MessageContent.MemberLeftTrip m => $"{await FormatUser(m.User)} a quitté le trajet du {FormatDate(m.Trip.Value?.DepartureTime)}",
-      _ => throw new ArgumentOutOfRangeException(nameof(content))
-    };
-  }
-
-  private async Task<string> FormatJoinedTrip(MessageContent.MemberJoinedTrip m)
-  {
-    var msg = $"{await FormatUser(m.User)} a rejoint le trajet du {FormatDate(m.Trip.Value?.DepartureTime)}";
-    if (m.TakeReturn)
-    {
-      return msg + " (retour inclus)";
-    }
-
-    return msg;
-  }
-
-  private static string FormatDate(DateTime? dateTime) =>
-    dateTime is null
-      ? "???"
-      : TimeZoneInfo.ConvertTime(dateTime.Value, TimeZone).ToString("dddd d MMMM", Culture);
-
-  private async Task<string> FormatUser(Ref<Api.Auth.User>? user)
-  {
-    if (user is null)
-    {
-      return "???";
-    }
-
-    var resolved = await user.Resolve(userService.Get);
-
-    return resolved.Pseudo;
-  }
-
   public async Task<PaginatedResponse<LianeMessage>> GetMessages(Ref<Api.Community.Liane> liane, Pagination pagination)
   {
     using var connection = db.NewConnection();
@@ -135,7 +58,7 @@ public sealed class LianeMessageServiceImpl(
       Math.Min(result.Count, pagination.Limit),
       cursor,
       result.Take(pagination.Limit)
-        .Select(m => new LianeMessage(m.Id.ToString(), m.CreatedBy, m.CreatedAt, m.Content))
+        .Select(m => new LianeMessage(m.Id, m.CreatedBy, m.CreatedAt, m.Content))
         .ToImmutableList(),
       total);
   }
@@ -177,6 +100,88 @@ public sealed class LianeMessageServiceImpl(
                                                                                  WHERE liane_member.liane_id = @lianeId AND liane_request.created_by = @userId
                                                                                  """, new { userId = userIdValue, lianeId }, tx);
     return lianeMemberDb;
+  }
+
+  public async Task<LianeMessage?> SendMessage(Ref<Api.Community.Liane> liane, MessageContent content)
+  {
+    using var connection = db.NewConnection();
+    using var tx = connection.BeginTransaction();
+    var userId = currentContext.CurrentUser().Id;
+    var lianeId = Guid.Parse(liane.Id);
+    var resolvedLiane = await lianeFetcher.FetchLiane(connection, lianeId, tx);
+    if (content is MessageContent.Text && !resolvedLiane.IsMember(userId))
+    {
+      throw new UnauthorizedAccessException("User is not part of the liane");
+    }
+
+    var now = DateTime.UtcNow;
+
+    content = content with { Value = await FormatMessage(userId, content) };
+
+    if (content.Value.IsNullOrEmpty())
+    {
+      return null;
+    }
+
+    var id = Uuid7.Guid();
+    await connection.InsertAsync(new LianeMessageDb(id, lianeId, content, userId, now), tx);
+    var lianeMessage = new LianeMessage(id, userId, now, content);
+
+    await pushService.PushMessage(lianeId, lianeMessage);
+    tx.Commit();
+    return lianeMessage;
+  }
+
+  private async Task<string?> FormatMessage(Ref<Api.Auth.User> sender, MessageContent content)
+  {
+    var value = content.Value?.Trim();
+    if (!value.IsNullOrEmpty())
+    {
+      return value;
+    }
+
+    var sentBy = await FormatUser(await sender.Resolve(userService.Get));
+    return content switch
+    {
+      MessageContent.LianeRequestModified => $"{sentBy} a modifié son annonce.",
+      MessageContent.TripAdded m => $"{sentBy} lance un covoit pour le {FormatDate(m.Trip.Value?.DepartureTime)}",
+      MessageContent.MemberRequested => $"{sentBy} souhaite rejoindre la liane.",
+      MessageContent.MemberAdded m => $"{sentBy} a accepté {await FormatUser(m.User)} dans la liane.",
+      MessageContent.MemberRejected m => $"{sentBy} a rejeté la demande de {await FormatUser(m.User)} pour rejoindre la liane.",
+      MessageContent.MemberLeft m => $"{await FormatUser(m.User)} a quitté la liane",
+      MessageContent.MemberJoinedTrip m => await FormatJoinedTrip(m),
+      MessageContent.MemberLeftTrip m => $"{await FormatUser(m.User)} a quitté le trajet du {FormatDate(m.Trip.Value?.DepartureTime)}",
+      MessageContent.MemberHasStarted => $"{sentBy} est en route",
+      _ => null
+    };
+  }
+
+  private async Task<string> FormatJoinedTrip(MessageContent.MemberJoinedTrip m)
+  {
+    var msg = $"{await FormatUser(m.User)} a rejoint le trajet du {FormatDate(m.Trip.Value?.DepartureTime)}";
+    if (m.TakeReturn)
+    {
+      return msg + " (retour inclus)";
+    }
+
+    return msg;
+  }
+
+  private static string FormatDate(DateTime? dateTime) =>
+    dateTime is null
+      ? "???"
+      : TimeZoneInfo.ConvertTime(dateTime.Value, TimeZone).ToString("dddd d MMMM", Culture);
+
+  private async Task<string> FormatUser(Ref<Api.Auth.User>? user)
+  {
+    if (user is null)
+    {
+      return "???";
+    }
+
+    var resolved = await user.Resolve(userService.Get);
+
+    return resolved.Pseudo;
   }
 
   private async Task<LianeMemberDb> MarkAsRead(IDbConnection connection, Guid lianeId, IDbTransaction tx, DateTime now)

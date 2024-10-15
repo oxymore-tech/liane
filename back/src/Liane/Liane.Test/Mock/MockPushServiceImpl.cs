@@ -13,8 +13,7 @@ public sealed class MockPushServiceImpl : IPushMiddleware
 {
   public Priority Priority => Priority.High;
 
-
-  private Dictionary<string, List<Notification>> sent = new();
+  private readonly Dictionary<string, List<Notification>> sent = new();
 
   public Task<bool> Push(Ref<User> receiver, Notification notification)
   {
@@ -23,7 +22,7 @@ public sealed class MockPushServiceImpl : IPushMiddleware
     {
       sent[receiver.Id] = v!.Concat(new List<Notification> { notification }).ToList();
     }
-    else sent[receiver.Id] = new List<Notification> { notification };
+    else sent[receiver.Id] = [notification];
 
     return Task.FromResult(true);
   }

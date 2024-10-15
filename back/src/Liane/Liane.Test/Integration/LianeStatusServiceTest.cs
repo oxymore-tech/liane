@@ -1,10 +1,9 @@
 using System;
 using System.Threading.Tasks;
-using Liane.Api.Event;
 using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
-using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Trip;
+using Liane.Service.Internal.Trip.Geolocation;
 using Liane.Service.Internal.User;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
@@ -16,15 +15,15 @@ namespace Liane.Test.Integration;
 public sealed class LianeStatusServiceTest : BaseIntegrationTest
 {
   private TripServiceImpl tripService = null!;
+  private ILianeTrackerService trackerService = null!;
   private MockCurrentContext currentContext = null!;
-  private EventDispatcher eventDispatcher = null!;
   private LianeStatusUpdate lianeStatusUpdate = null!;
 
   protected override void Setup(IMongoDatabase db)
   {
     tripService = ServiceProvider.GetRequiredService<TripServiceImpl>();
+    trackerService = ServiceProvider.GetRequiredService<ILianeTrackerService>();
     lianeStatusUpdate = ServiceProvider.GetRequiredService<LianeStatusUpdate>();
-    eventDispatcher = ServiceProvider.GetRequiredService<EventDispatcher>();
     currentContext = ServiceProvider.GetRequiredService<MockCurrentContext>();
   }
 
@@ -94,7 +93,7 @@ public sealed class LianeStatusServiceTest : BaseIntegrationTest
     await tripService.AddMember(liane1.Id, new TripMember(userB.Id, LabeledPositions.QuezacParking, LabeledPositions.Mende));
 
     currentContext.SetCurrentUser(userA);
-    await eventDispatcher.Dispatch(new LianeEvent.MemberPing(liane1.Id, ((DateTimeOffset)DateTime.Now).ToUnixTimeMilliseconds(), TimeSpan.FromMinutes(5), null));
+    await trackerService.SendPing(new MemberPing(liane1.Id, ((DateTimeOffset)DateTime.Now).ToUnixTimeMilliseconds(), TimeSpan.FromMinutes(5), null));
 
     var actual = await tripService.Get(liane1.Id);
 

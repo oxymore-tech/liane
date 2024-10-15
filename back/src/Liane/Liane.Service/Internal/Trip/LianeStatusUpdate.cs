@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Liane.Api.Trip;
@@ -12,10 +11,9 @@ using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Trip;
 
-public sealed class LianeStatusUpdate(ILogger<LianeStatusUpdate> logger, IMongoDatabase mongo, ITripService tripService, ITripUpdateObserver lianeUpdateObserver)
+public sealed class LianeStatusUpdate(ILogger<LianeStatusUpdate> logger, IMongoDatabase mongo, ITripService tripService)
   : CronJobService(logger, "* * * * *", false)
 {
-  private const int StartedDelayInMinutes = 5;
   public const int FinishedDelayInMinutes = 5;
   private const int StartedTimeoutInMinutes = 60;
 
@@ -24,9 +22,7 @@ public sealed class LianeStatusUpdate(ILogger<LianeStatusUpdate> logger, IMongoD
   public async Task Update(DateTime from)
   {
     await CancelLianes(from);
-    //await StartLianes(from);
     await FinishLianes(from);
-    //await RealtimeUpdate(from);
   }
 
   private async Task CancelLianes(DateTime from)
@@ -41,7 +37,6 @@ public sealed class LianeStatusUpdate(ILogger<LianeStatusUpdate> logger, IMongoD
       .ToImmutableHashSet();
 
     await Parallel.ForEachAsync(canceled, async (id, _) => { await tripService.UpdateState(id, TripStatus.Canceled); });
-    //await postgisService.Clear(canceled.ToImmutableList());
   }
 
   private async Task FinishLianes(DateTime from)
@@ -54,7 +49,7 @@ public sealed class LianeStatusUpdate(ILogger<LianeStatusUpdate> logger, IMongoD
     var filterTimedOut = Builders<LianeDb>.Filter.Where(l => l.State == TripStatus.Started)
                          & !Builders<LianeDb>.Filter.ElemMatch(l => l.WayPoints, w => w.Eta > limitStarted)
                          & !Builders<LianeDb>.Filter.ElemMatch(l => l.Pings, w => w.At > limitStarted);
-    
+
     var finishedLianes = await mongo.GetCollection<LianeDb>()
       .Find(filterNotStarted | filterTimedOut)
       .ToListAsync();
@@ -68,54 +63,6 @@ public sealed class LianeStatusUpdate(ILogger<LianeStatusUpdate> logger, IMongoD
     {
       if (token.IsCancellationRequested) return;
       await tripService.UpdateState(lianeDb.Id, TripStatus.Finished);
-    });
-  }
-
-  private async Task StartLianes(DateTime from)
-  {
-    var limit = from.AddMinutes(StartedDelayInMinutes);
-    var filter = Builders<LianeDb>.Filter.Where(l => l.State == TripStatus.NotStarted)
-                 & Builders<LianeDb>.Filter.Where(l => l.Members.Count > 1 && l.Driver.CanDrive)
-                 & (
-                   Builders<LianeDb>.Filter.Where(l => l.DepartureTime <= limit)
-                   & Builders<LianeDb>.Filter.ElemMatch(l => l.WayPoints, w => w.Eta > from)
-                 );
-    var activeLianes = await mongo.GetCollection<LianeDb>()
-      .Find(filter)
-      .ToListAsync();
-
-    if (activeLianes.Count == 0)
-    {
-      return;
-    }
-
-    await Parallel.ForEachAsync(activeLianes, async (lianeDb, token) =>
-    {
-      if (token.IsCancellationRequested) return;
-      await tripService.UpdateState(lianeDb.Id, TripStatus.Started);
-    });
-
-    // TODO create ongoing trip here ?
-    var toClear = activeLianes.Select(l => (Ref<Api.Trip.Trip>)l.Id).ToImmutableHashSet();
-    //await postgisService.Clear(toClear);
-  }
-
-  private async Task RealtimeUpdate(DateTime from)
-  {
-    var limit = from.AddMinutes(StartedDelayInMinutes);
-    var filter = Builders<LianeDb>.Filter.Where(l => l.State == TripStatus.Started)
-                 & Builders<LianeDb>.Filter.ElemMatch(l => l.WayPoints, w => w.Eta > from && w.Eta <= limit);
-    var withStartingSoonWaypoint = await mongo.GetCollection<LianeDb>()
-      .Find(filter)
-      .ToListAsync();
-    await Parallel.ForEachAsync(withStartingSoonWaypoint, async (liane, token) =>
-    {
-      if (token.IsCancellationRequested) return;
-      foreach (var lianeMember in liane.Members)
-      {
-        var resolved = await tripService.GetForCurrentUser(liane.Id, lianeMember.User);
-        await lianeUpdateObserver.Push(resolved, lianeMember.User);
-      }
     });
   }
 }

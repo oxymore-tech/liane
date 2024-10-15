@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using Liane.Api.Community;
-using Liane.Api.Event;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util;
@@ -164,7 +163,7 @@ public sealed class LianeServiceImpl(
         .Where(r => r.Id, ComparisonOperator.Eq, lianeRequestId)
         .And(r => r.CreatedBy, ComparisonOperator.Eq, userId)
       , tx);
-    
+
     if (lianeRequest is null)
     {
       return;
@@ -176,7 +175,7 @@ public sealed class LianeServiceImpl(
       Filter<LianeRequestDb>.Where(r => r.Id, ComparisonOperator.Eq, lianeRequestId)
       & Filter<LianeRequestDb>.Where(r => r.CreatedBy, ComparisonOperator.Eq, userId)
       , tx);
-    
+
     tx.Commit();
   }
 
@@ -211,7 +210,7 @@ public sealed class LianeServiceImpl(
 
     tx.Commit();
 
-    await lianeMessageService.SendMessage(foreign, new MessageContent.MemberRequested("", userId, mineId));
+    await eventDispatcher.Dispatch(foreign, new MessageContent.MemberRequested("", userId, mineId));
     return true;
   }
 
@@ -252,11 +251,7 @@ public sealed class LianeServiceImpl(
     var liane = await lianeFetcher.FetchLiane(connection, lianeId, tx);
     tx.Commit();
 
-    await lianeMessageService.SendMessage(foreign, new MessageContent.MemberAdded("", resolvedLianeRequest.CreatedBy, resolvedLianeRequest.Id));
-
-    var memberAccepted = new LianeEvent.MemberAccepted(liane.Id, resolvedLianeRequest.Id, resolvedLianeRequest.CreatedBy);
-    await eventDispatcher.Dispatch(memberAccepted, userId);
-
+    await eventDispatcher.Dispatch(foreign, new MessageContent.MemberAdded("", resolvedLianeRequest.CreatedBy, resolvedLianeRequest.Id));
     return liane;
   }
 
@@ -289,10 +284,7 @@ public sealed class LianeServiceImpl(
     var liane = await lianeFetcher.FetchLiane(connection, lianeId, tx);
     tx.Commit();
 
-    await lianeMessageService.SendMessage(foreign, new MessageContent.MemberRejected("", resolvedLianeRequest.CreatedBy));
-
-    var memberRejected = new LianeEvent.MemberRejected(liane.Id, resolvedLianeRequest.Id, resolvedLianeRequest.CreatedBy, null);
-    await eventDispatcher.Dispatch(memberRejected, userId);
+    await eventDispatcher.Dispatch(foreign, new MessageContent.MemberRejected("", resolvedLianeRequest.CreatedBy));
     return liane;
   }
 
@@ -388,6 +380,9 @@ public sealed class LianeServiceImpl(
     await connection.ExecuteAsync("DELETE FROM liane_member WHERE liane_id = @liane_id AND liane_request_id = @liane_request_id",
       new { liane_id = lianeMemberDb.LianeId, liane_request_id = lianeMemberDb.LianeRequestId }, tx);
     tx.Commit();
+
+    await eventDispatcher.Dispatch(liane, new MessageContent.MemberLeft("", userId));
+
     return true;
   }
 }

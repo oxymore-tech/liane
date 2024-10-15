@@ -134,8 +134,7 @@ export class IosService implements LianeGeolocation {
       AppLogger.debug("GEOPINGS", "Position tracked", position);
       const coordinate = { lat: position.latitude, lng: position.longitude };
       const ping: MemberPing = {
-        type: "MemberPing",
-        liane: lianeId,
+        trip: lianeId,
         coordinate,
         timestamp: Math.trunc(position.timestamp)
       };

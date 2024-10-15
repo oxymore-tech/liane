@@ -16,6 +16,7 @@ using Liane.Api.Util.Exception;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
+using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Postgis;
 using Liane.Service.Internal.Trip.Geolocation;
@@ -36,10 +37,9 @@ public sealed class TripServiceImpl(
   ILogger<TripServiceImpl> logger,
   IUserService userService,
   IPostgisService postgisService,
-  ITripUpdateObserver lianeUpdateObserver,
   IUserStatService userStatService,
   LianeTrackerCache trackerCache,
-  ILianeMessageService lianeMessageService)
+  EventDispatcher eventDispatcher)
   : BaseMongoCrudService<LianeDb, Api.Trip.Trip>(mongo), ITripService
 {
   private const int MaxDeltaInSeconds = 15 * 60; // 15 min
@@ -81,13 +81,11 @@ public sealed class TripServiceImpl(
 
     await userStatService.IncrementTotalCreatedTrips(createdBy);
     await rallyingPointService.UpdateStats([entity.From, entity.To], entity.ReturnAt ?? created.DepartureTime, entity.ReturnAt is null ? 1 : 2);
-    
+
     var trip = await Get(created.Id);
-    
-    if (trip.Liane is not null)
-    {
-      await lianeMessageService.SendMessage(trip.Liane, new MessageContent.TripAdded("", trip));
-    }
+
+    await eventDispatcher.Dispatch(trip.Liane, new MessageContent.TripAdded("", trip));
+
     return trip;
   }
 
@@ -251,9 +249,9 @@ public sealed class TripServiceImpl(
 
     await AddMemberSingle(trip.Return!, member with { From = newMember.To, To = newMember.From });
     await userStatService.IncrementTotalJoinedTrips(newMember.User);
-    
-    await lianeMessageService.SendMessage(trip.Liane, new MessageContent.MemberJoinedTrip("", newMember.User, trip, newMember.TakeReturnTrip));
-    
+
+    await eventDispatcher.Dispatch(trip.Liane, new MessageContent.MemberJoinedTrip("", newMember.User, trip, newMember.TakeReturnTrip));
+
     return trip;
   }
 
@@ -323,10 +321,9 @@ public sealed class TripServiceImpl(
 
     var updatedLiane = await MapEntity(updated);
     await postgisService.UpdateGeometry(updatedLiane);
-    
-    await lianeMessageService.SendMessage(updatedLiane.Liane, new MessageContent.MemberLeftTrip("", foundMember.User, updatedLiane));
-    
-    await PushUpdate(updated);
+
+    await eventDispatcher.Dispatch(updatedLiane.Liane, new MessageContent.MemberLeftTrip("", foundMember.User, updatedLiane));
+
     return updatedLiane;
   }
 
@@ -367,7 +364,7 @@ public sealed class TripServiceImpl(
       updated = await Update(liane, Builders<LianeDb>.Update.Set(l => l.State, updated.Members.All(m => m.Feedback!.Canceled) ? TripStatus.Canceled : TripStatus.Archived));
     }
 
-    await PushUpdate(updated);
+    await eventDispatcher.Dispatch(updated.Liane!, new MessageContent.MemberFeedback(liane, feedback));
   }
 
   private async Task<Api.Trip.Trip> AddMemberSingle(Ref<Api.Trip.Trip> liane, TripMember newMember)
@@ -397,18 +394,8 @@ public sealed class TripServiceImpl(
 
     var updatedLiane = await MapEntity(updated);
     await postgisService.UpdateGeometry(updatedLiane);
-    await PushUpdate(updated);
-    
-    return updatedLiane;
-  }
 
-  private async Task PushUpdate(LianeDb liane)
-  {
-    foreach (var lianeMember in liane.Members)
-    {
-      var resolved = await GetForCurrentUser(liane.Id, lianeMember.User);
-      await lianeUpdateObserver.Push(resolved, lianeMember.User);
-    }
+    return updatedLiane;
   }
 
   public async Task<string> GetContact(Ref<Api.Trip.Trip> id, Ref<Api.Auth.User> requester, Ref<Api.Auth.User> member)
@@ -641,14 +628,16 @@ public sealed class TripServiceImpl(
     if (lianeDb.State != TripStatus.NotStarted)
     {
       // Remove liane from potential search results
-      await postgisService.Clear(new[]
-      {
-        (Ref<Api.Trip.Trip>)liane.Id
-      });
+      await postgisService.Clear([
+        liane.Id
+      ]);
       if (lianeDb.State != TripStatus.Started)
       {
         var doneSession = trackerCache.RemoveTracker(liane.Id);
-        if (doneSession is not null) await doneSession.Dispose();
+        if (doneSession is not null)
+        {
+          await doneSession.Dispose();
+        }
       }
     }
 
@@ -659,7 +648,15 @@ public sealed class TripServiceImpl(
       await userStatService.IncrementTotalTrips(lianeDb.CreatedBy!, 0);
     }
 
-    await PushUpdate(lianeDb);
+    switch (lianeDb.State)
+    {
+      case TripStatus.Archived:
+        await eventDispatcher.Dispatch(lianeDb.Liane!, new MessageContent.TripArchived(lianeDb.Id));
+        break;
+      case TripStatus.Finished:
+        await eventDispatcher.Dispatch(lianeDb.Liane!, new MessageContent.TripFinished(lianeDb.Id));
+        break;
+    }
   }
 
   public async Task<FeatureCollection> GetRawGeolocationPings(Ref<Api.Trip.Trip> liane)
@@ -690,7 +687,7 @@ public sealed class TripServiceImpl(
       currentContext.CurrentUser().Id;
     var updated = await Update(liane, Builders<LianeDb>.Update.Set(l => l.Members, resolved.Members.Select(m => m.User.Id == sender ? m with { GeolocationLevel = level } : m)));
 
-    await PushUpdate(updated);
+    await eventDispatcher.Dispatch(updated.Liane!, new MessageContent.GeolocationLevelChanged(updated.Id, level));
   }
 
   public async Task CancelTrip(Ref<Api.Trip.Trip> lianeRef)
@@ -704,8 +701,9 @@ public sealed class TripServiceImpl(
       await UpdateState(liane, TripStatus.Canceled);
     }
 
-    var updated = await Update(lianeRef, Builders<LianeDb>.Update.Set(l => l.Members, liane.Members.Select(m => m.User.Id == sender ? m with { Cancellation = now } : m)));
-    await PushUpdate(updated);
+    await Update(lianeRef, Builders<LianeDb>.Update.Set(l => l.Members, liane.Members.Select(m => m.User.Id == sender ? m with { Cancellation = now } : m)));
+
+    await eventDispatcher.Dispatch(liane.Liane, new MessageContent.MemberLeftTrip("", sender, liane));
   }
 
   public async Task StartTrip(Ref<Api.Trip.Trip> lianeRef)
@@ -718,9 +716,9 @@ public sealed class TripServiceImpl(
       await UpdateState(liane, TripStatus.Started);
     }
 
-    var updated = await Update(lianeRef, Builders<LianeDb>.Update.Set(l => l.Members, liane.Members.Select(m => m.User.Id == sender ? m with { Departure = now } : m)));
+    await Update(lianeRef, Builders<LianeDb>.Update.Set(l => l.Members, liane.Members.Select(m => m.User.Id == sender ? m with { Departure = now } : m)));
 
-    await PushUpdate(updated);
+    await eventDispatcher.Dispatch(liane.Liane, new MessageContent.MemberHasStarted(liane));
   }
 
   private TripStatus GetUserState(Api.Trip.Trip trip, TripMember member)

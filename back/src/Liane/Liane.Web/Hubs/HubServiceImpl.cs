@@ -6,7 +6,6 @@ using Liane.Api.Event;
 using Liane.Api.Hub;
 using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
-using Liane.Service.Internal.Community;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Trip.Geolocation;
 using Microsoft.AspNetCore.SignalR;
@@ -18,9 +17,8 @@ namespace Liane.Web.Hubs;
 public sealed class HubServiceImpl(
   IHubContext<ChatHub, IHubClient> hubContext,
   ILogger<HubServiceImpl> logger,
-  ILianeTrackerCache trackerCache,
-  LianeFetcher lianeFetcher
-) : IHubService, IPushMiddleware, ILianeUpdatePushService, ITripUpdateObserver, IEventListener
+  ILianeTrackerCache trackerCache
+) : IHubService, IPushMiddleware, ILianeUpdatePushService
 {
   private MemoryCache CurrentConnections { get; } = new(new MemoryCacheOptions());
 
@@ -30,26 +28,6 @@ public sealed class HubServiceImpl(
   {
     CurrentConnections.TryGetValue(user.Id, out string? connectionId);
     return connectionId;
-  }
-
-  public async Task OnEvent(LianeEvent e, Ref<User> sender)
-  {
-    var lianeId = e switch
-    {
-      LianeEvent.MemberAccepted m => m.Liane,
-      LianeEvent.MemberRejected m => m.Liane,
-      _ => null
-    };
-    if (lianeId is null)
-    {
-      return;
-    }
-
-    var liane = await lianeFetcher.Get(lianeId.IdAsGuid());
-    foreach (var member in liane.Members)
-    {
-      await PushLianeUpdateTo(liane, member.User);
-    }
   }
 
   public async Task<bool> Push(Ref<User> recipient, Notification notification)
@@ -105,7 +83,7 @@ public sealed class HubServiceImpl(
     return Task.CompletedTask;
   }
 
-  public Task RemoveUser(Ref<User> user, string connectionId)
+  public Task RemoveUser(Ref<User> user)
   {
     CurrentConnections.Remove(user.Id);
     return Task.CompletedTask;
@@ -130,16 +108,6 @@ public sealed class HubServiceImpl(
     await hubContext.Clients.Client(connectionId).ReceiveTrackingInfo(update);
   }
 
-  public async Task Push(Trip trip, Ref<User> recipient)
-  {
-    var connectionId = GetConnectionId(recipient);
-    if (connectionId is not null)
-    {
-      logger.LogInformation("Pushing trip update to {user} : {update}", recipient, trip);
-      await hubContext.Clients.Client(connectionId).ReceiveTripUpdate(trip);
-    }
-  }
-
   public async Task PushUserUpdate(FullUser user)
   {
     var connectionId = GetConnectionId(user.Id!);
@@ -150,13 +118,23 @@ public sealed class HubServiceImpl(
     }
   }
 
-  private async Task PushLianeUpdateTo(Api.Community.Liane liane, Ref<User> recipient)
+  public async Task PushLianeUpdateTo(Api.Community.Liane liane, Ref<User> recipient)
   {
     var connectionId = GetConnectionId(recipient);
     if (connectionId is not null)
     {
       logger.LogInformation("Pushing liane update to {user} : {update}", recipient, liane);
       await hubContext.Clients.Client(connectionId).ReceiveLianeUpdate(liane);
+    }
+  }
+
+  public async Task PushTripUpdateTo(Trip trip, Ref<User> recipient)
+  {
+    var connectionId = GetConnectionId(recipient);
+    if (connectionId is not null)
+    {
+      logger.LogInformation("Pushing trip update to {user} : {update}", recipient, trip);
+      await hubContext.Clients.Client(connectionId).ReceiveTripUpdate(trip);
     }
   }
 }

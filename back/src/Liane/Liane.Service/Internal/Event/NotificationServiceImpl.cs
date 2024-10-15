@@ -19,13 +19,20 @@ public sealed class NotificationServiceImpl(
   IPushService pushService
 ) : INotificationService
 {
-  public async Task<Notification> Notify(Ref<Api.Auth.User>? sender, ImmutableList<Ref<Api.Auth.User>> recipients, string title, string message, string? uri)
+  public async Task<Notification> Notify(
+    DateTime at,
+    Ref<Api.Auth.User>? sender,
+    ImmutableList<Ref<Api.Auth.User>> recipients,
+    string title,
+    string message,
+    string? uri
+  )
   {
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
 
     var id = Uuid7.Guid();
-    await connection.InsertAsync(new NotificationDb(id, sender, DateTime.UtcNow, title, message, uri), tx);
+    await connection.InsertAsync(new NotificationDb(id, sender, at, title, message, uri), tx);
     await connection.InsertMultipleAsync(recipients.Select(u => new RecipientDb(id, u, null)), tx);
 
     tx.Commit();

@@ -10,6 +10,7 @@ using GeoJSON.Text.Geometry;
 using Liane.Api.Event;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
+using Liane.Api.Util.Exception;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Osrm;
@@ -156,6 +157,42 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
     }
   }
 
+  public async Task SendPing(MemberPing e)
+  {
+    var at = DateTimeOffset.FromUnixTimeMilliseconds(e.Timestamp).UtcDateTime;
+    var memberId = currentContext.CurrentUser().Id;
+    var ping = new UserPing(memberId, at, e.Delay ?? TimeSpan.Zero, e.Coordinate);
+    var filter = Builders<LianeDb>.Filter.Where(l => l.Id == e.Trip)
+                 & Builders<LianeDb>.Filter.Or(Builders<LianeDb>.Filter.Lt(l => l.DepartureTime, DateTime.UtcNow + TimeSpan.FromMinutes(15)),
+                   Builders<LianeDb>.Filter.Where(l => l.State == TripStatus.Started))
+                 & Builders<LianeDb>.Filter.ElemMatch(l => l.Members, m => m.User == memberId);
+
+    var liane = await mongo.GetCollection<LianeDb>()
+      .FindOneAndUpdateAsync(filter,
+        Builders<LianeDb>.Update.AddToSet(l => l.Pings, ping),
+        new FindOneAndUpdateOptions<LianeDb> { ReturnDocument = ReturnDocument.After }
+      );
+
+    if (liane is null)
+    {
+      throw ResourceNotFoundException.For(e.Trip);
+    }
+
+    if (liane.State is not TripStatus.Started)
+    {
+      throw new ValidationException(ValidationMessage.LianeStateInvalid(liane.State));
+    }
+
+    try
+    {
+      await PushPing(liane.Id, ping);
+    }
+    catch (Exception)
+    {
+      logger.LogWarning("Unable to push ping for '{0}' : {1}", liane.Id, ping);
+    }
+  }
+
   public async Task PushPing(Ref<Api.Trip.Trip> liane, UserPing ping)
   {
     var tracker = trackerCache.GetTracker(liane);
@@ -179,10 +216,12 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
 
     if (info.Car is not null && !tracker.Finished)
     {
-      if (lastCarMove.TryGetValue(tracker.Trip.Id, out var lastMoveDate) && DateTime.UtcNow - lastMoveDate > TimeSpan.FromMinutes(StoppedDurationInMinutes))
+      var now = DateTime.UtcNow;
+      if (lastCarMove.TryGetValue(tracker.Trip.Id, out var lastMoveDate) && now - lastMoveDate > TimeSpan.FromMinutes(StoppedDurationInMinutes))
       {
         // Notify driver
         _ = await notificationService.Notify(
+          now,
           null,
           tracker.Trip.Driver.User,
           "Votre trajet est-il toujours en cours ?",

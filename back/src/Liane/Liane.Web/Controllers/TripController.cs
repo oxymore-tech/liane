@@ -1,11 +1,9 @@
 using System.Threading;
 using System.Threading.Tasks;
 using GeoJSON.Text.Feature;
-using Liane.Api.Event;
 using Liane.Api.Trip;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Pagination;
-using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Trip.Geolocation;
 using Liane.Service.Internal.Util;
 using Liane.Web.Internal.AccessLevel;
@@ -21,7 +19,6 @@ namespace Liane.Web.Controllers;
 public sealed class TripController(
   ITripService tripService,
   ICurrentContext currentContext,
-  EventDispatcher eventDispatcher,
   ILianeTrackerService lianeTrackerService)
   : ControllerBase
 {
@@ -48,20 +45,16 @@ public sealed class TripController(
 
   [HttpPost("{id}/cancel")]
   [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Trip))]
-  public async Task<IActionResult> CancelLiane([FromRoute] string id)
+  public async Task CancelLiane([FromRoute] string id)
   {
     await tripService.CancelTrip(id);
-    await eventDispatcher.Dispatch(new LianeEvent.MemberHasCanceled(id, currentContext.CurrentUser().Id));
-    return NoContent();
   }
 
   [HttpPost("{id}/start")]
   [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Trip))]
-  public async Task<IActionResult> StartLiane([FromRoute] string id)
+  public async Task StartLiane([FromRoute] string id)
   {
     await tripService.StartTrip(id);
-    await eventDispatcher.Dispatch(new LianeEvent.MemberHasStarted(id, currentContext.CurrentUser().Id));
-    return NoContent();
   }
 
   [HttpPost("{id}/leave")]

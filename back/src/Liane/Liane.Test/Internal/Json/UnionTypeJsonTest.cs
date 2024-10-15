@@ -1,7 +1,6 @@
 using System.Collections.Immutable;
 using System.Text.Json;
 using DeepEqual.Syntax;
-using Liane.Api.Event;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
@@ -24,12 +23,6 @@ public sealed class UnionTypeJsonTest
     var actual = JsonSerializer.Deserialize<Api.Trip.Match>(json, options);
     match.WithDeepEqual(actual)
       .Assert();
-  }
-
-  [Test]
-  public void ShouldFailToDeserializeLianeEventWithMissingTypeInfo()
-  {
-    Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<LianeEvent>("{\"liane\":\"lianeId1\",\"Member\": \"augustin\"}", options));
   }
 
   [Test]

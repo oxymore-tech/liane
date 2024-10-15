@@ -138,7 +138,7 @@ describe.sequential("Joining a trip", () => {
               return () =>
                 sleep(50).then(() =>
                   driver.services.event.sendPing({
-                    liane: trip!.id!,
+                    trip: trip!.id!,
                     timestamp: new Date().getTime(),
                     coordinate,
                     type: "MemberPing"
@@ -151,7 +151,7 @@ describe.sequential("Joining a trip", () => {
               return () =>
                 sleep(50).then(() =>
                   passenger.services.event.sendPing({
-                    liane: trip!.id!,
+                    trip: trip!.id!,
                     timestamp: new Date().getTime(),
                     coordinate,
                     type: "MemberPing"

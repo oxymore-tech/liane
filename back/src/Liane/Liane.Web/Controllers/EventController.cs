@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
-using Liane.Api.Event;
-using Liane.Service.Internal.Event;
+using Liane.Api.Trip;
+using Liane.Service.Internal.Trip.Geolocation;
 using Liane.Web.Internal.Auth;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,12 +9,11 @@ namespace Liane.Web.Controllers;
 [Route("api/event")]
 [ApiController]
 [RequiresAuth]
-public sealed class EventController(EventDispatcher eventDispatcher) : ControllerBase
+public sealed class EventController(ILianeTrackerService trackerService) : ControllerBase
 {
   [HttpPost("member_ping")]
-  public async Task<IActionResult> Create([FromBody] LianeEvent.MemberPing lianeEvent)
+  public async Task Create([FromBody] MemberPing ping)
   {
-    await eventDispatcher.Dispatch(lianeEvent);
-    return NoContent();
+    await trackerService.SendPing(ping);
   }
 }

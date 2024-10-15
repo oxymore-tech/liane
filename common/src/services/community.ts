@@ -85,7 +85,6 @@ export type JoinTripQuery = {
 export type Text = { type: "Text"; value: string };
 export type LianeRequestModified = { type: "LianeRequestModified"; value: string; lianeRequest: Ref<CoLianeRequest> };
 export type TripAdded = { type: "TripAdded"; value: string; trip: Ref<Liane> };
-export type TripRemoved = { type: "TripRemoved"; value: string; trip: Ref<Liane> };
 export type MemberRequested = { type: "MemberRequested"; value: string; user: Ref<User>; lianeRequest: Ref<CoLianeRequest> };
 export type MemberAdded = { type: "MemberAdded"; value: string; user: Ref<User>; lianeRequest: Ref<CoLianeRequest> };
 export type MemberRejected = { type: "MemberRejected"; value: string; user: Ref<User> };
@@ -97,7 +96,6 @@ export type MessageContent =
   | Text
   | LianeRequestModified
   | TripAdded
-  | TripRemoved
   | MemberRequested
   | MemberAdded
   | MemberRejected

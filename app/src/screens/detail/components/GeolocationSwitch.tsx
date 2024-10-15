@@ -55,8 +55,7 @@ export const GeolocationSwitch = ({ liane: match }: { liane: Liane }) => {
       try {
         const coordinate: { lat: number; lng: number } = { lat: newLocation.latitude, lng: newLocation.longitude };
         const ping: MemberPing = {
-          type: "MemberPing",
-          liane: match.id as string,
+          trip: match.id as string,
           coordinate,
           timestamp: Math.trunc(newLocation.time)
         };

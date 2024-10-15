@@ -96,7 +96,6 @@ public abstract class BaseIntegrationTest
     services.AddService(new FirebaseSettings(null));
     services.AddService<MockPushServiceImpl>();
     services.AddService(Moq.Mock.Of<IHubService>());
-    services.AddService(Moq.Mock.Of<ITripUpdateObserver>());
     services.AddService(Moq.Mock.Of<ILianeUpdatePushService>());
     services.AddService(Moq.Mock.Of<IImageService>());
     services.AddService<TripServiceImpl>();
@@ -107,7 +106,6 @@ public abstract class BaseIntegrationTest
     services.AddService<PushServiceImpl>();
     services.AddService<LianeStatusUpdate>();
     services.AddService<LianeTrackerServiceImpl>();
-    services.AddService<MockAutomaticAnswerService>();
     services.AddService<DeleteAccountServiceImpl>();
     services.AddService<LianeTrackerCache>();
     services.AddService<LianeMessageServiceImpl>();

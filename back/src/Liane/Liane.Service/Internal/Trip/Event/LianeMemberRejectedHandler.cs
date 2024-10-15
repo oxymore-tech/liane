@@ -1,28 +1,23 @@
 using System.Threading.Tasks;
+using Liane.Api.Community;
 using Liane.Api.Event;
-using Liane.Api.Util.Ref;
-using Liane.Service.Internal.Community;
-using Liane.Service.Internal.Util;
 
 namespace Liane.Service.Internal.Trip.Event;
 
 // ReSharper disable once UnusedType.Global
 // Autodiscovered by DI
-public sealed class LianeMemberRejectedHandler(
-  INotificationService notificationService,
-  ICurrentContext currentContext,
-  LianeRequestFetcher lianeRequestFetcher)
-  : IEventListener<LianeEvent.MemberRejected>
+public sealed class LianeMemberRejectedHandler(INotificationService notificationService)
+  : IEventListener<MessageContent.MemberRejected>
 {
-  public async Task OnEvent(LianeEvent.MemberRejected e, Ref<Api.Auth.User>? sender = null)
+  public async Task OnEvent(LianeEvent<MessageContent.MemberRejected> e)
   {
-    var lianeRequest = await lianeRequestFetcher.Get(e.LianeRequest.IdAsGuid());
     await notificationService.Notify(
-      sender ?? currentContext.CurrentUser().Id,
-      e.User,
+      e.At,
+      e.Sender,
+      e.Content.User,
       "Demande déclinée",
-      $"Votre demande pour rejoindre la liane n'a pas été acceptée pour '{lianeRequest.Name}'",
-      $"liane://liane/{lianeRequest.Id}"
+      "Vous n'avez pas été accepté dans la liane",
+      $"liane://liane/{e.Liane.Id}"
     );
   }
 }
