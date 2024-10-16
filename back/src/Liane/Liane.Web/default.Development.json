@@ -24,6 +24,6 @@
     "TestAccount": "0000111111",
     "TestCode": "333333",
     "Cooldown": 0,
-    "ValidateLifetime": false
+    "Disabled": true
   }
 }

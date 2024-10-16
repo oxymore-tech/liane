@@ -9,9 +9,7 @@ using System.Threading.Tasks;
 using Liane.Api.Auth;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson;
@@ -33,13 +31,11 @@ public sealed class AuthServiceImpl : IAuthService
   private readonly SymmetricSecurityKey signinKey;
   private readonly MemoryCache smsCodeCache = new(new MemoryCacheOptions());
   private readonly IMongoDatabase mongo;
-  private readonly IWebHostEnvironment env;
   private readonly SmsSender smsSender;
 
-  public AuthServiceImpl(ILogger<AuthServiceImpl> logger, AuthSettings authSettings, IMongoDatabase mongo, IWebHostEnvironment env, SmsSender smsSender)
+  public AuthServiceImpl(ILogger<AuthServiceImpl> logger, AuthSettings authSettings, IMongoDatabase mongo, SmsSender smsSender)
   {
     this.mongo = mongo;
-    this.env = env;
     this.smsSender = smsSender;
     this.logger = logger;
     this.authSettings = authSettings;
@@ -72,6 +68,11 @@ public sealed class AuthServiceImpl : IAuthService
       smsCodeCache.Set($"attempt:{phoneNumber}", true, TimeSpan.FromSeconds(authSettings.Cooldown));
     }
 
+    if (authSettings.Disabled)
+    {
+      return;
+    }
+
     var generator = new Random();
     var code = generator.Next(0, 1000000).ToString("D6");
 
@@ -100,7 +101,10 @@ public sealed class AuthServiceImpl : IAuthService
       .SetOnInsert(p => p.CreatedAt, createdAt)
       .Set(p => p.PushToken, request.PushToken);
 
-    if (request.WithRefresh) update = update.Set(p => p.RefreshToken, encryptedToken).Set(p => p.Salt, salt);
+    if (request.WithRefresh)
+    {
+      update = update.Set(p => p.RefreshToken, encryptedToken).Set(p => p.Salt, salt);
+    }
 
     await collection.UpdateOneAsync(u => u.Id == userId, update, new UpdateOptions { IsUpsert = true });
 
@@ -113,7 +117,7 @@ public sealed class AuthServiceImpl : IAuthService
     var phoneNumber = request.Phone.ToPhoneNumber();
     var testAccountPhoneNumber = authSettings.TestAccount?.ToPhoneNumber();
 
-    if (env.IsDevelopment() || (phoneNumber == testAccountPhoneNumber && request.Code.Equals(authSettings.TestCode)))
+    if ((authSettings.Disabled && request.Code.Equals(authSettings.TestCode)) || (phoneNumber == testAccountPhoneNumber && request.Code.Equals(authSettings.TestCode)))
     {
       return (phoneNumber, true);
     }
@@ -165,7 +169,7 @@ public sealed class AuthServiceImpl : IAuthService
       IssuerSigningKey = signinKey,
       ValidIssuer = authSettings.Issuer,
       ValidAudience = authSettings.Audience,
-      ValidateLifetime = authSettings.ValidateLifetime,
+      ValidateLifetime = true,
       ClockSkew = TimeSpan.Zero
     };
     try

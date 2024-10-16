@@ -9,6 +9,6 @@ public sealed record AuthSettings(
   string SecretKey,
   string? TestAccount,
   string? TestCode,
-  int Cooldown = 30,
-  bool ValidateLifetime = true
+  bool Disabled,
+  int Cooldown = 30
 );
