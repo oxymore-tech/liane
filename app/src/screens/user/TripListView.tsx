@@ -27,6 +27,9 @@ import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { startGeolocationService } from "@/screens/detail/components/GeolocationSwitch";
 import { useTripStatus } from "@/components/trip/trip";
 import { AppLogger } from "@/api/logger";
+import { AppStyles } from "@/theme/styles.ts";
+import { LianeQueryKey } from "@/screens/user/MyTripsScreen.tsx";
+import { useQueryClient } from "react-query";
 
 export interface TripSection extends SectionBase<Liane> {
   date: string;
@@ -163,8 +166,18 @@ const LianeItem = ({ item, isTripStarted }: { item: Liane; isTripStarted: boolea
 };
 
 const StartButton = ({ item }: { item: Liane }) => {
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const { services } = useContext(AppContext);
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator style={[AppStyles.center]} color={AppColors.primaryColor} size="large" />
+      </View>
+    );
+  }
+
   return (
     <AppPressableOverlay
       backgroundStyle={{
@@ -175,7 +188,10 @@ const StartButton = ({ item }: { item: Liane }) => {
         setLoading(true);
         services.liane
           .start(item.id!)
-          .then(() => startGeolocationService(item))
+          .then(() => {
+            queryClient.invalidateQueries(LianeQueryKey);
+            startGeolocationService(item);
+          })
           .catch(e => {
             AppLogger.error("GEOPINGS", e);
           })

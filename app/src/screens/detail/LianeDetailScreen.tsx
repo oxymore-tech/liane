@@ -25,7 +25,6 @@ import { LianeDetailQueryKey } from "@/screens/user/MyTripsScreen";
 import { AppText } from "@/components/base/AppText";
 import { TripGeolocationProvider, useCarDelay, useTrackingInfo } from "@/screens/detail/TripGeolocationProvider";
 import { LianeMatchUserRouteLayer } from "@/components/map/layers/LianeMatchRouteLayer";
-import { LianeActionsView } from "@/screens/detail/components/LianeActionsView";
 import { InfoItem } from "@/screens/detail/components/InfoItem";
 import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay";
 import { AppIcon } from "@/components/base/AppIcon";
@@ -33,13 +32,11 @@ import { UserPicture } from "@/components/UserPicture";
 import { LianeStatusView } from "@/components/trip/LianeStatusView";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
-import { GeolocationSwitch, startGeolocationService } from "@/screens/detail/components/GeolocationSwitch";
+import { GeolocationSwitch } from "@/screens/detail/components/GeolocationSwitch";
 import { AppLocalization } from "@/api/i18n";
 import { WayPointsView } from "@/components/trip/WayPointsView";
 import { LianeProofDisplay } from "@/components/map/layers/LianeProofDisplay";
-import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { LocationMarker } from "@/screens/detail/components/LocationMarker";
-import { AppLogger } from "@/api/logger";
 
 export const LianeDetailScreen = () => {
   const { services, user } = useContext(AppContext);
