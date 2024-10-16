@@ -99,13 +99,16 @@ public sealed class LianeServiceImpl(
     {
       if (linkedTo.TryGetValue(r.Id!.Value, out var member))
       {
-        var liane = linkedToLianes[member.LianeId];
-        return new LianeMatch(
-          r,
-          member.JoinedAt is null
-            ? new LianeState.Pending(liane)
-            : new LianeState.Attached(liane)
-        );
+        var liane = linkedToLianes.GetValueOrDefault(member.LianeId);
+        if (liane is not null)
+        {
+          return new LianeMatch(
+            r,
+            member.JoinedAt is null
+              ? new LianeState.Pending(liane)
+              : new LianeState.Attached(liane)
+          );
+        }
       }
 
       var result = matches.GetValueOrDefault(r.Id!.Value, ImmutableList<Match>.Empty);
