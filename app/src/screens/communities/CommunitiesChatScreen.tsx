@@ -88,7 +88,8 @@ export const CommunitiesChatScreen = () => {
 
   const getDayOfWeek = (liane: Liane): string => {
     const departureDate = new Date(liane.departureTime);
-    return weekDays[departureDate.getUTCDay()];
+    const dayIndex = departureDate.getUTCDay() - 1;
+    return weekDays[dayIndex < 0 ? 6 : dayIndex];
   };
 
   const goToNextLiane = () => {
