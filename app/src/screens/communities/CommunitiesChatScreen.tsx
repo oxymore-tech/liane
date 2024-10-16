@@ -13,7 +13,7 @@ import {
 } from "@liane/common";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from "react-native";
-import { AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
+import { AppColorPalettes, AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
@@ -34,6 +34,7 @@ import { useSubscription } from "@/util/hooks/subscription.ts";
 import { AppLocalization } from "@/api/i18n.ts";
 import { DisplayWayPoints } from "@/components/communities/displayWaypointsView.tsx";
 import { weekDays } from "@/util/hooks/days.ts";
+import { LianeStatusView } from "@/components/trip/LianeStatusView.tsx";
 
 export const CommunitiesChatScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesChat">();
@@ -250,6 +251,78 @@ export const CommunitiesChatScreen = () => {
     }*/
   };
 
+  const tripActions = () => {
+    if (currentTrip) {
+      if (currentTrip.state === "NotStarted") {
+        return currentTrip.members.some(member => member.user.id === user?.id) ? (
+          <Pressable
+            onPress={quitTrip}
+            style={{
+              backgroundColor: AppColors.white,
+              borderRadius: 20,
+              paddingHorizontal: 16,
+              paddingVertical: 6,
+              borderWidth: 1,
+              borderColor: AppColorPalettes.gray[400]
+            }}>
+            <AppText
+              style={{
+                fontSize: 17,
+                fontWeight: "normal",
+                flexShrink: 1,
+                lineHeight: 27,
+                color: AppColors.black
+              }}>
+              {"Quitter"}
+            </AppText>
+          </Pressable>
+        ) : (
+          <Pressable
+            onPress={() => navigation.navigate("LianeTripDetail", { trip: currentTrip })}
+            style={{ backgroundColor: AppColors.primaryColor, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 6 }}>
+            <AppText
+              style={{
+                fontSize: 17,
+                fontWeight: "normal",
+                flexShrink: 1,
+                lineHeight: 27,
+                color: AppColors.white
+              }}>
+              {"Rejoindre"}
+            </AppText>
+          </Pressable>
+        );
+      } else {
+        return (
+          <AppText
+            style={[
+              {
+                paddingHorizontal: 16,
+                paddingVertical: 6,
+                color: AppColorPalettes.gray[400],
+                fontWeight: "bold",
+                fontStyle: "italic",
+                borderWidth: 1,
+                borderRadius: 20,
+                borderColor: AppColorPalettes.gray[400]
+              }
+            ]}>
+            <AppText
+              style={{
+                fontSize: 17,
+                fontWeight: "normal",
+                flexShrink: 1,
+                lineHeight: 27
+              }}>
+              {currentTrip.state}
+            </AppText>
+          </AppText>
+        );
+      }
+    }
+    return null;
+  };
+
   return (
     <View style={{ backgroundColor: AppColors.lightGrayBackground, justifyContent: "flex-end", flex: 1 }}>
       <View style={{ marginTop: insets.top + 52 }}>
@@ -326,44 +399,7 @@ export const CommunitiesChatScreen = () => {
                     }}>
                     {currentTrip?.departureTime && AppLocalization.formatMonthDay(new Date(currentTrip?.departureTime))}
                   </AppText>
-                  {currentTrip && currentTrip.members.some(member => member.user.id === user?.id) ? (
-                    <Pressable
-                      onPress={quitTrip}
-                      style={{
-                        backgroundColor: AppColors.white,
-                        borderRadius: 20,
-                        paddingHorizontal: 12,
-                        paddingVertical: 5,
-                        borderWidth: 2,
-                        borderColor: AppColors.darkGray
-                      }}>
-                      <AppText
-                        style={{
-                          fontSize: 18,
-                          fontWeight: "normal",
-                          flexShrink: 1,
-                          lineHeight: 27,
-                          color: AppColors.black
-                        }}>
-                        {"Quitter"}
-                      </AppText>
-                    </Pressable>
-                  ) : (
-                    <Pressable
-                      onPress={() => navigation.navigate("LianeTripDetail", { trip: currentTrip })}
-                      style={{ backgroundColor: AppColors.primaryColor, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5 }}>
-                      <AppText
-                        style={{
-                          fontSize: 18,
-                          fontWeight: "normal",
-                          flexShrink: 1,
-                          lineHeight: 27,
-                          color: AppColors.white
-                        }}>
-                        {"Rejoindre"}
-                      </AppText>
-                    </Pressable>
-                  )}
+                  {tripActions()}
                 </View>
                 <View
                   style={{
