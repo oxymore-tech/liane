@@ -12,7 +12,6 @@ namespace Liane.Service.Internal.Trip;
 public sealed record UserPing(
   Ref<Api.Auth.User> User,
   DateTime At,
-  TimeSpan Delay,
   LatLng? Coordinate
 );
 

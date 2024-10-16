@@ -104,7 +104,12 @@ public sealed class LianeTracker
     var currentLocation = lastLocations?.Peek();
     if (currentLocation is null) return null;
     var isMoving = IsMoving(currentLocation, lastLocations);
-    return new TrackedMemberLocation(member, Trip, currentLocation.At, Trip.GetWayPoint(currentLocation.NextPointIndex).RallyingPoint, (long)currentLocation.Delay.TotalSeconds,
+
+    var nextWayPoint = Trip.GetWayPoint(currentLocation.NextPointIndex);
+
+    var delay = nextWayPoint.Eta - currentLocation.At.AddMilliseconds(currentLocation.Delay.TotalMilliseconds);
+
+    return new TrackedMemberLocation(member, Trip, currentLocation.At, nextWayPoint.RallyingPoint, (long)delay.TotalMilliseconds,
       currentLocation.RawCoordinate, isMoving);
   }
 
@@ -188,12 +193,12 @@ public sealed class LianeTracker
       .ToImmutableList();
 
     var carPosition = lastCarPings.FirstOrDefault();
-    
+
     var car = carPosition?.Coordinate is not null
       ? new Car(
         carPosition.At,
         Trip.GetWayPoint(carPosition.NextPointIndex).RallyingPoint,
-        (long)carPosition.Delay.TotalSeconds,
+        (long)carPosition.Delay.TotalMilliseconds,
         carPosition.Coordinate.Value,
         carPassengers,
         IsMoving(lastCarPings.First(), lastCarPings)

@@ -71,7 +71,7 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
     foreach (var p in pings.OrderBy(p => p.timestamp))
     {
       if (finished) break;
-      await lianeTrackerService.PushPing(liane, new UserPing(p.user, p.timestamp, TimeSpan.Zero, p.coordinate));
+      await lianeTrackerService.PushPing(liane, new UserPing(p.user, p.timestamp, p.coordinate));
     }
 
     var lastLocation = tracker.GetCurrentMemberLocation(userId);
@@ -100,7 +100,7 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
     }).OrderBy(p => p.timestamp).ToImmutableList();
     foreach (var p in pings.Take(pings.Count / 2))
     {
-      await lianeTrackerService.PushPing(liane, new UserPing(p.user, p.timestamp, TimeSpan.Zero, p.coordinate));
+      await lianeTrackerService.PushPing(liane, new UserPing(p.user, p.timestamp, p.coordinate));
     }
 
     var lastLocation = tracker.GetCurrentMemberLocation(userId);
@@ -112,7 +112,7 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
 
     foreach (var p in pings.Skip(pings.Count / 2))
     {
-      await lianeTrackerService.PushPing(liane, new UserPing(p.user, p.timestamp, TimeSpan.Zero, p.coordinate));
+      await lianeTrackerService.PushPing(liane, new UserPing(p.user, p.timestamp, p.coordinate));
       if (p.coordinate.Distance(Positions.PointisInard) < 4000) break;
     }
 
@@ -125,7 +125,7 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
 
     // Check that a ping far away from the initial track does not finish the trip
     var southWest = new LatLng(Positions.PointisInard.Lat - 0.08, Positions.PointisInard.Lng + 0.3);
-    await lianeTrackerService.PushPing(liane, new UserPing(userId, pings.Last().timestamp, TimeSpan.Zero, southWest));
+    await lianeTrackerService.PushPing(liane, new UserPing(userId, pings.Last().timestamp, southWest));
 
     lastLocation = tracker.GetCurrentMemberLocation(userId);
     driverHasFinished = tracker.MemberHasArrived(userId);
@@ -178,7 +178,7 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
     // check that next point is Quezac (the car is going towards Quezac)
     var actual = tracker.GetTrackingInfo();
     Assert.AreEqual("Quezac_Parking", actual.Car?.NextPoint.Id);
-    Assert.Less(Math.Abs(actual.Car!.Delay - 562), 10); // Check difference with expected value is less than 10 seconds
+    Assert.Less(Math.Abs(actual.Car!.Delay - 562000), 10000); // Check difference with expected value is less than 10 seconds
     Assert.AreEqual(DateTime.Parse("2023-12-05T07:37:34.113Z").ToUniversalTime(), actual.Car.At);
   }
 
@@ -192,7 +192,7 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
 
     // check that next point is Mende 
     Assert.AreEqual("Mende", actual.Car?.NextPoint.Id);
-    Assert.Less(Math.Abs(actual.Car!.Delay - 1450), 10); // Check difference with expected value is less than 10 seconds
+    Assert.Less(Math.Abs(actual.Car!.Delay - 1450000), 10000); // Check difference with expected value is less than 10 seconds
   }
 
   [Test]
@@ -331,7 +331,7 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
     // augustin : ba3
 
     // thibault se trouve déjà à destination
-    //await lianeTrackerService.PushPing("6617e60b606952ceee7ee2aa", new UserPing("65f2cbd9e94a0516ac1e6dac", DateTime.Parse("2024-04-11T13:03:00+1"), TimeSpan.Zero, new LatLng(3.4845875, 44.3378072)));
+    //await lianeTrackerService.PushPing("6617e60b606952ceee7ee2aa", new UserPing("65f2cbd9e94a0516ac1e6dac", DateTime.Parse("2024-04-11T13:03:00+1"), new LatLng(3.4845875, 44.3378072)));
 
     var actual = tracker.GetTrackingInfo();
 

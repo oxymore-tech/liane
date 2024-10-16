@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using System.Timers;
 using GeoJSON.Text.Feature;
 using GeoJSON.Text.Geometry;
-using Liane.Api.Event;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Exception;
@@ -31,14 +30,11 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
   private readonly ILianeUpdatePushService lianeUpdatePushService;
   private readonly Timer timer = new(interval: 2 * 60 * 1000);
   private readonly ConcurrentDictionary<string, Action?> onReachedDestinationActions = new();
-  private readonly ConcurrentDictionary<string, DateTime> lastCarMove = new();
   private readonly ITripService tripService;
   private readonly ICurrentContext currentContext;
-  private readonly INotificationService notificationService;
-  private const int StoppedDurationInMinutes = 15;
 
   public LianeTrackerServiceImpl(LianeTrackerCache trackerCache, ILogger<LianeTrackerServiceImpl> logger, IPostgisService postgisService, IOsrmService osrmService, IMongoDatabase mongo,
-    ILianeUpdatePushService lianeUpdatePushService, ITripService tripService, ICurrentContext currentContext, INotificationService notificationService)
+    ILianeUpdatePushService lianeUpdatePushService, ITripService tripService, ICurrentContext currentContext)
   {
     this.trackerCache = trackerCache;
     this.logger = logger;
@@ -48,7 +44,6 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
     this.lianeUpdatePushService = lianeUpdatePushService;
     this.tripService = tripService;
     this.currentContext = currentContext;
-    this.notificationService = notificationService;
     timer.Elapsed += (_, _) =>
     {
       foreach (var tracker in trackerCache.Trackers)
@@ -91,7 +86,7 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
 
     if (ping.Coordinate is null)
     {
-      await InsertMemberLocation(tracker, ping.User.Id, new(pingTime, nextPointIndex, ping.Delay, null, null, double.PositiveInfinity, ping.User));
+      await InsertMemberLocation(tracker, ping.User.Id, new(pingTime, nextPointIndex, TimeSpan.Zero, null, null, double.PositiveInfinity, ping.User));
       return;
     }
 
@@ -104,8 +99,7 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
       var nextPointDistance = ping.Coordinate.Value.Distance(nextPoint.Location);
       var computedLocation = await osrmService.Nearest(ping.Coordinate.Value) ?? ping.Coordinate.Value;
       var table = await osrmService.Table(new List<LatLng> { computedLocation, nextPoint.Location });
-      var estimatedDuration = TimeSpan.FromSeconds(table.Durations[0][1]!.Value);
-      var delay = estimatedDuration + ping.Delay;
+      var delay = TimeSpan.FromSeconds(table.Durations[0][1]!.Value);
       await InsertMemberLocation(tracker, ping.User.Id, new(pingTime, nextPointIndex, delay, computedLocation, ping.Coordinate.Value, nextPointDistance, ping.User));
     }
     else
@@ -117,7 +111,7 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
       if (wayPointInRange)
       {
         // Send raw coordinate
-        if (nextPointIndex == tracker.Trip.WayPoints.Count - 1 && ping.User == tracker.Trip.Driver.User)
+        if (nextPointIndex == tracker.Trip.WayPoints.Count - 1)
         {
           // Driver arrived near destination point
           tracker.Finish();
@@ -127,10 +121,11 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
           callback?.Invoke();
         }
 
-        await InsertMemberLocation(tracker, ping.User.Id, new(pingTime, pingNextPointIndex, ping.Delay, ping.Coordinate.Value, ping.Coordinate.Value, nextPointDistance, ping.User));
+        await InsertMemberLocation(tracker, ping.User.Id, new(pingTime, pingNextPointIndex, TimeSpan.Zero, ping.Coordinate.Value, ping.Coordinate.Value, nextPointDistance, ping.User));
         return;
       }
-      else if (currentLocation is not null && currentLocation.PointDistance <= ILianeTrackerService.NearPointDistanceInMeters)
+
+      if (currentLocation is not null && currentLocation.PointDistance <= ILianeTrackerService.NearPointDistanceInMeters)
       {
         // Getting out of a way point zone
         // TODO We can mark the current time as the effective time for the current waypoint
@@ -151,7 +146,7 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
       var computedLocation = locationOnRoute.nearestPoint;
       var table = await osrmService.Table(new List<LatLng> { computedLocation, nextPoint.Location });
       var estimatedDuration = TimeSpan.FromSeconds(table.Durations[0][1]!.Value);
-      var delay = estimatedDuration + ping.Delay;
+      var delay = estimatedDuration;
 
       await InsertMemberLocation(tracker, ping.User.Id, new(pingTime, pingNextPointIndex, delay, computedLocation, ping.Coordinate.Value, nextPointDistance, ping.User));
     }
@@ -161,7 +156,7 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
   {
     var at = DateTimeOffset.FromUnixTimeMilliseconds(e.Timestamp).UtcDateTime;
     var memberId = currentContext.CurrentUser().Id;
-    var ping = new UserPing(memberId, at, e.Delay ?? TimeSpan.Zero, e.Coordinate);
+    var ping = new UserPing(memberId, at, e.Coordinate);
     var filter = Builders<LianeDb>.Filter.Where(l => l.Id == e.Trip)
                  & Builders<LianeDb>.Filter.Or(Builders<LianeDb>.Filter.Lt(l => l.DepartureTime, DateTime.UtcNow + TimeSpan.FromMinutes(15)),
                    Builders<LianeDb>.Filter.Where(l => l.State == TripStatus.Started))
@@ -212,25 +207,6 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
     foreach (var member in tracker.Trip.Members)
     {
       await lianeUpdatePushService.Push(info, member.User);
-    }
-
-    if (info.Car is not null && !tracker.Finished)
-    {
-      var now = DateTime.UtcNow;
-      if (lastCarMove.TryGetValue(tracker.Trip.Id, out var lastMoveDate) && now - lastMoveDate > TimeSpan.FromMinutes(StoppedDurationInMinutes))
-      {
-        // Notify driver
-        _ = await notificationService.Notify(
-          now,
-          null,
-          tracker.Trip.Driver.User,
-          "Votre trajet est-il toujours en cours ?",
-          "",
-          $"liane://trip/{tracker.Trip.Id}"
-        );
-      }
-
-      lastCarMove[tracker.Trip.Id] = info.Car.At;
     }
   }
 

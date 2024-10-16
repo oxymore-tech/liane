@@ -93,7 +93,7 @@ public sealed class LianeStatusServiceTest : BaseIntegrationTest
     await tripService.AddMember(liane1.Id, new TripMember(userB.Id, LabeledPositions.QuezacParking, LabeledPositions.Mende));
 
     currentContext.SetCurrentUser(userA);
-    await trackerService.SendPing(new MemberPing(liane1.Id, ((DateTimeOffset)DateTime.Now).ToUnixTimeMilliseconds(), TimeSpan.FromMinutes(5), null));
+    await trackerService.SendPing(new MemberPing(liane1.Id, ((DateTimeOffset)DateTime.Now).ToUnixTimeMilliseconds(), null));
 
     var actual = await tripService.Get(liane1.Id);
 

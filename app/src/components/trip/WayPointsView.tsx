@@ -84,10 +84,8 @@ function computeDelay(carLocation: Car | undefined, wayPoints: WayPoint[]) {
   if (!nextWayPoint) {
     return;
   }
-  // Delay = current time - Next point timing
-  const delay = (new Date().getTime() - new Date(nextWayPoint.eta).getTime()) / 1000;
-  const errorMargin = 600;
-  return delay < errorMargin && delay > -1 * errorMargin ? undefined : delay;
+
+  return (new Date(carLocation.at).getTime() + carLocation.delay - new Date(nextWayPoint.eta).getTime()) / 1000;
 }
 
 export const WayPointsView = ({ wayPoints, carLocation }: WayPointsViewProps) => {

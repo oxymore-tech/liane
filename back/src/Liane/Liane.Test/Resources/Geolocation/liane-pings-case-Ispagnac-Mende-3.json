@@ -101,7 +101,6 @@
           "$numberLong": "1702540504688"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -119,7 +118,6 @@
           "$numberLong": "1702540507792"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -137,7 +135,6 @@
           "$numberLong": "1702540507795"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -155,7 +152,6 @@
           "$numberLong": "1702540533795"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -173,7 +169,6 @@
           "$numberLong": "1702540586001"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -191,7 +186,6 @@
           "$numberLong": "1702540586119"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -209,7 +203,6 @@
           "$numberLong": "1702540628104"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -227,7 +220,6 @@
           "$numberLong": "1702540654181"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -245,7 +237,6 @@
           "$numberLong": "1702540654214"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -263,7 +254,6 @@
           "$numberLong": "1702540706477"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -281,7 +271,6 @@
           "$numberLong": "1702540746000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -299,7 +288,6 @@
           "$numberLong": "1702540748281"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -317,7 +305,6 @@
           "$numberLong": "1702540774380"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -335,7 +322,6 @@
           "$numberLong": "1702540774397"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -353,7 +339,6 @@
           "$numberLong": "1702540798000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -371,7 +356,6 @@
           "$numberLong": "1702540826000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -389,7 +373,6 @@
           "$numberLong": "1702540849000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -407,7 +390,6 @@
           "$numberLong": "1702540868532"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -425,7 +407,6 @@
           "$numberLong": "1702540877000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -443,7 +424,6 @@
           "$numberLong": "1702540894606"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -461,7 +441,6 @@
           "$numberLong": "1702540894607"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -479,7 +458,6 @@
           "$numberLong": "1702540907001"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -497,7 +475,6 @@
           "$numberLong": "1702540947001"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -515,7 +492,6 @@
           "$numberLong": "1702540988740"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -533,7 +509,6 @@
           "$numberLong": "1702540994001"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -551,7 +526,6 @@
           "$numberLong": "1702541014835"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -569,7 +543,6 @@
           "$numberLong": "1702541014836"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -587,7 +560,6 @@
           "$numberLong": "1702541027000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -605,7 +577,6 @@
           "$numberLong": "1702541058000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -623,7 +594,6 @@
           "$numberLong": "1702541089000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -641,7 +611,6 @@
           "$numberLong": "1702541108940"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -659,7 +628,6 @@
           "$numberLong": "1702541117000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -677,7 +645,6 @@
           "$numberLong": "1702541118000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -695,7 +662,6 @@
           "$numberLong": "1702541119000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -713,7 +679,6 @@
           "$numberLong": "1702541120000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -731,7 +696,6 @@
           "$numberLong": "1702541121000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -749,7 +713,6 @@
           "$numberLong": "1702541122000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -767,7 +730,6 @@
           "$numberLong": "1702541123000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -785,7 +747,6 @@
           "$numberLong": "1702541124000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -803,7 +764,6 @@
           "$numberLong": "1702541125000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -821,7 +781,6 @@
           "$numberLong": "1702541126000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -839,7 +798,6 @@
           "$numberLong": "1702541127000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -857,7 +815,6 @@
           "$numberLong": "1702541128000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -875,7 +832,6 @@
           "$numberLong": "1702541129000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -893,7 +849,6 @@
           "$numberLong": "1702541130000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -911,7 +866,6 @@
           "$numberLong": "1702541131000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -929,7 +883,6 @@
           "$numberLong": "1702541132000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -947,7 +900,6 @@
           "$numberLong": "1702541133000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -965,7 +917,6 @@
           "$numberLong": "1702541135113"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -983,7 +934,6 @@
           "$numberLong": "1702541185000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1001,7 +951,6 @@
           "$numberLong": "1702541224000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1019,7 +968,6 @@
           "$numberLong": "1702541229133"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1037,7 +985,6 @@
           "$numberLong": "1702541255349"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1055,7 +1002,6 @@
           "$numberLong": "1702541271000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1073,7 +1019,6 @@
           "$numberLong": "1702541349322"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1091,7 +1036,6 @@
           "$numberLong": "1702541375645"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1109,7 +1053,6 @@
           "$numberLong": "1702541375646"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1127,7 +1070,6 @@
           "$numberLong": "1702541391361"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1145,7 +1087,6 @@
           "$numberLong": "1702541469572"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1163,7 +1104,6 @@
           "$numberLong": "1702541495907"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1181,7 +1121,6 @@
           "$numberLong": "1702541495908"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1199,7 +1138,6 @@
           "$numberLong": "1702541511591"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1217,7 +1155,6 @@
           "$numberLong": "1702541589798"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1235,7 +1172,6 @@
           "$numberLong": "1702541616185"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1253,7 +1189,6 @@
           "$numberLong": "1702541616186"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1271,7 +1206,6 @@
           "$numberLong": "1702541631855"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1289,7 +1223,6 @@
           "$numberLong": "1702541710043"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1307,7 +1240,6 @@
           "$numberLong": "1702541736422"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1325,7 +1257,6 @@
           "$numberLong": "1702541736423"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1343,7 +1274,6 @@
           "$numberLong": "1702541752082"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1361,7 +1291,6 @@
           "$numberLong": "1702541830240"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1379,7 +1308,6 @@
           "$numberLong": "1702541856666"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1397,7 +1325,6 @@
           "$numberLong": "1702541856667"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1415,7 +1342,6 @@
           "$numberLong": "1702541872311"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1433,7 +1359,6 @@
           "$numberLong": "1702541950443"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1451,7 +1376,6 @@
           "$numberLong": "1702541976909"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1469,7 +1393,6 @@
           "$numberLong": "1702541976910"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1487,7 +1410,6 @@
           "$numberLong": "1702541992561"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1505,7 +1427,6 @@
           "$numberLong": "1702542050000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1523,7 +1444,6 @@
           "$numberLong": "1702542070681"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1541,7 +1461,6 @@
           "$numberLong": "1702542081000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1559,7 +1478,6 @@
           "$numberLong": "1702542097142"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1577,7 +1495,6 @@
           "$numberLong": "1702542097143"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1595,7 +1512,6 @@
           "$numberLong": "1702542127000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1613,7 +1529,6 @@
           "$numberLong": "1702542159000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1631,7 +1546,6 @@
           "$numberLong": "1702542160000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1649,7 +1563,6 @@
           "$numberLong": "1702542161000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1667,7 +1580,6 @@
           "$numberLong": "1702542162000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1685,7 +1597,6 @@
           "$numberLong": "1702542163000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1703,7 +1614,6 @@
           "$numberLong": "1702542164000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1721,7 +1631,6 @@
           "$numberLong": "1702542165000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1739,7 +1648,6 @@
           "$numberLong": "1702542166000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1757,7 +1665,6 @@
           "$numberLong": "1702542167000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1775,7 +1682,6 @@
           "$numberLong": "1702542168000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1793,7 +1699,6 @@
           "$numberLong": "1702542169000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1811,7 +1716,6 @@
           "$numberLong": "1702542170000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1829,7 +1733,6 @@
           "$numberLong": "1702542171000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1847,7 +1750,6 @@
           "$numberLong": "1702542172000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1865,7 +1767,6 @@
           "$numberLong": "1702542173000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1883,7 +1784,6 @@
           "$numberLong": "1702542174000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1901,7 +1801,6 @@
           "$numberLong": "1702542175000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1919,7 +1818,6 @@
           "$numberLong": "1702542190920"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1937,7 +1835,6 @@
           "$numberLong": "1702542200000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1955,7 +1852,6 @@
           "$numberLong": "1702542217441"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1973,7 +1869,6 @@
           "$numberLong": "1702542217442"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -1991,7 +1886,6 @@
           "$numberLong": "1702542227000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2009,7 +1903,6 @@
           "$numberLong": "1702542259000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2027,7 +1920,6 @@
           "$numberLong": "1702542295000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2045,7 +1937,6 @@
           "$numberLong": "1702542311124"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2063,7 +1954,6 @@
           "$numberLong": "1702542325000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2081,7 +1971,6 @@
           "$numberLong": "1702542337681"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2099,7 +1988,6 @@
           "$numberLong": "1702542366000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2117,7 +2005,6 @@
           "$numberLong": "1702542398000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2135,7 +2022,6 @@
           "$numberLong": "1702542423000"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2153,7 +2039,6 @@
           "$numberLong": "1702542431320"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2171,7 +2056,6 @@
           "$numberLong": "1702542452001"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2189,7 +2073,6 @@
           "$numberLong": "1702542457912"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2207,7 +2090,6 @@
           "$numberLong": "1702542457913"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2225,7 +2107,6 @@
           "$numberLong": "1702542502001"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2243,7 +2124,6 @@
           "$numberLong": "1702542544001"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2261,7 +2141,6 @@
           "$numberLong": "1702542551532"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2279,7 +2158,6 @@
           "$numberLong": "1702542578161"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2297,7 +2175,6 @@
           "$numberLong": "1702542578162"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2315,7 +2192,6 @@
           "$numberLong": "1702542664344"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2333,7 +2209,6 @@
           "$numberLong": "1702542671725"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2351,7 +2226,6 @@
           "$numberLong": "1702542698449"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2369,7 +2243,6 @@
           "$numberLong": "1702542698448"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2387,7 +2260,6 @@
           "$numberLong": "1702542784691"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2405,7 +2277,6 @@
           "$numberLong": "1702542792979"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2423,7 +2294,6 @@
           "$numberLong": "1702542819504"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2441,7 +2311,6 @@
           "$numberLong": "1702542819505"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2459,7 +2328,6 @@
           "$numberLong": "1702542906314"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2477,7 +2345,6 @@
           "$numberLong": "1702542913139"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2495,7 +2362,6 @@
           "$numberLong": "1702542939845"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2513,7 +2379,6 @@
           "$numberLong": "1702542939846"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2531,7 +2396,6 @@
           "$numberLong": "1702543026566"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2549,7 +2413,6 @@
           "$numberLong": "1702543033328"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2567,7 +2430,6 @@
           "$numberLong": "1702543059961"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2585,7 +2447,6 @@
           "$numberLong": "1702543059967"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2603,7 +2464,6 @@
           "$numberLong": "1702543146776"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2621,7 +2481,6 @@
           "$numberLong": "1702543153427"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2639,7 +2498,6 @@
           "$numberLong": "1702543180067"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2657,7 +2515,6 @@
           "$numberLong": "1702543180072"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2675,7 +2532,6 @@
           "$numberLong": "1702543266900"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2693,7 +2549,6 @@
           "$numberLong": "1702543273520"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2711,7 +2566,6 @@
           "$numberLong": "1702543300245"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2729,7 +2583,6 @@
           "$numberLong": "1702543387111"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2747,7 +2600,6 @@
           "$numberLong": "1702543393631"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2765,7 +2617,6 @@
           "$numberLong": "1702543420355"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2783,7 +2634,6 @@
           "$numberLong": "1702543420362"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2801,7 +2651,6 @@
           "$numberLong": "1702543507229"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2819,7 +2668,6 @@
           "$numberLong": "1702543513792"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2837,7 +2685,6 @@
           "$numberLong": "1702543540611"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2855,7 +2702,6 @@
           "$numberLong": "1702543540610"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2873,7 +2719,6 @@
           "$numberLong": "1702543627444"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2891,7 +2736,6 @@
           "$numberLong": "1702543633903"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2909,7 +2753,6 @@
           "$numberLong": "1702543660804"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2927,7 +2770,6 @@
           "$numberLong": "1702543660812"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2945,7 +2787,6 @@
           "$numberLong": "1702543747649"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2963,7 +2804,6 @@
           "$numberLong": "1702543754053"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2981,7 +2821,6 @@
           "$numberLong": "1702543780995"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -2999,7 +2838,6 @@
           "$numberLong": "1702543780996"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3017,7 +2855,6 @@
           "$numberLong": "1702543867953"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3035,7 +2872,6 @@
           "$numberLong": "1702543874214"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3053,7 +2889,6 @@
           "$numberLong": "1702543901191"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3071,7 +2906,6 @@
           "$numberLong": "1702543901190"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3089,7 +2923,6 @@
           "$numberLong": "1702543988119"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3107,7 +2940,6 @@
           "$numberLong": "1702543994515"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3125,7 +2957,6 @@
           "$numberLong": "1702544021391"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3143,7 +2974,6 @@
           "$numberLong": "1702544021392"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3161,7 +2991,6 @@
           "$numberLong": "1702544108283"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3179,7 +3008,6 @@
           "$numberLong": "1702544114678"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3197,7 +3025,6 @@
           "$numberLong": "1702544141578"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3215,7 +3042,6 @@
           "$numberLong": "1702544141577"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3233,7 +3059,6 @@
           "$numberLong": "1702544228504"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3251,7 +3076,6 @@
           "$numberLong": "1702544234953"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3269,7 +3093,6 @@
           "$numberLong": "1702544261759"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3287,7 +3110,6 @@
           "$numberLong": "1702544261760"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3305,7 +3127,6 @@
           "$numberLong": "1702544348720"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3323,7 +3144,6 @@
           "$numberLong": "1702544355107"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3341,7 +3161,6 @@
           "$numberLong": "1702544381940"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3359,7 +3178,6 @@
           "$numberLong": "1702544381939"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3377,7 +3195,6 @@
           "$numberLong": "1702544468877"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3395,7 +3212,6 @@
           "$numberLong": "1702544475388"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3413,7 +3229,6 @@
           "$numberLong": "1702544502139"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3431,7 +3246,6 @@
           "$numberLong": "1702544502140"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3449,7 +3263,6 @@
           "$numberLong": "1702544589051"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3467,7 +3280,6 @@
           "$numberLong": "1702544595554"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3485,7 +3297,6 @@
           "$numberLong": "1702544622366"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3503,7 +3314,6 @@
           "$numberLong": "1702544622367"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3521,7 +3331,6 @@
           "$numberLong": "1702544709281"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3539,7 +3348,6 @@
           "$numberLong": "1702544715712"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3557,7 +3365,6 @@
           "$numberLong": "1702544742560"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3575,7 +3382,6 @@
           "$numberLong": "1702544742559"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3593,7 +3399,6 @@
           "$numberLong": "1702544829497"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3611,7 +3416,6 @@
           "$numberLong": "1702544835878"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3629,7 +3433,6 @@
           "$numberLong": "1702544862762"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3647,7 +3450,6 @@
           "$numberLong": "1702544862761"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3665,7 +3467,6 @@
           "$numberLong": "1702544949658"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3683,7 +3484,6 @@
           "$numberLong": "1702544956032"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3701,7 +3501,6 @@
           "$numberLong": "1702544982945"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3719,7 +3518,6 @@
           "$numberLong": "1702544982946"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3737,7 +3535,6 @@
           "$numberLong": "1702545069929"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3755,7 +3552,6 @@
           "$numberLong": "1702545076191"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3773,7 +3569,6 @@
           "$numberLong": "1702545103045"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3791,7 +3586,6 @@
           "$numberLong": "1702545103193"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3809,7 +3603,6 @@
           "$numberLong": "1702545190102"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3827,7 +3620,6 @@
           "$numberLong": "1702545196510"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3845,7 +3637,6 @@
           "$numberLong": "1702545223198"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3863,7 +3654,6 @@
           "$numberLong": "1702545223348"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3881,7 +3671,6 @@
           "$numberLong": "1702545310260"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3899,7 +3688,6 @@
           "$numberLong": "1702545316673"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3917,7 +3705,6 @@
           "$numberLong": "1702545343353"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3935,7 +3722,6 @@
           "$numberLong": "1702545343505"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3953,7 +3739,6 @@
           "$numberLong": "1702545430420"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3971,7 +3756,6 @@
           "$numberLong": "1702545436838"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -3989,7 +3773,6 @@
           "$numberLong": "1702545463506"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4007,7 +3790,6 @@
           "$numberLong": "1702545463657"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4025,7 +3807,6 @@
           "$numberLong": "1702545550709"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4043,7 +3824,6 @@
           "$numberLong": "1702545557006"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4061,7 +3841,6 @@
           "$numberLong": "1702545583661"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4079,7 +3858,6 @@
           "$numberLong": "1702545583821"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4097,7 +3875,6 @@
           "$numberLong": "1702545670874"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4115,7 +3892,6 @@
           "$numberLong": "1702545677157"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4133,7 +3909,6 @@
           "$numberLong": "1702545703826"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4151,7 +3926,6 @@
           "$numberLong": "1702545703912"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4169,7 +3943,6 @@
           "$numberLong": "1702545791032"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4187,7 +3960,6 @@
           "$numberLong": "1702545797308"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4205,7 +3977,6 @@
           "$numberLong": "1702545824031"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4223,7 +3994,6 @@
           "$numberLong": "1702545824032"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4241,7 +4011,6 @@
           "$numberLong": "1702545911262"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4259,7 +4028,6 @@
           "$numberLong": "1702545917613"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4277,7 +4045,6 @@
           "$numberLong": "1702545944230"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4295,7 +4062,6 @@
           "$numberLong": "1702545944231"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4313,7 +4079,6 @@
           "$numberLong": "1702546031428"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4331,7 +4096,6 @@
           "$numberLong": "1702546037829"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4349,7 +4113,6 @@
           "$numberLong": "1702546064425"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4367,7 +4130,6 @@
           "$numberLong": "1702546064426"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4385,7 +4147,6 @@
           "$numberLong": "1702546151595"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4403,7 +4164,6 @@
           "$numberLong": "1702546158052"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4421,7 +4181,6 @@
           "$numberLong": "1702546184618"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4439,7 +4198,6 @@
           "$numberLong": "1702546184619"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4457,7 +4215,6 @@
           "$numberLong": "1702546271773"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4475,7 +4232,6 @@
           "$numberLong": "1702546278271"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4493,7 +4249,6 @@
           "$numberLong": "1702546304811"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4511,7 +4266,6 @@
           "$numberLong": "1702546304812"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4529,7 +4283,6 @@
           "$numberLong": "1702546391935"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4547,7 +4300,6 @@
           "$numberLong": "1702546398435"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4565,7 +4317,6 @@
           "$numberLong": "1702546425033"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4583,7 +4334,6 @@
           "$numberLong": "1702546512046"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4601,7 +4351,6 @@
           "$numberLong": "1702546518604"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4619,7 +4368,6 @@
           "$numberLong": "1702546545361"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4637,7 +4385,6 @@
           "$numberLong": "1702546545362"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4655,7 +4402,6 @@
           "$numberLong": "1702546632681"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4673,7 +4419,6 @@
           "$numberLong": "1702546638759"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4691,7 +4436,6 @@
           "$numberLong": "1702546665558"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4709,7 +4453,6 @@
           "$numberLong": "1702546665559"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4727,7 +4470,6 @@
           "$numberLong": "1702546753003"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4745,7 +4487,6 @@
           "$numberLong": "1702546758915"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4763,7 +4504,6 @@
           "$numberLong": "1702546785743"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4781,7 +4521,6 @@
           "$numberLong": "1702546785744"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4799,7 +4538,6 @@
           "$numberLong": "1702546873162"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4817,7 +4555,6 @@
           "$numberLong": "1702546879078"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4835,7 +4572,6 @@
           "$numberLong": "1702546905937"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4853,7 +4589,6 @@
           "$numberLong": "1702546993442"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4871,7 +4606,6 @@
           "$numberLong": "1702546999208"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4889,7 +4623,6 @@
           "$numberLong": "1702547026129"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4907,7 +4640,6 @@
           "$numberLong": "1702547026128"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4925,7 +4657,6 @@
           "$numberLong": "1702547113610"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4943,7 +4674,6 @@
           "$numberLong": "1702547119392"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4961,7 +4691,6 @@
           "$numberLong": "1702547146337"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4979,7 +4708,6 @@
           "$numberLong": "1702547233876"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -4997,7 +4725,6 @@
           "$numberLong": "1702547239616"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5015,7 +4742,6 @@
           "$numberLong": "1702547266532"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5033,7 +4759,6 @@
           "$numberLong": "1702547266533"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5051,7 +4776,6 @@
           "$numberLong": "1702547354200"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5069,7 +4793,6 @@
           "$numberLong": "1702547359780"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5087,7 +4810,6 @@
           "$numberLong": "1702547386721"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5105,7 +4827,6 @@
           "$numberLong": "1702547386722"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5123,7 +4844,6 @@
           "$numberLong": "1702547474523"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5141,7 +4861,6 @@
           "$numberLong": "1702547479931"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5159,7 +4878,6 @@
           "$numberLong": "1702547506950"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5177,7 +4895,6 @@
           "$numberLong": "1702547506951"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5195,7 +4912,6 @@
           "$numberLong": "1702547594680"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5213,7 +4929,6 @@
           "$numberLong": "1702547600096"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5231,7 +4946,6 @@
           "$numberLong": "1702547627149"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5249,7 +4963,6 @@
           "$numberLong": "1702547627150"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5267,7 +4980,6 @@
           "$numberLong": "1702547714844"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5285,7 +4997,6 @@
           "$numberLong": "1702547720250"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5303,7 +5014,6 @@
           "$numberLong": "1702547747343"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5321,7 +5031,6 @@
           "$numberLong": "1702547747344"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5339,7 +5048,6 @@
           "$numberLong": "1702547835003"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5357,7 +5065,6 @@
           "$numberLong": "1702547840410"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5375,7 +5082,6 @@
           "$numberLong": "1702547867550"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5393,7 +5099,6 @@
           "$numberLong": "1702547867549"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5411,7 +5116,6 @@
           "$numberLong": "1702547955235"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5429,7 +5133,6 @@
           "$numberLong": "1702547960573"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5447,7 +5150,6 @@
           "$numberLong": "1702547987784"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5465,7 +5167,6 @@
           "$numberLong": "1702547987783"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5483,7 +5184,6 @@
           "$numberLong": "1702548075529"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5501,7 +5201,6 @@
           "$numberLong": "1702548080728"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5519,7 +5218,6 @@
           "$numberLong": "1702548108005"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5537,7 +5235,6 @@
           "$numberLong": "1702548108006"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5555,7 +5252,6 @@
           "$numberLong": "1702548195731"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5573,7 +5269,6 @@
           "$numberLong": "1702548200887"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5591,7 +5286,6 @@
           "$numberLong": "1702548228209"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5609,7 +5303,6 @@
           "$numberLong": "1702548228208"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5627,7 +5320,6 @@
           "$numberLong": "1702548315896"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5645,7 +5337,6 @@
           "$numberLong": "1702548321044"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5663,7 +5354,6 @@
           "$numberLong": "1702548348403"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5681,7 +5371,6 @@
           "$numberLong": "1702548348404"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5699,7 +5388,6 @@
           "$numberLong": "1702548436173"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5717,7 +5405,6 @@
           "$numberLong": "1702548441286"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5735,7 +5422,6 @@
           "$numberLong": "1702548468605"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5753,7 +5439,6 @@
           "$numberLong": "1702548468604"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5771,7 +5456,6 @@
           "$numberLong": "1702548556388"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5789,7 +5473,6 @@
           "$numberLong": "1702548561453"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5807,7 +5490,6 @@
           "$numberLong": "1702548588803"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5825,7 +5507,6 @@
           "$numberLong": "1702548588804"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5843,7 +5524,6 @@
           "$numberLong": "1702548676707"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5861,7 +5541,6 @@
           "$numberLong": "1702548681613"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5879,7 +5558,6 @@
           "$numberLong": "1702548709002"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5897,7 +5575,6 @@
           "$numberLong": "1702548709003"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5915,7 +5592,6 @@
           "$numberLong": "1702548796875"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5933,7 +5609,6 @@
           "$numberLong": "1702548801772"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5951,7 +5626,6 @@
           "$numberLong": "1702548829244"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5969,7 +5643,6 @@
           "$numberLong": "1702548829243"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -5987,7 +5660,6 @@
           "$numberLong": "1702548917146"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6005,7 +5677,6 @@
           "$numberLong": "1702548921937"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6023,7 +5694,6 @@
           "$numberLong": "1702548949451"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6041,7 +5711,6 @@
           "$numberLong": "1702548949450"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6059,7 +5728,6 @@
           "$numberLong": "1702549037364"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6077,7 +5745,6 @@
           "$numberLong": "1702549042118"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6095,7 +5762,6 @@
           "$numberLong": "1702549069753"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6113,7 +5779,6 @@
           "$numberLong": "1702549069752"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6131,7 +5796,6 @@
           "$numberLong": "1702549157587"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6149,7 +5813,6 @@
           "$numberLong": "1702549162278"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6167,7 +5830,6 @@
           "$numberLong": "1702549189941"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6185,7 +5847,6 @@
           "$numberLong": "1702549277803"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6203,7 +5864,6 @@
           "$numberLong": "1702549282519"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6221,7 +5881,6 @@
           "$numberLong": "1702549310136"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6239,7 +5898,6 @@
           "$numberLong": "1702549310137"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6257,7 +5915,6 @@
           "$numberLong": "1702549398023"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6275,7 +5932,6 @@
           "$numberLong": "1702549402681"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6293,7 +5949,6 @@
           "$numberLong": "1702549430345"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6311,7 +5966,6 @@
           "$numberLong": "1702549430344"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6329,7 +5983,6 @@
           "$numberLong": "1702549518350"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6347,7 +6000,6 @@
           "$numberLong": "1702549522948"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6365,7 +6017,6 @@
           "$numberLong": "1702549550624"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6383,7 +6034,6 @@
           "$numberLong": "1702549638576"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6401,7 +6051,6 @@
           "$numberLong": "1702549643176"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6419,7 +6068,6 @@
           "$numberLong": "1702549670848"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6437,7 +6085,6 @@
           "$numberLong": "1702549758783"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6455,7 +6102,6 @@
           "$numberLong": "1702549763391"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6473,7 +6119,6 @@
           "$numberLong": "1702549791169"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6491,7 +6136,6 @@
           "$numberLong": "1702549879022"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6509,7 +6153,6 @@
           "$numberLong": "1702549883711"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6527,7 +6170,6 @@
           "$numberLong": "1702549911491"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6545,7 +6187,6 @@
           "$numberLong": "1702549911490"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6563,7 +6204,6 @@
           "$numberLong": "1702549999189"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6581,7 +6221,6 @@
           "$numberLong": "1702550003935"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6599,7 +6238,6 @@
           "$numberLong": "1702550031717"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6617,7 +6255,6 @@
           "$numberLong": "1702550031718"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6635,7 +6272,6 @@
           "$numberLong": "1702550119437"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6653,7 +6289,6 @@
           "$numberLong": "1702550124105"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6671,7 +6306,6 @@
           "$numberLong": "1702550151926"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6689,7 +6323,6 @@
           "$numberLong": "1702550239661"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6707,7 +6340,6 @@
           "$numberLong": "1702550244366"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6725,7 +6357,6 @@
           "$numberLong": "1702550272148"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6743,7 +6374,6 @@
           "$numberLong": "1702550272147"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6761,7 +6391,6 @@
           "$numberLong": "1702550359875"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6779,7 +6408,6 @@
           "$numberLong": "1702550364524"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6797,7 +6425,6 @@
           "$numberLong": "1702550392347"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6815,7 +6442,6 @@
           "$numberLong": "1702550392348"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6833,7 +6459,6 @@
           "$numberLong": "1702550480093"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6851,7 +6476,6 @@
           "$numberLong": "1702550484683"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6869,7 +6493,6 @@
           "$numberLong": "1702550512586"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6887,7 +6510,6 @@
           "$numberLong": "1702550512585"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6905,7 +6527,6 @@
           "$numberLong": "1702550600403"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6923,7 +6544,6 @@
           "$numberLong": "1702550604842"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6941,7 +6561,6 @@
           "$numberLong": "1702550632806"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6959,7 +6578,6 @@
           "$numberLong": "1702550632805"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6977,7 +6595,6 @@
           "$numberLong": "1702550720638"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -6995,7 +6612,6 @@
           "$numberLong": "1702550725006"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7013,7 +6629,6 @@
           "$numberLong": "1702550753014"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7031,7 +6646,6 @@
           "$numberLong": "1702550840954"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7049,7 +6663,6 @@
           "$numberLong": "1702550845168"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7067,7 +6680,6 @@
           "$numberLong": "1702550873210"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7085,7 +6697,6 @@
           "$numberLong": "1702550873211"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7103,7 +6714,6 @@
           "$numberLong": "1702550961141"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7121,7 +6731,6 @@
           "$numberLong": "1702550965475"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7139,7 +6748,6 @@
           "$numberLong": "1702550993409"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7157,7 +6765,6 @@
           "$numberLong": "1702550993410"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7175,7 +6782,6 @@
           "$numberLong": "1702551081497"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7193,7 +6799,6 @@
           "$numberLong": "1702551085637"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7211,7 +6816,6 @@
           "$numberLong": "1702551113604"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7229,7 +6833,6 @@
           "$numberLong": "1702551201666"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7247,7 +6850,6 @@
           "$numberLong": "1702551205803"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7265,7 +6867,6 @@
           "$numberLong": "1702551233905"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7283,7 +6884,6 @@
           "$numberLong": "1702551321938"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7301,7 +6901,6 @@
           "$numberLong": "1702551325958"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7319,7 +6918,6 @@
           "$numberLong": "1702551354130"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7337,7 +6935,6 @@
           "$numberLong": "1702551354131"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7355,7 +6952,6 @@
           "$numberLong": "1702551442155"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7373,7 +6969,6 @@
           "$numberLong": "1702551446116"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7391,7 +6986,6 @@
           "$numberLong": "1702551474323"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7409,7 +7003,6 @@
           "$numberLong": "1702551474322"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7427,7 +7020,6 @@
           "$numberLong": "1702551562478"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7445,7 +7037,6 @@
           "$numberLong": "1702551566229"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7463,7 +7054,6 @@
           "$numberLong": "1702551594658"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7481,7 +7071,6 @@
           "$numberLong": "1702551594659"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7499,7 +7088,6 @@
           "$numberLong": "1702551682697"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7517,7 +7105,6 @@
           "$numberLong": "1702551686383"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7535,7 +7122,6 @@
           "$numberLong": "1702551714871"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7553,7 +7139,6 @@
           "$numberLong": "1702551714870"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7571,7 +7156,6 @@
           "$numberLong": "1702551802913"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7589,7 +7173,6 @@
           "$numberLong": "1702551806548"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7607,7 +7190,6 @@
           "$numberLong": "1702551835060"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7625,7 +7207,6 @@
           "$numberLong": "1702551835059"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7643,7 +7224,6 @@
           "$numberLong": "1702551923147"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7661,7 +7241,6 @@
           "$numberLong": "1702551926815"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7679,7 +7258,6 @@
           "$numberLong": "1702551955316"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7697,7 +7275,6 @@
           "$numberLong": "1702551955317"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7715,7 +7292,6 @@
           "$numberLong": "1702552043459"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7733,7 +7309,6 @@
           "$numberLong": "1702552047037"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7751,7 +7326,6 @@
           "$numberLong": "1702552075638"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7769,7 +7343,6 @@
           "$numberLong": "1702552075639"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7787,7 +7360,6 @@
           "$numberLong": "1702552163631"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7805,7 +7377,6 @@
           "$numberLong": "1702552167260"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7823,7 +7394,6 @@
           "$numberLong": "1702552195837"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7841,7 +7411,6 @@
           "$numberLong": "1702552283891"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7859,7 +7428,6 @@
           "$numberLong": "1702552287419"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7877,7 +7445,6 @@
           "$numberLong": "1702552316038"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7895,7 +7462,6 @@
           "$numberLong": "1702552404063"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7913,7 +7479,6 @@
           "$numberLong": "1702552407694"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7931,7 +7496,6 @@
           "$numberLong": "1702552436299"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7949,7 +7513,6 @@
           "$numberLong": "1702552436298"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7967,7 +7530,6 @@
           "$numberLong": "1702552524333"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -7985,7 +7547,6 @@
           "$numberLong": "1702552527849"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8003,7 +7564,6 @@
           "$numberLong": "1702552556616"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8021,7 +7581,6 @@
           "$numberLong": "1702552556617"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8039,7 +7598,6 @@
           "$numberLong": "1702552644563"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8057,7 +7615,6 @@
           "$numberLong": "1702552648031"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8075,7 +7632,6 @@
           "$numberLong": "1702552676815"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8093,7 +7649,6 @@
           "$numberLong": "1702552676819"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8111,7 +7666,6 @@
           "$numberLong": "1702552764770"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8129,7 +7683,6 @@
           "$numberLong": "1702552768205"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8147,7 +7700,6 @@
           "$numberLong": "1702552797014"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8165,7 +7717,6 @@
           "$numberLong": "1702552797013"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8183,7 +7734,6 @@
           "$numberLong": "1702552884987"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8201,7 +7751,6 @@
           "$numberLong": "1702552888472"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8219,7 +7768,6 @@
           "$numberLong": "1702552917210"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8237,7 +7785,6 @@
           "$numberLong": "1702553005311"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8255,7 +7802,6 @@
           "$numberLong": "1702553008631"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8273,7 +7819,6 @@
           "$numberLong": "1702553037488"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8291,7 +7836,6 @@
           "$numberLong": "1702553037489"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8309,7 +7853,6 @@
           "$numberLong": "1702553125529"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8327,7 +7870,6 @@
           "$numberLong": "1702553128790"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8345,7 +7887,6 @@
           "$numberLong": "1702553157712"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8363,7 +7904,6 @@
           "$numberLong": "1702553245748"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8381,7 +7921,6 @@
           "$numberLong": "1702553248946"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8399,7 +7938,6 @@
           "$numberLong": "1702553277935"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8417,7 +7955,6 @@
           "$numberLong": "1702553277936"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8435,7 +7972,6 @@
           "$numberLong": "1702553365913"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8453,7 +7989,6 @@
           "$numberLong": "1702553369109"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8471,7 +8006,6 @@
           "$numberLong": "1702553398252"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8489,7 +8023,6 @@
           "$numberLong": "1702553398251"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8507,7 +8040,6 @@
           "$numberLong": "1702553486182"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8525,7 +8057,6 @@
           "$numberLong": "1702553489259"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8543,7 +8074,6 @@
           "$numberLong": "1702553518471"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8561,7 +8091,6 @@
           "$numberLong": "1702553518470"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8579,7 +8108,6 @@
           "$numberLong": "1702553606399"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8597,7 +8125,6 @@
           "$numberLong": "1702553609422"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8615,7 +8142,6 @@
           "$numberLong": "1702553638668"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8633,7 +8159,6 @@
           "$numberLong": "1702553638667"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8651,7 +8176,6 @@
           "$numberLong": "1702553726625"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8669,7 +8193,6 @@
           "$numberLong": "1702553729578"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8687,7 +8210,6 @@
           "$numberLong": "1702553758873"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8705,7 +8227,6 @@
           "$numberLong": "1702553758874"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8723,7 +8244,6 @@
           "$numberLong": "1702553846844"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8741,7 +8261,6 @@
           "$numberLong": "1702553849734"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8759,7 +8278,6 @@
           "$numberLong": "1702553879126"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8777,7 +8295,6 @@
           "$numberLong": "1702553879127"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8795,7 +8312,6 @@
           "$numberLong": "1702553966957"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8813,7 +8329,6 @@
           "$numberLong": "1702553969896"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8831,7 +8346,6 @@
           "$numberLong": "1702553999450"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8849,7 +8363,6 @@
           "$numberLong": "1702553999449"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8867,7 +8380,6 @@
           "$numberLong": "1702554087182"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8885,7 +8397,6 @@
           "$numberLong": "1702554090056"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8903,7 +8414,6 @@
           "$numberLong": "1702554119648"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8921,7 +8431,6 @@
           "$numberLong": "1702554119647"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8939,7 +8448,6 @@
           "$numberLong": "1702554207499"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8957,7 +8465,6 @@
           "$numberLong": "1702554210265"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8975,7 +8482,6 @@
           "$numberLong": "1702554239888"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -8993,7 +8499,6 @@
           "$numberLong": "1702554239887"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9011,7 +8516,6 @@
           "$numberLong": "1702554327824"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9029,7 +8533,6 @@
           "$numberLong": "1702554330589"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9047,7 +8550,6 @@
           "$numberLong": "1702554360210"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9065,7 +8567,6 @@
           "$numberLong": "1702554360209"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9083,7 +8584,6 @@
           "$numberLong": "1702554448042"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9101,7 +8601,6 @@
           "$numberLong": "1702554450750"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9119,7 +8618,6 @@
           "$numberLong": "1702554480423"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9137,7 +8635,6 @@
           "$numberLong": "1702554480424"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9155,7 +8652,6 @@
           "$numberLong": "1702554568206"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9173,7 +8669,6 @@
           "$numberLong": "1702554571026"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9191,7 +8686,6 @@
           "$numberLong": "1702554600646"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9209,7 +8703,6 @@
           "$numberLong": "1702554600647"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9227,7 +8720,6 @@
           "$numberLong": "1702554688477"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9245,7 +8737,6 @@
           "$numberLong": "1702554691248"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9263,7 +8754,6 @@
           "$numberLong": "1702554720866"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9281,7 +8771,6 @@
           "$numberLong": "1702554720867"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9299,7 +8788,6 @@
           "$numberLong": "1702554808803"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9317,7 +8805,6 @@
           "$numberLong": "1702554811460"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9335,7 +8822,6 @@
           "$numberLong": "1702554841084"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9353,7 +8839,6 @@
           "$numberLong": "1702554929021"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9371,7 +8856,6 @@
           "$numberLong": "1702554931615"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9389,7 +8873,6 @@
           "$numberLong": "1702554961302"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9407,7 +8890,6 @@
           "$numberLong": "1702554961303"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9425,7 +8907,6 @@
           "$numberLong": "1702555049238"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9443,7 +8924,6 @@
           "$numberLong": "1702555051776"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9461,7 +8941,6 @@
           "$numberLong": "1702555081522"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9479,7 +8958,6 @@
           "$numberLong": "1702555081521"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9497,7 +8975,6 @@
           "$numberLong": "1702555169459"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9515,7 +8992,6 @@
           "$numberLong": "1702555171933"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9533,7 +9009,6 @@
           "$numberLong": "1702555201743"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9551,7 +9026,6 @@
           "$numberLong": "1702555201744"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9569,7 +9043,6 @@
           "$numberLong": "1702555289676"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9587,7 +9060,6 @@
           "$numberLong": "1702555292090"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9605,7 +9077,6 @@
           "$numberLong": "1702555321946"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9623,7 +9094,6 @@
           "$numberLong": "1702555321947"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9641,7 +9111,6 @@
           "$numberLong": "1702555409894"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9659,7 +9128,6 @@
           "$numberLong": "1702555412357"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9677,7 +9145,6 @@
           "$numberLong": "1702555442286"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9695,7 +9162,6 @@
           "$numberLong": "1702555530118"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9713,7 +9179,6 @@
           "$numberLong": "1702555532518"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9731,7 +9196,6 @@
           "$numberLong": "1702555562598"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9749,7 +9213,6 @@
           "$numberLong": "1702555650330"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9767,7 +9230,6 @@
           "$numberLong": "1702555652792"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9785,7 +9247,6 @@
           "$numberLong": "1702555682823"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9803,7 +9264,6 @@
           "$numberLong": "1702555682822"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9821,7 +9281,6 @@
           "$numberLong": "1702555770552"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9839,7 +9298,6 @@
           "$numberLong": "1702555773022"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9857,7 +9315,6 @@
           "$numberLong": "1702555803037"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9875,7 +9332,6 @@
           "$numberLong": "1702555890780"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9893,7 +9349,6 @@
           "$numberLong": "1702555893332"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9911,7 +9366,6 @@
           "$numberLong": "1702555923252"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9929,7 +9383,6 @@
           "$numberLong": "1702555923253"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9947,7 +9400,6 @@
           "$numberLong": "1702556010989"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9965,7 +9417,6 @@
           "$numberLong": "1702556013552"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -9983,7 +9434,6 @@
           "$numberLong": "1702556043479"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10001,7 +9451,6 @@
           "$numberLong": "1702556131151"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10019,7 +9468,6 @@
           "$numberLong": "1702556133734"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10037,7 +9485,6 @@
           "$numberLong": "1702556163683"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10055,7 +9502,6 @@
           "$numberLong": "1702556163684"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10073,7 +9519,6 @@
           "$numberLong": "1702556251255"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10091,7 +9536,6 @@
           "$numberLong": "1702556253933"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10109,7 +9553,6 @@
           "$numberLong": "1702556283787"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10127,7 +9570,6 @@
           "$numberLong": "1702556283805"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10145,7 +9587,6 @@
           "$numberLong": "1702556371487"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10163,7 +9604,6 @@
           "$numberLong": "1702556374036"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10181,7 +9621,6 @@
           "$numberLong": "1702556403904"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10199,7 +9638,6 @@
           "$numberLong": "1702556403907"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10217,7 +9655,6 @@
           "$numberLong": "1702556491709"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10235,7 +9672,6 @@
           "$numberLong": "1702556494270"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10253,7 +9689,6 @@
           "$numberLong": "1702556524064"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10271,7 +9706,6 @@
           "$numberLong": "1702556524067"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10289,7 +9723,6 @@
           "$numberLong": "1702556611928"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10307,7 +9740,6 @@
           "$numberLong": "1702556614379"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10325,7 +9757,6 @@
           "$numberLong": "1702556644287"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10343,7 +9774,6 @@
           "$numberLong": "1702556644291"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10361,7 +9791,6 @@
           "$numberLong": "1702556732043"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10379,7 +9808,6 @@
           "$numberLong": "1702556734486"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10397,7 +9825,6 @@
           "$numberLong": "1702556764512"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10415,7 +9842,6 @@
           "$numberLong": "1702556764508"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10433,7 +9859,6 @@
           "$numberLong": "1702556852264"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10451,7 +9876,6 @@
           "$numberLong": "1702556854722"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10469,7 +9893,6 @@
           "$numberLong": "1702556884726"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10487,7 +9910,6 @@
           "$numberLong": "1702556884730"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10505,7 +9927,6 @@
           "$numberLong": "1702556972463"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10523,7 +9944,6 @@
           "$numberLong": "1702556974940"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10541,7 +9961,6 @@
           "$numberLong": "1702557004944"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10559,7 +9978,6 @@
           "$numberLong": "1702557004948"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10577,7 +9995,6 @@
           "$numberLong": "1702557092702"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10595,7 +10012,6 @@
           "$numberLong": "1702557095158"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10613,7 +10029,6 @@
           "$numberLong": "1702557125168"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10631,7 +10046,6 @@
           "$numberLong": "1702557125165"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10649,7 +10063,6 @@
           "$numberLong": "1702557212921"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10667,7 +10080,6 @@
           "$numberLong": "1702557215379"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10685,7 +10097,6 @@
           "$numberLong": "1702557245382"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10703,7 +10114,6 @@
           "$numberLong": "1702557245386"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10721,7 +10131,6 @@
           "$numberLong": "1702557333145"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10739,7 +10148,6 @@
           "$numberLong": "1702557335489"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10757,7 +10165,6 @@
           "$numberLong": "1702557365493"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10775,7 +10182,6 @@
           "$numberLong": "1702557365497"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10793,7 +10199,6 @@
           "$numberLong": "1702557453359"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10811,7 +10216,6 @@
           "$numberLong": "1702557455597"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10829,7 +10233,6 @@
           "$numberLong": "1702557485718"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10847,7 +10250,6 @@
           "$numberLong": "1702557485721"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10865,7 +10267,6 @@
           "$numberLong": "1702557573579"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10883,7 +10284,6 @@
           "$numberLong": "1702557575830"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10901,7 +10301,6 @@
           "$numberLong": "1702557605937"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10919,7 +10318,6 @@
           "$numberLong": "1702557605941"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10937,7 +10335,6 @@
           "$numberLong": "1702557693797"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10955,7 +10352,6 @@
           "$numberLong": "1702557696053"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10973,7 +10369,6 @@
           "$numberLong": "1702557726160"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -10991,7 +10386,6 @@
           "$numberLong": "1702557726156"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11009,7 +10403,6 @@
           "$numberLong": "1702557814015"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11027,7 +10420,6 @@
           "$numberLong": "1702557816268"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11045,7 +10437,6 @@
           "$numberLong": "1702557846378"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11063,7 +10454,6 @@
           "$numberLong": "1702557846374"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11081,7 +10471,6 @@
           "$numberLong": "1702557934237"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11099,7 +10488,6 @@
           "$numberLong": "1702557936488"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11117,7 +10505,6 @@
           "$numberLong": "1702557966597"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11135,7 +10522,6 @@
           "$numberLong": "1702557966592"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11153,7 +10539,6 @@
           "$numberLong": "1702558054455"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11171,7 +10556,6 @@
           "$numberLong": "1702558056592"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11189,7 +10573,6 @@
           "$numberLong": "1702558086814"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11207,7 +10590,6 @@
           "$numberLong": "1702558086818"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11225,7 +10607,6 @@
           "$numberLong": "1702558174673"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11243,7 +10624,6 @@
           "$numberLong": "1702558176735"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11261,7 +10641,6 @@
           "$numberLong": "1702558207030"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11279,7 +10658,6 @@
           "$numberLong": "1702558207036"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11297,7 +10675,6 @@
           "$numberLong": "1702558294892"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11315,7 +10692,6 @@
           "$numberLong": "1702558296885"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11333,7 +10709,6 @@
           "$numberLong": "1702558327252"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11351,7 +10726,6 @@
           "$numberLong": "1702558327256"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11369,7 +10743,6 @@
           "$numberLong": "1702558415109"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11387,7 +10760,6 @@
           "$numberLong": "1702558417057"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11405,7 +10777,6 @@
           "$numberLong": "1702558447473"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11423,7 +10794,6 @@
           "$numberLong": "1702558447469"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11441,7 +10811,6 @@
           "$numberLong": "1702558535432"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11459,7 +10828,6 @@
           "$numberLong": "1702558537275"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11477,7 +10845,6 @@
           "$numberLong": "1702558567692"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11495,7 +10862,6 @@
           "$numberLong": "1702558567684"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11513,7 +10879,6 @@
           "$numberLong": "1702558655650"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11531,7 +10896,6 @@
           "$numberLong": "1702558657494"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11549,7 +10913,6 @@
           "$numberLong": "1702558687932"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11567,7 +10930,6 @@
           "$numberLong": "1702558687933"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11585,7 +10947,6 @@
           "$numberLong": "1702558775870"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11603,7 +10964,6 @@
           "$numberLong": "1702558777711"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11621,7 +10981,6 @@
           "$numberLong": "1702558808131"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11639,7 +10998,6 @@
           "$numberLong": "1702558808127"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11657,7 +11015,6 @@
           "$numberLong": "1702558896090"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11675,7 +11032,6 @@
           "$numberLong": "1702558897817"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11693,7 +11049,6 @@
           "$numberLong": "1702558928346"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11711,7 +11066,6 @@
           "$numberLong": "1702558928350"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11729,7 +11083,6 @@
           "$numberLong": "1702559016308"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11747,7 +11100,6 @@
           "$numberLong": "1702559017924"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11765,7 +11117,6 @@
           "$numberLong": "1702559048566"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11783,7 +11134,6 @@
           "$numberLong": "1702559048570"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11801,7 +11151,6 @@
           "$numberLong": "1702559136527"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11819,7 +11168,6 @@
           "$numberLong": "1702559138160"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11837,7 +11185,6 @@
           "$numberLong": "1702559168890"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11855,7 +11202,6 @@
           "$numberLong": "1702559168886"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11873,7 +11219,6 @@
           "$numberLong": "1702559256744"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11891,7 +11236,6 @@
           "$numberLong": "1702559258385"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11909,7 +11253,6 @@
           "$numberLong": "1702559289209"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11927,7 +11270,6 @@
           "$numberLong": "1702559289213"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11945,7 +11287,6 @@
           "$numberLong": "1702559376965"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11963,7 +11304,6 @@
           "$numberLong": "1702559378492"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11981,7 +11321,6 @@
           "$numberLong": "1702559409429"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -11999,7 +11338,6 @@
           "$numberLong": "1702559409426"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12017,7 +11355,6 @@
           "$numberLong": "1702559497184"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12035,7 +11372,6 @@
           "$numberLong": "1702559498604"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12053,7 +11389,6 @@
           "$numberLong": "1702559529646"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12071,7 +11406,6 @@
           "$numberLong": "1702559529658"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12089,7 +11423,6 @@
           "$numberLong": "1702559617403"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12107,7 +11440,6 @@
           "$numberLong": "1702559618704"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12125,7 +11457,6 @@
           "$numberLong": "1702559649764"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12143,7 +11474,6 @@
           "$numberLong": "1702559649768"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12161,7 +11491,6 @@
           "$numberLong": "1702559737623"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12179,7 +11508,6 @@
           "$numberLong": "1702559738852"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12197,7 +11525,6 @@
           "$numberLong": "1702559769985"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12215,7 +11542,6 @@
           "$numberLong": "1702559769981"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12233,7 +11559,6 @@
           "$numberLong": "1702559857843"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12251,7 +11576,6 @@
           "$numberLong": "1702559859069"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12269,7 +11593,6 @@
           "$numberLong": "1702559890205"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12287,7 +11610,6 @@
           "$numberLong": "1702559890201"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12305,7 +11627,6 @@
           "$numberLong": "1702559978056"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12323,7 +11644,6 @@
           "$numberLong": "1702559979291"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12341,7 +11661,6 @@
           "$numberLong": "1702560010423"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12359,7 +11678,6 @@
           "$numberLong": "1702560010419"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12377,7 +11695,6 @@
           "$numberLong": "1702560098275"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12395,7 +11712,6 @@
           "$numberLong": "1702560099396"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12413,7 +11729,6 @@
           "$numberLong": "1702560130642"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12431,7 +11746,6 @@
           "$numberLong": "1702560130638"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12449,7 +11763,6 @@
           "$numberLong": "1702560218499"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12467,7 +11780,6 @@
           "$numberLong": "1702560219619"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12485,7 +11797,6 @@
           "$numberLong": "1702560250856"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12503,7 +11814,6 @@
           "$numberLong": "1702560250860"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12521,7 +11831,6 @@
           "$numberLong": "1702560338714"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12539,7 +11848,6 @@
           "$numberLong": "1702560339844"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12557,7 +11865,6 @@
           "$numberLong": "1702560371077"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12575,7 +11882,6 @@
           "$numberLong": "1702560371082"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12593,7 +11899,6 @@
           "$numberLong": "1702560458936"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12611,7 +11916,6 @@
           "$numberLong": "1702560460060"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12629,7 +11933,6 @@
           "$numberLong": "1702560491208"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12647,7 +11950,6 @@
           "$numberLong": "1702560579157"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12665,7 +11967,6 @@
           "$numberLong": "1702560580167"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12683,7 +11984,6 @@
           "$numberLong": "1702560611415"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12701,7 +12001,6 @@
           "$numberLong": "1702560611410"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12719,7 +12018,6 @@
           "$numberLong": "1702560699375"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12737,7 +12035,6 @@
           "$numberLong": "1702560700296"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12755,7 +12052,6 @@
           "$numberLong": "1702560731633"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12773,7 +12069,6 @@
           "$numberLong": "1702560731637"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12791,7 +12086,6 @@
           "$numberLong": "1702560819592"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12809,7 +12103,6 @@
           "$numberLong": "1702560820515"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12827,7 +12120,6 @@
           "$numberLong": "1702560851854"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12845,7 +12137,6 @@
           "$numberLong": "1702560851850"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12863,7 +12154,6 @@
           "$numberLong": "1702560939810"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12881,7 +12171,6 @@
           "$numberLong": "1702560940744"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12899,7 +12188,6 @@
           "$numberLong": "1702560972069"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12917,7 +12205,6 @@
           "$numberLong": "1702560972147"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12935,7 +12222,6 @@
           "$numberLong": "1702561060032"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12953,7 +12239,6 @@
           "$numberLong": "1702561060849"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12971,7 +12256,6 @@
           "$numberLong": "1702561092174"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -12989,7 +12273,6 @@
           "$numberLong": "1702561092236"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13007,7 +12290,6 @@
           "$numberLong": "1702561180352"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13025,7 +12307,6 @@
           "$numberLong": "1702561181067"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13043,7 +12324,6 @@
           "$numberLong": "1702561212306"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13061,7 +12341,6 @@
           "$numberLong": "1702561212326"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13079,7 +12358,6 @@
           "$numberLong": "1702561300574"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13097,7 +12375,6 @@
           "$numberLong": "1702561301284"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13115,7 +12392,6 @@
           "$numberLong": "1702561332537"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13133,7 +12409,6 @@
           "$numberLong": "1702561332521"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13151,7 +12426,6 @@
           "$numberLong": "1702561420789"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13169,7 +12443,6 @@
           "$numberLong": "1702561421506"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13187,7 +12460,6 @@
           "$numberLong": "1702561452842"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13205,7 +12477,6 @@
           "$numberLong": "1702561452846"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13223,7 +12494,6 @@
           "$numberLong": "1702561541009"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13241,7 +12511,6 @@
           "$numberLong": "1702561541618"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13259,7 +12528,6 @@
           "$numberLong": "1702561573063"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13277,7 +12545,6 @@
           "$numberLong": "1702561573057"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13295,7 +12562,6 @@
           "$numberLong": "1702561661434"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13313,7 +12579,6 @@
           "$numberLong": "1702561661843"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13331,7 +12596,6 @@
           "$numberLong": "1702561693285"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13349,7 +12613,6 @@
           "$numberLong": "1702561693281"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13367,7 +12630,6 @@
           "$numberLong": "1702561781652"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13385,7 +12647,6 @@
           "$numberLong": "1702561782062"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13403,7 +12664,6 @@
           "$numberLong": "1702561813499"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13421,7 +12681,6 @@
           "$numberLong": "1702561813503"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13439,7 +12698,6 @@
           "$numberLong": "1702561901872"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13457,7 +12715,6 @@
           "$numberLong": "1702561902244"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13475,7 +12732,6 @@
           "$numberLong": "1702561933622"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13493,7 +12749,6 @@
           "$numberLong": "1702561933626"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13511,7 +12766,6 @@
           "$numberLong": "1702562022092"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13529,7 +12783,6 @@
           "$numberLong": "1702562022397"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13547,7 +12800,6 @@
           "$numberLong": "1702562053836"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13565,7 +12817,6 @@
           "$numberLong": "1702562053840"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13583,7 +12834,6 @@
           "$numberLong": "1702562142412"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13601,7 +12851,6 @@
           "$numberLong": "1702562142563"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13619,7 +12868,6 @@
           "$numberLong": "1702562174057"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13637,7 +12885,6 @@
           "$numberLong": "1702562174049"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13655,7 +12902,6 @@
           "$numberLong": "1702562262602"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13673,7 +12919,6 @@
           "$numberLong": "1702562262729"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13691,7 +12936,6 @@
           "$numberLong": "1702562294273"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13709,7 +12953,6 @@
           "$numberLong": "1702562294277"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13727,7 +12970,6 @@
           "$numberLong": "1702562382749"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13745,7 +12987,6 @@
           "$numberLong": "1702562382848"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13763,7 +13004,6 @@
           "$numberLong": "1702562414496"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
@@ -13781,7 +13021,6 @@
           "$numberLong": "1702562414492"
         }
       },
-      "delay": "00:00:00",
       "coordinate": {
         "type": "Point",
         "coordinates": [
