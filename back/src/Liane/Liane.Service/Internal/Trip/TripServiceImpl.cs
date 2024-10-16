@@ -300,11 +300,6 @@ public sealed class TripServiceImpl(
       return null;
     }
 
-    if (toUpdate.Driver.User == foundMember.User)
-    {
-      return null;
-    }
-
     var newMembers = toUpdate.Members.Remove(foundMember);
 
     if (newMembers.IsEmpty)
@@ -312,8 +307,12 @@ public sealed class TripServiceImpl(
       await Delete(liane);
       return null;
     }
+    
+    var newDriver = toUpdate.Driver.User == foundMember.User
+      ? newMembers.First().User
+      : toUpdate.Driver.User;
 
-    var update = (await GetTripUpdate(toUpdate.DepartureTime, toUpdate.Driver.User, newMembers))
+    var update = (await GetTripUpdate(toUpdate.DepartureTime, newDriver, newMembers))
       .Pull(l => l.Members, foundMember)
       .Set(l => l.TotalSeatCount, toUpdate.TotalSeatCount - foundMember.SeatCount);
 
