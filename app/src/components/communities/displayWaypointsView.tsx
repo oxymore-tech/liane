@@ -3,7 +3,7 @@ import React, { ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 import { Hours, Minutes, RallyingPoint, TimeOnly, TimeOnlyUtils, WayPoint } from "@liane/common";
 import { AppText } from "@/components/base/AppText";
-import { AppColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { extractWaypointFromTo } from "@/util/hooks/lianeRequest";
 import { AppIcon, IconName } from "@/components/base/AppIcon.tsx";
 
@@ -62,7 +62,13 @@ export const DisplayRallyingPoints = ({ wayPoints, inverseTravel = false, startT
             {`${formatHour(time.hour)}:${formatHour(time.minute)}`}
           </AppText>
         ) : null}
-        {icon ? <AppIcon style={styles.separateIcon} name={icon as IconName} /> : <AppText style={styles.separateNoIcon}>{"|"}</AppText>}
+        {icon ? (
+          <AppIcon style={styles.separateIcon} name={icon as IconName} color={AppColors.primaryColor} />
+        ) : (
+          <View style={styles.separateIcon}>
+            <View style={{ backgroundColor: AppColors.primaryColor, borderRadius: 16, margin: 5, padding: 4 }} />
+          </View>
+        )}
         <View style={{ flexDirection: "column", justifyContent: "center" }}>
           <AppText
             style={[
@@ -109,12 +115,12 @@ export const DisplayRallyingPoints = ({ wayPoints, inverseTravel = false, startT
           style
         ]}>
         {startTime
-          ? tripRow(from, startTime, "position-marker")
+          ? tripRow(from, startTime, "pin")
           : endTime
           ? tripRow(from, adjustMinutesToTime(endTime, 65, "subtract"), "position-marker")
           : null}
         {steps.map(step => tripRow(step))}
-        {endTime ? tripRow(to, endTime, "position-end") : startTime ? tripRow(to, adjustMinutesToTime(startTime, 65, "add"), "position-end") : null}
+        {endTime ? tripRow(to, endTime, "flag") : startTime ? tripRow(to, adjustMinutesToTime(startTime, 65, "add"), "position-end") : null}
       </View>
     </View>
   );
