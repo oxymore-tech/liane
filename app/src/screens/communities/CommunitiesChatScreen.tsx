@@ -238,9 +238,9 @@ export const CommunitiesChatScreen = () => {
   );
 
   const quitTrip = async () => {
-    if (liane && liane.id) {
+    if (currentTrip && currentTrip.id) {
       try {
-        const result = await services.community.leave(liane.id);
+        const result = await services.liane.leave(currentTrip.id);
         AppLogger.debug("COMMUNITIES", "A quitter une liane avec succès", result);
         navigation.goBack();
       } catch (error) {
