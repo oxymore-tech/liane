@@ -34,12 +34,15 @@ import { useSubscription } from "@/util/hooks/subscription.ts";
 import { AppLocalization } from "@/api/i18n.ts";
 import { DisplayWayPoints } from "@/components/communities/displayWaypointsView.tsx";
 import { weekDays } from "@/util/hooks/days.ts";
-import { getLianeStatusStyle, LianeStatusView } from "@/components/trip/LianeStatusView.tsx";
+import { getLianeStatusStyle } from "@/components/trip/LianeStatusView.tsx";
+import { LianeQueryKey } from "@/screens/user/MyTripsScreen.tsx";
+import { useQueryClient } from "react-query";
 
 export const CommunitiesChatScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesChat">();
   const { user, services } = useContext(AppContext);
   const insets = useSafeAreaInsets();
+  const queryClient = useQueryClient();
 
   const [messages, setMessages] = useState<LianeMessage[]>([]);
   const [paginationCursor, setPaginationCursor] = useState<string>();
@@ -66,8 +69,23 @@ export const CommunitiesChatScreen = () => {
     [liane?.id]
   );
 
-  // subscriptionTrip
-  // Invalidate cache
+  useSubscription<Liane>(
+    services.realTimeHub.tripUpdates,
+    updatedTrip => {
+      setTrips(prevTrips => {
+        const tripIndex = prevTrips.findIndex(trip => trip.id === updatedTrip.id);
+
+        if (tripIndex !== -1) {
+          const updatedTrips = [...prevTrips];
+          updatedTrips[tripIndex] = updatedTrip;
+          return updatedTrips;
+        }
+
+        return prevTrips;
+      });
+    },
+    [trips.map(trip => trip.id)]
+  );
 
   const fetchTrip = async (id: string) => {
     try {
@@ -78,14 +96,15 @@ export const CommunitiesChatScreen = () => {
     }
   };
 
-  const members = useMemo(
-    () =>
-      chat?.currentGroup?.members?.reduce((acc, b) => {
-        acc[b.user.id!] = b.user;
-        return acc;
-      }, {} as { [k: string]: User }),
-    [chat?.currentGroup?.members]
-  );
+  const fetchLiane = async (id: string) => {
+    try {
+      const l: CoLiane = await services.community.get(id);
+      setLiane(l);
+      return l;
+    } catch (e) {
+      AppLogger.debug("COMMUNITIES", "Au moment de récupérer la liane, une erreur c'est produite", e);
+    }
+  };
 
   const getDayOfWeek = (liane: Liane): string => {
     const departureDate = new Date(liane.departureTime);
@@ -174,21 +193,12 @@ export const CommunitiesChatScreen = () => {
       geolocationLevel: geolocationLevel || "None",
       recurrence: undefined
     });
+    queryClient.invalidateQueries(LianeQueryKey);
   };
 
   useEffect(() => {
     setLiane(undefined);
     setError(undefined);
-
-    const fetchLiane = async (id: string) => {
-      try {
-        const l: CoLiane = await services.community.get(id);
-        setLiane(l);
-        return l;
-      } catch (e) {
-        AppLogger.debug("COMMUNITIES", "Au moment de récupérer la liane, une erreur c'est produite", e);
-      }
-    };
 
     if (route.params.liane) {
       // Lorsqu'on arrive directement par une liane
@@ -242,7 +252,7 @@ export const CommunitiesChatScreen = () => {
       try {
         const result = await services.liane.leave(currentTrip.id);
         AppLogger.debug("COMMUNITIES", "A quitter une liane avec succès", result);
-        navigation.goBack();
+        liane?.id && (await fetchTrip(liane?.id));
       } catch (error) {
         AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de la demande pour quitter une liane", error);
       }
