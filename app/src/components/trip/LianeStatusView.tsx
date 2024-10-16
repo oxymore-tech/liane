@@ -36,7 +36,7 @@ export const LianeStatusView = ({ style, liane }: LianeStatusViewProps) => {
   );
 };
 
-const getLianeStatusStyle = (lianeStatus: LiveTripStatus): [string | undefined, ColorValue] => {
+export const getLianeStatusStyle = (lianeStatus: LiveTripStatus): [string | undefined, ColorValue] => {
   let status;
   let color: ColorValue = AppColors.grayBackground;
   switch (lianeStatus) {

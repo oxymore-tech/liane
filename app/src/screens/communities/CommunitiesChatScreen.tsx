@@ -34,7 +34,7 @@ import { useSubscription } from "@/util/hooks/subscription.ts";
 import { AppLocalization } from "@/api/i18n.ts";
 import { DisplayWayPoints } from "@/components/communities/displayWaypointsView.tsx";
 import { weekDays } from "@/util/hooks/days.ts";
-import { LianeStatusView } from "@/components/trip/LianeStatusView.tsx";
+import { getLianeStatusStyle, LianeStatusView } from "@/components/trip/LianeStatusView.tsx";
 
 export const CommunitiesChatScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesChat">();
@@ -238,7 +238,7 @@ export const CommunitiesChatScreen = () => {
   );
 
   const quitTrip = async () => {
-    /*if (liane && liane.id) {
+    if (liane && liane.id) {
       try {
         const result = await services.community.leave(liane.id);
         AppLogger.debug("COMMUNITIES", "A quitter une liane avec succès", result);
@@ -248,7 +248,7 @@ export const CommunitiesChatScreen = () => {
       }
     } else {
       AppLogger.debug("COMMUNITIES", "Pas de lianeRequest ID lors de la demande pour quitter une liane", liane);
-    }*/
+    }
   };
 
   const tripActions = () => {
@@ -314,7 +314,7 @@ export const CommunitiesChatScreen = () => {
                 flexShrink: 1,
                 lineHeight: 27
               }}>
-              {currentTrip.state}
+              {getLianeStatusStyle(currentTrip.state)[0]}
             </AppText>
           </AppText>
         );
