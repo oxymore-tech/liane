@@ -59,7 +59,7 @@ export const TimeWheelPicker = ({
         <AppText style={styles.hourStyle}>:</AppText>
 
         <WheelPicker
-          selectedIndex={dateValue.minute ?? 0 / minuteStep}
+          selectedIndex={(dateValue.minute ?? 0) / minuteStep}
           isInfinite={true}
           itemTextStyle={styles.itemTextStyle}
           selectedIndicatorStyle={styles.selectedIndicator}
