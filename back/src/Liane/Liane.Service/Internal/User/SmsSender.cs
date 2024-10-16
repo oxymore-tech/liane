@@ -22,6 +22,12 @@ public sealed class SmsSender(ILogger<SmsSender> logger, SmsSettings smsSettings
 
   public async Task Send(string phone, string message)
   {
+    if (smsSettings.ApiKey is null)
+    {
+      logger.LogWarning("API key is missing, sms not sent to {0} with message {1}", phone, message);
+      return;
+    }
+
     var sendTransacSms = new SendTransacSms(
       "Liane",
       phone,
@@ -29,7 +35,7 @@ public sealed class SmsSender(ILogger<SmsSender> logger, SmsSettings smsSettings
       SendTransacSms.TypeEnum.Transactional,
       "auth",
       "https://dev.liane.app"
-      );
+    );
 
     try
     {

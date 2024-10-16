@@ -9,12 +9,8 @@ using MongoDB.Driver;
 
 namespace Liane.Service.Internal.User;
 
-public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.Auth.User>, IUserService
+public sealed class UserServiceImpl(IMongoDatabase mongo) : BaseMongoCrudService<DbUser, Api.Auth.User>(mongo), IUserService
 {
-  public UserServiceImpl(IMongoDatabase mongo) : base(mongo)
-  {
-  }
-
   public override async Task<Api.Auth.User> Get(Ref<Api.Auth.User> reference)
   {
     try
@@ -62,18 +58,11 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.Auth.User
   {
     var phoneNumber = phone.ToPhoneNumber();
 
-    var number = phoneNumber.ToString();
-
     var dbUser = await Mongo.GetCollection<DbUser>()
-      .Find(u => u.Phone == number)
+      .Find(u => u.Phone == phoneNumber)
       .FirstOrDefaultAsync();
 
-    if (dbUser is null)
-    {
-      return false;
-    }
-
-    return dbUser.UserInfo is not null;
+    return dbUser?.UserInfo is not null;
   }
 
   public async Task<FullUser> GetFullUser(string userId)

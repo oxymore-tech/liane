@@ -42,7 +42,7 @@ public static class MongoFactory
 
     if (authSettings?.TestAccount is not null)
     {
-      var phone = authSettings.TestAccount.ToPhoneNumber().ToString();
+      var phone = authSettings.TestAccount.ToPhoneNumber();
       var testUser = db.GetCollection<DbUser>()
         .Find(u => u.Phone == phone)
         .FirstOrDefault();
