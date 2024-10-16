@@ -101,9 +101,7 @@ services:
       LIANE_Mongo__Password: ${MONGO_PASSWORD}
       LIANE_Database__Username: ${MONGO_USERNAME}
       LIANE_Database__Password: ${MONGO_PASSWORD}
-      LIANE_Twilio__Account: ${TWILIO_ACCOUNT}
-      LIANE_Twilio__Token: ${TWILIO_TOKEN}
-      LIANE_Twilio__From: ${TWILIO_FROM}
+      LIANE_Sms__ApiKey: ${SMS_API_KEY}
       LIANE_Auth__SecretKey: ${AUTH_SECRET_KEY}
       LIANE_Auth__TestAccount: ${AUTH_TEST_ACCOUNT}
       LIANE_Auth__TestCode: ${AUTH_TEST_CODE}

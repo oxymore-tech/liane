@@ -23,14 +23,12 @@ Initialiser la base mongo necessaire pour liane :
 ./liane stop # Stop la base mongo
 ```
 
-## Configuration Twilio (optionnel)
+## Configuration SMS (optionnel)
 
-Seulement si vous voulez envoyer des sms, il est nécessaire de définir trois variables d'environnement :
+Seulement si vous voulez envoyer des sms, il est nécessaire de définir l'ApiKey de brevo :
 
 ```bash
-export LIANE_TWILIO__ACCOUNT=XXX
-export LIANE_TWILIO__FROM=+000
-export LIANE_TWILIO__TOKEN=xxx
+export LIANE_SMS__APIKEY=XXX
 ```
 
 ## Développement sur le projet 

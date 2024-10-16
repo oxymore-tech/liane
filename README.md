@@ -31,9 +31,7 @@ Installer liane CLI (outils pour le dev) :
 Créer le fichier `.env.local` dans le répertoire `back` avec le contenu suivant :
 
 ```bash
-LIANE_TWILIO__ACCOUNT=
-LIANE_TWILIO__FROM=
-LIANE_TWILIO__TOKEN=
+LIANE_SMS__APIKEY=
 LIANE_AUTH__TESTACCOUNT=
 LIANE_AUTH__TESTCODE=
 ```

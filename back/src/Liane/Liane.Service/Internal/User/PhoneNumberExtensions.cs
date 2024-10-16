@@ -1,10 +1,8 @@
-using Twilio.Types;
-
 namespace Liane.Service.Internal.User;
 
 public static class PhoneNumberExtensions
 {
-  public static PhoneNumber ToPhoneNumber(this string phone)
+  public static string ToPhoneNumber(this string phone)
   {
     var trim = phone.Trim();
 
@@ -13,6 +11,6 @@ public static class PhoneNumberExtensions
       trim = $"+33{trim[1..]}";
     }
 
-    return new PhoneNumber(trim);
+    return trim;
   }
 }

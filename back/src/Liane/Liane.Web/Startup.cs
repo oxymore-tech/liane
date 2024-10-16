@@ -76,7 +76,8 @@ public static class Startup
     services.AddService<MigrationService>();
 
     services.AddService<CurrentContextImpl>();
-    services.AddSettings<TwilioSettings>(context);
+    services.AddSettings<SmsSettings>(context);
+    services.AddService<SmsSender>();
     services.AddSettings<AuthSettings>(context);
     services.AddService<AuthServiceImpl>();
     services.AddService<UserServiceImpl>();

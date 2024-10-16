@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 using Dapper;
 using Liane.Api.Auth;
 using Liane.Api.Community;
+using Liane.Api.Util;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Postgis.Db;
 using Liane.Service.Internal.Util;
 using Liane.Service.Internal.Util.Sql;
-using Microsoft.IdentityModel.Tokens;
 using UuidExtensions;
 
 namespace Liane.Service.Internal.Community;

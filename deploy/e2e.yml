@@ -30,7 +30,6 @@ services:
       LIANE_Mongo__Password: secret
       LIANE_Database__Username: mongo
       LIANE_Database__Password: secret
-      LIANE_Twilio__TestCode: "333333"
       LIANE_Auth__SecretKey: "TjWnZr4t7w!z%C*F-JaNdRgUkXp2s5v8x/A?D(G+KbPeShVmYq3t6w9zBE)H@M"
       LIANE_Auth__TestAccount: "0000111111"
       LIANE_Auth__TestCode:  "333333"

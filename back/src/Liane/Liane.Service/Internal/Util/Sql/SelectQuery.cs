@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
-using Microsoft.IdentityModel.Tokens;
+using Liane.Api.Util;
 
 namespace Liane.Service.Internal.Util.Sql;
 

@@ -21,7 +21,8 @@
         <PackageReference Include="Npgsql" Version="8.0.4" />
         <PackageReference Include="Npgsql.NetTopologySuite" Version="8.0.4" />
         <PackageReference Include="Npgsql.GeoJSON" Version="8.0.4" />
-        <PackageReference Include="Twilio" Version="7.4.0" />
+        <PackageReference Include="brevo_csharp" Version="1.0.0" />
+        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.1.2" />
         <PackageReference Include="UuidExtensions" Version="1.2.0" />
     </ItemGroup>
 

@@ -9,6 +9,11 @@ namespace Liane.Api.Util;
 
 public static class EnumerableExtensions
 {
+  public static bool IsNullOrEmpty<T>(this IEnumerable<T>? enumerable)
+  {
+    return enumerable is null || !enumerable.Any();
+  }
+
   public static (IEnumerable<T>, IEnumerable<T>) Split<T>(this IEnumerable<T> input, Func<T, bool> predicate)
   {
     var left = new List<T>();

@@ -16,9 +16,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Twilio;
-using Twilio.Rest.Api.V2010.Account;
-using Twilio.Types;
 
 namespace Liane.Service.Internal.User;
 
@@ -32,19 +29,19 @@ public sealed class AuthServiceImpl : IAuthService
 
   private static readonly JwtSecurityTokenHandler JwtTokenHandler = new();
   private readonly ILogger<AuthServiceImpl> logger;
-  private readonly TwilioSettings twilioSettings;
   private readonly AuthSettings authSettings;
   private readonly SymmetricSecurityKey signinKey;
   private readonly MemoryCache smsCodeCache = new(new MemoryCacheOptions());
   private readonly IMongoDatabase mongo;
   private readonly IWebHostEnvironment env;
+  private readonly SmsSender smsSender;
 
-  public AuthServiceImpl(ILogger<AuthServiceImpl> logger, TwilioSettings twilioSettings, AuthSettings authSettings, IMongoDatabase mongo, IWebHostEnvironment env)
+  public AuthServiceImpl(ILogger<AuthServiceImpl> logger, AuthSettings authSettings, IMongoDatabase mongo, IWebHostEnvironment env, SmsSender smsSender)
   {
     this.mongo = mongo;
     this.env = env;
+    this.smsSender = smsSender;
     this.logger = logger;
-    this.twilioSettings = twilioSettings;
     this.authSettings = authSettings;
     var keyByteArray = Encoding.ASCII.GetBytes(authSettings.SecretKey);
     signinKey = new SymmetricSecurityKey(keyByteArray);
@@ -75,26 +72,12 @@ public sealed class AuthServiceImpl : IAuthService
       smsCodeCache.Set($"attempt:{phoneNumber}", true, TimeSpan.FromSeconds(authSettings.Cooldown));
     }
 
-    if (twilioSettings is { Account: not null, Token: not null })
-    {
-      TwilioClient.Init(twilioSettings.Account, twilioSettings.Token);
-      var generator = new Random();
-      var code = generator.Next(0, 1000000).ToString("D6");
+    var generator = new Random();
+    var code = generator.Next(0, 1000000).ToString("D6");
 
-      smsCodeCache.Set(phoneNumber.ToString()!, code, TimeSpan.FromMinutes(2));
+    smsCodeCache.Set(phoneNumber, code, TimeSpan.FromMinutes(2));
 
-      var message = await MessageResource.CreateAsync(
-        body: $"{code} est votre code liane",
-        from: new PhoneNumber(twilioSettings.From),
-        to: phoneNumber
-      );
-
-      logger.LogDebug("SMS sent {message} to {phoneNumber} with code {code}", message, phoneNumber, code);
-    }
-    else if (twilioSettings.TestCode is not null)
-    {
-      smsCodeCache.Set(phoneNumber.ToString()!, twilioSettings.TestCode, TimeSpan.FromMinutes(2));
-    }
+    await smsSender.Send(phoneNumber, $"{code} est votre code liane");
   }
 
   public async Task<AuthResponse> Login(AuthRequest request)
@@ -116,9 +99,9 @@ public sealed class AuthServiceImpl : IAuthService
       .SetOnInsert(p => p.IsAdmin, isAdmin)
       .SetOnInsert(p => p.CreatedAt, createdAt)
       .Set(p => p.PushToken, request.PushToken);
-    
+
     if (request.WithRefresh) update = update.Set(p => p.RefreshToken, encryptedToken).Set(p => p.Salt, salt);
-    
+
     await collection.UpdateOneAsync(u => u.Id == userId, update, new UpdateOptions { IsUpsert = true });
 
     var authUser = new AuthUser(userId, dbUser?.IsAdmin ?? isAdmin, dbUser?.UserInfo is not null);
@@ -127,8 +110,8 @@ public sealed class AuthServiceImpl : IAuthService
 
   private (string, bool) Authenticate(AuthRequest request)
   {
-    var phoneNumber = request.Phone.ToPhoneNumber().ToString()!;
-    var testAccountPhoneNumber = authSettings.TestAccount?.ToPhoneNumber().ToString();
+    var phoneNumber = request.Phone.ToPhoneNumber();
+    var testAccountPhoneNumber = authSettings.TestAccount?.ToPhoneNumber();
 
     if (env.IsDevelopment() || (phoneNumber == testAccountPhoneNumber && request.Code.Equals(authSettings.TestCode)))
     {
