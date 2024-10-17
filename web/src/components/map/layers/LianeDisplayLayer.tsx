@@ -28,6 +28,9 @@ export function LianeDisplayLayer({ date }: LianeDisplayLayerProps) {
         "source-layer": "liane_display",
         source: "liane_display",
         type: "line",
+        layout: {
+          "line-sort-key": ["get", "count"]
+        },
         paint: {
           "line-color": "#0B79F9",
           "line-width": 3
