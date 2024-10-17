@@ -1,4 +1,5 @@
 import urlJoin from "url-join";
+import { DayOfWeekFlag } from "./api";
 
 export type AppEnvVariables = {
   DD_CLIENT_TOKEN: string | null;
@@ -38,13 +39,11 @@ export class AppEnv {
   get lianeFilteredTilesUrl() {
     return urlJoin(this.raw.TILES_URL || `https://${this.host}`, "liane_display_filter_test");
   }
-  public static readonly getLayerDateParams = (date: Date) =>
-    "offset=" +
-    date.getTimezoneOffset() +
-    "&day=" +
-    date.getFullYear() +
-    "-" +
-    (1 + date.getMonth()).toString().padStart(2, "0") +
-    "-" +
-    date.getDate().toString().padStart(2, "0");
+
+  public static getLianeDisplayParams(weekDays?: DayOfWeekFlag) {
+    if (weekDays === undefined || weekDays === null) {
+      return "";
+    }
+    return `weekDays=${weekDays}`;
+  }
 }

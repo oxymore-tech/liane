@@ -1,5 +1,5 @@
-import { AppEnv, RallyingPoint } from "@liane/common";
-import React, { useEffect, useState } from "react";
+import { AppEnv, DayOfWeekFlag, RallyingPoint } from "@liane/common";
+import React, { useEffect, useMemo, useState } from "react";
 import MapLibreGL from "@maplibre/maplibre-react-native";
 import { Feature, Point } from "geojson";
 import { AppColors } from "@/theme/colors";
@@ -8,25 +8,25 @@ import { AppLogger } from "@/api/logger";
 import { RNAppEnv } from "@/api/env";
 
 export const LianeDisplayLayer = ({
-  date = new Date(),
+  weekDays,
   onSelect
 }: {
-  date?: Date;
+  weekDays?: DayOfWeekFlag;
   onSelect?: (
     rp: RallyingPoint & {
       point_type: string;
     }
   ) => void;
 }) => {
-  const dateArg = AppEnv.getLayerDateParams(date);
+  const params = useMemo(() => AppEnv.getLianeDisplayParams(weekDays), [weekDays]);
   const [sourceId, setSourceId] = useState("");
   useEffect(() => {
-    setSourceId("segments" + dateArg);
-    AppLogger.debug("MAP", "tile source", dateArg);
-  }, [dateArg]);
+    setSourceId("segments" + params);
+    AppLogger.debug("MAP", "tile source", params);
+  }, [params]);
 
   const controller = useAppMapViewController();
-  const url = RNAppEnv.lianeTilesUrl + "?" + dateArg;
+  const url = RNAppEnv.lianeTilesUrl + "?" + params;
 
   const updateIdentifier = Math.floor(new Date().getTime() / 1000 / 3600); // update map every hour
 

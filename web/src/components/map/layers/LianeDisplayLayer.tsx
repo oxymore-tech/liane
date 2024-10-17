@@ -4,24 +4,24 @@ import { useMapContext } from "@/components/map/Map";
 import { useEffect, useMemo } from "react";
 import { NodeAppEnv } from "@/api/env";
 import { VectorSourceSpecification } from "maplibre-gl";
-import { AppEnv } from "@liane/common";
+import { AppEnv, DayOfWeekFlag } from "@liane/common";
 
 export type LianeDisplayLayerProps = {
-  date: Date;
+  weekDays?: DayOfWeekFlag;
 };
 
-export function LianeDisplayLayer({ date }: LianeDisplayLayerProps) {
+export function LianeDisplayLayer({ weekDays }: LianeDisplayLayerProps) {
   const map = useMapContext();
-  const args = useMemo(() => AppEnv.getLayerDateParams(date), [date]);
+  const params = useMemo(() => AppEnv.getLianeDisplayParams(weekDays), [weekDays]);
   useEffect(() => {
     const url = NodeAppEnv.lianeTilesUrl;
     map.current?.once("load", () => {
-      if (!map.current || map.current?.getSource("liane_display")) {
+      if (map.current?.getSource("liane_display")) {
         return;
       }
       map.current?.addSource("liane_display", {
         type: "vector",
-        tiles: [url + "/{z}/{x}/{y}"]
+        tiles: [url + "/{z}/{x}/{y}?" + params]
       });
       map.current?.addLayer({
         id: "liane_display",
@@ -43,15 +43,18 @@ export function LianeDisplayLayer({ date }: LianeDisplayLayerProps) {
     });
   }, [map]);
   useEffect(() => {
-    const lianeSource = map.current?.getSource("liane_display");
-    if (map.current && lianeSource) {
-      const url = NodeAppEnv.lianeTilesUrl + "/{z}/{x}/{y}?" + args;
+    if (!map.current) {
+      return;
+    }
+    const lianeSource = map.current.getSource("liane_display");
+    if (lianeSource) {
+      const url = NodeAppEnv.lianeTilesUrl + "/{z}/{x}/{y}?" + params;
       (lianeSource as VectorSourceSpecification).tiles = [url];
       map.current.style.sourceCaches["liane_display"].clearTiles();
       // Load the new tiles for the current viewport (map.transform -> viewport)
       map.current.style.sourceCaches["liane_display"].update(map.current.transform);
       map.current.triggerRepaint();
     }
-  }, [args]);
+  }, [map, params]);
   return <></>;
 }
