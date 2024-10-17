@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { RallyingPoint } from "@liane/common";
 import { useAppBackController } from "@/components/AppBackContextProvider";
-import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
+import { AppColors, defaultTextColor } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { Column, Row } from "@/components/base/AppLayout";
 import AppMapView from "@/components/map/AppMapView";
@@ -10,8 +10,6 @@ import LocationPin from "@/assets/location_pin.svg";
 import { RallyingPointItem } from "@/screens/ItinerarySearchForm";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { RallyingPointsDisplayLayer } from "@/components/map/layers/RallyingPointsDisplayLayer";
-import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay";
-import Animated, { ZoomIn, ZoomOut } from "react-native-reanimated";
 import { PageHeader } from "@/components/context/Navigation";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppPressableIcon } from "@/components/base/AppPressable";
@@ -29,21 +27,13 @@ export const SelectOnMapView = ({ onSelect, title }: SelectOnMapViewProps) => {
   return (
     <View style={styles.container}>
       <AppMapView>
-        {<RallyingPointsDisplayLayer selected={selectedRP?.id} onSelect={setSelectedRP} />}
-        {selectedRP && (
-          <Animated.View entering={ZoomIn} exiting={ZoomOut}>
-            <WayPointDisplay rallyingPoint={selectedRP} type={"from"} size={24} offsetY={-24} />
-          </Animated.View>
-        )}
+        <RallyingPointsDisplayLayer selected={selectedRP?.id} onSelect={setSelectedRP} />
       </AppMapView>
       <View style={[styles.headerContainer, AppStyles.shadow]}>
         <PageHeader title={title} goBack={goBack} />
       </View>
       {selectedRP && (
-        <Column style={[styles.footerContainer, AppStyles.shadow, { paddingBottom: bottom }]} spacing={8}>
-          <Row style={{ position: "relative", left: -16, padding: 8 }}>
-            <AppPressableIcon name={"close"} onPress={() => setSelectedRP(undefined)} />
-          </Row>
+        <Column style={[styles.footerContainer, AppStyles.shadow, { paddingTop: 32, paddingBottom: 32 + bottom }]} spacing={8}>
           <Row
             style={{
               alignItems: "center",
@@ -52,8 +42,6 @@ export const SelectOnMapView = ({ onSelect, title }: SelectOnMapViewProps) => {
               paddingVertical: 8,
               paddingHorizontal: 4,
               borderRadius: 16,
-              borderColor: AppColorPalettes.gray[200],
-              borderWidth: 1,
               position: "relative",
               top: -4
             }}
@@ -63,6 +51,7 @@ export const SelectOnMapView = ({ onSelect, title }: SelectOnMapViewProps) => {
               <RallyingPointItem item={selectedRP} labelSize={18} showIcon={false} detailed={true} />
             </View>
             <View style={{ width: 24, flexShrink: 100 }} />
+            <AppPressableIcon name={"close"} onPress={() => setSelectedRP(undefined)} />
           </Row>
           <Row spacing={8}>
             <AppRoundedButton flex={2} backgroundColor={AppColors.primaryColor} text={"Choisir ce point"} onPress={() => onSelect(selectedRP)} />

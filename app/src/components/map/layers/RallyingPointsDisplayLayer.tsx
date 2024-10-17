@@ -1,13 +1,16 @@
 import { RallyingPoint, Ref } from "@liane/common";
 import React from "react";
-import { AppColors, AppColorPalettes } from "@/theme/colors";
+import { AppColors } from "@/theme/colors";
 import MapLibreGL from "@maplibre/maplibre-react-native";
 import { Feature, Point } from "geojson";
 import { useAppMapViewController } from "@/components/map/AppMapView";
 import { RNAppEnv } from "@/api/env";
 
-export const RallyingPointsDisplayLayer = ({ onSelect }: { onSelect?: (rp: RallyingPoint) => void; selected?: Ref<RallyingPoint> | undefined }) => {
+export type RallyingPointsDisplayLayerProps = { onSelect?: (rp: RallyingPoint) => void; selected?: Ref<RallyingPoint> | undefined };
+
+export const RallyingPointsDisplayLayer = ({ selected, onSelect }: RallyingPointsDisplayLayerProps) => {
   const controller = useAppMapViewController();
+
   return (
     <MapLibreGL.VectorSource
       id={"all_rallying_points"}
@@ -24,35 +27,39 @@ export const RallyingPointsDisplayLayer = ({ onSelect }: { onSelect?: (rp: Rally
               if (points.length === 1) {
                 const p = points[0];
 
-                //@ts-ignore
-                onSelect({ ...p!.properties!, location: { lat: p.geometry.coordinates[1], lng: p.geometry.coordinates[0] } });
-              } else if (points.length > 0) {
-                const zoom = await controller.getZoom()!;
-
-                let newZoom;
-                if (zoom < 10.5) {
-                  newZoom = 12.1; //rp ? 12.1 : zoom + 1.5;
-                } else if (zoom < 12) {
-                  newZoom = 12.1;
-                } else {
-                  newZoom = zoom + 1;
+                if (!p.properties?.point_count) {
+                  //@ts-ignore
+                  onSelect({ ...p.properties, location: { lat: p.geometry.coordinates[1], lng: p.geometry.coordinates[0] } });
+                  await controller.setCenter(center);
+                  return;
                 }
-                await controller.setCenter(center, newZoom);
               }
+
+              const zoom = await controller.getZoom()!;
+
+              let newZoom;
+              if (zoom < 10.5) {
+                newZoom = 12.1; //rp ? 12.1 : zoom + 1.5;
+              } else if (zoom < 12) {
+                newZoom = 12.1;
+              } else {
+                newZoom = zoom + 1;
+              }
+              await controller.setCenter(center, newZoom);
             }
           : undefined
       }>
       <MapLibreGL.SymbolLayer
         id="rp_symbols"
         sourceLayerID={"rallying_point_display"}
-        minZoomLevel={10.5}
+        filter={["!", ["has", "point_count"]]}
         style={{
           textFont: ["Open Sans Regular", "Noto Sans Regular"],
-          textSize: 12,
-          textColor: AppColors.black,
+          textSize: 14,
+          textColor: ["case", ["==", ["get", "id"], selected ?? "XXXXXXXXX"], AppColors.primaryColor, AppColors.black],
           textHaloColor: AppColors.white,
-          textHaloWidth: 1.5,
-          textField: ["step", ["zoom"], "", 12, ["get", "label"]],
+          textHaloWidth: 1,
+          textField: ["get", "label"],
           textAllowOverlap: false,
           iconAllowOverlap: true,
           textAnchor: "bottom",
@@ -66,17 +73,25 @@ export const RallyingPointsDisplayLayer = ({ onSelect }: { onSelect?: (rp: Rally
           iconSize: ["step", ["zoom"], 0.32, 12, 0.4]
         }}
       />
-      <MapLibreGL.CircleLayer
-        id="rp_symbols_small"
+
+      <MapLibreGL.SymbolLayer
+        id="rp_clusters"
         sourceLayerID={"rallying_point_display"}
-        minZoomLevel={5}
-        maxZoomLevel={10.5}
+        filter={["has", "point_count"]}
         style={{
-          circleColor: AppColorPalettes.pink[500],
-          circleRadius: 4,
-          circleStrokeColor: AppColors.white,
-          circleStrokeWidth: 1,
-          visibility: "visible"
+          textFont: ["Open Sans Regular", "Noto Sans Regular"],
+          textSize: 18,
+          textColor: AppColors.white,
+          textHaloWidth: 0.2,
+          textField: ["get", "point_count"],
+          textAllowOverlap: false,
+          iconAllowOverlap: true,
+          textMaxWidth: 5.4,
+          textOptional: true,
+          visibility: "visible",
+          iconImage: "deposit_cluster",
+          iconAnchor: "center",
+          iconSize: ["step", ["zoom"], 0.5, 12, 0.4]
         }}
       />
     </MapLibreGL.VectorSource>
