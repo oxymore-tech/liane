@@ -46,9 +46,7 @@ export const DisplayRallyingPoints = ({ wayPoints, inverseTravel = false, startT
           flexDirection: "row",
           justifyContent: "flex-start",
           alignItems: "center",
-          width: "100%",
-          marginTop: 5,
-          marginBottom: 5
+          width: "100%"
         }}>
         {time ? (
           <AppText
@@ -110,7 +108,8 @@ export const DisplayRallyingPoints = ({ wayPoints, inverseTravel = false, startT
             width: "100%",
             flexDirection: "column",
             justifyContent: "space-between",
-            alignItems: "center"
+            alignItems: "center",
+            paddingVertical: 5
           },
           style
         ]}>

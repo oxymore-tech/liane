@@ -19,7 +19,7 @@ import { LianeMatchLianeRouteLayer } from "@/components/map/layers/LianeMatchRou
 import { LocationMarker } from "@/screens/detail/components/LocationMarker.tsx";
 import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay.tsx";
 import { LianeProofDisplay } from "@/components/map/layers/LianeProofDisplay.tsx";
-import { getBoundingBox } from "@liane/common";
+import { getBoundingBox, ResolvedLianeRequest } from "@liane/common";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider.tsx";
 
 export const LianeMapDetailScreen = () => {
@@ -139,23 +139,31 @@ export const LianeMapDetailScreen = () => {
                   />
                 </View>
               )}
-              <DisplayDays days={lianeRequest.weekDays} />
-              <DisplayRallyingPoints
-                wayPoints={lianeRequest.wayPoints}
-                endTime={lianeRequest.arriveBefore}
-                style={{ backgroundColor: AppColors.gray100, borderRadius: 20 }}
-              />
-              <DisplayRallyingPoints
-                wayPoints={lianeRequest.wayPoints}
-                inverseTravel
-                startTime={lianeRequest.returnAfter}
-                style={{ backgroundColor: AppColors.gray100, borderRadius: 20 }}
-              />
+              {displayResolvedLiane(lianeRequest)}
             </View>
           </View>
         </View>
       </View>
     </View>
+  );
+};
+
+export const displayResolvedLiane = (lianeRequest: ResolvedLianeRequest) => {
+  return (
+    <>
+      <DisplayDays days={lianeRequest.weekDays} />
+      <DisplayRallyingPoints
+        wayPoints={lianeRequest.wayPoints}
+        endTime={lianeRequest.arriveBefore}
+        style={{ backgroundColor: AppColors.gray100, borderRadius: 20 }}
+      />
+      <DisplayRallyingPoints
+        wayPoints={lianeRequest.wayPoints}
+        inverseTravel
+        startTime={lianeRequest.returnAfter}
+        style={{ backgroundColor: AppColors.gray100, borderRadius: 20 }}
+      />
+    </>
   );
 };
 
