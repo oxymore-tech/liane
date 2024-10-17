@@ -129,16 +129,15 @@ const RPIconLayer = ({
         layout: {
           "icon-image": "rp_pink_blank",
           "text-size": 14,
-          "icon-size": ["interpolate", ["linear"], ["zoom"], 7, 0.16, 9, 0.24, 11, 0.36],
           "text-field": ["get", "point_count"],
           "text-allow-overlap": false,
           "icon-allow-overlap": true,
           "text-anchor": "center",
-          "text-offset": [0, -1.05],
           "text-max-width": 5.4,
           "text-optional": true,
           "icon-optional": false,
-          "icon-anchor": "bottom"
+          "icon-anchor": "center",
+          "icon-size": ["interpolate", ["linear"], ["zoom"], 7, 0.5, 9, 0.24, 11, 0.36]
         },
         paint: {
           "text-color": "#ffffff",
