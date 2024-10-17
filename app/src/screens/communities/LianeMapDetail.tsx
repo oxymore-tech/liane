@@ -1,35 +1,31 @@
-import React, { useContext, useMemo, useRef, useState } from "react";
-import { FlatList, Pressable, StyleSheet, View } from "react-native";
+import React, { useContext, useMemo, useState } from "react";
+import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Center } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppPressableIcon } from "@/components/base/AppPressable";
 import { AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
-import { extractDays } from "@/util/hooks/days";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton.tsx";
 import { AppLogger } from "@/api/logger.ts";
-import AppMapView, { AppMapViewController } from "@/components/map/AppMapView.tsx";
+import AppMapView from "@/components/map/AppMapView.tsx";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
 import { DisplayDays } from "@/components/communities/displayDaysView.tsx";
-import { AppIcon } from "@/components/base/AppIcon.tsx";
-import { extractWaypointFromTo } from "@/util/hooks/lianeRequest.ts";
 import { DisplayRallyingPoints } from "@/components/communities/displayWaypointsView.tsx";
 import { LianeMatchLianeRouteLayer } from "@/components/map/layers/LianeMatchRouteLayer.tsx";
-import { LocationMarker } from "@/screens/detail/components/LocationMarker.tsx";
 import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay.tsx";
-import { LianeProofDisplay } from "@/components/map/layers/LianeProofDisplay.tsx";
 import { getBoundingBox, ResolvedLianeRequest } from "@liane/common";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider.tsx";
+import { AppBottomSheet, AppBottomSheetHandleHeight, AppBottomSheetScrollView } from "@/components/base/AppBottomSheet.tsx";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export const LianeMapDetailScreen = () => {
   const { navigation, route } = useAppNavigation<"LianeMapDetail">();
   const group = route.params.group;
   const lianeRequest = route.params.request;
   const { services } = useContext(AppContext);
+
   const { height } = useAppWindowsDimensions();
-  const { top: insetsTop } = useSafeAreaInsets();
-  const mapRatioHeigt = 0.45;
 
   const insets = useSafeAreaInsets();
   const [error, setError] = useState<Error | undefined>(undefined);
@@ -40,7 +36,7 @@ export const LianeMapDetailScreen = () => {
         const result = await services.community.joinRequest(lianeRequest.id, group.liane);
         AppLogger.debug("COMMUNITIES", "Demande de rejoindre une liane avec succès", result);
         navigation.navigate("Lianes");
-      } catch (error) {
+      } catch (e) {
         AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de la demande de rejoindre d'une liane", error);
       }
     } else {
@@ -54,7 +50,7 @@ export const LianeMapDetailScreen = () => {
         const result = await services.community.accept(group.liane, lianeRequest.id);
         AppLogger.debug("COMMUNITIES", "Acceptation une liane avec succès", result);
         navigation.navigate("Lianes");
-      } catch (error) {
+      } catch (e) {
         AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de l'acceptation d'une liane", error);
       }
     } else {
@@ -62,22 +58,25 @@ export const LianeMapDetailScreen = () => {
     }
   };
 
+  const [bSheetTop, setBSheetTop] = useState<number>(0.55 * height);
+
   const mapBounds = useMemo(() => {
     if (!lianeRequest) {
       return undefined;
     }
 
-    const bSheetTopPixels = height * (mapRatioHeigt + 0.45);
+    console.log("SCREOLL", bSheetTop);
+    const bSheetTopPixels = bSheetTop > 1 ? bSheetTop : bSheetTop * height;
     const bbox = getBoundingBox(lianeRequest!.wayPoints.map(w => [w.location.lng, w.location.lat]));
-    bbox.paddingTop = bSheetTopPixels < height / 2 ? insetsTop + 96 : 22;
+    bbox.paddingTop = 24;
     bbox.paddingLeft = 72;
     bbox.paddingRight = 72;
-    bbox.paddingBottom = Math.min(bSheetTopPixels + 40, (height - bbox.paddingTop) / 2 + 24);
+    bbox.paddingBottom = bSheetTopPixels + 24;
     return bbox;
-  }, [lianeRequest.id, insetsTop, height]);
+  }, [lianeRequest, bSheetTop, height]);
 
   return (
-    <View style={styles.mainContainer}>
+    <GestureHandlerRootView style={styles.mainContainer}>
       {error && (
         <Center style={{ flex: 1 }}>
           <AppText style={{ color: ContextualColors.redAlert.text }}>{error.message}</AppText>
@@ -89,62 +88,60 @@ export const LianeMapDetailScreen = () => {
             <AppPressableIcon onPress={() => navigation.goBack()} name={"arrow-ios-back-outline"} color={AppColors.primaryColor} size={32} />
           </View>
         </View>
-        <View style={{ flex: 1, flexDirection: "column", alignItems: "flex-end", justifyContent: "space-between", height: "100%", width: "100%" }}>
-          <AppMapView bounds={mapBounds}>
-            {lianeRequest && lianeRequest.id && <LianeMatchLianeRouteLayer wayPoints={lianeRequest.wayPoints} lianeId={lianeRequest.id} />}
+        <AppMapView bounds={mapBounds}>
+          {lianeRequest && lianeRequest.id && <LianeMatchLianeRouteLayer wayPoints={lianeRequest.wayPoints} lianeId={lianeRequest.id} />}
 
-            {lianeRequest?.wayPoints.map((w, i) => {
-              let type: "to" | "from" | "step";
-              if (i === 0) {
-                type = "from";
-              } else if (i === lianeRequest.wayPoints.length - 1) {
-                type = "to";
-              } else {
-                type = "step";
-              }
-              return <WayPointDisplay key={w.id} rallyingPoint={w} type={type} />;
-            })}
-          </AppMapView>
-          <View style={{ width: "100%", height: "100%", backgroundColor: AppColors.white, position: "absolute", top: height * mapRatioHeigt }}>
-            <View style={{ paddingTop: 20 }}>
-              {group.type === "Single" && group.askToJoinAt ? (
-                <View
+          {lianeRequest?.wayPoints.map((w, i) => {
+            let type: "to" | "from" | "step";
+            if (i === 0) {
+              type = "from";
+            } else if (i === lianeRequest.wayPoints.length - 1) {
+              type = "to";
+            } else {
+              type = "step";
+            }
+            return <WayPointDisplay key={w.id} rallyingPoint={w} type={type} />;
+          })}
+        </AppMapView>
+        <AppBottomSheet onScrolled={v => setBSheetTop(v)} stops={[AppBottomSheetHandleHeight, 0.55, 1]} padding={{ top: 80 }} initialStop={1}>
+          <AppBottomSheetScrollView style={{ paddingHorizontal: 12 }}>
+            {group.type === "Single" && group.askToJoinAt ? (
+              <View
+                style={{
+                  justifyContent: "center",
+                  alignItems: "center"
+                }}>
+                <AppText
                   style={{
-                    justifyContent: "center",
-                    alignItems: "center"
-                  }}>
-                  <AppText
-                    style={{
-                      fontWeight: "bold",
-                      fontSize: 14,
-                      lineHeight: 27,
-                      color: AppColors.black
-                    }}>{`Cette personne souhaite rejoindre votre liane`}</AppText>
-                  <View style={{ marginHorizontal: "20%" }}>
-                    <AppRoundedButton
-                      color={defaultTextColor(AppColors.primaryColor)}
-                      onPress={acceptLiane}
-                      backgroundColor={AppColors.primaryColor}
-                      text={"Accepter "}
-                    />
-                  </View>
-                </View>
-              ) : (
+                    fontWeight: "bold",
+                    fontSize: 14,
+                    lineHeight: 27,
+                    color: AppColors.black
+                  }}>{`Cette personne souhaite rejoindre votre liane`}</AppText>
                 <View style={{ marginHorizontal: "20%" }}>
                   <AppRoundedButton
                     color={defaultTextColor(AppColors.primaryColor)}
-                    onPress={joinLiane}
+                    onPress={acceptLiane}
                     backgroundColor={AppColors.primaryColor}
-                    text={"Rejoindre "}
+                    text={"Accepter "}
                   />
                 </View>
-              )}
-              {displayResolvedLiane(lianeRequest)}
-            </View>
-          </View>
-        </View>
+              </View>
+            ) : (
+              <View style={{ marginHorizontal: "20%" }}>
+                <AppRoundedButton
+                  color={defaultTextColor(AppColors.primaryColor)}
+                  onPress={joinLiane}
+                  backgroundColor={AppColors.primaryColor}
+                  text={"Rejoindre "}
+                />
+              </View>
+            )}
+            {displayResolvedLiane(lianeRequest)}
+          </AppBottomSheetScrollView>
+        </AppBottomSheet>
       </View>
-    </View>
+    </GestureHandlerRootView>
   );
 };
 
@@ -169,7 +166,7 @@ export const displayResolvedLiane = (lianeRequest: ResolvedLianeRequest) => {
 
 const styles = StyleSheet.create({
   mainContainer: {
-    backgroundColor: AppColors.grayBackground,
+    backgroundColor: AppColors.white,
     justifyContent: "flex-start",
     flex: 1,
     height: "100%"

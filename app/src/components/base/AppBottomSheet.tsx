@@ -146,7 +146,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
       .enabled(canScroll || true);
 
     const bgColor = useMemo(() => {
-      return StyleSheet.flatten(backgroundStyle).backgroundColor || AppColors.white;
+      return StyleSheet.flatten(backgroundStyle)?.backgroundColor || AppColors.white;
     }, [backgroundStyle]);
 
     // Animate the expanded bottom sheet background

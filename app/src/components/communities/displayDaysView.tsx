@@ -1,18 +1,9 @@
-import React, { useContext, useMemo } from "react";
+import React from "react";
 
-import { Pressable, StyleSheet, View } from "react-native";
-import { CoLianeMatch, DayOfWeekFlag } from "@liane/common";
-import { AppContext } from "@/components/context/ContextProvider";
-import { Row } from "@/components/base/AppLayout";
+import { StyleSheet, View } from "react-native";
+import { DayOfWeekFlag } from "@liane/common";
 import { AppText } from "@/components/base/AppText";
 import { AppColors } from "@/theme/colors";
-import { JoinedLianeView } from "@/components/communities/JoinedLianeView";
-import { AppLogger } from "@/api/logger";
-import { extractDaysOnly, extractWaypointFromTo } from "@/util/hooks/lianeRequest";
-import { DetachedLianeItem } from "@/components/communities/DetachedLianeItem.tsx";
-import { useAppNavigation } from "@/components/context/routing.ts";
-import { AppIcon } from "@/components/base/AppIcon.tsx";
-import App from "@/App.tsx";
 import { weekDays } from "@/util/hooks/days.ts";
 
 type DisplayDaysProps = {
@@ -30,7 +21,7 @@ export const DisplayDays = ({ days }: DisplayDaysProps) => {
         marginTop: 15
       }}>
       {[...days].map((char, position) => (
-        <View style={char === "0" ? styles.dayNotSelected : styles.daySelected}>
+        <View style={char === "0" ? styles.dayNotSelected : styles.daySelected} key={position}>
           <AppText
             style={{
               fontWeight: "normal",
