@@ -232,7 +232,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
               }}>
               <View
                 style={{
-                  backgroundColor: backgroundStyle.backgroundColor,
+                  backgroundColor: backgroundStyle?.backgroundColor,
                   width: 80,
                   borderTopRightRadius: 40,
                   borderTopLeftRadius: 40
