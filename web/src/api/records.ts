@@ -12,17 +12,17 @@ export class RecordServiceClient implements RecordService {
   constructor(private http: HttpClient) {}
 
   list(params?: TripRecordFilterParams) {
-    return this.http.get<PaginatedResponse<TripRecord>>(`/liane/record`, { params });
+    return this.http.get<PaginatedResponse<TripRecord>>(`/trip/record`, { params });
   }
   get(id: string) {
-    return this.http.get<TripRecord>(`/liane/record/${id}`);
+    return this.http.get<TripRecord>(`/trip/record/${id}`);
   }
   getRecordPings(id: string, raw?: boolean): Promise<FeatureCollection<GeoJSON.Point, { user: string; at: string }>> {
-    return this.http.get<FeatureCollection<GeoJSON.Point, { user: string; at: string }>>(`/liane/${id}/geolocation`, {
+    return this.http.get<FeatureCollection<GeoJSON.Point, { user: string; at: string }>>(`/trip/${id}/geolocation`, {
       params: { raw: raw ?? false }
     });
   }
   async recreate(id: string) {
-    await this.http.post(`/liane/record/${id}/recreate`);
+    await this.http.post(`/trip/record/${id}/recreate`);
   }
 }
