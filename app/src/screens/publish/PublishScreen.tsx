@@ -29,6 +29,8 @@ type StepProps<T> = {
   value: T;
 };
 
+const MaxSteps = 5;
+
 export const PublishScreen = () => {
   const { services } = useContext(AppContext);
   const queryClient = useQueryClient();
@@ -47,7 +49,7 @@ export const PublishScreen = () => {
     isEnabled: true
   });
 
-  const [step, setStep] = useState<number>(initialValue ? 6 : -1);
+  const [step, setStep] = useState<number>(initialValue ? MaxSteps : -1);
   const [previousStep, setPreviousStep] = useState<number>(-1);
   const [pending, setPending] = useState(false);
 
@@ -176,7 +178,7 @@ export const PublishScreen = () => {
           ]}
         />
       )}
-      {step >= 6 && (
+      {step >= MaxSteps && (
         <View style={[styles.accordion, styles.bottom]}>
           <AppButton title="Envoyer" icon="arrow-circle-right-outline" onPress={handleDone} loading={pending} />
         </View>
