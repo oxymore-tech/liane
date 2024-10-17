@@ -76,7 +76,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var (lianeGugu, lianeJayBee, lianeMathilde, lianeSiloe, _, _, _, _) = await SetupDefaultLianes();
 
     currentContext.SetCurrentUser(gugu);
-    var list = await tested.List();
+    var list = await tested.Match();
 
     AssertMatchesEquals(list,
       new LianeMatch(lianeGugu, new LianeState.Detached(ImmutableList.Create<Match>(
@@ -97,7 +97,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var (lianeGugu, lianeJayBee, lianeMathilde, lianeSiloe, _, _, _, _) = await SetupDefaultLianes();
 
     currentContext.SetCurrentUser(mathilde);
-    var actual = await tested.List();
+    var actual = await tested.Match();
     Assert.AreEqual(1, actual.Count);
 
     var lianeMatch = actual[0];
@@ -125,7 +125,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     await tested.Update(lianeJayBee.Id, lianeJayBee with { IsEnabled = false });
 
     currentContext.SetCurrentUser(mathilde);
-    var list = await tested.List();
+    var list = await tested.Match();
 
     AssertMatchesEquals(list,
       new LianeMatch(lianeMathilde, new LianeState.Detached(ImmutableList.Create<Match>(
@@ -144,7 +144,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var lianePain2 = await CreateLianeRequest(gugu, "Pain 2", LabeledPositions.Cocures, LabeledPositions.Mende, weekDays: DayOfWeekFlag.All);
 
     currentContext.SetCurrentUser(gugu);
-    var list = await tested.List();
+    var list = await tested.Match();
 
     AssertMatchesEquals(list,
       new LianeMatch(lianeGugu, new LianeState.Detached(ImmutableList.Create<Match>(
@@ -190,7 +190,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     // Gugu liane request is attached to the liane
     {
       currentContext.SetCurrentUser(gugu);
-      var list = await tested.List();
+      var list = await tested.Match();
 
       AssertMatchesEquals(list,
         new LianeMatch(lianeGugu, new LianeState.Attached(joinedLiane))
@@ -241,7 +241,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     // Gugu liane request is attached to the liane
     {
       currentContext.SetCurrentUser(gugu);
-      var list = await tested.List();
+      var list = await tested.Match();
 
       AssertMatchesEquals(list,
         new LianeMatch(lianeGugu, new LianeState.Attached(joinedLianeUdated))
@@ -266,7 +266,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     // Mathilde is attached to jaybee now
     {
       currentContext.SetCurrentUser(jayBee);
-      var list = await tested.List();
+      var list = await tested.Match();
 
       AssertMatchesEquals(list,
         new LianeMatch(lianeJayBee, new LianeState.Attached(exisitingLiane))
@@ -276,7 +276,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     // JayBee is attached to jaybee mathilde now
     {
       currentContext.SetCurrentUser(mathilde);
-      var list = await tested.List();
+      var list = await tested.Match();
 
       AssertMatchesEquals(list,
         new LianeMatch(lianeMathilde, new LianeState.Attached(exisitingLiane))
@@ -286,7 +286,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     // Jaybee/Mathilde liane now appears in a liane in gugu matches
     {
       currentContext.SetCurrentUser(gugu);
-      var list = await tested.List();
+      var list = await tested.Match();
 
       AssertMatchesEquals(list,
         new LianeMatch(lianeGugu, new LianeState.Detached(
@@ -357,7 +357,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     // Gugu liane request is attached to the joined liane
     {
       currentContext.SetCurrentUser(gugu);
-      var list = await tested.List();
+      var list = await tested.Match();
 
       AssertMatchesEquals(list,
         new LianeMatch(lianeGugu, new LianeState.Attached(liane))
@@ -369,7 +369,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       currentContext.SetCurrentUser(gugu);
       var left = await tested.Leave(exisitingLiane);
       Assert.IsTrue(left);
-      var list = await tested.List();
+      var list = await tested.Match();
 
       Assert.IsInstanceOf<LianeState.Detached>(list[0].State);
     }
@@ -573,7 +573,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     await CreateLianeRequest(mathilde, "Alodr", LabeledPositions.Florac, LabeledPositions.BalsiegeParkingEglise, weekDays: DayOfWeekFlag.Wednesday);
 
     currentContext.SetCurrentUser(gugu);
-    var list = await tested.List();
+    var list = await tested.Match();
 
     AssertMatchesEquals(list,
       new LianeMatch(lianeGugu, new LianeState.Detached(ImmutableList.Create<Match>(
@@ -600,7 +600,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
 
     {
       currentContext.SetCurrentUser(gugu);
-      var list = await tested.List();
+      var list = await tested.Match();
 
       AssertMatchesEquals(list,
         new LianeMatch(lianeGugu, new LianeState.Attached(joinedLiane)),
@@ -623,7 +623,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
 
     {
       currentContext.SetCurrentUser(gugu);
-      var list = await tested.List();
+      var list = await tested.Match();
 
       AssertMatchesEquals(list,
         new LianeMatch(lianeGugu, new LianeState.Detached(ImmutableList.Create<Match>(
@@ -642,7 +642,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
 
     {
       currentContext.SetCurrentUser(gugu);
-      var list = await tested.List();
+      var list = await tested.Match();
 
 
       AssertMatchesEquals(list,

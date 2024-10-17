@@ -9,11 +9,11 @@ using GeoJSON.Text.Feature;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Exception;
+using Liane.Api.Util.Geo;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Postgis.Db;
-using Liane.Service.Internal.Util.Geo;
 using Liane.Service.Internal.Util.Sql;
 using Microsoft.Extensions.Caching.Memory;
 

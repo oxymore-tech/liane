@@ -1,6 +1,6 @@
 namespace Liane.Api.Trip;
 
-public sealed class LianeFilter
+public sealed class TripFilter
 {
   public bool ForCurrentUser { get; init; }
 

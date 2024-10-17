@@ -120,7 +120,7 @@ public sealed class TripController(
   [HttpGet("")]
   public Task<PaginatedResponse<Trip>> List([FromQuery] Pagination pagination, [FromQuery(Name = "state")] TripStatus[] stateFilter, CancellationToken cancellationToken)
   {
-    return tripService.List(new LianeFilter { ForCurrentUser = true, States = stateFilter }, pagination, cancellationToken);
+    return tripService.List(new TripFilter { ForCurrentUser = true, States = stateFilter }, pagination, cancellationToken);
   }
 
   [HttpPost("")]
@@ -133,7 +133,7 @@ public sealed class TripController(
   [RequiresAdminAuth]
   public Task<PaginatedResponse<Trip>> ListAll([FromQuery] Pagination pagination, CancellationToken cancellationToken)
   {
-    return tripService.List(new LianeFilter(), pagination, cancellationToken);
+    return tripService.List(new TripFilter(), pagination, cancellationToken);
   }
 
   [HttpGet("record")]

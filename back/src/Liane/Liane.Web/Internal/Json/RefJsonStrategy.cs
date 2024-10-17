@@ -30,8 +30,6 @@ internal static class RefJsonStrategy
           continue;
         }
 
-        var expectResolved = jsonPropertyInfo.AttributeProvider?.GetCustomAttributes(typeof(SerializeAsResolvedRefAttribute), true).Any() ?? false;
-
         jsonPropertyInfo.Get = o =>
         {
           var value = propertyInfo.GetValue(o);
@@ -40,6 +38,7 @@ internal static class RefJsonStrategy
             return null;
           }
 
+          var expectResolved = propertyInfo.GetCustomAttribute(typeof(SerializeAsResolvedRefAttribute), true) is not null;
           var asResolved = AsResolvedMethod.MakeGenericMethod(jsonPropertyInfo.PropertyType.GenericTypeArguments[0]);
           return asResolved.Invoke(null, [value, expectResolved]);
         };

@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Liane.Api.Trip;
 
-public readonly struct DayOfWeekFlag : IEquatable<DayOfWeekFlag>
+public readonly struct DayOfWeekFlag : IEquatable<DayOfWeekFlag>, IComparable<DayOfWeekFlag>
 {
   private DayOfWeekFlag(uint value)
   {
@@ -42,7 +42,7 @@ public readonly struct DayOfWeekFlag : IEquatable<DayOfWeekFlag>
     _ => throw new ArgumentOutOfRangeException(nameof(dayOfWeek), dayOfWeek, null)
   };
 
-  private bool HasFlag(DayOfWeekFlag flag) => (value & flag.value) == flag.value;
+  public bool HasFlag(DayOfWeekFlag flag) => (value & flag.value) == flag.value;
 
   public bool IsEmpty() => value == 0;
 
@@ -132,5 +132,10 @@ public readonly struct DayOfWeekFlag : IEquatable<DayOfWeekFlag>
   public override int GetHashCode()
   {
     return (int)value;
+  }
+
+  public int CompareTo(DayOfWeekFlag other)
+  {
+    return (int)value - (int)other.value;
   }
 }

@@ -8,7 +8,6 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Liane.Api.Util;
 using Liane.Api.Util.Exception;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Liane.Web.Internal.Json;
 
@@ -86,10 +85,20 @@ internal sealed class UnionJsonConverter<TRoot> : JsonConverter<TRoot> where TRo
     {
       var name = options.PropertyNamingPolicy?.ConvertName(propertyInfo.Name) ?? propertyInfo.Name;
       writer.WritePropertyName(name);
-      JsonSerializer.Serialize(writer, propertyInfo.GetValue(value), options);
+      JsonSerializer.Serialize(writer, MapValue(propertyInfo.GetValue(value)), options);
     }
 
     writer.WriteEndObject();
+  }
+
+  private object? MapValue(object? value)
+  {
+    if (value is null)
+    {
+      return null;
+    }
+
+    return value;
   }
 
   private static IEnumerable<Type> GetSubTypes(Type rootType)

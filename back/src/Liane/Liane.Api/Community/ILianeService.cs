@@ -9,7 +9,8 @@ public interface ILianeService
   Task<LianeRequest> Create(LianeRequest request);
   Task<LianeRequest> Update(Ref<LianeRequest> id, LianeRequest request);
   Task Delete(Ref<LianeRequest> id);
-  Task<ImmutableList<LianeMatch>> List();
+  Task<ImmutableList<LianeMatch>> Match();
+  Task<ImmutableList<Liane>> List(LianeFilter filter);
 
   Task<Liane> Get(Ref<Liane> id);
   Task<bool> JoinRequest(Ref<LianeRequest> mine, Ref<Liane> liane);

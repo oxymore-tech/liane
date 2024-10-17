@@ -41,14 +41,24 @@ public sealed class UserServiceImpl(IMongoDatabase mongo) : BaseMongoCrudService
   public async Task<FullUser> UpdateInfo(string id, UserInfo info)
   {
     const int minLength = 2;
-    if (info.FirstName.Length < minLength) throw new ValidationException(nameof(UserInfo.FirstName), ValidationMessage.TooShort(minLength));
-    if (info.LastName.Length < minLength) throw new ValidationException(nameof(UserInfo.LastName), ValidationMessage.TooShort(minLength));
+    var firstName = info.FirstName.Trim();
+    var lastName = info.LastName.Trim();
+
+    if (firstName.Length < minLength)
+    {
+      throw new ValidationException(nameof(UserInfo.FirstName), ValidationMessage.TooShort(minLength));
+    }
+
+    if (lastName.Length < minLength)
+    {
+      throw new ValidationException(nameof(UserInfo.LastName), ValidationMessage.TooShort(minLength));
+    }
 
     await Mongo.GetCollection<DbUser>()
       .UpdateOneAsync(
         u => u.Id == id,
-        Builders<DbUser>.Update.Set(i => i.UserInfo!.FirstName, info.FirstName)
-          .Set(i => i.UserInfo!.LastName, info.LastName)
+        Builders<DbUser>.Update.Set(i => i.UserInfo!.FirstName, firstName)
+          .Set(i => i.UserInfo!.LastName, lastName)
           .Set(i => i.UserInfo!.Gender, info.Gender)
       );
     return await GetFullUser(id);

@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Liane.Api.Routing;
-using NetTopologySuite.Geometries;
 
-namespace Liane.Service.Internal.Util.Geo;
+namespace Liane.Api.Util.Geo;
 
 public record BoundingBox(LatLng Min, LatLng Max)
 {
@@ -23,17 +22,6 @@ public record BoundingBox(LatLng Min, LatLng Max)
     }
 
     return new BoundingBox(new LatLng(minLat, minLon), new LatLng(maxLat, maxLon));
-  }
-
-  public Polygon AsPolygon()
-  {
-    return new Polygon(new LinearRing([
-      new Coordinate(Min.Lng, Min.Lat),
-      new Coordinate(Max.Lng, Min.Lat),
-      new Coordinate(Max.Lng, Max.Lat),
-      new Coordinate(Min.Lng, Max.Lat),
-      new Coordinate(Min.Lng, Min.Lat)
-    ])) {SRID = 4326};
   }
 
   public BoundingBox Enlarge(double distanceInMeter)

@@ -52,7 +52,7 @@ public sealed class DeletionServiceImplTest : BaseIntegrationTest
     await testedService.DeleteCurrent();
 
     currentContext.SetCurrentUser(userB);
-    var list = await tripService.List(new LianeFilter { ForCurrentUser = true, States = new[] { TripStatus.NotStarted } }, new Pagination());
+    var list = await tripService.List(new TripFilter { ForCurrentUser = true, States = new[] { TripStatus.NotStarted } }, new Pagination());
 
     CollectionAssert.IsEmpty(list.Data);
   }

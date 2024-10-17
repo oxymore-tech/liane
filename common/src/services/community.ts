@@ -1,6 +1,7 @@
 import { DayOfWeekFlag, Entity, Identity, Liane, PaginatedRequestParams, PaginatedResponse, RallyingPoint, Ref, User, UTCDateTime } from "../api";
 import { HttpClient } from "./http";
 import { TimeOnly, TimeRange } from "./time";
+import { BoundingBox } from "../util";
 
 export type CoLianeRequest = Entity & {
   name: string;
@@ -82,6 +83,12 @@ export type JoinTripQuery = {
   takeReturnTrip: boolean;
 };
 
+export type LianeFilter = {
+  forCurrentUser: boolean;
+  bbox?: BoundingBox;
+  weekDays?: DayOfWeekFlag;
+};
+
 export type Text = { type: "Text"; value: string };
 export type LianeRequestModified = { type: "LianeRequestModified"; value: string; lianeRequest: Ref<CoLianeRequest> };
 export type TripAdded = { type: "TripAdded"; value: string; trip: Ref<Liane> };
@@ -108,7 +115,9 @@ export type MessageContent =
 export type LianeMessage<T extends MessageContent = MessageContent> = Entity & { content: T };
 
 export interface CommunityService {
-  list(): Promise<CoLianeMatch[]>;
+  match(): Promise<CoLianeMatch[]>;
+
+  list(filter: LianeFilter): Promise<CoLiane[]>;
 
   get(liane: string): Promise<CoLiane>;
 
@@ -140,8 +149,12 @@ export interface CommunityService {
 export class CommunityServiceClient implements CommunityService {
   constructor(protected http: HttpClient) {}
 
-  list() {
-    return this.http.get<CoLianeMatch[]>("/community/liane");
+  match() {
+    return this.http.get<CoLianeMatch[]>("/community/match");
+  }
+
+  list(filter: LianeFilter) {
+    return this.http.putAs<CoLiane[]>("/community/liane", { body: filter });
   }
 
   create(lianeRequest: CoLianeRequest) {

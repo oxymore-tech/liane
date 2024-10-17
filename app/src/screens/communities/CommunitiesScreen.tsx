@@ -18,9 +18,9 @@ export const CommunitiesScreen = () => {
   const { services } = useContext(AppContext);
   const queriesData = useQueries([
     {
-      queryKey: CoLianeQueryKey,
+      queryKey: CoLianeMatchQueryKey,
       queryFn: async () => {
-        return await services.community.list();
+        return await services.community.match();
       }
     }
   ]);
@@ -108,5 +108,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export const CoLianeQueryKey = "liane";
-export default CommunitiesScreen;
+export const CoLianeMatchQueryKey = "liane/match";

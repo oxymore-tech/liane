@@ -17,10 +17,16 @@ namespace Liane.Web.Controllers;
 public sealed class LianeController(ILianeService lianeService, ITripService tripService)
   : ControllerBase
 {
-  [HttpGet("liane")]
-  public Task<ImmutableList<LianeMatch>> List()
+  [HttpGet("match")]
+  public Task<ImmutableList<LianeMatch>> Match()
   {
-    return lianeService.List();
+    return lianeService.Match();
+  }
+
+  [HttpPut("liane")]
+  public Task<ImmutableList<Api.Community.Liane>> List([FromBody] LianeFilter filter)
+  {
+    return lianeService.List(filter);
   }
 
   [HttpPost("liane")]

@@ -210,10 +210,10 @@ public sealed class TripServiceImplTest : BaseIntegrationTest
     }
 
     currentContext.SetCurrentUser(userA);
-    var resultsA = await testedService.List(new LianeFilter { ForCurrentUser = true }, new Pagination());
+    var resultsA = await testedService.List(new TripFilter { ForCurrentUser = true }, new Pagination());
 
     currentContext.SetCurrentUser(userB);
-    var resultsB = await testedService.List(new LianeFilter { ForCurrentUser = true }, new Pagination());
+    var resultsB = await testedService.List(new TripFilter { ForCurrentUser = true }, new Pagination());
 
     Assert.AreEqual(lianesACount, resultsA.Data.Count);
 
@@ -253,7 +253,7 @@ public sealed class TripServiceImplTest : BaseIntegrationTest
 
     created = created.OrderByDescending(l => l.DepartureTime).ToList();
 
-    var firstPage = await testedService.List(new LianeFilter { ForCurrentUser = true }, new Pagination(Limit: pageSize, SortAsc: false));
+    var firstPage = await testedService.List(new TripFilter { ForCurrentUser = true }, new Pagination(Limit: pageSize, SortAsc: false));
     Assert.AreEqual(20, firstPage.TotalCount);
     Assert.AreEqual(pageSize, firstPage.Data.Count);
     Assert.AreEqual(0, created.FindIndex(l => l.Id == firstPage.Data.First().Id));
@@ -262,7 +262,7 @@ public sealed class TripServiceImplTest : BaseIntegrationTest
     var cursorId = (firstPage.Next as Cursor.Time)!.Id;
     Assert.AreEqual(10, created.FindIndex(l => l.Id == cursorId));
 
-    var lastPage = await testedService.List(new LianeFilter { ForCurrentUser = true }, new Pagination(Limit: pageSize, Cursor: firstPage.Next, SortAsc: false));
+    var lastPage = await testedService.List(new TripFilter { ForCurrentUser = true }, new Pagination(Limit: pageSize, Cursor: firstPage.Next, SortAsc: false));
     Assert.AreEqual(pageSize, lastPage.Data.Count);
     Assert.AreEqual(10, created.FindIndex(l => l.Id == lastPage.Data.First().Id));
     Assert.AreEqual(19, created.FindIndex(l => l.Id == lastPage.Data.Last().Id));

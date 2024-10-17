@@ -3,10 +3,10 @@ import { FeatureCollection, Position } from "geojson";
 import turfDistance from "@turf/distance";
 import { point } from "@turf/helpers";
 
-export type BoundingBox = Readonly<{
-  from: LatLng;
-  to: LatLng;
-}>;
+export type BoundingBox = {
+  min: LatLng;
+  max: LatLng;
+};
 
 export function toLatLng(position: Position): LatLng {
   const [lng, lat] = position;
@@ -16,20 +16,20 @@ export function toLatLng(position: Position): LatLng {
 export function fromPositions(bbox: Position[]): BoundingBox {
   const [upperLeft, bottomRight] = bbox;
   return {
-    to: toLatLng(upperLeft), //maxs
-    from: toLatLng(bottomRight) //mins
+    max: toLatLng(upperLeft), //maxs
+    min: toLatLng(bottomRight) //mins
   };
 }
 
 export function contains(bbox: BoundingBox, coordinate: LatLng) {
-  return coordinate.lat <= bbox.to.lat && coordinate.lat >= bbox.from.lat && coordinate.lng <= bbox.to.lng && coordinate.lng >= bbox.from.lng;
+  return coordinate.lat <= bbox.max.lat && coordinate.lat >= bbox.min.lat && coordinate.lng <= bbox.max.lng && coordinate.lng >= bbox.min.lng;
 }
 
 export function isWithinBox(bbox: BoundingBox, bbox2: BoundingBox) {
-  return bbox.from.lat >= bbox2.from.lat && bbox.from.lng >= bbox2.from.lng && bbox.to.lat <= bbox2.to.lat && bbox.to.lng <= bbox2.to.lng;
+  return bbox.min.lat >= bbox2.min.lat && bbox.min.lng >= bbox2.min.lng && bbox.max.lat <= bbox2.max.lat && bbox.max.lng <= bbox2.max.lng;
 }
 export const getCenter = (bbox: BoundingBox) => {
-  return { lng: (bbox.from.lng + bbox.to.lng) / 2, lat: (bbox.from.lat + bbox.to.lat) / 2 };
+  return { lng: (bbox.min.lng + bbox.max.lng) / 2, lat: (bbox.min.lat + bbox.max.lat) / 2 };
 };
 
 export interface CameraPadding {
@@ -61,7 +61,7 @@ export const getBoundingBox = (coordinates: Position[], padding: number = 0): Di
 };
 
 export const fromBoundingBox = (bbox: BoundingBox): { ne: [number, number]; sw: [number, number] } => {
-  return { sw: [bbox.from.lng, bbox.from.lat], ne: [bbox.to.lng, bbox.to.lat] };
+  return { sw: [bbox.min.lng, bbox.min.lat], ne: [bbox.max.lng, bbox.max.lat] };
 };
 
 export const isFeatureCollection = (x: any): x is FeatureCollection => {

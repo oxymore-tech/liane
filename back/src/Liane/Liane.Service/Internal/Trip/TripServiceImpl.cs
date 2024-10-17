@@ -176,16 +176,16 @@ public sealed class TripServiceImpl(
     return new LianeMatchDisplay(new FeatureCollection(segments.ToFeatures().ToList()), matches.Data);
   }
 
-  public async Task<PaginatedResponse<Api.Trip.Trip>> List(LianeFilter lianeFilter, Pagination pagination, CancellationToken cancellationToken = default)
+  public async Task<PaginatedResponse<Api.Trip.Trip>> List(TripFilter tripFilter, Pagination pagination, CancellationToken cancellationToken = default)
   {
-    var filter = BuildFilter(lianeFilter);
+    var filter = BuildFilter(tripFilter);
     var paginatedLianes = await Collection.PaginateTime(pagination, l => l.DepartureTime, filter, cancellationToken: cancellationToken);
-    if (lianeFilter is { ForCurrentUser: true, States.Length: > 0 })
+    if (tripFilter is { ForCurrentUser: true, States.Length: > 0 })
     {
       // Return with user's version of liane state
       var result = await paginatedLianes.SelectAsync(async l =>
         l with { State = GetUserState(await MapEntity(l), l.Members.Find(m => m.User.Id == currentContext.CurrentUser().Id)!) });
-      paginatedLianes = result.Where(l => lianeFilter.States.Contains(l.State));
+      paginatedLianes = result.Where(l => tripFilter.States.Contains(l.State));
     }
 
     return await paginatedLianes.SelectAsync(MapEntity) with { TotalCount = await Count(filter) };
@@ -201,10 +201,10 @@ public sealed class TripServiceImpl(
       .SelectAsync(MapEntity, cancellationToken: cancellationToken);
   }
 
-  private FilterDefinition<LianeDb> BuildFilter(LianeFilter lianeFilter)
+  private FilterDefinition<LianeDb> BuildFilter(TripFilter tripFilter)
   {
     FilterDefinition<LianeDb> filter;
-    if (lianeFilter.ForCurrentUser)
+    if (tripFilter.ForCurrentUser)
     {
       var currentUser = currentContext.CurrentUser();
       filter = GetAccessLevelFilter(currentUser.Id, ResourceAccessLevel.Member);
@@ -212,9 +212,9 @@ public sealed class TripServiceImpl(
 
     else filter = FilterDefinition<LianeDb>.Empty;
 
-    if (lianeFilter.States?.Length > 0)
+    if (tripFilter.States?.Length > 0)
     {
-      filter &= (Builders<LianeDb>.Filter.In(l => l.State, lianeFilter.States)
+      filter &= (Builders<LianeDb>.Filter.In(l => l.State, tripFilter.States)
                  | Builders<LianeDb>.Filter.Eq(l => l.State, TripStatus.Started)
                  | Builders<LianeDb>.Filter.Eq(l => l.State, TripStatus.Finished));
     }

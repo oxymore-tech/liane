@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,6 +13,7 @@ using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Postgis.Db;
 using Liane.Service.Internal.Util;
+using Liane.Service.Internal.Util.Geo;
 using Liane.Service.Internal.Util.Sql;
 using NetTopologySuite.Geometries;
 using UuidExtensions;
@@ -79,7 +81,7 @@ public sealed class LianeServiceImpl(
     return created;
   }
 
-  public async Task<ImmutableList<LianeMatch>> List()
+  public async Task<ImmutableList<LianeMatch>> Match()
   {
     var userId = currentContext.CurrentUser().Id;
     using var connection = db.NewConnection();
@@ -117,6 +119,44 @@ public sealed class LianeServiceImpl(
         new LianeState.Detached(result)
       );
     }).ToImmutableList();
+  }
+
+  public async Task<ImmutableList<Api.Community.Liane>> List(LianeFilter filter)
+  {
+    var userId = currentContext.CurrentUser().Id;
+    using var connection = db.NewConnection();
+
+    var lianeRequestFilter = Filter<LianeRequestDb>.Empty;
+
+    if (filter.ForCurrentUser)
+    {
+      lianeRequestFilter &= Filter<LianeRequestDb>.Where(r => r.CreatedBy, ComparisonOperator.Eq, userId);
+    }
+
+    if (filter.Bbox is not null)
+    {
+      var ids = await connection.QueryAsync<Guid>("""
+                                                  SELECT lr.id
+                                                  FROM liane_request lr
+                                                  INNER JOIN  route r ON lr.way_points = r.way_points
+                                                  WHERE ST_Intersects(@bbox, r.geometry)
+                                                  """, new { bbox = filter.Bbox.AsPolygon() });
+      lianeRequestFilter &= Filter<LianeRequestDb>.Where(r => r.Id, ComparisonOperator.In, ids);
+    }
+
+    IEnumerable<LianeRequest> lianeRequests = await lianeRequestFetcher.FetchLianeRequests(connection, lianeRequestFilter);
+
+    if (filter.WeekDays is not null)
+    {
+      lianeRequests = lianeRequests.Where(r => r.WeekDays.HasFlag(filter.WeekDays.Value));
+    }
+
+    return (await lianeFetcher.FetchLianes(connection, lianeRequests.Select(l => l.Id!.Value).Take(20))).Values
+      .OrderByDescending(l => l.TotalMembers)
+      .ThenByDescending(l => l.WeekDays)
+      .ThenByDescending(l => l.ReturnAfter - l.ArriveBefore)
+      .ThenBy(l => l.Id)
+      .ToImmutableList();
   }
 
   public async Task<LianeRequest> Update(Ref<LianeRequest> id, LianeRequest request)

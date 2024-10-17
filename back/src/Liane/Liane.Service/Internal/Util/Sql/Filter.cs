@@ -4,7 +4,9 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
 using Liane.Api.Routing;
+using Liane.Api.Util.Geo;
 using Liane.Service.Internal.Util.Geo;
+using NetTopologySuite.Geometries;
 
 namespace Liane.Service.Internal.Util.Sql;
 
@@ -35,13 +37,13 @@ public abstract record Filter<T>
   public static Filter<T> operator |(Filter<T> left, Filter<T> right) => left.Or(right);
 
   public static Filter<T> Empty => new EmptyFilter();
-  
+
   public static Filter<T> Regex(Expression<Func<T, object?>> field, object? operand) => new Condition(field, ComparisonOperator.Regex, operand);
-  
+
   public static Filter<T> Where<TValue>(Expression<Func<T, TValue>> field, ComparisonOperator op, TValue operand) => new Condition(FieldDefinition<T>.From(field), op, operand);
   public static Filter<T> Where(Expression<Func<T, object?>> field, ComparisonOperator op, object? operand) => Where<object?>(field, op, operand);
   public static Filter<T> Where(FieldDefinition<T> field, ComparisonOperator op, object? operand) => new Condition(field, op, operand);
-  
+
   public Filter<T> And(Expression<Func<T, object?>> field, ComparisonOperator op, object? operand) => this & Where<object?>(field, op, operand);
   public Filter<T> Or(Expression<Func<T, object?>> field, ComparisonOperator op, object? operand) => this | Where<object?>(field, op, operand);
 
@@ -53,6 +55,12 @@ public abstract record Filter<T>
   }
 
   public static Filter<T> Within(Expression<Func<T, LatLng?>> func, BoundingBox boundingBox)
+  {
+    var field = FieldDefinition<T>.From(func);
+    return new WithinFilter(field, boundingBox);
+  }
+
+  public static Filter<T> Within(Expression<Func<T, LineString?>> func, BoundingBox boundingBox)
   {
     var field = FieldDefinition<T>.From(func);
     return new WithinFilter(field, boundingBox);

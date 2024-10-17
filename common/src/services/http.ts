@@ -45,6 +45,10 @@ export class HttpClient {
     return this.fetchAndCheckAs<T>("POST", uri, options);
   }
 
+  putAs<T>(uri: string, options: QueryPostOptions = {}): Promise<T> {
+    return this.fetchAndCheckAs<T>("PUT", uri, options);
+  }
+
   async postAsString(uri: string, options: QueryPostOptions = {}): Promise<string> {
     const response = await this.fetchAndCheckWithRetry("POST", uri, options);
     return await response.text();

@@ -32,7 +32,7 @@ describe.sequential("Liane as a community", () => {
         timeConstraints: [{ when: { start: { hour: 8 }, end: { hour: 9 } }, at: pickup }],
         isEnabled: true
       });
-      const actual = await currentUser.services.community.list();
+      const actual = await currentUser.services.community.match();
       expect(actual).toBeDefined();
     });
   });

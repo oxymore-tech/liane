@@ -220,8 +220,8 @@ export const DEFAULT_TLS = {
 };
 
 export const FR_BBOX: BoundingBox = {
-  from: { lat: 41.172856, lng: -5.818786 },
-  to: { lat: 51.577228, lng: 10.331117 }
+  min: { lat: 41.172856, lng: -5.818786 },
+  max: { lat: 51.577228, lng: 10.331117 }
 };
 
 export const getMapStyleUrl = (env: AppEnv) => "https://api.maptiler.com/maps/streets-v2/style.json?key=" + env.raw.MAPTILER_KEY;
