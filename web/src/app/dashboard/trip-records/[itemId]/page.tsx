@@ -17,6 +17,7 @@ import { useLocalization } from "@/api/intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { GeojsonSource } from "@/components/map/GeojsonSource";
 import { Popup } from "@/components/map/Popup";
+import { RallyingPointsLayer } from "@/components/map/layers/RallyingPointsLayer";
 
 const RegenButton = ({ id }: { id: string }) => {
   const [loading, setLoading] = useState(false);
@@ -240,6 +241,7 @@ export default function TripRecordItemPage({ params }: { params: { itemId: strin
         </div>
       )}
       <Map center={from?.rallyingPoint.location}>
+        <RallyingPointsLayer />
         {!!record && <RouteLayer points={record.wayPoints.map(w => w.rallyingPoint)} />}
         {!!markerFeatures && <PingsMarkersLayer features={markerFeatures!} />}
         {!!record && !!markerFeatures && (
