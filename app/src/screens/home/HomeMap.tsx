@@ -15,10 +15,18 @@ import { PotentialLianeLayer } from "@/components/map/layers/PotentialLianeLayer
 import { RallyingPointsFeaturesDisplayLayer } from "@/components/map/layers/RallyingPointsFeaturesDisplayLayer";
 import { AppColors } from "@/theme/colors";
 import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay";
-import { BottomSheetObservableMessage } from "@/components/base/AppBottomSheet";
+import {
+  AppBottomSheet,
+  AppBottomSheetHandleHeight,
+  AppBottomSheetScrollView,
+  BottomSheetObservableMessage,
+  BottomSheetRefProps
+} from "@/components/base/AppBottomSheet";
 import { PickupDestinationsDisplayLayer } from "@/components/map/layers/PickupDestinationsDisplayLayer";
 import { AppLogger } from "@/api/logger";
 import { useObservable } from "@/util/hooks/subscription";
+import { ActivityIndicator, View } from "react-native";
+import { AppStyles } from "@/theme/styles.ts";
 
 export type HomeMapProps = {
   onMovingStateChanged: (moving: boolean) => void;
@@ -193,83 +201,102 @@ export const HomeMap = React.forwardRef<AppMapViewController, HomeMapProps>(
     };
 
     return (
-      <AppMapView
-        bounds={mapBounds}
-        showGeolocation={state.matches("map") || state.matches("point") ? "bottom" : undefined} //&& !movingDisplay}
-        onRegionChanged={onRegionChanged}
-        onStopMovingRegion={() => {
-          onMovingStateChanged(false);
-        }}
-        onStartMovingRegion={() => {
-          onMovingStateChanged(true);
-        }}
-        ref={appMapRef}>
-        {state.matches("map") && (
-          <LianeDisplayLayer
+      <>
+        <AppMapView
+          bounds={mapBounds}
+          showGeolocation={state.matches("map") || state.matches("point") ? "bottom" : undefined} //&& !movingDisplay}
+          onRegionChanged={onRegionChanged}
+          onStopMovingRegion={() => {
+            onMovingStateChanged(false);
+          }}
+          onStartMovingRegion={() => {
+            onMovingStateChanged(true);
+          }}
+          ref={appMapRef}>
+          {state.matches("map") && (
+            <LianeDisplayLayer
             weekDays={state.context.filter.weekDays}
-            onSelect={rp => {
-              if (rp) {
-                machine.send("SELECT", { data: rp });
-                featureSubject?.next(rp.point_type === "active" ? undefined : []);
-              } else {
-                machine.send("BACK");
-              }
+              onSelect={rp => {
+                if (rp) {
+                  machine.send("SELECT", { data: rp });
+                  featureSubject?.next(rp.point_type === "active" ? undefined : []);
+                } else {
+                  machine.send("BACK");
+                }
+              }}
+            />
+          )}
+          {state.matches("point") && (
+            <PickupDestinationsDisplayLayer
+            weekDays={state.context.filter.weekDays}
+              point={(state.context.filter.to || state.context.filter.from)!.id!}
+              type={state.context.filter.from ? "pickup" : "deposit"}
+              onSelect={rp => {
+                if (rp) {
+                  machine.send("SELECT", { data: rp });
+                } else {
+                  machine.send("BACK");
+                }
+              }}
+            />
+          )}
+          {(isMatchState || isDetailState) && (
+            <LianeShapeDisplayLayer useWidth={3} lianeDisplay={matchDisplay} lianeId={isDetailState ? state.context.selectedMatch!.trip.id : null} />
+          )}
+          {isMatchState && ((state.matches({ match: "idle" }) && state.context.matches!.length === 0) || state.matches({ match: "load" })) && (
+            <PotentialLianeLayer from={state.context.filter.from!} to={state.context.filter.to!} />
+          )}
+          {/*isDetailState && <LianeMatchRouteLayer from={state.context.filter.from!} to={state.context.filter.to!} match={state.context.selectedMatch!} />*/}
+
+          {isMatchStateIdle && (
+            <RallyingPointsFeaturesDisplayLayer
+              rallyingPoints={pickupsDisplay}
+              cluster={false}
+              interactive={false}
+              id="pickups"
+              color={AppColors.primaryColor}
+            />
+          )}
+          {isMatchStateIdle && (
+            <RallyingPointsFeaturesDisplayLayer
+              rallyingPoints={depositsDisplay}
+              cluster={false}
+              interactive={false}
+              id="deposits"
+              color={AppColors.primaryColor}
+            />
+          )}
+
+          {state.matches("point") && (
+            <WayPointDisplay
+              rallyingPoint={(state.context.filter.to || state.context.filter.from)!}
+              type={state.context.filter.from ? "from" : "to"}
+            />
+          )}
+
+          {isDetailState && <WayPointDisplay rallyingPoint={detailStateData!.pickup} type={"from"} />}
+          {isDetailState && <WayPointDisplay rallyingPoint={detailStateData!.deposit} type={"to"} />}
+
+          {state.matches("match") && <WayPointDisplay rallyingPoint={state.context.filter.from!} type={"from"} />}
+          {state.matches("match") && <WayPointDisplay rallyingPoint={state.context.filter.to!} type={"to"} />}
+
+          {children}
+        </AppMapView>
+        <AppBottomSheet
+          ref={refBottomSheet}
+          stops={[AppBottomSheetHandleHeight + 96, 0.45, 1]}
+          padding={{ top: 80 }}
+          initialStop={1}
+          backgroundStyle={{
+            backgroundColor: AppColors.gray100
+          }}>
+          <View
+            style={{
+              height: 400
             }}
           />
-        )}
-        {state.matches("point") && (
-          <PickupDestinationsDisplayLayer
-            weekDays={state.context.filter.weekDays}
-            point={(state.context.filter.to || state.context.filter.from)!.id!}
-            type={state.context.filter.from ? "pickup" : "deposit"}
-            onSelect={rp => {
-              if (rp) {
-                machine.send("SELECT", { data: rp });
-              } else {
-                machine.send("BACK");
-              }
-            }}
-          />
-        )}
-        {(isMatchState || isDetailState) && (
-          <LianeShapeDisplayLayer useWidth={3} lianeDisplay={matchDisplay} lianeId={isDetailState ? state.context.selectedMatch!.trip.id : null} />
-        )}
-        {isMatchState && ((state.matches({ match: "idle" }) && state.context.matches!.length === 0) || state.matches({ match: "load" })) && (
-          <PotentialLianeLayer from={state.context.filter.from!} to={state.context.filter.to!} />
-        )}
-        {/*isDetailState && <LianeMatchRouteLayer from={state.context.filter.from!} to={state.context.filter.to!} match={state.context.selectedMatch!} />*/}
-
-        {isMatchStateIdle && (
-          <RallyingPointsFeaturesDisplayLayer
-            rallyingPoints={pickupsDisplay}
-            cluster={false}
-            interactive={false}
-            id="pickups"
-            color={AppColors.primaryColor}
-          />
-        )}
-        {isMatchStateIdle && (
-          <RallyingPointsFeaturesDisplayLayer
-            rallyingPoints={depositsDisplay}
-            cluster={false}
-            interactive={false}
-            id="deposits"
-            color={AppColors.primaryColor}
-          />
-        )}
-
-        {state.matches("point") && (
-          <WayPointDisplay rallyingPoint={(state.context.filter.to || state.context.filter.from)!} type={state.context.filter.from ? "from" : "to"} />
-        )}
-
-        {isDetailState && <WayPointDisplay rallyingPoint={detailStateData!.pickup} type={"from"} />}
-        {isDetailState && <WayPointDisplay rallyingPoint={detailStateData!.deposit} type={"to"} />}
-
-        {state.matches("match") && <WayPointDisplay rallyingPoint={state.context.filter.from!} type={"from"} />}
-        {state.matches("match") && <WayPointDisplay rallyingPoint={state.context.filter.to!} type={"to"} />}
-
-        {children}
-      </AppMapView>
+        </AppBottomSheet>
+      </>
     );
   }
 );

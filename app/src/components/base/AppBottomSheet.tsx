@@ -1,4 +1,4 @@
-import { FlatListProps, ScrollViewProps, StyleProp, StyleSheet } from "react-native";
+import { FlatListProps, ScrollViewProps, StyleProp, StyleSheet, View } from "react-native";
 import React, { createContext, forwardRef, PropsWithChildren, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { FlatList, Gesture, GestureDetector, ScrollView } from "react-native-gesture-handler";
 import Animated, { interpolate, interpolateColor, runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
@@ -22,6 +22,7 @@ export interface BottomSheetProps extends PropsWithChildren {
   onScrolled?: (y: number) => void;
   canScroll?: boolean;
   backgroundStyle?: StyleProp<any>;
+  handlerColorStyle?: StyleProp<any>;
 }
 
 export type BottomSheetRefProps = {
@@ -45,7 +46,7 @@ interface BottomSheetContext {
 const BottomSheetContext = createContext<BottomSheetContext>();
 
 export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
-  ({ onScrolled, children, backgroundStyle, canScroll, stops, margins, padding, initialStop = 0 }, ref) => {
+  ({ onScrolled, children, backgroundStyle, canScroll, stops, margins, padding, initialStop = 0, handlerColorStyle }, ref) => {
     const marginBottom = margins?.bottom || 0;
     const insets = useSafeAreaInsets();
     const paddingTop = (padding?.top || insets.top + 16) - AppBottomSheetHandleHeight;
@@ -212,7 +213,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
           <Animated.View
             style={[
               styles.bottomSheetContainerDefaults,
-              backgroundStyle,
+              handlerColorStyle ?? backgroundStyle,
               styles.bottomSheetContainer,
               AppStyles.shadow,
               marginBottom > 0
@@ -223,7 +224,22 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
                 : {},
               bSheetStyle
             ]}>
-            <Animated.View style={[styles.handler, handleStyle]} />
+            <View
+              style={{
+                justifyContent: "center",
+                alignItems: "center",
+                flexDirection: "row"
+              }}>
+              <View
+                style={{
+                  backgroundColor: backgroundStyle.backgroundColor,
+                  width: 80,
+                  borderTopRightRadius: 40,
+                  borderTopLeftRadius: 40
+                }}>
+                <Animated.View style={[styles.handler, handleStyle]} />
+              </View>
+            </View>
 
             <BottomSheetContext.Provider
               value={{
@@ -248,7 +264,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
                   context.value = { y: h.value };
                 }
               }}>
-              {children}
+              <View style={backgroundStyle}>{children}</View>
             </BottomSheetContext.Provider>
           </Animated.View>
         </Animated.View>
