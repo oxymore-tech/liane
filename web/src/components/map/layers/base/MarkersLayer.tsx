@@ -28,12 +28,12 @@ export const useMarkersLayer = ({ source, id, props, onMouseLeavePoint, onMouseE
         if (!image) console.warn("No image found");
         else if (!map.current?.hasImage("pin")) {
           map.current?.addImage("pin", image, { sdf: true });
-          setReady(true);
         }
-        console.log("here");
+        setReady(true);
+        console.debug("image is loaded");
       });
 
-    console.log(map.current?.loaded());
+    console.debug("image loaded", map.current?.loaded());
     if (map.current?.loaded()) loadImage();
     else map.current?.once("load", loadImage);
     return () => {
@@ -99,7 +99,7 @@ export const useMarkersLayer = ({ source, id, props, onMouseLeavePoint, onMouseE
   }, [ready, source, onMouseEnterPoint, onMouseLeavePoint, onClickPoint, map]);
 };
 
-export const RPMarkersLayer = ({
+/*export const RPMarkersLayer = ({
   onClickListener,
   sourceId
 }: {
@@ -165,4 +165,4 @@ export const RPMarkersLayer = ({
       ) : null,
     [onClickListener, ready, sourceId]
   );
-};
+};*/

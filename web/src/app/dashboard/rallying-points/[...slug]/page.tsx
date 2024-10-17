@@ -5,11 +5,11 @@ import { useAppServices } from "@/components/ContextProvider";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { GeojsonSource } from "@/components/map/GeojsonSource";
 import { EmptyFeatureCollection, RallyingPoint, Ref, toLatLng } from "@liane/common";
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Feature, FeatureCollection, Point } from "geojson";
 import { LineLayer } from "@/components/map/layers/base/LineLayer";
 import Map from "@/components/map/Map";
-import maplibregl, { FillLayerSpecification, LineLayerSpecification } from "maplibre-gl";
+import maplibregl, { FillLayerSpecification, LineLayerSpecification, MapGeoJSONFeature } from "maplibre-gl";
 import { LoadingViewIndicator } from "@/components/base/LoadingViewIndicator";
 import { FitFeatures } from "@/components/map/FitFeatures";
 import { Breadcrumb, Card, Checkbox, Toast } from "flowbite-react";
@@ -17,7 +17,6 @@ import centroid from "@turf/centroid";
 import { LayerConfig } from "@/components/map/layers/base/abstractLayer";
 import { SymbolLayerSpecification } from "@maplibre/maplibre-gl-style-spec";
 import { Marker } from "@/components/map/Marker";
-import { SplitView } from "@/components/base/SplitView";
 import { IconButton } from "@/components/base/IconButton";
 import { FormProvider, useController, useForm, useFormContext } from "react-hook-form";
 import { MarkerSymbolLayer, SymbolLayer } from "@/components/map/layers/base/SymbolLayer";
@@ -29,6 +28,7 @@ import { AreaSelectionControl } from "@/components/map/AreaSelection";
 import { ControlPanel, ControlPanelButton, ControlPanelToggle } from "@/components/map/ControlPanel";
 import { Icon } from "@/components/base/Icon";
 import { RallyingPointImportModal } from "@/app/dashboard/rallying-points/[...slug]/RallyingPointImportModal";
+import { point } from "@turf/turf";
 
 export default function RallyingPointsAdminPage() {
   const { slug } = useParams();
@@ -106,13 +106,20 @@ const DepartmentView = ({
   const [selectingLocation, setSelectingLocation] = useState(false);
   const [importingPoints, setImportingPoints] = useState(false);
 
+  const [multiselectFeatures, setMultiselectFeatures] = useState<MapGeoJSONFeature[]>([]);
+
+  const [selectingArea, setSelectingArea] = useState(false);
+  useEffect(() => {
+    map.current?.setPadding({ left: showBottomPane ? 600 : 0, top: 0, bottom: 0, right: 0 });
+  }, [showBottomPane]);
+
   return (
-    <SplitView initial={200}>
+    <>
       <FormProvider {...methods}>
         <Map
           //@ts-ignore
           ref={map}
-          center={newRallyingPoint?.location ?? center}
+          center={center}
           onClick={e => {
             if (selectingLocation) {
               console.log(e.lngLat);
@@ -122,12 +129,18 @@ const DepartmentView = ({
           }}>
           <ControlPanel>
             <AreaSelectionControl
+              onToggleTool={setSelectingArea}
               targetLayers={["rallying_points"]}
-              onSelectFeatures={f => {
+              onSelectFeatures={(f, ctrlKey) => {
                 console.debug(f.length, f);
-                /* TODO f.forEach(selected => {
+                //TODO
+                f.forEach(selected => {
                   map.current?.setFeatureState({ source: "rallying_points", id: selected.id }, { selected: true });
-                });*/
+                });
+                setMultiselectFeatures(p => {
+                  if (ctrlKey) return p.concat(f);
+                  else return f;
+                });
               }}
               onHoverFeatureStateChanged={(f, hovered) => {
                 console.debug(f, hovered);
@@ -145,8 +158,19 @@ const DepartmentView = ({
             </ControlPanelToggle>
           </ControlPanel>
 
-          {!!boundaries && !newRallyingPoint && (
-            <FitFeatures features={boundaries.features.concat(data?.requests?.features ?? [])} setMaxBounds={true} />
+          {!!boundaries && !selectingArea && (
+            <FitFeatures
+              features={
+                !!selectedRallyingPointFeature
+                  ? [selectedRallyingPointFeature]
+                  : !!selectedRequestFeature
+                  ? [selectedRequestFeature]
+                  : !!newRallyingPoint?.location
+                  ? [point([newRallyingPoint.location.lng, newRallyingPoint.location.lat])]
+                  : boundaries.features.concat(data?.requests?.features ?? [])
+              }
+              setMaxBounds={true}
+            />
           )}
 
           <Sources {...data} />
@@ -172,6 +196,7 @@ const DepartmentView = ({
             source={"rallying_points"}
             props={RPLayerProps}
             onClick={e => {
+              if (selectingLocation || selectingArea) return;
               if (e.features && e.features.length > 0) {
                 if (selectedRequest) {
                   map.current?.setFeatureState({ source: "rallying_points_requests", id: selectedRequest }, { selected: false });
@@ -189,6 +214,7 @@ const DepartmentView = ({
             source={"rallying_points_requests"}
             props={RPRequestLayerProps}
             onClick={e => {
+              if (selectingLocation || selectingArea) return;
               if (e.features && e.features.length > 0) {
                 if (selectedRallyingPoint) {
                   map.current?.setFeatureState({ source: "rallying_points", id: selectedRallyingPoint }, { selected: false });
@@ -201,13 +227,6 @@ const DepartmentView = ({
             }}
           />
           {newRallyingPoint && <Marker lngLat={newRallyingPoint.location!} />}
-          {/*selectedLocation && (
-            <PopupContainer lngLat={selectedLocation} anchor={"top"}>
-              <Card>
-                <Button>Choisir cette localisation</Button>
-              </Card>
-            </PopupContainer>
-          )*/}
         </Map>
 
         <div className="absolute z-[5] w-full bottom-0 top-0 pointer-events-none">
@@ -226,54 +245,59 @@ const DepartmentView = ({
               </Toast>
             </div>
           )}
-          {!selectingLocation && !newRallyingPoint && <LegendView />}
+          {!selectingLocation && !newRallyingPoint && !showBottomPane && <LegendView />}
           <RallyingPointImportModal importingPoints={importingPoints} onClose={() => setImportingPoints(false)} />
         </div>
       </FormProvider>
       {showBottomPane && (
-        <div className=" p-1.5 grow grid bg-white dark:bg-gray-900" style={{ gridTemplateRows: "auto minmax(0, 1fr) auto" }}>
-          <div className="flex gap-4 justify-start items-center mx-1 mb-4">
-            <IconButton
-              icon="close"
-              onClick={() => {
-                if (selectedRallyingPoint)
-                  map.current?.setFeatureState({ source: "rallying_points", id: selectedRallyingPoint }, { selected: false });
-                if (selectedRequest) map.current?.setFeatureState({ source: "rallying_points_requests", id: selectedRequest }, { selected: false });
-                setSelectedRallyingPoint(null);
-                setNewRallyingPoint(null);
-                setSelectedRequest(null);
-              }}
-            />
-            <h3 className="font-bold">
-              {newRallyingPoint && "Nouveau point de ralliement"}
-              {selectedRallyingPointFeature && selectedRallyingPointFeature.properties.label}
-              {selectedRequest && "Propostion de point"}
-            </h3>
-          </div>
-          <div className="overflow-y-auto flex flex-col">
-            {newRallyingPoint && (
-              <RallyingPointEdition
-                refresh={() => queryClient.invalidateQueries({ queryKey: ["rallying_point", department] })}
-                point={{ ...newRallyingPoint }}
-              />
-            )}
-            {selectedRallyingPointFeature && (
-              <RallyingPointEdition
-                refresh={() => queryClient.invalidateQueries({ queryKey: ["rallying_point", department] })}
-                point={{ ...selectedRallyingPointFeature.properties, location: toLatLng(selectedRallyingPointFeature.geometry.coordinates) }}
-              />
-            )}
-            {selectedRequestFeature && (
-              <RequestView
-                refresh={() => queryClient.invalidateQueries({ queryKey: ["rallying_point", department] })}
-                //  refresh={() => queryClient.invalidateQueries({ queryKey: ["rallying_point", department] })}
-                request={selectedRequestFeature.properties}
-              />
-            )}
-          </div>
+        <div className="px-2 py-2 absolute z-[100] bottom-0 top-0 left-0 w-[600px] pointer-events-auto ">
+          <Card className="bg-white dark:bg-gray-900 h-full">
+            <div className="grow grid" style={{ gridTemplateRows: "auto minmax(0, 1fr) auto" }}>
+              <div className="flex gap-4 justify-start items-center mx-1 mb-4">
+                <IconButton
+                  icon="close"
+                  onClick={() => {
+                    if (selectedRallyingPoint)
+                      map.current?.setFeatureState({ source: "rallying_points", id: selectedRallyingPoint }, { selected: false });
+                    if (selectedRequest)
+                      map.current?.setFeatureState({ source: "rallying_points_requests", id: selectedRequest }, { selected: false });
+                    setSelectedRallyingPoint(null);
+                    setNewRallyingPoint(null);
+                    setSelectedRequest(null);
+                  }}
+                />
+                <h3 className="font-bold">
+                  {newRallyingPoint && "Nouveau point de ralliement"}
+                  {selectedRallyingPointFeature && selectedRallyingPointFeature.properties.label}
+                  {selectedRequest && "Propostion de point"}
+                </h3>
+              </div>
+              <div className="overflow-y-auto flex flex-col">
+                {newRallyingPoint && (
+                  <RallyingPointEdition
+                    refresh={() => queryClient.invalidateQueries({ queryKey: ["rallying_point", department] })}
+                    point={{ ...newRallyingPoint }}
+                  />
+                )}
+                {selectedRallyingPointFeature && (
+                  <RallyingPointEdition
+                    refresh={() => queryClient.invalidateQueries({ queryKey: ["rallying_point", department] })}
+                    point={{ ...selectedRallyingPointFeature.properties, location: toLatLng(selectedRallyingPointFeature.geometry.coordinates) }}
+                  />
+                )}
+                {selectedRequestFeature && (
+                  <RequestView
+                    refresh={() => queryClient.invalidateQueries({ queryKey: ["rallying_point", department] })}
+                    //  refresh={() => queryClient.invalidateQueries({ queryKey: ["rallying_point", department] })}
+                    request={selectedRequestFeature.properties}
+                  />
+                )}
+              </div>
+            </div>
+          </Card>
         </div>
       )}
-    </SplitView>
+    </>
   );
 };
 
@@ -322,7 +346,7 @@ const RPLayerProps: LayerConfig<SymbolLayerSpecification>["props"] = {
   //   minzoom: 8
   layout: {
     "icon-image": "pin",
-    "icon-size": ["interpolate", ["linear"], ["zoom"], 7, 0.3, 9, 0.5, 11, 0.7],
+    "icon-size": ["interpolate", ["linear"], ["zoom"], 7, 0.8, 9, 1, 11, 1.4],
     "icon-allow-overlap": true,
     "icon-optional": false,
     "icon-anchor": "bottom",
@@ -348,7 +372,7 @@ const RPRequestLayerProps: LayerConfig<SymbolLayerSpecification>["props"] = {
   //   minzoom: 8
   layout: {
     "icon-image": "pin",
-    "icon-size": ["interpolate", ["linear"], ["zoom"], 7, 0.3, 9, 0.5, 11, 0.7],
+    "icon-size": ["interpolate", ["linear"], ["zoom"], 7, 0.8, 9, 1, 11, 1.4],
     "icon-allow-overlap": true,
     "icon-optional": false,
     "icon-anchor": "bottom",
@@ -400,7 +424,7 @@ const ItemLegend = ({ name, label }: { name: string; label: string }) => {
 };
 const LegendView = () => {
   return (
-    <div className="px-4 py-2 absolute z-[5] bottom-0 pointer-events-auto ">
+    <div className="px-4 py-2 absolute z-[5] bottom-0 pointer-events-auto max-w-[600px]">
       <Card>
         <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Filtres</h5>
         <div className="gap-4 flex items-center">

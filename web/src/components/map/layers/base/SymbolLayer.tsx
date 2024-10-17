@@ -26,7 +26,7 @@ export const MarkerSymbolLayer = (config: LayerConfig<SymbolLayerSpecification>)
     const loadImage = () =>
       map.current?.loadGlobalImage("/pin.png", "pin", () => {
         setReady(true);
-        //    console.log("here", config.id);
+        console.debug("here", config.id);
       });
 
     // console.log(map.current?.loaded());
