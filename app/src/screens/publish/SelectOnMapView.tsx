@@ -75,6 +75,9 @@ export const SelectOnMapView = ({ onSelect, title }: SelectOnMapViewProps) => {
 
 const styles = StyleSheet.create({
   container: {
+    position: "absolute",
+    top: 0,
+    left: 0,
     height: "100%",
     width: "100%",
     flex: 1

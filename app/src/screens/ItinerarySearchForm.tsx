@@ -378,6 +378,7 @@ export type ItinerarySearchFormProps = {
   trip: Partial<Trip>;
   updateTrip: (trip: Partial<Trip>) => void;
   title?: string;
+  style?: StyleProp<ViewStyle>;
   formWrapperStyle?: StyleProp<ViewStyle>;
   formStyle?: StyleProp<ViewStyle>;
   editable?: boolean;
@@ -388,6 +389,7 @@ export const ItinerarySearchForm = ({
   trip: currentTrip,
   updateTrip,
   title,
+  style,
   formWrapperStyle,
   formStyle,
   editable = true,
@@ -431,7 +433,7 @@ export const ItinerarySearchForm = ({
   }
 
   return (
-    <Column style={{ flex: editable ? 1 : undefined }}>
+    <Column style={[{ flex: editable ? 1 : undefined }, style]}>
       <ItineraryFormHeader
         title={title}
         editable={editable}

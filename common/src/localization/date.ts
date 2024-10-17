@@ -97,15 +97,11 @@ export class Localization {
 
   formatDaysOfTheWeek = (daysOfTheWeek?: DayOfWeekFlag) => {
     if (!daysOfTheWeek || daysOfTheWeek === "0000000") {
-      return;
+      return "Jamais";
     } else if (daysOfTheWeek === "1111111") {
       return "Tous les jours";
     }
-    const formatted = this.daysList
-      .filter((_day: string, index: number) => daysOfTheWeek?.charAt(index) === "1")
-      .map((day: string) => `${day.toLocaleLowerCase()}s`)
-      .join(", ");
-    return `Les ${formatted}`;
+    return this.daysList.filter((_day: string, index: number) => daysOfTheWeek?.charAt(index) === "1").join(", ");
   };
 
   formatDuration = (duration: TimeInSeconds) => {

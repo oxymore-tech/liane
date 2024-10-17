@@ -5,7 +5,6 @@ import React, { useEffect } from "react";
 import { AppText } from "@/components/base/AppText.tsx";
 import { Row } from "@/components/base/AppLayout.tsx";
 import { AppIcon } from "@/components/base/AppIcon.tsx";
-import { AppStyles } from "@/theme/styles.ts";
 
 export type AccordionProps = {
   title: string;
@@ -17,9 +16,7 @@ export type AccordionProps = {
   stepStyle?: StyleProp<ViewStyle>;
 };
 
-export function Accordion({ header, step, onChangeStep, steps = [], style, stepStyle }: AccordionProps) {
-  const offset = header ? 1 : 0;
-
+export function Accordion({ step, onChangeStep, steps = [], style, stepStyle }: AccordionProps) {
   useEffect(() => {
     LogBox.ignoreLogs([
       "VirtualizedLists should never be nested inside plain ScrollViews with the same orientation because it can break windowing and other functionality - use another VirtualizedList-backed container instead."
@@ -27,26 +24,20 @@ export function Accordion({ header, step, onChangeStep, steps = [], style, stepS
   }, []);
 
   return (
-    <ScrollView style={[{ display: "flex" }, style]} keyboardShouldPersistTaps="always">
-      {header && <View style={[{ flex: step === 0 ? 1 : undefined }, styles.headerContainer]}>{header}</View>}
-      {steps
-        .filter((_, index) => step >= index + offset)
-        .map((item, index) => {
-          const stepIndex = index + offset;
-          const selected = step === stepIndex;
-          return selected || item.disableSummary ? (
-            <AccordionStep key={stepIndex} style={stepStyle} selected={selected} {...item} />
-          ) : (
-            <AccordionSummary
-              key={stepIndex}
-              index={stepIndex}
-              title={item.title}
-              onPress={() => onChangeStep && onChangeStep(stepIndex)}
-              last={index + 1 === steps.length}
-            />
-          );
-        })}
-    </ScrollView>
+    <View style={{ flex: 1 }}>
+      <ScrollView style={[{ display: "flex" }, style]} keyboardShouldPersistTaps="always">
+        {steps
+          .filter((_, index) => step >= index)
+          .map((item, index) => {
+            const selected = step === index;
+            return selected || item.disableSummary ? (
+              <AccordionStep key={index} style={stepStyle} selected={selected} {...item} />
+            ) : (
+              <AccordionSummary key={index} title={item.title} onPress={() => onChangeStep && onChangeStep(index)} />
+            );
+          })}
+      </ScrollView>
+    </View>
   );
 }
 
@@ -76,18 +67,13 @@ const AccordionStep = ({ selected, style, render }: AccordionStepProps) => {
 export type AccordionSummaryProps = {
   title: string;
   onPress: () => void;
-  index: number;
-  last: boolean;
 };
 
-const AccordionSummary = ({ title, index, onPress, last }: AccordionSummaryProps) => {
+const AccordionSummary = ({ title, onPress }: AccordionSummaryProps) => {
   return (
-    <Animated.View
-      exiting={FadeOutRight.duration(300)}
-      entering={FadeIn.duration(300).springify().damping(15)}
-      style={{ marginTop: -16, zIndex: -1 - index }}>
+    <Animated.View exiting={FadeOutRight.duration(300)} entering={FadeIn.duration(300).springify().damping(15)}>
       <Pressable onPress={onPress}>
-        <Row style={[styles.summaryContainer, !last ? AppStyles.shadow : undefined]}>
+        <Row style={styles.summaryContainer}>
           <AppText style={styles.summary}>{title}</AppText>
           <AppIcon name={"edit-2"} color={AppColors.white} />
         </Row>
@@ -105,22 +91,19 @@ const styles = StyleSheet.create({
     textAlignVertical: "center"
   },
   stepContainer: {
-    marginTop: 12
+    marginTop: 4
   },
   headerContainer: {
     borderRadius: 18
   },
   summaryContainer: {
-    paddingTop: 16,
     paddingHorizontal: 16,
     backgroundColor: AppColors.primaryColor,
-    borderBottomLeftRadius: 18,
-    borderBottomRightRadius: 18,
-    height: 75,
+    borderRadius: 16,
+    height: 48,
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    borderWidth: 2,
-    borderColor: AppColors.lightGrayBackground
+    marginTop: 4
   }
 });

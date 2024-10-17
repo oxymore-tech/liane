@@ -13,7 +13,7 @@ import { LianeQueryKey } from "@/screens/user/MyTripsScreen";
 
 import { AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
-import { CoLiane, CoLianeRequest, DayOfWeekFlag, TimeOnly, TimeOnlyUtils, Trip } from "@liane/common";
+import { CoLianeRequest, DayOfWeekFlag, TimeOnly, TimeOnlyUtils, Trip } from "@liane/common";
 import { AppModalNavigationContext } from "@/components/AppModalNavigationProvider";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppLocalization } from "@/api/i18n";
@@ -23,7 +23,6 @@ import { Accordion } from "@/screens/publish/Accordion.tsx";
 import { PageHeader } from "@/components/context/Navigation.tsx";
 import { ItinerarySearchForm } from "@/screens/ItinerarySearchForm.tsx";
 import { AppButton } from "@/components/base/AppButton.tsx";
-import { AppLogger } from "@/api/logger.ts";
 
 type StepProps<T> = {
   onChange: (v: T) => void;
@@ -48,8 +47,8 @@ export const PublishScreen = () => {
     isEnabled: true
   });
 
-  const [step, setStep] = useState<number>(initialValue ? 6 : 0);
-  const [previousStep, setPreviousStep] = useState<number>(0);
+  const [step, setStep] = useState<number>(initialValue ? 6 : -1);
+  const [previousStep, setPreviousStep] = useState<number>(-1);
   const [pending, setPending] = useState(false);
 
   useEffect(() => {
@@ -72,18 +71,16 @@ export const PublishScreen = () => {
   const handleDone = useCallback(async () => {
     setPending(true);
     try {
+      const newLianeRequest = {
+        ...lianeRequest,
+        wayPoints: [trip.from!.id!, trip.to!.id!]
+      } as CoLianeRequest;
       if (initialValue && lianeRequest.id) {
-        await services.community.update(lianeRequest.id, {
-          ...lianeRequest,
-          wayPoints: [trip.from!.id!, trip.to!.id!]
-        } as CoLianeRequest);
+        await services.community.update(lianeRequest.id, newLianeRequest);
         navigation.navigate("Lianes");
       } else {
         await queryClient.invalidateQueries(LianeQueryKey);
-        const created = await services.community.create({
-          ...lianeRequest,
-          wayPoints: [trip.from!.id!, trip.to!.id!]
-        } as CoLianeRequest);
+        const created = await services.community.create(newLianeRequest);
 
         navigation.popToTop();
         if (shouldShow) {
@@ -95,7 +92,7 @@ export const PublishScreen = () => {
     } finally {
       setPending(false);
     }
-  }, [lianeRequest, navigation, queryClient, services.community, shouldShow, showTutorial, trip.from, trip.to]);
+  }, [initialValue, lianeRequest, navigation, queryClient, services.community, shouldShow, showTutorial, trip.from, trip.to]);
 
   const stepDone = useCallback(() => {
     if (step < previousStep) {
@@ -114,65 +111,71 @@ export const PublishScreen = () => {
     [stepDone, lianeRequest]
   );
 
+  const handleUpdateTrip = useCallback(
+    (t: Partial<Trip>) => {
+      const updated = { ...trip, ...t };
+      setTrip(updated);
+      if (updated.from && updated.to) {
+        stepDone();
+      }
+    },
+    [stepDone, trip]
+  );
+
   return (
     <View style={{ flex: 1, backgroundColor: "white" }}>
       <PageHeader title={"Créer une annonce"} navigation={navigation} />
-      <Accordion
-        title={"Créer une annonce"}
-        step={step}
-        onChangeStep={setStep}
-        style={styles.accordion}
-        header={
-          <ItinerarySearchForm
-            onRequestFocus={() => setStep(0)}
-            editable={step === 0}
-            formStyle={styles.stepContainer}
-            trip={trip}
-            updateTrip={t => {
-              const updated = { ...trip, ...t };
-              setTrip(updated);
-              if (updated.from && updated.to) {
-                stepDone();
-              }
-            }}
-          />
-        }
-        stepStyle={styles.stepContainer}
-        steps={[
-          {
-            title: AppLocalization.formatDaysOfTheWeek(lianeRequest.weekDays) ?? "Pas de jours",
-            render: () => <DaysStepView value={lianeRequest.weekDays ?? "0000000"} onChange={weekDays => updateAndNext({ weekDays })} />
-          },
-          {
-            title: `Arriver avant ${AppLocalization.formatTimeOnly(lianeRequest.arriveBefore)}`,
-            render: () => (
-              <TimeStepView
-                title={`Je souhaite arriver à ${trip.to?.city ?? ""} avant ?`}
-                value={lianeRequest.arriveBefore ?? { hour: 10 }}
-                onChange={arriveBefore => updateAndNext({ arriveBefore })}
-              />
-            )
-          },
-          {
-            title: `Retour après ${AppLocalization.formatTimeOnly(lianeRequest.returnAfter)}`,
-            render: () => (
-              <TimeStepView
-                title={`Je souhaite repartir de ${trip.to?.city ?? ""} après ?`}
-                value={lianeRequest.returnAfter ?? { hour: 18 }}
-                onChange={returnAfter => updateAndNext({ returnAfter })}
-              />
-            )
-          },
-          {
-            title: lianeRequest.canDrive ? "Je peux conduire" : "Uniquement passager",
-            render: () => <VehicleStepView value={lianeRequest.canDrive ?? true} onChange={canDrive => updateAndNext({ canDrive })} />
-          },
-          {
-            title: lianeRequest.name ?? "Libélé",
-            render: () => <NameStepView value={lianeRequest.name} onChange={v => updateAndNext({ name: v })} />
-          }
-        ]}
+      <ItinerarySearchForm
+        style={{ paddingHorizontal: 16 }}
+        formStyle={styles.stepContainer}
+        onRequestFocus={() => setStep(-1)}
+        editable={step === -1}
+        trip={trip}
+        updateTrip={handleUpdateTrip}
       />
+      {step >= 0 && (
+        <Accordion
+          title={"Créer une annonce"}
+          step={step}
+          onChangeStep={setStep}
+          style={styles.accordion}
+          stepStyle={styles.stepContainer}
+          steps={[
+            {
+              title: AppLocalization.formatDaysOfTheWeek(lianeRequest.weekDays),
+              render: () => <DaysStepView value={lianeRequest.weekDays ?? "0000000"} onChange={weekDays => updateAndNext({ weekDays })} />
+            },
+            {
+              title: `Arriver avant ${AppLocalization.formatTimeOnly(lianeRequest.arriveBefore)}`,
+              render: () => (
+                <TimeStepView
+                  title={`Je souhaite arriver à ${trip.to?.city ?? ""} avant ?`}
+                  value={lianeRequest.arriveBefore ?? { hour: 10 }}
+                  onChange={arriveBefore => updateAndNext({ arriveBefore })}
+                />
+              )
+            },
+            {
+              title: `Retour après ${AppLocalization.formatTimeOnly(lianeRequest.returnAfter)}`,
+              render: () => (
+                <TimeStepView
+                  title={`Je souhaite repartir de ${trip.to?.city ?? ""} après ?`}
+                  value={lianeRequest.returnAfter ?? { hour: 18 }}
+                  onChange={returnAfter => updateAndNext({ returnAfter })}
+                />
+              )
+            },
+            {
+              title: lianeRequest.canDrive ? "Je peux conduire" : "Uniquement passager",
+              render: () => <VehicleStepView value={lianeRequest.canDrive ?? true} onChange={canDrive => updateAndNext({ canDrive })} />
+            },
+            {
+              title: lianeRequest.name ?? "Libélé",
+              render: () => <NameStepView value={lianeRequest.name} onChange={v => updateAndNext({ name: v })} />
+            }
+          ]}
+        />
+      )}
       {step >= 6 && (
         <View style={[styles.accordion, styles.bottom]}>
           <AppButton title="Envoyer" icon="arrow-circle-right-outline" onPress={handleDone} loading={pending} />
@@ -186,7 +189,7 @@ type StepFormProps = {
   title: string;
   children: React.ReactElement | React.ReactElement[];
   disabled?: boolean;
-  onValidate: () => void;
+  onValidate?: () => void;
 };
 
 const StepForm = ({ title, children, disabled = false, onValidate }: StepFormProps) => {
@@ -194,7 +197,7 @@ const StepForm = ({ title, children, disabled = false, onValidate }: StepFormPro
     <Column spacing={8} style={{ padding: 12 }}>
       <Animated.View exiting={SlideOutLeft.duration(300)} entering={SlideInLeft.delay(600).duration(300).springify().damping(15)}>
         <Center>
-          <AppText style={[AppStyles.title, styles.stepTitle]}>{title}</AppText>
+          <AppText style={AppStyles.title}>{title}</AppText>
         </Center>
       </Animated.View>
 
@@ -205,7 +208,7 @@ const StepForm = ({ title, children, disabled = false, onValidate }: StepFormPro
         {children}
       </Animated.View>
 
-      <AppButton title="Suivant" onPress={onValidate} disabled={disabled} />
+      {onValidate && <AppButton title="Suivant" onPress={onValidate} disabled={disabled} />}
     </Column>
   );
 };
@@ -279,13 +282,7 @@ const TimeStepView = ({ title, onChange, value }: TimeStepProps) => {
 
 const VehicleStepView = ({ onChange, value }: StepProps<boolean>) => {
   return (
-    <Column spacing={8} style={{ padding: 12 }}>
-      <Animated.View exiting={SlideOutLeft.duration(300)} entering={SlideInLeft.delay(600).duration(300).springify().damping(15)}>
-        <Center>
-          <AppText style={[AppStyles.title, styles.stepTitle]}>Je peux conduire ?</AppText>
-        </Center>
-      </Animated.View>
-
+    <StepForm title="Je peux conduire ?">
       <View style={{ display: "flex", flexDirection: "row", justifyContent: "center", gap: 40 }}>
         <AppButton
           title="Non"
@@ -300,7 +297,7 @@ const VehicleStepView = ({ onChange, value }: StepProps<boolean>) => {
           style={{ width: 80 }}
         />
       </View>
-    </Column>
+    </StepForm>
   );
 };
 
@@ -315,10 +312,8 @@ const NameStepView = ({ onChange, value }: StepProps<string | undefined>) => {
 };
 
 const styles = StyleSheet.create({
-  stepTitle: {
-    marginTop: 12
-  },
   accordion: {
+    flex: 1,
     paddingHorizontal: 16
   },
   bottom: {
@@ -330,6 +325,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: AppColors.lightGrayBackground,
     borderRadius: 18,
-    paddingVertical: 12
+    paddingVertical: 6
   }
 });
