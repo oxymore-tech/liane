@@ -160,7 +160,7 @@ export const HomeMap = React.forwardRef<AppMapViewController, HomeMapProps>(
           appMapRef.current?.setCenter({ lat: center[1], lng: center[0] }, zoom + 0.01, 50); //state.context.filter.from!.location
         });
       });
-    }, [state.context.filter.to?.id, state.context.filter.targetTime?.dateTime, isPointState]);
+    }, [state.context.filter.to?.id, state.context.filter.weekDays, isPointState]);
 
     const onRegionChanged = async (payload: { zoomLevel: number; isUserInteraction: boolean; visibleBounds: Position[] }) => {
       if (onZoomChanged) {
@@ -206,7 +206,7 @@ export const HomeMap = React.forwardRef<AppMapViewController, HomeMapProps>(
         ref={appMapRef}>
         {state.matches("map") && (
           <LianeDisplayLayer
-            date={state.context.filter.targetTime?.dateTime}
+            weekDays={state.context.filter.weekDays}
             onSelect={rp => {
               if (rp) {
                 machine.send("SELECT", { data: rp });
@@ -219,7 +219,7 @@ export const HomeMap = React.forwardRef<AppMapViewController, HomeMapProps>(
         )}
         {state.matches("point") && (
           <PickupDestinationsDisplayLayer
-            date={state.context.filter.targetTime?.dateTime}
+            weekDays={state.context.filter.weekDays}
             point={(state.context.filter.to || state.context.filter.from)!.id!}
             type={state.context.filter.from ? "pickup" : "deposit"}
             onSelect={rp => {

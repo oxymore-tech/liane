@@ -12,6 +12,7 @@ import {
 } from "xstate";
 import {
   BoundingBox,
+  DayOfWeekFlag,
   EmptyFeatureCollection,
   Liane,
   LianeMatch,
@@ -19,7 +20,6 @@ import {
   LianeSearchFilter,
   RallyingPoint,
   Ref,
-  TargetTimeDirection,
   Trip
 } from "@liane/common";
 
@@ -37,13 +37,9 @@ export type HomeMapMachineStateKeys = "map" | "form" | "point" | "match" | "deta
 
 export const getSearchFilter = (filter: Partial<InternalLianeMatchFilter>) => {
   return <LianeSearchFilter>{
-    availableSeats: -1, //TODO
+    availableSeats: -1,
     to: filter.to!.id!,
-    from: filter.from!.id!,
-    targetTime: {
-      direction: filter.targetTime?.direction ?? "Departure",
-      dateTime: (filter.targetTime?.dateTime ?? new Date()).toISOString()
-    }
+    from: filter.from!.id!
   };
 };
 
@@ -52,10 +48,7 @@ export const filterHasFullTrip = (filter: Partial<InternalLianeMatchFilter>): bo
 type InternalLianeMatchFilter = {
   to: RallyingPoint;
   from: RallyingPoint;
-  targetTime: {
-    dateTime: Date;
-    direction: TargetTimeDirection;
-  };
+  weekDays?: DayOfWeekFlag;
   availableSeats: number;
 };
 
@@ -141,7 +134,7 @@ const createState = <T>(
       },
       onError: {
         target: "failed",
-        actions: assign({ error: (context, event) => event.data })
+        actions: assign({ error: (context, e: any) => e.data })
       }
     };
   }
@@ -412,10 +405,10 @@ export const HomeMapMachine = (services: {
         updateFilter: assign<HomeMapContext, UpdateFilterEvent>({
           filter: (context, event) => {
             const availableSeats = (Object.hasOwn(event.data, "availableSeats") ? event.data.availableSeats : context.filter.availableSeats) || -1;
-            const targetTime = Object.hasOwn(event.data, "targetTime") ? event.data.targetTime : context.filter.targetTime;
+            const weekDays = Object.hasOwn(event.data, "weekDays") ? event.data.weekDays : context.filter.weekDays;
             return {
               ...context.filter,
-              targetTime: { direction: targetTime?.direction || "Departure", dateTime: targetTime?.dateTime || new Date() },
+              weekDays,
               availableSeats
             };
           }

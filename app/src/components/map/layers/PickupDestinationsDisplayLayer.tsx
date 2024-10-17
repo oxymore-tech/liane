@@ -1,4 +1,4 @@
-import { AppEnv, RallyingPoint, Ref } from "@liane/common";
+import { AppEnv, DayOfWeekFlag, RallyingPoint, Ref } from "@liane/common";
 import React, { useEffect, useMemo, useState } from "react";
 import { useAppMapViewController } from "@/components/map/AppMapView";
 import MapLibreGL from "@maplibre/maplibre-react-native";
@@ -8,22 +8,22 @@ import { AppLogger } from "@/api/logger";
 import { RNAppEnv } from "@/api/env";
 
 export type PickupDestinationsDisplayLayerProps = {
-  date?: Date;
+  weekDays?: DayOfWeekFlag;
   onSelect?: (rp: RallyingPoint) => void;
   point: Ref<RallyingPoint>;
   type: "pickup" | "deposit";
 };
 
-export const PickupDestinationsDisplayLayer = ({ date = new Date(), onSelect, point, type }: PickupDestinationsDisplayLayerProps) => {
-  const dateArg = useMemo(() => AppEnv.getLayerDateParams(date), [date]);
+export const PickupDestinationsDisplayLayer = ({ weekDays, onSelect, point, type }: PickupDestinationsDisplayLayerProps) => {
+  const params = useMemo(() => AppEnv.getLianeDisplayParams(weekDays), [weekDays]);
   const [sourceId, setSourceId] = useState("");
   useEffect(() => {
-    setSourceId("segmentsFiltered" + dateArg + point + type);
-    AppLogger.debug("MAP", "tile source", dateArg, type, point);
-  }, [dateArg, point, type]);
+    setSourceId("segmentsFiltered" + params + point + type);
+    AppLogger.debug("MAP", "tile source", params, type, point);
+  }, [params, point, type]);
 
   const controller = useAppMapViewController();
-  const url = RNAppEnv.lianeFilteredTilesUrl + "?" + dateArg + `&${type}=` + point;
+  const url = RNAppEnv.lianeFilteredTilesUrl + "?" + params + `&${type}=` + point;
 
   const updateIdentifier = Math.floor(new Date().getTime() / 1000 / 3600); // update map every hour
   return (
