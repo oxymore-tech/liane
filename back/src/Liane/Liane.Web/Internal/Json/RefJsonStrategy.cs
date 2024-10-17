@@ -15,7 +15,8 @@ internal static class RefJsonStrategy
   {
     return typeInfo =>
     {
-      var jsonPropertyInfos = typeInfo.Properties.Where(p => p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(Ref<>));
+      var jsonPropertyInfos = typeInfo.Properties
+        .Where(p => p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(Ref<>));
 
       foreach (var jsonPropertyInfo in jsonPropertyInfos)
       {
@@ -33,17 +34,22 @@ internal static class RefJsonStrategy
         jsonPropertyInfo.Get = o =>
         {
           var value = propertyInfo.GetValue(o);
-          if (value is null)
-          {
-            return null;
-          }
-
           var expectResolved = propertyInfo.GetCustomAttribute(typeof(SerializeAsResolvedRefAttribute), true) is not null;
-          var asResolved = AsResolvedMethod.MakeGenericMethod(jsonPropertyInfo.PropertyType.GenericTypeArguments[0]);
-          return asResolved.Invoke(null, [value, expectResolved]);
+          return MapRefValue(propertyInfo.PropertyType, value, expectResolved);
         };
       }
     };
+  }
+
+  public static object? MapRefValue(Type propertyType, object? value, bool expectResolved)
+  {
+    if (value is null)
+    {
+      return null;
+    }
+
+    var asResolved = AsResolvedMethod.MakeGenericMethod(propertyType.GenericTypeArguments[0]);
+    return asResolved.Invoke(null, [value, expectResolved]);
   }
 
   private static Ref<T>? AsResolved<T>(Ref<T> reference, bool expectResolved) where T : class, IIdentity

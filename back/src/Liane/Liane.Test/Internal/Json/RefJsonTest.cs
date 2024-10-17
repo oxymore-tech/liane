@@ -28,6 +28,7 @@ public sealed class RefJsonTest
     Assert.AreEqual("{\"rallyingPoint\":\"Cocures\"}", actual);
   }
 
+  [Test]
   public void ShouldSerializeAnnotatedRefAsUnresolved2()
   {
     var value = new MessageContent.MemberLeft("Cocures gars", new User("XX", null, "Pablo", Gender.Man, null, new UserStats()));

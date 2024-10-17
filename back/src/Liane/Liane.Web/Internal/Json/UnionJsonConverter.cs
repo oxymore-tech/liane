@@ -8,6 +8,7 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Liane.Api.Util;
 using Liane.Api.Util.Exception;
+using Liane.Api.Util.Ref;
 
 namespace Liane.Web.Internal.Json;
 
@@ -28,6 +29,7 @@ internal sealed class UnionJsonConverter<TRoot> : JsonConverter<TRoot> where TRo
         {
           var propertyInfos = t.GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Where(p => p.GetCustomAttribute(typeof(JsonIgnoreAttribute), false) is null)
+            .Select(p => new PropInfo(p, GetValueMapper(p)))
             .ToImmutableList();
           return new TypeInfo(t.GetConstructors()[0], propertyInfos);
         }
@@ -81,24 +83,33 @@ internal sealed class UnionJsonConverter<TRoot> : JsonConverter<TRoot> where TRo
     writer.WriteStartObject();
     writer.WritePropertyName(Discriminator);
     writer.WriteStringValue(value.GetType().Name);
-    foreach (var propertyInfo in allTypeInfo[value.GetType()].Properties)
+    foreach (var propInfo in allTypeInfo[value.GetType()].Properties)
     {
+      var propertyInfo = propInfo.PropertyInfo;
       var name = options.PropertyNamingPolicy?.ConvertName(propertyInfo.Name) ?? propertyInfo.Name;
       writer.WritePropertyName(name);
-      JsonSerializer.Serialize(writer, MapValue(propertyInfo.GetValue(value)), options);
+
+      var v = propertyInfo.GetValue(value);
+      if (propInfo.ValueMapper is not null)
+      {
+        v = propInfo.ValueMapper(v);
+      }
+
+      JsonSerializer.Serialize(writer, v, options);
     }
 
     writer.WriteEndObject();
   }
 
-  private object? MapValue(object? value)
+  private static Func<object?, object?>? GetValueMapper(PropertyInfo p)
   {
-    if (value is null)
+    if (!(p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(Ref<>)))
     {
       return null;
     }
 
-    return value;
+    var expectResolved = p.GetCustomAttribute(typeof(SerializeAsResolvedRefAttribute), true) is not null;
+    return r => RefJsonStrategy.MapRefValue(p.PropertyType, r, expectResolved);
   }
 
   private static IEnumerable<Type> GetSubTypes(Type rootType)
@@ -128,4 +139,6 @@ internal sealed class UnionJsonConverter<TRoot> : JsonConverter<TRoot> where TRo
   }
 }
 
-internal sealed record TypeInfo(ConstructorInfo ConstructorInfo, ImmutableList<PropertyInfo> Properties);
+internal sealed record TypeInfo(ConstructorInfo ConstructorInfo, ImmutableList<PropInfo> Properties);
+
+internal sealed record PropInfo(PropertyInfo PropertyInfo, Func<object?, object?>? ValueMapper);
