@@ -27,7 +27,7 @@ export const DisplayDays = ({ days }: DisplayDaysProps) => {
         justifyContent: "space-between",
         alignItems: "center",
         marginHorizontal: 45,
-        marginTop: 25
+        marginTop: 15
       }}>
       {[...days].map((char, position) => (
         <View style={char === "0" ? styles.dayNotSelected : styles.daySelected}>

@@ -15,10 +15,18 @@ import { PotentialLianeLayer } from "@/components/map/layers/PotentialLianeLayer
 import { RallyingPointsFeaturesDisplayLayer } from "@/components/map/layers/RallyingPointsFeaturesDisplayLayer";
 import { AppColors } from "@/theme/colors";
 import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay";
-import { BottomSheetObservableMessage } from "@/components/base/AppBottomSheet";
+import {
+  AppBottomSheet,
+  AppBottomSheetHandleHeight,
+  AppBottomSheetScrollView,
+  BottomSheetObservableMessage,
+  BottomSheetRefProps
+} from "@/components/base/AppBottomSheet";
 import { PickupDestinationsDisplayLayer } from "@/components/map/layers/PickupDestinationsDisplayLayer";
 import { AppLogger } from "@/api/logger";
 import { useObservable } from "@/util/hooks/subscription";
+import { ActivityIndicator, View } from "react-native";
+import { AppStyles } from "@/theme/styles.ts";
 
 export type HomeMapProps = {
   onMovingStateChanged: (moving: boolean) => void;
@@ -26,11 +34,20 @@ export type HomeMapProps = {
   displaySource: Observable<[FeatureCollection, Set<Ref<Liane>> | undefined]>;
   featureSubject?: Subject<GeoJSON.Feature[] | undefined>;
   onZoomChanged?: (z: number) => void;
+  onMapMoved?: (visibleBounds: Position[]) => void;
   ref: React.Ref<AppMapViewController>;
 } & PropsWithChildren;
 export const HomeMap = React.forwardRef<AppMapViewController, HomeMapProps>(
   (
-    { onMovingStateChanged, onZoomChanged, bottomSheetObservable, displaySource: matchDisplaySource, featureSubject, children }: HomeMapProps,
+    {
+      onMovingStateChanged,
+      onZoomChanged,
+      bottomSheetObservable,
+      displaySource: matchDisplaySource,
+      featureSubject,
+      onMapMoved,
+      children
+    }: HomeMapProps,
     ref
   ) => {
     const machine = useContext(HomeMapContext);
@@ -162,6 +179,10 @@ export const HomeMap = React.forwardRef<AppMapViewController, HomeMapProps>(
       });
     }, [state.context.filter.to?.id, state.context.filter.weekDays, isPointState]);
 
+    const handleRegionChanged = async (payload: { zoomLevel: number; isUserInteraction: boolean; visibleBounds: Position[] }) => {
+      onMapMoved && onMapMoved(payload.visibleBounds);
+      await onRegionChanged(payload);
+    };
     const onRegionChanged = async (payload: { zoomLevel: number; isUserInteraction: boolean; visibleBounds: Position[] }) => {
       if (onZoomChanged) {
         onZoomChanged(payload.zoomLevel);
@@ -196,7 +217,7 @@ export const HomeMap = React.forwardRef<AppMapViewController, HomeMapProps>(
       <AppMapView
         bounds={mapBounds}
         showGeolocation={state.matches("map") || state.matches("point") ? "bottom" : undefined} //&& !movingDisplay}
-        onRegionChanged={onRegionChanged}
+        onRegionChanged={handleRegionChanged}
         onStopMovingRegion={() => {
           onMovingStateChanged(false);
         }}
