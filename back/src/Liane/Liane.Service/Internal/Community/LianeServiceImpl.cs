@@ -435,7 +435,7 @@ public sealed class LianeServiceImpl(
 public sealed record LianeMemberDb(
   Guid LianeRequestId,
   Guid LianeId,
-  DateTime RequestedAt,
+  DateTime? RequestedAt,
   DateTime? JoinedAt,
   DateTime? LastReadAt
 );

@@ -40,10 +40,10 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
         SELECT liane_member.*
         FROM liane_request
                  INNER JOIN liane_member ON liane_request.id = liane_member.liane_id
-        WHERE liane_request.created_by = @userId
+        WHERE liane_request.created_by = @userId AND liane_member.joined_at IS NULL
         """,
         new { userId }, tx)
-      ).ToImmutableDictionary(m => m.LianeId, m => m.RequestedAt);
+      ).ToImmutableDictionary(m => m.LianeId, m => m.RequestedAt!.Value);
     var snapedPoints = await rallyingPointService.Snap(rawMatches.FilterSelectMany<LianeRawMatch, LatLng>(r => [r.Deposit, r.Pickup, r.DepositReverse, r.PickupReverse]).ToImmutableHashSet());
     return await rawMatches
       .GroupByAsync(m => m.From, async g =>
@@ -218,7 +218,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     if (rawMatches.Count == 1)
     {
       var first = rawMatches.First();
-      var askToJoinAt = askToJoins.TryGetValue(first.LianeRequest, out var value) ? value : (DateTime?)null;
+      var askToJoinAt = askToJoins.TryGetValue(first.From, out var value) ? value : (DateTime?)null;
 
       return new Match.Single(
         first.LianeRequest,

@@ -68,7 +68,7 @@ public sealed class LianeFetcher(LianeRequestFetcher lianeRequestFetcher, IUserS
           var lianeMembers = await members
             .FilterSelectAsync(m => ToLianeMember(lianeRequestsFetcher, m, m.JoinedAt!.Value));
           var lianePendingMembers = await pendingMembers
-            .FilterSelectAsync(m => ToLianeMember(lianeRequestsFetcher, m, m.RequestedAt));
+            .FilterSelectAsync(m => ToLianeMember(lianeRequestsFetcher, m, m.RequestedAt!.Value));
 
           return new Api.Community.Liane(
             lianeRequestId,
