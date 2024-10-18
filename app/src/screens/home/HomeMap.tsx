@@ -15,18 +15,10 @@ import { PotentialLianeLayer } from "@/components/map/layers/PotentialLianeLayer
 import { RallyingPointsFeaturesDisplayLayer } from "@/components/map/layers/RallyingPointsFeaturesDisplayLayer";
 import { AppColors } from "@/theme/colors";
 import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay";
-import {
-  AppBottomSheet,
-  AppBottomSheetHandleHeight,
-  AppBottomSheetScrollView,
-  BottomSheetObservableMessage,
-  BottomSheetRefProps
-} from "@/components/base/AppBottomSheet";
+import { BottomSheetObservableMessage } from "@/components/base/AppBottomSheet";
 import { PickupDestinationsDisplayLayer } from "@/components/map/layers/PickupDestinationsDisplayLayer";
 import { AppLogger } from "@/api/logger";
 import { useObservable } from "@/util/hooks/subscription";
-import { ActivityIndicator, View } from "react-native";
-import { AppStyles } from "@/theme/styles.ts";
 
 export type HomeMapProps = {
   onMovingStateChanged: (moving: boolean) => void;

@@ -218,19 +218,5 @@ const styles = StyleSheet.create({
     width: "100%",
     position: "absolute",
     flex: 1
-  },
-  border: {
-    borderWidth: 1,
-    borderColor: AppColorPalettes.gray[200]
-  },
-  floatingSearchBar: {
-    paddingVertical: 24,
-    paddingHorizontal: 24,
-    position: "absolute",
-    width: "100%"
-  },
-  smallActionButton: {
-    padding: 16,
-    borderRadius: 52
   }
 });

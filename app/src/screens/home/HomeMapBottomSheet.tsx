@@ -6,6 +6,7 @@ import { LianeOnMapItem } from "@/screens/home/LianeOnMapItemView.tsx";
 import React, { useMemo, useRef } from "react";
 import { TripSection } from "@/screens/home/HomeScreen.tsx";
 import { useAppNavigation } from "@/components/context/routing.ts";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type HomeMapBottomSheetProps = {
   colianes?: CoLiane[];
@@ -15,6 +16,7 @@ type HomeMapBottomSheetProps = {
 };
 export const HomeMapBottomSheetContainer = ({ colianes, isFetching, currentBoundbox, fetchLianeOnMap }: HomeMapBottomSheetProps) => {
   const refBottomSheet = useRef<BottomSheetRefProps>(null);
+  const insets = useSafeAreaInsets();
   const { navigation } = useAppNavigation<"Home">();
 
   const convertToDateSections = (data: CoLiane[]): TripSection[] =>
@@ -31,7 +33,7 @@ export const HomeMapBottomSheetContainer = ({ colianes, isFetching, currentBound
   return (
     <AppBottomSheet
       ref={refBottomSheet}
-      stops={[AppBottomSheetHandleHeight + 96, 0.45, 1]}
+      stops={[AppBottomSheetHandleHeight + 60 + insets.bottom, 0.45, 1]}
       padding={{ top: 80 }}
       initialStop={1}
       backgroundStyle={{
@@ -41,7 +43,7 @@ export const HomeMapBottomSheetContainer = ({ colianes, isFetching, currentBound
         backgroundColor: AppColors.gray100
       }}>
       <SectionList
-        style={{ padding: 5, marginBottom: 92, marginTop: 3 }}
+        style={{ padding: 5, marginBottom: 56 + insets.bottom, marginTop: 3 }}
         refreshControl={<RefreshControl refreshing={isFetching || false} onRefresh={() => currentBoundbox && fetchLianeOnMap(currentBoundbox)} />}
         sections={sections}
         showsVerticalScrollIndicator={false}
