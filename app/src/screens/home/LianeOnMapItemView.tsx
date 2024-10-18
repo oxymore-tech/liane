@@ -1,29 +1,25 @@
-import React, { useMemo, useState } from "react";
+import React from "react";
 
 import { Pressable, StyleSheet, View } from "react-native";
-import { CoLiane, CoLianeMatch, ResolvedLianeRequest } from "@liane/common";
+import { CoLiane } from "@liane/common";
 import { Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { AppColors } from "@/theme/colors";
 import { extractDaysOnly, extractWaypointFromTo } from "@/util/hooks/lianeRequest";
 import { AppIcon } from "@/components/base/AppIcon.tsx";
-import { useAppNavigation } from "@/components/context/routing.ts";
 import { JoinedLianeView } from "@/components/communities/JoinedLianeView.tsx";
 
 type LianeOnMapItemProps = {
   item: CoLiane;
-  openLiane: (liane: ResolvedLianeRequest) => void;
+  openLiane: (liane: CoLiane) => void;
 };
 
 export const LianeOnMapItem = ({ item, openLiane }: LianeOnMapItemProps) => {
-  const { navigation } = useAppNavigation();
-  const lianeRequest = item?.members[0]?.lianeRequest;
-
-  if (lianeRequest) {
-    const { to, from } = extractWaypointFromTo(lianeRequest?.wayPoints);
+  if (item) {
+    const { to, from } = extractWaypointFromTo(item?.wayPoints);
     return (
       <View>
-        <Pressable style={{ justifyContent: "center", display: "flex" }} onPress={() => openLiane(lianeRequest)}>
+        <Pressable style={{ justifyContent: "center", display: "flex" }} onPress={() => openLiane(item)}>
           <View>
             <Row style={styles.driverContainer}>
               <Row>
@@ -90,7 +86,7 @@ export const LianeOnMapItem = ({ item, openLiane }: LianeOnMapItemProps) => {
                           lineHeight: 20,
                           color: AppColors.darkGray
                         }}>
-                        {extractDaysOnly(lianeRequest)}
+                        {extractDaysOnly(item)}
                       </AppText>
                     </View>
                     <View style={{ position: "absolute", top: 10, right: 10 }}>

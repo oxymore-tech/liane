@@ -216,11 +216,11 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
                 justifyContent: "center",
                 alignItems: "center",
                 flexDirection: "row",
-                backgroundColor: handlerColorStyle ? "transparent" : backgroundStyle.backgroundColor
+                backgroundColor: handlerColorStyle ? "transparent" : backgroundStyle?.backgroundColor
               }}>
               <View
                 style={{
-                  backgroundColor: handlerColorStyle ? handlerColorStyle.backgroundColor : backgroundStyle.backgroundColor,
+                  backgroundColor: handlerColorStyle?.backgroundColor ?? backgroundStyle?.backgroundColor,
                   width: 80,
                   borderTopRightRadius: 40,
                   borderTopLeftRadius: 40

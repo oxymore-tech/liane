@@ -1,4 +1,4 @@
-import React, { useContext, useMemo, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Center } from "@/components/base/AppLayout";
@@ -14,26 +14,60 @@ import { DisplayDays } from "@/components/communities/displayDaysView.tsx";
 import { DisplayRallyingPoints } from "@/components/communities/displayWaypointsView.tsx";
 import { LianeMatchLianeRouteLayer } from "@/components/map/layers/LianeMatchRouteLayer.tsx";
 import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay.tsx";
-import { getBoundingBox, ResolvedLianeRequest } from "@liane/common";
+import { CoLiane, CoMatch, getBoundingBox, ResolvedLianeRequest } from "@liane/common";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider.tsx";
 import { AppBottomSheet, AppBottomSheetHandleHeight, AppBottomSheetScrollView } from "@/components/base/AppBottomSheet.tsx";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
+function isCoLiane(l: CoLiane | CoMatch): l is CoLiane {
+  return (l as any).wayPoints;
+}
 export const LianeMapDetailScreen = () => {
   const { navigation, route } = useAppNavigation<"LianeMapDetail">();
-  const group = route.params.group;
   const lianeRequest = route.params.request;
   const { services } = useContext(AppContext);
-
   const { height } = useAppWindowsDimensions();
-
   const insets = useSafeAreaInsets();
   const [error, setError] = useState<Error | undefined>(undefined);
+  const [bSheetTop, setBSheetTop] = useState<number>(0.55 * height);
+  const [liane, setliane] = useState<CoLiane>();
+  const [match, setMatch] = useState<CoMatch>();
+
+  const mapBounds = useMemo(() => {
+    if (!liane) {
+      return undefined;
+    }
+    const bSheetTopPixels = bSheetTop > 1 ? bSheetTop : bSheetTop * height;
+    const coordinates = liane!.wayPoints.map(w => [w.location.lng, w.location.lat]);
+    if (match) {
+      coordinates.push([match.pickup.location.lng, match.pickup.location.lat]);
+      coordinates.push([match.deposit.location.lng, match.deposit.location.lat]);
+    }
+    const bbox = getBoundingBox(coordinates);
+    bbox.paddingTop = 24;
+    bbox.paddingLeft = 72;
+    bbox.paddingRight = 72;
+    bbox.paddingBottom = bSheetTopPixels + 24;
+    return bbox;
+  }, [liane, bSheetTop, height]);
+
+  useEffect(() => {
+    if (isCoLiane(route.params.liane)) {
+      setliane(route.params.liane);
+    } else {
+      setMatch(route.params.liane);
+      services.community.get(route.params.liane.liane).then(setliane);
+    }
+  }, [route.params.liane]);
 
   const joinLiane = async () => {
-    if (lianeRequest && lianeRequest.id) {
+    if (!match) {
+      navigation.navigate("Publish", {
+        initialValue: liane
+      });
+    } else if (lianeRequest && lianeRequest.id) {
       try {
-        const result = await services.community.joinRequest(lianeRequest.id, group.liane);
+        const result = await services.community.joinRequest(lianeRequest.id, match.liane);
         AppLogger.debug("COMMUNITIES", "Demande de rejoindre une liane avec succès", result);
         navigation.navigate("Lianes");
       } catch (e) {
@@ -45,9 +79,9 @@ export const LianeMapDetailScreen = () => {
   };
 
   const acceptLiane = async () => {
-    if (lianeRequest && lianeRequest.id) {
+    if (lianeRequest && lianeRequest.id && match) {
       try {
-        const result = await services.community.accept(group.liane, lianeRequest.id);
+        const result = await services.community.accept(match.liane, lianeRequest.id);
         AppLogger.debug("COMMUNITIES", "Acceptation une liane avec succès", result);
         navigation.navigate("Lianes");
       } catch (e) {
@@ -57,22 +91,6 @@ export const LianeMapDetailScreen = () => {
       AppLogger.debug("COMMUNITIES", "Pas de lianeRequest ID lors de l'acceptation", lianeRequest);
     }
   };
-
-  const [bSheetTop, setBSheetTop] = useState<number>(0.55 * height);
-
-  const mapBounds = useMemo(() => {
-    if (!lianeRequest) {
-      return undefined;
-    }
-
-    const bSheetTopPixels = bSheetTop > 1 ? bSheetTop : bSheetTop * height;
-    const bbox = getBoundingBox(lianeRequest!.wayPoints.map(w => [w.location.lng, w.location.lat]));
-    bbox.paddingTop = 24;
-    bbox.paddingLeft = 72;
-    bbox.paddingRight = 72;
-    bbox.paddingBottom = bSheetTopPixels + 24;
-    return bbox;
-  }, [lianeRequest, bSheetTop, height]);
 
   return (
     <GestureHandlerRootView style={styles.mainContainer}>
@@ -88,7 +106,7 @@ export const LianeMapDetailScreen = () => {
           </View>
         </View>
         <AppMapView bounds={mapBounds}>
-          {lianeRequest && lianeRequest.id && <LianeMatchLianeRouteLayer wayPoints={lianeRequest.wayPoints} lianeId={lianeRequest.id} />}
+          {liane && liane.id && <LianeMatchLianeRouteLayer wayPoints={liane.wayPoints} lianeId={liane.id} />}
 
           {lianeRequest?.wayPoints.map((w, i) => {
             let type: "to" | "from" | "step";
@@ -102,9 +120,16 @@ export const LianeMapDetailScreen = () => {
             return <WayPointDisplay key={w.id} rallyingPoint={w} type={type} />;
           })}
         </AppMapView>
-        <AppBottomSheet onScrolled={v => setBSheetTop(v)} stops={[AppBottomSheetHandleHeight, 0.55, 1]} padding={{ top: 80 }} initialStop={1}>
+        <AppBottomSheet
+          onScrolled={v => setBSheetTop(v)}
+          stops={[AppBottomSheetHandleHeight, 0.55, 1]}
+          padding={{ top: 80 }}
+          initialStop={1}
+          backgroundStyle={{
+            backgroundColor: AppColors.white
+          }}>
           <AppBottomSheetScrollView style={{ paddingHorizontal: 12 }}>
-            {group.type === "Single" && group.askToJoinAt ? (
+            {match && match.type === "Single" && match.askToJoinAt ? (
               <View
                 style={{
                   justifyContent: "center",
@@ -136,7 +161,7 @@ export const LianeMapDetailScreen = () => {
                 />
               </View>
             )}
-            {displayResolvedLiane(lianeRequest)}
+            {liane && displayliane(liane)}
           </AppBottomSheetScrollView>
         </AppBottomSheet>
       </View>
@@ -144,19 +169,19 @@ export const LianeMapDetailScreen = () => {
   );
 };
 
-export const displayResolvedLiane = (lianeRequest: ResolvedLianeRequest) => {
+export const displayliane = (liane: ResolvedLianeRequest | CoLiane) => {
   return (
     <>
-      <DisplayDays days={lianeRequest.weekDays} />
+      <DisplayDays days={liane.weekDays} />
       <DisplayRallyingPoints
-        wayPoints={lianeRequest.wayPoints}
-        endTime={lianeRequest.arriveBefore}
+        wayPoints={liane.wayPoints}
+        endTime={liane.arriveBefore}
         style={{ backgroundColor: AppColors.gray100, borderRadius: 20 }}
       />
       <DisplayRallyingPoints
-        wayPoints={lianeRequest.wayPoints}
+        wayPoints={liane.wayPoints}
         inverseTravel
-        startTime={lianeRequest.returnAfter}
+        startTime={liane.returnAfter}
         style={{ backgroundColor: AppColors.gray100, borderRadius: 20 }}
       />
     </>
