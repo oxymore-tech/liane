@@ -224,5 +224,9 @@ export const LianeMatchLianeRouteLayer = ({
   lianeId: string;
   color?: AppColors;
 }) => {
+  if (wayPoints.length === 0) {
+    return null;
+  }
+
   return <RouteLianeLayer wayPoints={wayPoints} loadingFeatures={loadingFeatures} id={lianeId} color={color} />;
 };

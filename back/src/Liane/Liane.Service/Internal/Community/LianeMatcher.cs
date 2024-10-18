@@ -32,37 +32,40 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
   }
 
   public async Task<ImmutableList<Match>> FindMatchesBetween(IDbConnection connection, Guid from, IEnumerable<Guid> to, IDbTransaction? tx = null)
-    => (await FindMatches(connection, [], from, to, tx)).Values.FirstOrDefault(ImmutableList<Match>.Empty);
+  {
+    var rawMatches = await FindRawMatch(connection, from, to, tx);
+    var snapedPoints = await rallyingPointService.Snap(rawMatches.FilterSelectMany<LianeRawMatch, LatLng>(r => [r.Deposit, r.Pickup, r.DepositReverse, r.PickupReverse]).ToImmutableHashSet());
+    return await MapToMatches(snapedPoints, ImmutableDictionary<Guid, DateTime>.Empty, rawMatches);
+  }
 
   public async Task<ImmutableDictionary<Guid, ImmutableList<Match>>> FindMatches(IDbConnection connection, IEnumerable<Guid> linkedTo, IDbTransaction? tx = null)
-    => await FindMatches(connection, linkedTo, null, null, tx);
-
-  private async Task<ImmutableDictionary<Guid, ImmutableList<Match>>> FindMatches(IDbConnection connection, IEnumerable<Guid> linkedTo, Guid? from, IEnumerable<Guid>? to, IDbTransaction? tx = null)
   {
     var userId = currentContext.CurrentUser().Id;
     var rawMatches = await FindRawMatches(connection, userId, linkedTo, tx: tx);
-    var askToJoins = (await connection.QueryAsync<LianeMemberDb>(
+    var askToJoins = (await connection.QueryAsync<(Guid, DateTime)>(
         """
-        SELECT liane_member.*
+        SELECT liane_id, requested_at
         FROM liane_request
                  INNER JOIN liane_member ON liane_request.id = liane_member.liane_id
         WHERE liane_request.created_by = @userId AND liane_member.joined_at IS NULL
         """,
         new { userId }, tx)
-      ).ToImmutableDictionary(m => m.LianeId, m => m.RequestedAt!.Value);
+      ).ToImmutableDictionary(m => m.Item1, m => m.Item2);
     var snapedPoints = await rallyingPointService.Snap(rawMatches.FilterSelectMany<LianeRawMatch, LatLng>(r => [r.Deposit, r.Pickup, r.DepositReverse, r.PickupReverse]).ToImmutableHashSet());
     return await rawMatches
-      .GroupByAsync(m => m.From, async g =>
-      {
-        var matches = await g.GroupBy(m => m.LinkedTo ?? m.LianeRequest)
-          .FilterSelectAsync(r => ToMatch(r.ToImmutableList(), snapedPoints, askToJoins));
-        return matches
-          .OrderByDescending(m => m.Score)
-          .ThenByDescending(m => m is Match.Group group ? group.TotalMembers : 0)
-          .ThenByDescending(m => m is Match.Single { AskToJoinAt: not null })
-          .ThenBy(m => m.Liane.IdAsGuid())
-          .ToImmutableList();
-      });
+      .GroupByAsync(m => m.From, g => MapToMatches(snapedPoints, askToJoins, g));
+  }
+
+  private async Task<ImmutableList<Match>> MapToMatches(ImmutableDictionary<LatLng, RallyingPoint> snapedPoints, ImmutableDictionary<Guid, DateTime> askToJoins, IEnumerable<LianeRawMatch> rawMatches)
+  {
+    var matches = await rawMatches.GroupBy(m => m.LinkedTo ?? m.LianeRequest)
+      .FilterSelectAsync(r => ToMatch(r.ToImmutableList(), snapedPoints, askToJoins));
+    return matches
+      .OrderByDescending(m => m.Score)
+      .ThenByDescending(m => m is Match.Group group ? group.TotalMembers : 0)
+      .ThenByDescending(m => m is Match.Single { AskToJoinAt: not null })
+      .ThenBy(m => m.Liane.IdAsGuid())
+      .ToImmutableList();
   }
 
   /// <summary>

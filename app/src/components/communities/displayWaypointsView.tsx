@@ -3,7 +3,7 @@ import React, { ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 import { Hours, Minutes, RallyingPoint, TimeOnly, TimeOnlyUtils, WayPoint } from "@liane/common";
 import { AppText } from "@/components/base/AppText";
-import { AppColorPalettes, AppColors } from "@/theme/colors";
+import { AppColors } from "@/theme/colors";
 import { extractWaypointFromTo } from "@/util/hooks/lianeRequest";
 import { AppIcon, IconName } from "@/components/base/AppIcon.tsx";
 
@@ -14,6 +14,10 @@ type DisplayWayPointsProps = {
 };
 
 export const DisplayWayPoints = ({ wayPoints, hideLabel, style }: DisplayWayPointsProps) => {
+  if (wayPoints.length === 0) {
+    return null;
+  }
+
   const startTime = TimeOnlyUtils.fromDate(new Date(wayPoints[0].eta));
   const endTime = TimeOnlyUtils.fromDate(new Date(wayPoints[wayPoints.length - 1].eta));
   return (

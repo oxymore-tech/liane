@@ -669,7 +669,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       true, weekDays, true, null, null));
   }
 
-  private static (string User, string Text) ToTuple(LianeMessage message) => (message.CreatedBy.Id, message.Content.Value);
+  private static (string User, string Text) ToTuple(LianeMessage message) => (message.CreatedBy.Id, message.Content.Value ?? $"!!{message.Content.GetType().Name}!!");
 
   private static void AssertMatchesEquals(ImmutableList<LianeMatch> list, params LianeMatch[] expected)
   {

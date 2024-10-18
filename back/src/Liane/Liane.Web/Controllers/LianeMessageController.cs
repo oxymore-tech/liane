@@ -22,7 +22,7 @@ public sealed class LianeMessageController(ILianeMessageService lianeMessageServ
   }
 
   [HttpPost("liane/{id:guid}/message")]
-  public Task<LianeMessage> SendMessage(Guid id, [FromBody] MessageContent content)
+  public Task<LianeMessage?> SendMessage(Guid id, [FromBody] MessageContent content)
   {
     return lianeMessageService.SendMessage(id, content);
   }
