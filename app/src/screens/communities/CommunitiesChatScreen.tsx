@@ -38,6 +38,7 @@ import { getLianeStatusStyle } from "@/components/trip/LianeStatusView.tsx";
 import { LianeQueryKey } from "@/screens/user/MyTripsScreen.tsx";
 import { useQueryClient } from "react-query";
 import { JoinedLianeView } from "@/components/communities/JoinedLianeView.tsx";
+import { UserPicture } from "@/components/UserPicture.tsx";
 
 export const CommunitiesChatScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesChat">();
@@ -397,7 +398,19 @@ export const CommunitiesChatScreen = () => {
                     paddingTop: 10,
                     alignItems: "center"
                   }}>
-                  {liane && <JoinedLianeView liane={liane} style={{ paddingTop: 8, paddingLeft: 15 }} />}
+                  {liane && (
+                    <View
+                      style={{
+                        flex: 1,
+                        flexDirection: "row",
+                        marginLeft: 25,
+                        paddingTop: 8
+                      }}>
+                      {currentTrip.members.map(member => (
+                        <UserPicture key={member.user.id} size={24} url={member.user.pictureUrl} id={member.user.id} style={{ marginLeft: -10 }} />
+                      ))}
+                    </View>
+                  )}
 
                   {tripActions()}
                 </View>
