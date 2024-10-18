@@ -38,9 +38,6 @@ export const HomeMapBottomSheetContainer = ({ colianes, isFetching, currentBound
       initialStop={1}
       backgroundStyle={{
         backgroundColor: AppColors.gray100
-      }}
-      handlerColorStyle={{
-        backgroundColor: AppColors.gray100
       }}>
       <SectionList
         style={{ padding: 5, marginBottom: 56 + insets.bottom, marginTop: 3 }}

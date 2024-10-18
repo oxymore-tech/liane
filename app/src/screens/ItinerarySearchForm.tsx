@@ -3,7 +3,16 @@ import React, { useCallback, useContext, useEffect, useMemo, useState } from "re
 import { ActivityIndicator, ColorValue, FlatList, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { AppText } from "@/components/base/AppText";
 import { TripViewStyles } from "@/components/trip/TripSegmentView";
-import { asSearchedLocation, getKeyForTrip, isRallyingPointSearchedLocation, RallyingPoint, Ref, SearchedLocation, Trip } from "@liane/common";
+import {
+  asSearchedLocation,
+  CoLiane,
+  getKeyForTrip,
+  isRallyingPointSearchedLocation,
+  RallyingPoint,
+  Ref,
+  SearchedLocation,
+  Trip
+} from "@liane/common";
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
@@ -376,6 +385,7 @@ export const PlaceSuggestions = (props: {
 
 export type ItinerarySearchFormProps = {
   trip: Partial<Trip>;
+  liane?: Ref<CoLiane>;
   updateTrip: (trip: Partial<Trip>) => void;
   title?: string;
   style?: StyleProp<ViewStyle>;
@@ -389,6 +399,7 @@ export const ItinerarySearchForm = ({
   trip: currentTrip,
   updateTrip,
   title,
+  liane,
   style,
   formWrapperStyle,
   formStyle,
@@ -422,6 +433,7 @@ export const ItinerarySearchForm = ({
           return true;
         }}>
         <SelectOnMapView
+          liane={liane}
           onSelect={p => {
             setMapOpen(undefined);
             updateTrip({ [mapOpen]: p });

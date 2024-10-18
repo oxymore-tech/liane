@@ -137,6 +137,7 @@ export const PublishScreen = () => {
         formStyle={styles.stepContainer}
         onRequestFocus={() => setStep(-1)}
         editable={step === -1}
+        liane={lianeId}
         trip={trip}
         updateTrip={handleUpdateTrip}
       />

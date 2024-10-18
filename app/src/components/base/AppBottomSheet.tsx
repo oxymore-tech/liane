@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Observable, Subject } from "rxjs";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 
-export const AppBottomSheetHandleHeight = 24;
+export const AppBottomSheetHandleHeight = 60;
 
 export interface BottomSheetProps extends PropsWithChildren {
   // Preset heights for this bottom sheet. I the value is greater than 1, the unit is in pixels,
@@ -22,7 +22,6 @@ export interface BottomSheetProps extends PropsWithChildren {
   onScrolled?: (y: number) => void;
   canScroll?: boolean;
   backgroundStyle?: StyleProp<any>;
-  handlerColorStyle?: StyleProp<any>;
 }
 
 export type BottomSheetRefProps = {
@@ -46,7 +45,7 @@ interface BottomSheetContext {
 const BottomSheetContext = createContext<BottomSheetContext>();
 
 export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
-  ({ onScrolled, children, backgroundStyle, canScroll, stops, margins, padding, initialStop = 0, handlerColorStyle }, ref) => {
+  ({ onScrolled, children, backgroundStyle, canScroll, stops, margins, padding, initialStop = 0 }, ref) => {
     const marginBottom = margins?.bottom || 0;
     const insets = useSafeAreaInsets();
     const paddingTop = (padding?.top || insets.top + 16) - AppBottomSheetHandleHeight;
@@ -72,7 +71,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
 
     useEffect(() => {
       margin.value = { bottom: marginBottom, left: margins?.left ?? 0, right: margins?.right ?? 0 };
-    }, [margins?.bottom, margins?.left, margins?.right]);
+    }, [margin, marginBottom, margins?.bottom, margins?.left, margins?.right]);
 
     const expanded = new Subject<boolean>();
 
@@ -191,7 +190,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
       const backgroundColor = interpolateColor(
         h.value,
         [0, height - fillLimit - AppBottomSheetHandleHeight, height - fillLimit, height],
-        [AppColorPalettes.gray[400], AppColorPalettes.gray[400], "rgba(255,255,255,0)", "rgba(255,255,255,0)"]
+        [AppColorPalettes.gray[300], AppColorPalettes.gray[300], "rgba(255,255,255,0)", "rgba(255,255,255,0)"]
       );
       return {
         backgroundColor
@@ -216,15 +215,18 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
                 justifyContent: "center",
                 alignItems: "center",
                 flexDirection: "row",
-                backgroundColor: handlerColorStyle ? "transparent" : backgroundStyle?.backgroundColor
+                backgroundColor: "transparent"
               }}>
               <View
                 style={{
-                  backgroundColor: handlerColorStyle?.backgroundColor ?? backgroundStyle?.backgroundColor,
+                  backgroundColor: backgroundStyle?.backgroundColor,
                   width: 80,
                   borderTopRightRadius: 40,
-                  borderTopLeftRadius: 40
+                  borderTopLeftRadius: 40,
+                  paddingTop: 14,
+                  paddingBottom: 8
                 }}>
+                <Animated.View style={[styles.handler, handleStyle]} />
                 <Animated.View style={[styles.handler, handleStyle]} />
               </View>
             </View>
@@ -232,7 +234,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
           <Animated.View
             style={[
               styles.bottomSheetContainerDefaults,
-              handlerColorStyle ?? backgroundStyle,
+              backgroundStyle,
               styles.bottomSheetContainer,
               AppStyles.shadow,
               marginBottom > 0
@@ -388,7 +390,7 @@ const styles = StyleSheet.create({
     height: 4,
     backgroundColor: AppColorPalettes.gray[400],
     alignSelf: "center",
-    marginVertical: 10,
+    marginVertical: 3,
     borderRadius: 2
   }
 });

@@ -16,9 +16,7 @@ export const DisplayDays = ({ days }: DisplayDaysProps) => {
       style={{
         flexDirection: "row",
         justifyContent: "space-between",
-        alignItems: "center",
-        marginHorizontal: 45,
-        marginTop: 15
+        alignItems: "center"
       }}>
       {[...days].map((char, position) => (
         <View style={char === "0" ? styles.dayNotSelected : styles.daySelected} key={position}>

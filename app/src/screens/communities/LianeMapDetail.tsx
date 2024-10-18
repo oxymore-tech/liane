@@ -18,6 +18,7 @@ import { CoLiane, CoMatch, getBoundingBox, ResolvedLianeRequest, WayPoint } from
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider.tsx";
 import { AppBottomSheet, AppBottomSheetHandleHeight, AppBottomSheetScrollView } from "@/components/base/AppBottomSheet.tsx";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker.tsx";
 
 function isCoLiane(l: CoLiane | CoMatch): l is CoLiane {
   return (l as any).wayPoints;
@@ -126,7 +127,17 @@ export const LianeMapDetailScreen = () => {
         </View>
         <AppMapView bounds={mapBounds}>
           {liane && liane.id && <LianeMatchLianeRouteLayer wayPoints={wayPoints.map(w => w.rallyingPoint)} lianeId={liane.id} />}
-
+          {wayPoints.map((w, i) => {
+            let type: "to" | "from" | "step";
+            if (i === 0) {
+              type = "from";
+            } else if (i === wayPoints.length - 1) {
+              type = "to";
+            } else {
+              type = "step";
+            }
+            return <WayPointDisplay key={`liane_${w.rallyingPoint.id}`} rallyingPoint={w.rallyingPoint} type={type} />;
+          })}
           {lianeRequest?.wayPoints.map((w, i) => {
             let type: "to" | "from" | "step";
             if (i === 0) {
@@ -147,7 +158,7 @@ export const LianeMapDetailScreen = () => {
           backgroundStyle={{
             backgroundColor: AppColors.white
           }}>
-          <AppBottomSheetScrollView style={{ paddingHorizontal: 12 }}>
+          <AppBottomSheetScrollView>
             {match && match.type === "Single" && match.askToJoinAt ? (
               <View
                 style={{
@@ -206,7 +217,7 @@ export const DisplayLiane = ({ liane, wayPoints }: DisplayLianeProps) => {
   }
   return (
     <>
-      <DisplayDays days={liane.weekDays} />
+      <DayOfTheWeekPicker selectedDays={liane.weekDays} dualOptionMode={true} />
       <DisplayWayPoints wayPoints={wayPoints} style={{ backgroundColor: AppColors.gray100, borderRadius: 20 }} />
     </>
   );

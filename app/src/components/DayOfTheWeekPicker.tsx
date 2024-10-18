@@ -9,6 +9,17 @@ import { Row } from "@/components/base/AppLayout";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 
+type DayOfTheWeekPickerProps = {
+  selectedDays?: DayOfWeekFlag;
+  onChangeDays?: (daysOfTheWeek: DayOfWeekFlag) => void;
+  fontSize?: number;
+  daysSize?: number;
+  borderBottomDisplayed?: boolean;
+  enabledDays?: DayOfWeekFlag;
+  singleOptionMode?: boolean;
+  dualOptionMode?: boolean;
+};
+
 export const DayOfTheWeekPicker = ({
   selectedDays,
   onChangeDays,
@@ -18,16 +29,7 @@ export const DayOfTheWeekPicker = ({
   borderBottomDisplayed = false,
   singleOptionMode = false,
   dualOptionMode = false
-}: {
-  selectedDays: DayOfWeekFlag | null;
-  onChangeDays: (daysOfTheWeek: DayOfWeekFlag) => void;
-  fontSize?: number;
-  daysSize?: number;
-  borderBottomDisplayed?: boolean;
-  enabledDays?: DayOfWeekFlag;
-  singleOptionMode?: boolean;
-  dualOptionMode?: boolean;
-}) => {
+}: DayOfTheWeekPickerProps) => {
   const selectedDaysString = selectedDays ?? "0000000";
   const size = daysSize ?? 35;
   const selectDate = (dayIndex: number) => {
@@ -49,7 +51,7 @@ export const DayOfTheWeekPicker = ({
           : currentSelectedDays.charAt(index);
     });
 
-    onChangeDays(newSelectedDays as DayOfWeekFlag);
+    onChangeDays && onChangeDays(newSelectedDays as DayOfWeekFlag);
   };
 
   const countAvailableDays = (weekdays: string): number => {
@@ -68,9 +70,9 @@ export const DayOfTheWeekPicker = ({
       <Row style={styles.rowContainer} spacing={6}>
         {AppLocalization.daysList.map((day: string, index: number) => (
           <AppPressableOverlay
-            disabled={enabledDays?.charAt(index) === "0"}
+            disabled={!onChangeDays || enabledDays?.charAt(index) === "0"}
             key={index}
-            onPress={() => selectDate(index)}
+            onPress={() => onChangeDays && selectDate(index)}
             backgroundStyle={[
               styles.dayContainer,
               selectedDaysString?.charAt(index) === "1" ? styles.daySelectedContainer : null,

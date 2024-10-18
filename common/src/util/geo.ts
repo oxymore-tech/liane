@@ -41,8 +41,8 @@ export interface CameraPadding {
 
 export type DisplayBoundingBox = Required<CameraPadding> & { ne: Position; sw: Position };
 export const getBoundingBox = (coordinates: Position[], padding: number = 0): DisplayBoundingBox => {
-  const sw = [1000, 1000];
-  const ne = [-1000, -1000];
+  const sw = [90, 90];
+  const ne = [-90, -90];
   for (const [lng, lat] of coordinates) {
     if (lng < sw[0]) {
       sw[0] = lng;

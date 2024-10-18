@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { RallyingPoint } from "@liane/common";
+import { CoLiane, RallyingPoint, Ref, WayPoint } from "@liane/common";
 import { useAppBackController } from "@/components/AppBackContextProvider";
 import { AppColors, defaultTextColor } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
@@ -13,20 +13,34 @@ import { RallyingPointsDisplayLayer } from "@/components/map/layers/RallyingPoin
 import { PageHeader } from "@/components/context/Navigation";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppPressableIcon } from "@/components/base/AppPressable";
+import { LianeMatchLianeRouteLayer } from "@/components/map/layers/LianeMatchRouteLayer.tsx";
+import { AppContext } from "@/components/context/ContextProvider.tsx";
 
 export interface SelectOnMapViewProps {
   onSelect: (rp: RallyingPoint) => void;
   title: string;
+  liane?: Ref<CoLiane>;
 }
-export const SelectOnMapView = ({ onSelect, title }: SelectOnMapViewProps) => {
+export const SelectOnMapView = ({ onSelect, title, liane }: SelectOnMapViewProps) => {
+  const { services } = useContext(AppContext);
   const [selectedRP, setSelectedRP] = useState<RallyingPoint | undefined>();
 
   const { bottom } = useSafeAreaInsets();
   const { goBack } = useAppBackController();
 
+  const [wayPoints, setWayPoints] = useState<WayPoint[]>([]);
+
+  useEffect(() => {
+    if (!liane) {
+      return;
+    }
+    services.community.getTrip(liane).then(setWayPoints);
+  }, [liane, services.community]);
+
   return (
     <View style={styles.container}>
       <AppMapView>
+        {liane && <LianeMatchLianeRouteLayer wayPoints={wayPoints.map(w => w.rallyingPoint)} lianeId={liane} />}
         <RallyingPointsDisplayLayer selected={selectedRP?.id} onSelect={setSelectedRP} />
       </AppMapView>
       <View style={[styles.headerContainer, AppStyles.shadow]}>
