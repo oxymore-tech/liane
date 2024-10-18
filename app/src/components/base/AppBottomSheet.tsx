@@ -210,6 +210,25 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
               position: "absolute"
             }
           ]}>
+          <Animated.View>
+            <View
+              style={{
+                justifyContent: "center",
+                alignItems: "center",
+                flexDirection: "row",
+                backgroundColor: handlerColorStyle ? "transparent" : backgroundStyle?.backgroundColor
+              }}>
+              <View
+                style={{
+                  backgroundColor: handlerColorStyle?.backgroundColor ?? backgroundStyle?.backgroundColor,
+                  width: 80,
+                  borderTopRightRadius: 40,
+                  borderTopLeftRadius: 40
+                }}>
+                <Animated.View style={[styles.handler, handleStyle]} />
+              </View>
+            </View>
+          </Animated.View>
           <Animated.View
             style={[
               styles.bottomSheetContainerDefaults,
@@ -224,23 +243,6 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
                 : {},
               bSheetStyle
             ]}>
-            <View
-              style={{
-                justifyContent: "center",
-                alignItems: "center",
-                flexDirection: "row"
-              }}>
-              <View
-                style={{
-                  backgroundColor: backgroundStyle?.backgroundColor,
-                  width: 80,
-                  borderTopRightRadius: 40,
-                  borderTopLeftRadius: 40
-                }}>
-                <Animated.View style={[styles.handler, handleStyle]} />
-              </View>
-            </View>
-
             <BottomSheetContext.Provider
               value={{
                 expanded,
