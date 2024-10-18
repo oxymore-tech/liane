@@ -11,10 +11,10 @@ import { AppLogger } from "@/api/logger.ts";
 import AppMapView from "@/components/map/AppMapView.tsx";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
 import { DisplayDays } from "@/components/communities/displayDaysView.tsx";
-import { DisplayRallyingPoints } from "@/components/communities/displayWaypointsView.tsx";
+import { DisplayWayPoints } from "@/components/communities/displayWaypointsView.tsx";
 import { LianeMatchLianeRouteLayer } from "@/components/map/layers/LianeMatchRouteLayer.tsx";
 import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay.tsx";
-import { CoLiane, CoMatch, getBoundingBox, ResolvedLianeRequest } from "@liane/common";
+import { CoLiane, CoMatch, getBoundingBox, ResolvedLianeRequest, WayPoint } from "@liane/common";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider.tsx";
 import { AppBottomSheet, AppBottomSheetHandleHeight, AppBottomSheetScrollView } from "@/components/base/AppBottomSheet.tsx";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -22,6 +22,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 function isCoLiane(l: CoLiane | CoMatch): l is CoLiane {
   return (l as any).wayPoints;
 }
+
 export const LianeMapDetailScreen = () => {
   const { navigation, route } = useAppNavigation<"LianeMapDetail">();
   const lianeRequest = route.params.request;
@@ -32,24 +33,28 @@ export const LianeMapDetailScreen = () => {
   const [bSheetTop, setBSheetTop] = useState<number>(0.55 * height);
   const [liane, setliane] = useState<CoLiane>();
   const [match, setMatch] = useState<CoMatch>();
+  const [wayPoints, setWayPoints] = useState<WayPoint[]>([]);
+
+  useEffect(() => {
+    if (!liane) {
+      return;
+    }
+    services.community.getTrip(liane.id!, lianeRequest?.id).then(setWayPoints);
+  }, [liane, lianeRequest, services.community]);
 
   const mapBounds = useMemo(() => {
     if (!liane) {
       return undefined;
     }
     const bSheetTopPixels = bSheetTop > 1 ? bSheetTop : bSheetTop * height;
-    const coordinates = liane!.wayPoints.map(w => [w.location.lng, w.location.lat]);
-    if (match) {
-      coordinates.push([match.pickup.location.lng, match.pickup.location.lat]);
-      coordinates.push([match.deposit.location.lng, match.deposit.location.lat]);
-    }
+    const coordinates = wayPoints.map(w => [w.rallyingPoint.location.lng, w.rallyingPoint.location.lat]);
     const bbox = getBoundingBox(coordinates);
     bbox.paddingTop = 24;
     bbox.paddingLeft = 72;
     bbox.paddingRight = 72;
     bbox.paddingBottom = bSheetTopPixels + 24;
     return bbox;
-  }, [liane, bSheetTop, height, match]);
+  }, [liane, bSheetTop, height, wayPoints]);
 
   useEffect(() => {
     if (isCoLiane(route.params.liane)) {
@@ -120,7 +125,7 @@ export const LianeMapDetailScreen = () => {
           </View>
         </View>
         <AppMapView bounds={mapBounds}>
-          {liane && liane.id && <LianeMatchLianeRouteLayer wayPoints={liane.wayPoints} lianeId={liane.id} />}
+          {liane && liane.id && <LianeMatchLianeRouteLayer wayPoints={wayPoints.map(w => w.rallyingPoint)} lianeId={liane.id} />}
 
           {lianeRequest?.wayPoints.map((w, i) => {
             let type: "to" | "from" | "step";
@@ -182,7 +187,7 @@ export const LianeMapDetailScreen = () => {
                 }}
               />
             )}
-            {liane && displayliane(liane)}
+            <DisplayLiane liane={liane} wayPoints={wayPoints} />
           </AppBottomSheetScrollView>
         </AppBottomSheet>
       </View>
@@ -190,21 +195,19 @@ export const LianeMapDetailScreen = () => {
   );
 };
 
-export const displayliane = (liane: ResolvedLianeRequest | CoLiane) => {
+type DisplayLianeProps = {
+  liane?: ResolvedLianeRequest | CoLiane;
+  wayPoints: WayPoint[];
+};
+
+export const DisplayLiane = ({ liane, wayPoints }: DisplayLianeProps) => {
+  if (!liane) {
+    return null;
+  }
   return (
     <>
       <DisplayDays days={liane.weekDays} />
-      <DisplayRallyingPoints
-        wayPoints={liane.wayPoints}
-        endTime={liane.arriveBefore}
-        style={{ backgroundColor: AppColors.gray100, borderRadius: 20 }}
-      />
-      <DisplayRallyingPoints
-        wayPoints={liane.wayPoints}
-        inverseTravel
-        startTime={liane.returnAfter}
-        style={{ backgroundColor: AppColors.gray100, borderRadius: 20 }}
-      />
+      <DisplayWayPoints wayPoints={wayPoints} style={{ backgroundColor: AppColors.gray100, borderRadius: 20 }} />
     </>
   );
 };

@@ -1,4 +1,4 @@
-import { CoLianeMatch, getPoint, getTripFromMatch, getTripMatch, LianeMatch, RallyingPoint, ResolvedLianeRequest, WayPoint } from "@liane/common";
+import { getPoint, getTripFromMatch, getTripMatch, LianeMatch, RallyingPoint, WayPoint } from "@liane/common";
 import { FeatureCollection } from "geojson";
 import React, { useContext, useMemo } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
