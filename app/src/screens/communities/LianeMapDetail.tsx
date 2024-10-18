@@ -65,7 +65,6 @@ export const LianeMapDetailScreen = () => {
       return undefined;
     }
 
-    console.log("SCREOLL", bSheetTop);
     const bSheetTopPixels = bSheetTop > 1 ? bSheetTop : bSheetTop * height;
     const bbox = getBoundingBox(lianeRequest!.wayPoints.map(w => [w.location.lng, w.location.lat]));
     bbox.paddingTop = 24;

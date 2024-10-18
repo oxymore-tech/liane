@@ -1,4 +1,4 @@
-import { DayOfWeekFlag, Entity, Identity, Liane, PaginatedRequestParams, PaginatedResponse, RallyingPoint, Ref, User, UTCDateTime } from "../api";
+import { DayOfWeekFlag, Entity, Liane, PaginatedRequestParams, PaginatedResponse, RallyingPoint, Ref, User, UTCDateTime } from "../api";
 import { HttpClient } from "./http";
 import { TimeOnly, TimeRange } from "./time";
 import { BoundingBox } from "../util";
@@ -65,9 +65,14 @@ export type Group = {
 
 export type CoMatch = Single | Group;
 
-export type CoLiane = Identity & {
+export type CoLiane = Entity & {
   members: CoLianeMember[];
   pendingMembers: CoLianeMember[];
+  wayPoints: RallyingPoint[];
+  roundTrip: boolean;
+  arriveBefore: TimeOnly;
+  returnAfter: TimeOnly;
+  weekDays: DayOfWeekFlag;
 };
 
 export type CoLianeMember = {

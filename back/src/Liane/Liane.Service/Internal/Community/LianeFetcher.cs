@@ -79,7 +79,8 @@ public sealed class LianeFetcher(LianeRequestFetcher lianeRequestFetcher, IUserS
             lianeRequest.ArriveBefore,
             lianeRequest.ReturnAfter,
             lianeRequest.WeekDays,
-            lianeRequest.CreatedBy!
+            lianeRequest.CreatedBy!,
+            lianeRequest.CreatedAt!.Value
           );
         }))
       .ToImmutableDictionary(l => l.Id);

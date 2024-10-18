@@ -17,7 +17,8 @@ public sealed record Liane(
   TimeOnly ArriveBefore,
   TimeOnly ReturnAfter,
   DayOfWeekFlag WeekDays,
-  Ref<User> CreatedBy
+  Ref<User> CreatedBy,
+  DateTime CreatedAt
 ) : IIdentity<Guid>, ISharedResource<LianeMember>
 {
   public bool IsMember(Ref<User> user) => Members.Any(m => m.User.Id == user.Id) || PendingMembers.Any(m => m.User.Id == user.Id);
