@@ -30,66 +30,38 @@ import { useBottomBarStyle } from "@/components/context/Navigation";
 import { useAppNavigation } from "@/components/context/routing";
 import { WelcomeWizardModal } from "@/screens/home/WelcomeWizard";
 import { HomeMap } from "@/screens/home/HomeMap";
-import { AppBottomSheet, AppBottomSheetHandleHeight, BottomSheetObservableMessage, BottomSheetRefProps } from "@/components/base/AppBottomSheet";
+import { BottomSheetObservableMessage } from "@/components/base/AppBottomSheet";
 import { AppLogger } from "@/api/logger";
 import { AppMapViewController } from "@/components/map/AppMapView";
 import { useBehaviorSubject, useObservable } from "@/util/hooks/subscription";
-import { LianeOnMapItem } from "@/screens/home/LianeOnMapItemView.tsx";
-import { AppText } from "@/components/base/AppText.tsx";
-import { AppRoundedButton } from "@/components/base/AppRoundedButton.tsx";
-import { DisplayDays } from "@/components/communities/displayDaysView.tsx";
-import { DisplayRallyingPoints } from "@/components/communities/displayWaypointsView.tsx";
-import { displayResolvedLiane } from "@/screens/communities/LianeMapDetail.tsx";
-import { AppIcon } from "@/components/base/AppIcon.tsx";
+import { HomeMapBottomSheetContainer } from "@/screens/home/HomeMapBottomSheet.tsx";
 
 export interface TripSection extends SectionBase<CoLiane> {}
 
 const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureCollection, Set<Ref<Liane>> | undefined]> }) => {
   const [movingDisplay, setMovingDisplay] = useState<boolean>(false);
   const machine = useContext(HomeMapContext);
-  const refBottomSheet = useRef<BottomSheetRefProps>(null);
   const [lianes, setLianes] = useState<CoLiane[]>();
   const [currentBoundbox, setCurrentBoundbox] = useState<BoundingBox>();
   const [isFetching, setFetching] = useState<boolean>();
-
   const [state] = useActor(machine);
   const { status } = useContext(AppContext);
-
-  const backHandler = () => {
-    if (state.can("BACK")) {
-      // handle it
-      machine.send("BACK");
-      return true;
-    }
-
-    return false;
-  };
-
-  const convertToDateSections = (data: CoLiane[]): TripSection[] =>
-    data.map(
-      item =>
-        ({
-          data: [item]
-        } as TripSection)
-    );
-
+  const mapFeatureSubject = useBehaviorSubject<GeoJSON.Feature[] | undefined>(undefined);
+  const features = useObservable(mapFeatureSubject, undefined);
+  const hasFeatures = !!features;
+  const appMapRef = useRef<AppMapViewController>(null);
+  const [modalOpen, setModalOpen] = useState(false);
   const bottomSheetScroll = useBehaviorSubject<BottomSheetObservableMessage>({ top: 0, expanded: false });
-
   const loading = Object.values(state.value).find(s => s === "init" || s === "load") !== undefined;
   const loadingDisplay = loading && state.context.reloadCause === "display"; //isLoadingDisplay ||
   const loadingList = loading && !state.context.reloadCause;
   const offline = status === "offline";
   const { navigation } = useAppNavigation<"Home">();
   const { services } = useContext(AppContext);
-  const sections = useMemo(() => {
-    return lianes ? convertToDateSections(lianes) : [];
-  }, [lianes]);
-
   const isMatchState = state.matches("match");
   const isDetailState = state.matches("detail");
   const isMapState = state.matches("map");
   const isPointState = state.matches("point");
-
   const bottomSheetDisplay = state.matches("form") ? "none" : movingDisplay ? "closed" : undefined;
 
   const bbStyle = useBottomBarStyle();
@@ -100,14 +72,15 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
     );
   });
 
-  const mapFeatureSubject = useBehaviorSubject<GeoJSON.Feature[] | undefined>(undefined);
+  const backHandler = () => {
+    if (state.can("BACK")) {
+      // handle it
+      machine.send("BACK");
+      return true;
+    }
 
-  const features = useObservable(mapFeatureSubject, undefined);
-  const hasFeatures = !!features;
-
-  const appMapRef = useRef<AppMapViewController>(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [lianeDetail, setLianeDetail] = useState<ResolvedLianeRequest>();
+    return false;
+  };
 
   const computeLianeDisplay = (visibleBounds: Position[]) => {
     fetchLianeOnMap(fromPositions(visibleBounds)).then();
@@ -141,50 +114,12 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
             onZoomChanged={z => AppLogger.debug("MAP", `zoom ${z}`)}
             onMapMoved={computeLianeDisplay}
           />
-          <AppBottomSheet
-            ref={refBottomSheet}
-            stops={[AppBottomSheetHandleHeight + 96, 0.45, 1]}
-            padding={{ top: 80 }}
-            initialStop={0}
-            backgroundStyle={{
-              backgroundColor: lianeDetail ? AppColors.white : AppColors.gray100
-            }}>
-            {lianeDetail ? (
-              <View style={{ width: "100%", height: "100%", backgroundColor: AppColors.white }}>
-                <View style={{ flexDirection: "row", justifyContent: "center" }}>
-                  <View style={{ paddingTop: 10 }}>
-                    <AppRoundedButton
-                      color={defaultTextColor(AppColors.primaryColor)}
-                      onPress={() =>
-                        navigation.navigate("Publish", {
-                          initialValue: lianeDetail
-                        })
-                      }
-                      backgroundColor={AppColors.primaryColor}
-                      text={"Rejoindre"}
-                    />
-                  </View>
-                </View>
-                <Pressable style={{ position: "absolute", top: 10, left: 10 }} onPress={() => setLianeDetail(undefined)}>
-                  <AppIcon name={"arrow2-left"} color={AppColors.darkGray} size={22} />
-                </Pressable>
-
-                <View>{displayResolvedLiane(lianeDetail)}</View>
-              </View>
-            ) : (
-              <SectionList
-                style={{ padding: 5 }}
-                refreshControl={
-                  <RefreshControl refreshing={isFetching || false} onRefresh={() => currentBoundbox && fetchLianeOnMap(currentBoundbox)} />
-                }
-                sections={sections}
-                showsVerticalScrollIndicator={false}
-                renderItem={props => LianeOnMapItem({ ...props, openLiane: setLianeDetail })}
-                keyExtractor={item => item.id!}
-                onEndReachedThreshold={0.2}
-              />
-            )}
-          </AppBottomSheet>
+          <HomeMapBottomSheetContainer
+            colianes={lianes}
+            isFetching={!!isFetching}
+            currentBoundbox={currentBoundbox}
+            fetchLianeOnMap={fetchLianeOnMap}
+          />
           {["point", "map"].some(state.matches) && (
             <>
               <SearchModal
