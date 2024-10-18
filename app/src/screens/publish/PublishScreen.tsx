@@ -36,6 +36,7 @@ export const PublishScreen = () => {
   const queryClient = useQueryClient();
   const { navigation, route } = useAppNavigation<"Publish">();
   const initialValue = route.params.initialValue;
+  const lianeId = route.params.lianeId;
   const { showTutorial, shouldShow } = useContext(AppModalNavigationContext);
 
   const [trip, setTrip] = useState<Partial<Trip>>({});
@@ -49,7 +50,7 @@ export const PublishScreen = () => {
     isEnabled: true
   });
 
-  const [step, setStep] = useState<number>(initialValue ? MaxSteps : -1);
+  const [step, setStep] = useState<number>(lianeId ? -1 : initialValue ? MaxSteps : -1);
   const [previousStep, setPreviousStep] = useState<number>(-1);
   const [pending, setPending] = useState(false);
 
@@ -83,6 +84,10 @@ export const PublishScreen = () => {
       } else {
         await queryClient.invalidateQueries(LianeQueryKey);
         const created = await services.community.create(newLianeRequest);
+
+        if (lianeId) {
+          await services.community.joinRequest(created.id!, lianeId);
+        }
 
         navigation.popToTop();
         if (shouldShow) {
@@ -126,7 +131,7 @@ export const PublishScreen = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: "white" }}>
-      <PageHeader title={"Créer une annonce"} navigation={navigation} />
+      <PageHeader title={lianeId ? "Rejoindre une liane" : "Créer une annonce"} navigation={navigation} />
       <ItinerarySearchForm
         style={{ paddingHorizontal: 16 }}
         formStyle={styles.stepContainer}
@@ -137,7 +142,7 @@ export const PublishScreen = () => {
       />
       {step >= 0 && (
         <Accordion
-          title={"Créer une annonce"}
+          title={lianeId ? "Rejoindre une liane" : "Créer une annonce"}
           step={step}
           onChangeStep={setStep}
           style={styles.accordion}

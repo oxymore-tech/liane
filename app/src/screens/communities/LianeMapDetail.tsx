@@ -25,7 +25,7 @@ function isCoLiane(l: CoLiane | CoMatch): l is CoLiane {
 export const LianeMapDetailScreen = () => {
   const { navigation, route } = useAppNavigation<"LianeMapDetail">();
   const lianeRequest = route.params.request;
-  const { services } = useContext(AppContext);
+  const { services, user } = useContext(AppContext);
   const { height } = useAppWindowsDimensions();
   const insets = useSafeAreaInsets();
   const [error, setError] = useState<Error | undefined>(undefined);
@@ -63,7 +63,7 @@ export const LianeMapDetailScreen = () => {
   const joinLiane = async () => {
     if (!match) {
       navigation.navigate("Publish", {
-        initialValue: liane
+        lianeId: liane?.id
       });
     } else if (lianeRequest && lianeRequest.id) {
       try {
@@ -151,7 +151,7 @@ export const LianeMapDetailScreen = () => {
                   />
                 </View>
               </View>
-            ) : (
+            ) : !liane?.members.some(member => member.user.id === user?.id) ? (
               <View style={{ marginHorizontal: "20%" }}>
                 <AppRoundedButton
                   color={defaultTextColor(AppColors.primaryColor)}
@@ -160,6 +160,12 @@ export const LianeMapDetailScreen = () => {
                   text={"Rejoindre "}
                 />
               </View>
+            ) : (
+              <View
+                style={{
+                  paddingTop: 10
+                }}
+              />
             )}
             {liane && displayliane(liane)}
           </AppBottomSheetScrollView>
