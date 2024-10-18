@@ -36,6 +36,7 @@ import { weekDays } from "@/util/hooks/days.ts";
 import { getLianeStatusStyle } from "@/components/trip/LianeStatusView.tsx";
 import { LianeQueryKey } from "@/screens/user/MyTripsScreen.tsx";
 import { useQueryClient } from "react-query";
+import { JoinedLianeView } from "@/components/communities/JoinedLianeView.tsx";
 
 export const CommunitiesChatScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesChat">();
@@ -108,7 +109,7 @@ export const CommunitiesChatScreen = () => {
   const getDayOfWeek = (liane: Liane): string => {
     const departureDate = new Date(liane.departureTime);
     const dayIndex = departureDate.getUTCDay() - 1;
-    return weekDays[dayIndex < 0 ? 6 : dayIndex];
+    return `${weekDays[dayIndex < 0 ? 6 : dayIndex]} ${departureDate.getDate()}`;
   };
 
   const goToNextLiane = () => {
@@ -355,7 +356,7 @@ export const CommunitiesChatScreen = () => {
                   lineHeight: 27,
                   color: AppColors.black
                 }}>
-                {`${trips.length} trajets prévus`}
+                {`${trips.length} trajets prévu${trips.length > 1 ? "s" : ""}`}
               </AppText>
               <View
                 style={{
@@ -398,16 +399,8 @@ export const CommunitiesChatScreen = () => {
                     paddingTop: 10,
                     alignItems: "center"
                   }}>
-                  <AppText
-                    style={{
-                      fontSize: 18,
-                      fontWeight: "normal",
-                      flexShrink: 1,
-                      lineHeight: 27,
-                      color: AppColors.black
-                    }}>
-                    {currentTrip?.departureTime && AppLocalization.formatMonthDay(new Date(currentTrip?.departureTime))}
-                  </AppText>
+                  {liane && <JoinedLianeView liane={liane} style={{ paddingTop: 8, paddingLeft: 15 }} />}
+
                   {tripActions()}
                 </View>
                 <View

@@ -1,16 +1,17 @@
 import React from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { AppColors } from "@/theme/colors";
 import { UserPicture } from "@/components/UserPicture";
 import { CoLiane, ResolvedLianeRequest } from "@liane/common";
 
 export interface GroupsViewProps {
   liane: CoLiane;
+  style?: StyleProp<ViewStyle>;
 }
 
-export const JoinedLianeView = ({ liane }: GroupsViewProps) => {
+export const JoinedLianeView = ({ liane, style }: GroupsViewProps) => {
   return (
-    <View>
+    <View style={style}>
       <View style={{ flexGrow: 1, flexShrink: 1 }}>
         <View
           style={{
