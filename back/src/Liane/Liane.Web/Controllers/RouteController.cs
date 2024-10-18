@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Liane.Web.Controllers;
 
-[Route("api/basicRoute")] // TODO name "routing" ?
+[Route("api/route")]
 [ApiController]
 public class RouteController(IRoutingService routeService) : ControllerBase
 {

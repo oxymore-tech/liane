@@ -49,7 +49,7 @@ export const LianeMapDetailScreen = () => {
     bbox.paddingRight = 72;
     bbox.paddingBottom = bSheetTopPixels + 24;
     return bbox;
-  }, [liane, bSheetTop, height]);
+  }, [liane, bSheetTop, height, match]);
 
   useEffect(() => {
     if (isCoLiane(route.params.liane)) {
@@ -58,7 +58,7 @@ export const LianeMapDetailScreen = () => {
       setMatch(route.params.liane);
       services.community.get(route.params.liane.liane).then(setliane);
     }
-  }, [route.params.liane]);
+  }, [route.params.liane, services.community]);
 
   const joinLiane = async () => {
     if (!match) {

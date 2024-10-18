@@ -20,7 +20,7 @@ export class RoutingServiceClient implements RoutingService {
   constructor(protected http: HttpClient) {}
 
   async getRoute(pointsCoordinates: LatLng[]): Promise<Route> {
-    const { coordinates } = await this.http.postAs<RawRouteResponse>("/route/", { body: { coordinates: pointsCoordinates } });
+    const { coordinates } = await this.http.postAs<RawRouteResponse>("/route", { body: { coordinates: pointsCoordinates } });
     return { geometry: { coordinates, type: "MultiLineString" } };
   }
 
