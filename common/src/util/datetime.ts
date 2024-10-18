@@ -1,6 +1,8 @@
 import { DayOfWeekFlag, UTCDateTime } from "../api";
 
 export type TimeInSeconds = number;
+export type TimeInMilliseconds = number;
+
 export const toTimeInSeconds = (datetime: Date) => {
   return (datetime.getHours() * 60 + datetime.getMinutes()) * 60 + datetime.getSeconds();
 };

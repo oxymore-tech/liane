@@ -172,38 +172,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
           </HomeBottomSheetContainer>
         )}
 
-        {state.matches("form") && <ItinerarySearchForm trip={state.context.filter} updateTrip={t => machine.send("UPDATE", { data: t })} />}
-
         {isDetailState && <AnimatedFloatingBackButton onPress={() => machine.send("BACK")} />}
-        {isMapState && (
-          <MapHeader
-            hintPhrase={isPointState && !hasFeatures ? "Aucun passage n'est prévu." : null}
-            updateTrip={t => machine.send("UPDATE", { data: t })}
-            trip={state.context.filter}
-            searchPlace={() => setModalOpen(true)}
-          />
-        )}
-        {isPointState && (
-          <MapHeader
-            searchPlace={() => setModalOpen(true)}
-            hintPhrase={isPointState && !hasFeatures ? "Aucun passage n'est prévu." : null}
-            action={
-              isPointState && !hasFeatures
-                ? {
-                    icon: "play-circle-outline",
-                    title: "Proposer un trajet vers ce point",
-                    onPress: () => navigation.navigate("Publish", { initialValue: { wayPoints: [state.context.filter!.to!] } })
-                  }
-                : null
-            }
-            animateEntry={false}
-            updateTrip={t => {
-              machine.send("UPDATE", { data: t });
-            }}
-            trip={state.context.filter}
-          />
-        )}
-        {isMatchState && <MapHeader animateEntry={false} updateTrip={t => machine.send("UPDATE", { data: t })} trip={state.context.filter} />}
       </View>
     </AppBackContextProvider>
   );

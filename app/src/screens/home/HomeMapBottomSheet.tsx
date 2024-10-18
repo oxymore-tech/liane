@@ -41,7 +41,7 @@ export const HomeMapBottomSheetContainer = ({ colianes, isFetching, currentBound
         backgroundColor: AppColors.gray100
       }}>
       <SectionList
-        style={{ padding: 5 }}
+        style={{ padding: 5, marginBottom: 92, marginTop: 3 }}
         refreshControl={<RefreshControl refreshing={isFetching || false} onRefresh={() => currentBoundbox && fetchLianeOnMap(currentBoundbox)} />}
         sections={sections}
         showsVerticalScrollIndicator={false}

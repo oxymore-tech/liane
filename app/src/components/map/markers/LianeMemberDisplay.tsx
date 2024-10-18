@@ -1,4 +1,4 @@
-import { LatLng, User } from "@liane/common";
+import { LatLng, TimeInMilliseconds, User } from "@liane/common";
 import { StyleSheet, Text, View } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { UserPicture } from "@/components/UserPicture";
@@ -30,7 +30,7 @@ export const LianeMemberDisplay = ({
   size?: number;
   showLocationPin?: boolean;
   minZoom?: number | undefined;
-  delay?: number | undefined;
+  delay?: TimeInMilliseconds | undefined;
   isMoving: boolean;
 }) => {
   const controller = useAppMapViewController();
