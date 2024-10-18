@@ -152,12 +152,14 @@ export const RouteLianeLayer = ({
   wayPoints,
   id,
   loadingFeatures,
-  style
+  style,
+  color
 }: {
   wayPoints: RallyingPoint[];
   id?: string;
   loadingFeatures?: FeatureCollection;
   style?: StyleProp<LineLayerStyle>;
+  color?: AppColors;
 }) => {
   const { services } = useContext(AppContext);
   const { data, isLoading } = useQuery(["match", wayPoints[0].id, wayPoints[wayPoints.length - 1].id], () => {
@@ -198,7 +200,7 @@ export const RouteLianeLayer = ({
         aboveLayerID="Highway"
         id={"match_route_display" + (id ? "_" + id : "")}
         style={{
-          lineColor: AppColors.blue,
+          lineColor: color ?? AppColors.blue,
           lineWidth: 3,
           ...argStyle
         }}
@@ -214,11 +216,13 @@ export const LianeMatchUserRouteLayer = ({ loadingFeatures, match }: { loadingFe
 export const LianeMatchLianeRouteLayer = ({
   loadingFeatures,
   wayPoints,
-  lianeId
+  lianeId,
+  color
 }: {
   loadingFeatures?: FeatureCollection;
   wayPoints: RallyingPoint[];
   lianeId: string;
+  color?: AppColors;
 }) => {
-  return <RouteLianeLayer wayPoints={wayPoints} loadingFeatures={loadingFeatures} id={lianeId} />;
+  return <RouteLianeLayer wayPoints={wayPoints} loadingFeatures={loadingFeatures} id={lianeId} color={color} />;
 };
