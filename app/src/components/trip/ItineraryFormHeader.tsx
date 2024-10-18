@@ -33,7 +33,7 @@ export const ItineraryFormHeader = ({
   const { to, from } = trip;
 
   return (
-    <Animated.View style={[styles.headerContainer, containerStyle]} entering={animateEntry ? SlideInUp : undefined} exiting={SlideOutUp}>
+    <Animated.View style={containerStyle} entering={animateEntry ? SlideInUp : undefined} exiting={SlideOutUp}>
       <ItineraryForm
         style={style}
         from={from}
@@ -50,7 +50,3 @@ export const ItineraryFormHeader = ({
     </Animated.View>
   );
 };
-
-const styles = StyleSheet.create({
-  headerContainer: {}
-});

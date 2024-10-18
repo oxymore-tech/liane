@@ -55,7 +55,7 @@ export const ItineraryForm = ({
   }, [from, to]);
 
   return (
-    <Column spacing={6} style={[styles.containerStyle, style]}>
+    <Column style={style}>
       <RallyingPointField
         ref={inputRefFrom}
         onChange={v => {
@@ -87,7 +87,7 @@ export const ItineraryForm = ({
         showTrailing={field === "to" && (to || (searchTo && searchTo.length > 0)) === true}
       />
       {(to || from) && (
-        <View style={{ position: "absolute", right: 0, top: 8, height: "100%", justifyContent: "center" }}>
+        <View style={{ position: "absolute", right: 0, top: 6, height: "100%", justifyContent: "center" }}>
           <AppPressableIcon
             name={"arrow-switch"}
             style={{ width: 40, height: 40, justifyContent: "center", alignItems: "center" }}
@@ -115,9 +115,3 @@ export const ItineraryForm = ({
     </Column>
   );
 };
-
-const styles = StyleSheet.create({
-  containerStyle: {
-    paddingBottom: 12
-  }
-});

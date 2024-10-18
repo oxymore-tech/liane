@@ -14,6 +14,7 @@ import { AppStyles } from "@/theme/styles";
 import { useDebounceValue } from "@/util/hooks/debounce";
 import { AppBackContextProvider } from "@/components/AppBackContextProvider.tsx";
 import { SelectOnMapView } from "@/screens/publish/SelectOnMapView.tsx";
+import { AppButton } from "@/components/base/AppButton.tsx";
 
 export const RecentTrip = ({ trip, style }: { trip: Trip; style?: StyleProp<ViewStyle> }) => {
   return (
@@ -281,7 +282,6 @@ export const RallyingPointSuggestions = ({
     <FlatList
       refreshing={loading}
       style={{ flex: 1 }}
-      keyboardShouldPersistTaps="handled"
       data={locationList}
       keyExtractor={i => i.id!}
       renderItem={({ item }) => (
@@ -456,26 +456,26 @@ export const ItinerarySearchForm = ({
 
       {editable && currentPoint !== undefined && (
         <>
-          <Row style={{ paddingVertical: 20, justifyContent: "space-between" }}>
+          <Row style={{ paddingHorizontal: 4, paddingTop: 8, justifyContent: "space-between" }}>
             <AppPressableOverlay
               onPress={async () => {
                 const currentLocation = await services.location.currentLocation();
                 const closestPoint = await services.rallyingPoint.snap(currentLocation);
                 handleUpdateField(closestPoint);
               }}>
-              <Row spacing={16}>
+              <Row spacing={4}>
                 <AppIcon name={"position-on"} color={AppColors.blue} />
                 <AppText>Utiliser ma position</AppText>
               </Row>
             </AppPressableOverlay>
             <AppPressableOverlay onPress={() => setMapOpen(currentPoint)}>
-              <Row spacing={16}>
+              <Row spacing={4}>
                 <AppIcon name={"map-outline"} color={AppColorPalettes.blue[700]} />
                 <AppText>Choisir sur la carte</AppText>
               </Row>
             </AppPressableOverlay>
           </Row>
-          <AppText style={{ paddingBottom: 16, fontWeight: "bold" }}>Choisissez un point de ralliement</AppText>
+          <AppText style={{ fontWeight: "bold" }}>Choisissez un point de ralliement</AppText>
           <RallyingPointSuggestions
             currentSearch={currentSearch}
             exceptValues={otherValue ? [otherValue.id!] : undefined}

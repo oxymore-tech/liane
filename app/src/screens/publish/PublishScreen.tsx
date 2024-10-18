@@ -99,7 +99,7 @@ export const PublishScreen = () => {
     } finally {
       setPending(false);
     }
-  }, [initialValue, lianeRequest, navigation, queryClient, services.community, shouldShow, showTutorial, trip.from, trip.to]);
+  }, [initialValue, lianeId, lianeRequest, navigation, queryClient, services.community, shouldShow, showTutorial, trip.from, trip.to]);
 
   const stepDone = useCallback(() => {
     if (step < previousStep) {
@@ -320,7 +320,6 @@ const NameStepView = ({ onChange, value }: StepProps<string | undefined>) => {
 
 const styles = StyleSheet.create({
   accordion: {
-    flex: 1,
     paddingHorizontal: 16
   },
   bottom: {
