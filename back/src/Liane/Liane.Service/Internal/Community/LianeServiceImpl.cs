@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
@@ -347,6 +348,21 @@ public sealed class LianeServiceImpl(
     return liane;
   }
 
+  public async Task<ImmutableList<WayPoint>> GetTrip(Guid liane, Guid? lianeRequest)
+  {
+    using var connection = db.NewConnection();
+    using var tx = connection.BeginTransaction();
+
+    var (rallyingPoints, arriveBefore, at) = await GetBestTrip(connection, liane, lianeRequest, tx);
+
+    var wayPoints = await routingService.GetOptimizedTrip(rallyingPoints);
+
+    var computedTime = TimeOnly.FromDateTime(wayPoints.First(w => w.RallyingPoint.Id == at.Id).Eta);
+    var diff = computedTime - arriveBefore;
+
+    return wayPoints.Select(w => w with { Eta = w.Eta - diff }).ToImmutableList();
+  }
+
   public async Task<bool> JoinTrip(JoinTripQuery query)
   {
     using var connection = db.NewConnection();
@@ -429,6 +445,30 @@ public sealed class LianeServiceImpl(
     await eventDispatcher.Dispatch(liane, new MessageContent.MemberLeft("", userId));
 
     return true;
+  }
+
+  private async Task<(ImmutableList<RallyingPoint> WayPoints, TimeOnly ArriveBefore, Ref<RallyingPoint> At)> GetBestTrip(IDbConnection connection, Guid liane, Guid? lianeRequest,
+    IDbTransaction? tx = null)
+  {
+    var resolved = await lianeFetcher.FetchLiane(connection, liane, tx);
+    if (lianeRequest is null)
+    {
+      return (resolved.WayPoints, resolved.ArriveBefore, resolved.WayPoints.Last());
+    }
+
+    var matches = await matcher.FindMatchesBetween(connection, lianeRequest.Value, resolved.Members.Select(m => m.LianeRequest.IdAsGuid()).ToImmutableList(), tx);
+
+    var bestMatch = matches.FirstOrDefault();
+    if (bestMatch is null)
+    {
+      return (resolved.WayPoints, resolved.ArriveBefore, resolved.WayPoints.Last());
+    }
+
+    return (
+      resolved.WayPoints.Append(bestMatch.Pickup).Append(bestMatch.Deposit).DistinctBy(w => w.Id).ToImmutableList(),
+      resolved.ArriveBefore,
+      resolved.WayPoints.Last()
+    );
   }
 }
 

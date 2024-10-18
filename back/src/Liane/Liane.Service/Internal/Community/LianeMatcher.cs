@@ -31,7 +31,13 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     return await ToMatch(rawMatches, snapedPoints, ImmutableDictionary<Guid, DateTime>.Empty);
   }
 
+  public async Task<ImmutableList<Match>> FindMatchesBetween(IDbConnection connection, Guid from, IEnumerable<Guid> to, IDbTransaction? tx = null)
+    => (await FindMatches(connection, [], from, to, tx)).Values.FirstOrDefault(ImmutableList<Match>.Empty);
+
   public async Task<ImmutableDictionary<Guid, ImmutableList<Match>>> FindMatches(IDbConnection connection, IEnumerable<Guid> linkedTo, IDbTransaction? tx = null)
+    => await FindMatches(connection, linkedTo, null, null, tx);
+
+  private async Task<ImmutableDictionary<Guid, ImmutableList<Match>>> FindMatches(IDbConnection connection, IEnumerable<Guid> linkedTo, Guid? from, IEnumerable<Guid>? to, IDbTransaction? tx = null)
   {
     var userId = currentContext.CurrentUser().Id;
     var rawMatches = await FindRawMatches(connection, userId, linkedTo, tx: tx);
@@ -118,7 +124,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
                                                                             lr_b.id = lm_b.liane_request_id AND NOT lm_b.liane_id = ANY(@linkedTo)
                                                                           INNER JOIN route b ON
                                                                             b.way_points = lr_b.way_points AND st_intersects(a.geometry, b.geometry)
-                                                                  WHERE lr_a.created_by = @userId AND lm_a.liane_request_id IS NULL AND (@from IS NULL OR lr_a.id = @from)
+                                                                  WHERE ((@from IS NULL AND lr_a.created_by = @userId) OR lr_a.id = @from) AND lm_a.liane_request_id IS NULL
                                                                   ) AS first_glance
                                                             WHERE st_length(intersection) / a_length > 0.35
                                                             ORDER BY st_length(intersection) / a_length DESC, "from"
@@ -130,6 +136,9 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
   }
 
   private static async Task<ImmutableList<LianeRawMatch>> FindRawMatch(IDbConnection connection, Guid from, Guid to, IDbTransaction? tx = null)
+    => await FindRawMatch(connection, from, [to], tx);
+
+  private static async Task<ImmutableList<LianeRawMatch>> FindRawMatch(IDbConnection connection, Guid from, IEnumerable<Guid> to, IDbTransaction? tx = null)
   {
     var result = await connection.QueryAsync<LianeRawMatch>("""
                                                             SELECT "from",
@@ -170,7 +179,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
                                                                             lr_a.round_trip AND a_reverse.way_points = array_reverse(lr_a.way_points)
                                                                           INNER JOIN liane_request lr_b ON
                                                                             lr_b.id != lr_a.id
-                                                                              AND lr_b.id = @to
+                                                                              AND lr_b.id = ANY(@to)
                                                                               AND lr_b.created_by != lr_a.created_by
                                                                               AND matching_weekdays(lr_a.week_days, lr_b.week_days)::integer != 0
                                                                           LEFT JOIN liane_member lm_b ON

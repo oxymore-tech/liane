@@ -18,6 +18,8 @@ public interface IRoutingService
   Task<ImmutableList<Route>> GetAlternatives(RoutingQuery routingQuery);
   Task<DeltaRoute> CrossAWayPoint(RoutingWithPointQuery routingWithPointQuery);
 
+  Task<ImmutableList<WayPoint>> GetOptimizedTrip(ImmutableList<RallyingPoint> points);
+
   Task<ImmutableList<WayPoint>?> GetTrip(DepartureOrArrivalTime departureOrArrival, RouteSegment endpoints, IEnumerable<RouteSegment> segments)
     => departureOrArrival.Direction switch
     {

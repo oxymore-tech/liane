@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 using Liane.Api.Community;
+using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Web.Internal.Auth;
 using Microsoft.AspNetCore.Mvc;
@@ -45,6 +46,18 @@ public sealed class LianeController(ILianeService lianeService, ITripService tri
   public Task DeleteRequest(Guid id)
   {
     return lianeService.Delete(id);
+  }
+
+  [HttpGet("liane/{liane:guid}/trip")]
+  public Task<ImmutableList<WayPoint>> GetTrip(Guid liane)
+  {
+    return lianeService.GetTrip(liane, null);
+  }
+  
+  [HttpGet("liane/{liane:guid}/trip/{id:guid}")]
+  public Task<ImmutableList<WayPoint>> GetTrip(Guid liane, Guid lianeRequest)
+  {
+    return lianeService.GetTrip(liane, lianeRequest);
   }
 
   [HttpPost("liane/{liane:guid}/join/{id:guid}")]

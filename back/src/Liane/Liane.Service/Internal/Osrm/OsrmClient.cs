@@ -16,7 +16,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace Liane.Service.Internal.Osrm;
 
-public sealed class OsrmClient : IOsrmService
+public sealed class OsrmClient(OsrmSettings settings) : IOsrmService
 {
   private static readonly JsonSerializerOptions JsonOptions = new()
   {
@@ -26,12 +26,7 @@ public sealed class OsrmClient : IOsrmService
   };
 
   private readonly MemoryCache routeCache = new(new MemoryCacheOptions { SizeLimit = 50 });
-  private readonly HttpClient client;
-
-  public OsrmClient(OsrmSettings settings)
-  {
-    client = new HttpClient { BaseAddress = settings.Url };
-  }
+  private readonly HttpClient client = new() { BaseAddress = settings.Url };
 
   public Task<Response.Routing> Route(IEnumerable<LatLng> coordinates, string alternatives = "false", string steps = "false", string geometries = "geojson", string overview = "simplified",
     string annotations = "false",
@@ -63,10 +58,7 @@ public sealed class OsrmClient : IOsrmService
     })!;
   }
 
-  public async Task<Response.Trip> Trip(IEnumerable<LatLng> coordinates, string roundtrip = "false", string source = "first", string destination = "last", string geometries = "geojson",
-    string overview = "false",
-    string annotations = "false", string steps = "false",
-    CancellationToken cancellationToken = default)
+  public async Task<Response.Trip> Trip(IEnumerable<LatLng> coordinates, CancellationToken cancellationToken = default)
   {
     var format = Format(coordinates);
 
@@ -77,16 +69,7 @@ public sealed class OsrmClient : IOsrmService
 
     var uri = $"/trip/v1/driving/{format}";
 
-    var result = await client.GetFromJsonAsync<Response.Trip>(uri.WithParams(new
-    {
-      roundtrip,
-      source,
-      destination,
-      steps,
-      geometries,
-      overview,
-      annotations
-    }), JsonOptions, cancellationToken: cancellationToken);
+    var result = await client.GetFromJsonAsync<Response.Trip>(uri.WithParams(new { geometries = "geojson" }), JsonOptions, cancellationToken: cancellationToken);
 
     if (result == null)
     {

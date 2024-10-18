@@ -87,7 +87,7 @@ public sealed class RoutingServiceImpl(IOsrmService osrmService, ILogger<Routing
   /// Get the matrix of durations between each pair of rallying points as a dictionary
   /// </summary>
   /// <returns>The matrix composed of tuples (duration, distance)</returns>
-  private async ValueTask<Dictionary<RallyingPoint, Dictionary<RallyingPoint, (double? duration, double? distance)>>> GetDurationMatrix(ImmutableArray<RallyingPoint> keys)
+  private async ValueTask<Dictionary<RallyingPoint, Dictionary<RallyingPoint, (double? duration, double? distance)>>> GetDurationMatrix(ImmutableList<RallyingPoint> keys)
   {
     var (durations, distances) = await osrmService.Table(keys.Select(rp => rp.Location));
     var matrix = new Dictionary<RallyingPoint, Dictionary<RallyingPoint, (double?, double?)>>();
@@ -188,6 +188,30 @@ public sealed class RoutingServiceImpl(IOsrmService osrmService, ILogger<Routing
     return trip.Count != pointsDictionary.Count
       ? null // No solution found
       : trip.ToImmutableList();
+  }
+
+  public async Task<ImmutableList<WayPoint>> GetOptimizedTrip(ImmutableList<RallyingPoint> points)
+  {
+    // call osrm trip service
+    var tripResponse = await osrmService.Trip(points.Select(rp => rp.Location));
+    var eta = DateTime.UtcNow.Date;
+    return tripResponse.Waypoints
+      .Select(w =>
+      {
+        var rallyingPoint = points[w.WaypointIndex];
+        return (w, rallyingPoint);
+      })
+      .Select((t, i) =>
+      {
+        var leg = i == 0 ? null : tripResponse.Trips[0].Legs[i - 1];
+        var duration = (int)(leg?.Duration ?? 0);
+        var distance = (int)(leg?.Distance ?? 0);
+        return new WayPoint(t.rallyingPoint,
+          duration,
+          distance,
+          eta.AddSeconds(duration)
+        );
+      }).ToImmutableList();
   }
 
   private static IEnumerable<LatLng> GetFromTo(LatLng fromLocation, LatLng toLocation)

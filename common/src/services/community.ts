@@ -1,4 +1,4 @@
-import { DayOfWeekFlag, Entity, Liane, PaginatedRequestParams, PaginatedResponse, RallyingPoint, Ref, User, UTCDateTime } from "../api";
+import { DayOfWeekFlag, Entity, Liane, PaginatedRequestParams, PaginatedResponse, RallyingPoint, Ref, User, UTCDateTime, WayPoint } from "../api";
 import { HttpClient } from "./http";
 import { TimeOnly, TimeRange } from "./time";
 import { BoundingBox } from "../util";
@@ -126,6 +126,8 @@ export interface CommunityService {
 
   get(liane: string): Promise<CoLiane>;
 
+  getTrip(liane: string, lianeRequest?: string): Promise<WayPoint[]>;
+
   create(lianeRequest: CoLianeRequest): Promise<CoLianeRequest>;
 
   update(lianeRequestId: string, request: CoLianeRequest): Promise<CoLianeRequest>;
@@ -188,6 +190,11 @@ export class CommunityServiceClient implements CommunityService {
 
   getIncomingTrips(liane: string) {
     return this.http.get<Liane[]>(`/community/liane/${liane}/incoming_trip`);
+  }
+
+  getTrip(liane: string, lianeRequest?: string): Promise<WayPoint[]> {
+    const suffix = lianeRequest ? `/${lianeRequest}` : "";
+    return this.http.get<WayPoint[]>(`/community/liane/${liane}/trip${suffix}`);
   }
 
   joinTrip(query: JoinTripQuery) {
