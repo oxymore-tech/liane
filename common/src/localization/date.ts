@@ -1,5 +1,5 @@
 import { DayOfWeekFlag } from "../api";
-import { TimeInSeconds } from "../util";
+import { TimeInMilliseconds } from "../util";
 import { TimeOnly } from "../services";
 
 export class Localization {
@@ -104,16 +104,16 @@ export class Localization {
     return this.daysList.filter((_day: string, index: number) => daysOfTheWeek?.charAt(index) === "1").join(", ");
   };
 
-  formatDuration = (duration: TimeInSeconds) => {
-    if (duration < 60) {
+  formatDuration = (duration: TimeInMilliseconds) => {
+    if (duration / 1000 < 60) {
       return "1 min";
     }
-    return duration >= 3600
-      ? Math.floor(duration / 3600) +
+    return duration / 1000 >= 3600
+      ? Math.floor(duration / 1000 / 3600) +
           "h" +
-          Math.floor((duration % 3600) / 60)
+          Math.floor(((duration / 1000) % 3600) / 60)
             .toString()
             .padStart(2, "0")
-      : Math.floor(duration / 60).toString() + " min";
+      : Math.floor(duration / 1000 / 60).toString() + " min";
   };
 }

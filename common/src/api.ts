@@ -1,4 +1,4 @@
-import { TimeInSeconds } from "./util";
+import { TimeInMilliseconds, TimeInSeconds } from "./util";
 import { FeatureCollection } from "geojson";
 import { IUnion, UnionUtils } from "./union";
 import { CoLiane } from "./services";
@@ -203,14 +203,14 @@ export type TrackedMemberLocation = {
   liane: Ref<Liane>;
   at: UTCDateTime;
   nextPoint: Ref<RallyingPoint>;
-  delay: TimeInSeconds;
+  delay: TimeInMilliseconds;
   location?: LatLng;
   isMoving: boolean;
 };
 export type Car = {
   at: UTCDateTime;
   nextPoint: Ref<RallyingPoint>;
-  delay: number;
+  delay: TimeInMilliseconds;
   position: LatLng;
   members: Ref<User>[];
   isMoving: boolean;
