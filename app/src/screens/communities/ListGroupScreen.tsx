@@ -57,7 +57,7 @@ export const ListGroupScreen = () => {
         <FlatList
           data={groups}
           renderItem={({ item }) => (
-            <GroupItem key={item.liane} group={item} onPress={() => navigation.navigate("LianeMapDetail", { group: item, request: lianeRequest })} />
+            <GroupItem key={item.liane} group={item} onPress={() => navigation.navigate("LianeMapDetail", { liane: item, request: lianeRequest })} />
           )}
         />
       </View>
