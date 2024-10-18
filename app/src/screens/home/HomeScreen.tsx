@@ -91,7 +91,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
       setFetching(true);
       setCurrentBoundbox(bound);
       const lianesTemp: CoLiane[] = await services.community.list({
-        forCurrentUser: true,
+        forCurrentUser: false,
         bbox: bound
       });
       setLianes(lianesTemp);

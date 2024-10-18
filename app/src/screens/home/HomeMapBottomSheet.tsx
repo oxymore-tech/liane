@@ -6,9 +6,10 @@ import { AppRoundedButton } from "@/components/base/AppRoundedButton.tsx";
 import { AppIcon } from "@/components/base/AppIcon.tsx";
 import { displayResolvedLiane } from "@/screens/communities/LianeMapDetail.tsx";
 import { LianeOnMapItem } from "@/screens/home/LianeOnMapItemView.tsx";
-import React, { useMemo, useRef, useState } from "react";
+import React, { useContext, useMemo, useRef, useState } from "react";
 import { TripSection } from "@/screens/home/HomeScreen.tsx";
 import { useAppNavigation } from "@/components/context/routing.ts";
+import { AppContext } from "@/components/context/ContextProvider.tsx";
 
 type HomeMapBottomSheetProps = {
   colianes?: CoLiane[];
@@ -20,6 +21,8 @@ export const HomeMapBottomSheetContainer = ({ colianes, isFetching, currentBound
   const [lianeDetail, setLianeDetail] = useState<ResolvedLianeRequest>();
   const refBottomSheet = useRef<BottomSheetRefProps>(null);
   const { navigation } = useAppNavigation<"Home">();
+  const { user } = useContext(AppContext);
+
   const convertToDateSections = (data: CoLiane[]): TripSection[] =>
     data.map(
       item =>
@@ -45,20 +48,25 @@ export const HomeMapBottomSheetContainer = ({ colianes, isFetching, currentBound
       }}>
       {lianeDetail ? (
         <View style={{ width: "100%", height: "100%", backgroundColor: AppColors.white }}>
-          <View style={{ flexDirection: "row", justifyContent: "center" }}>
-            <View style={{ paddingTop: 10 }}>
-              <AppRoundedButton
-                color={defaultTextColor(AppColors.primaryColor)}
-                onPress={() =>
-                  navigation.navigate("Publish", {
-                    initialValue: lianeDetail
-                  })
-                }
-                backgroundColor={AppColors.primaryColor}
-                text={"Rejoindre"}
-              />
+          {colianes?.some(coLiane => coLiane.members.some(member => member.user.id === user?.id)) ? (
+            <View style={{ paddingTop: 10 }} />
+          ) : (
+            <View style={{ flexDirection: "row", justifyContent: "center" }}>
+              <View style={{ paddingTop: 10 }}>
+                <AppRoundedButton
+                  color={defaultTextColor(AppColors.primaryColor)}
+                  onPress={() =>
+                    navigation.navigate("Publish", {
+                      initialValue: lianeDetail
+                    })
+                  }
+                  backgroundColor={AppColors.primaryColor}
+                  text={"Rejoindre"}
+                />
+              </View>
             </View>
-          </View>
+          )}
+
           <Pressable style={{ position: "absolute", top: 10, left: 10 }} onPress={() => setLianeDetail(undefined)}>
             <AppIcon name={"arrow2-left"} color={AppColors.darkGray} size={22} />
           </Pressable>
