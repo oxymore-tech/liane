@@ -92,6 +92,20 @@ export const LianeMapDetailScreen = () => {
     }
   };
 
+  const rejectLiane = async () => {
+    if (lianeRequest && lianeRequest.id && match) {
+      try {
+        const result = await services.community.reject(match.liane, lianeRequest.id);
+        AppLogger.debug("COMMUNITIES", "Acceptation une liane avec succès", result);
+        navigation.navigate("Lianes");
+      } catch (e) {
+        AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de l'acceptation d'une liane", error);
+      }
+    } else {
+      AppLogger.debug("COMMUNITIES", "Pas de lianeRequest ID lors de l'acceptation", lianeRequest);
+    }
+  };
+
   return (
     <GestureHandlerRootView style={styles.mainContainer}>
       {error && (
@@ -143,6 +157,7 @@ export const LianeMapDetailScreen = () => {
                     color: AppColors.black
                   }}>{`Cette personne souhaite rejoindre votre liane`}</AppText>
                 <View style={{ marginHorizontal: "20%" }}>
+                  <AppRoundedButton color={AppColors.black} onPress={rejectLiane} backgroundColor={AppColors.white} text={"Refuser "} />
                   <AppRoundedButton
                     color={defaultTextColor(AppColors.primaryColor)}
                     onPress={acceptLiane}
