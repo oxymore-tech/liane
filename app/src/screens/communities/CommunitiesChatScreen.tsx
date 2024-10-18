@@ -693,7 +693,7 @@ const LaunchTripModal = ({
           </View>
           <Row spacing={8} style={{ justifyContent: "space-evenly" }}>
             <Column>
-              <AppText style={styles.modalText}>Départ à :</AppText>
+              <AppText style={styles.modalText}>Arrivée à :</AppText>
               <Center>
                 <TimeWheelPicker
                   date={TimeOnlyUtils.fromDate(startDate)}
