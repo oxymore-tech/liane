@@ -93,6 +93,10 @@ export class Localization {
     return `${this.formatMonthDay(date)} à ${this.formatTime(date)}`;
   };
 
+  formatDateOnly = (date: Date | number) => {
+    return `${this.formatMonthDay(date)}`;
+  };
+
   readonly daysList = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
 
   formatDaysOfTheWeek = (daysOfTheWeek?: DayOfWeekFlag) => {

@@ -8,8 +8,7 @@ import {
   PaginatedResponse,
   RallyingPoint,
   ResolvedLianeRequest,
-  TimeOnlyUtils,
-  User
+  TimeOnlyUtils
 } from "@liane/common";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from "react-native";
@@ -595,35 +594,34 @@ const LaunchTripModal = ({
   setTripModalVisible: (v: boolean) => void;
   launchTrip: (d: [Date, Date | undefined], from: string | undefined, to: string | undefined) => void;
 }) => {
-  const [launchTripStep, setLaunchTripStep] = useState(1);
   const [selectedTime, setSelectedTime] = useState<[Date, Date | undefined]>([new Date(), undefined]);
   const [selectedDay, setSelectedDay] = useState<DayOfWeekFlag>(getNextAvailableDay(lianeRequest.weekDays, startDate));
   const [from, setFrom] = useState<RallyingPoint>(lianeRequest.wayPoints[0]);
   const [to, setTo] = useState<RallyingPoint>(lianeRequest.wayPoints[lianeRequest.wayPoints.length - 1]);
+  const [returnSelected, setReturnSelected] = useState<boolean>(true);
 
-  const launch = () => {
+  const tripDateTime = useMemo(() => {
     const todayIndex = (selectedTime[0].getDay() + 6) % 7;
-
     let selectedDays = selectedDay
       .split("")
       .map((day, index) => (day === "1" ? index : -1))
       .filter(index => index !== -1);
-
     let firstDay = (selectedDays[0] - todayIndex + 7) % 7;
-    let returnDay = selectedDays.length > 1 ? (selectedDays[1] - todayIndex + 7) % 7 : firstDay;
-
     if (firstDay === 0 && selectedTime[0].valueOf() < new Date().valueOf()) {
       firstDay = 7;
     }
-    const departureTime = addSeconds(selectedTime[0], firstDay * 3600 * 24);
-    const returnTime =
-      launchTripStep === 1
-        ? selectedTime[1]
-          ? addSeconds(selectedTime[1], returnDay * 3600 * 24)
-          : addSeconds(startDate, returnDay * 3600 * 24)
-        : undefined;
+    let returnDay = selectedDays.length > 1 ? (selectedDays[1] - todayIndex + 7) % 7 : firstDay;
 
-    launchTrip([departureTime, returnTime], from.id, to.id);
+    let returnTime = returnSelected
+      ? selectedTime[1]
+        ? addSeconds(selectedTime[1], returnDay * 3600 * 24)
+        : addSeconds(startDate, returnDay * 3600 * 24)
+      : undefined;
+
+    return { depart: addSeconds(selectedTime[0], firstDay * 3600 * 24), return: returnTime };
+  }, [selectedDay, selectedTime]);
+  const launch = () => {
+    launchTrip([tripDateTime.depart, tripDateTime.return], from.id, to.id);
   };
 
   const switchDestination = () => {
@@ -638,10 +636,10 @@ const LaunchTripModal = ({
         <AppText style={{ fontSize: 22, fontWeight: "bold", lineHeight: 24 }}>Lancer un trajet</AppText>
         <Column spacing={8}>
           <View>
-            <Row spacing={6}>
-              <AppText style={[{ marginTop: 5 }, styles.modalText]}>{from.label}</AppText>
+            <Row spacing={6} style={{ flexDirection: "row", justifyContent: "flex-start" }}>
+              <AppText style={[{ marginTop: 5 }, styles.modalText]}>{from.city}</AppText>
               <AppPressableIcon name={"flip-2-outline"} onPress={switchDestination} />
-              <AppText style={[{ marginTop: 5 }, styles.modalText]}>{to.label}</AppText>
+              <AppText style={[{ marginTop: 5 }, styles.modalText]}>{to.city}</AppText>
             </Row>
           </View>
           <View>
@@ -649,45 +647,45 @@ const LaunchTripModal = ({
               <DayOfTheWeekPicker selectedDays={selectedDay} onChangeDays={setSelectedDay} enabledDays={"1111111"} dualOptionMode={true} />
             </Row>
           </View>
+          {selectedDay !== "0000000" && tripDateTime?.depart ? (
+            <View style={{ flexDirection: "row", justifyContent: "flex-start" }}>
+              <View
+                style={{
+                  width: "auto",
+                  marginTop: 5,
+                  backgroundColor: AppColors.lightGrayBackground,
+                  paddingHorizontal: 8,
+                  borderRadius: 20,
+                  paddingVertical: 4
+                }}>
+                <AppText style={[styles.modalText]}>{AppLocalization.formatDateOnly(tripDateTime.depart)}</AppText>
+              </View>
+            </View>
+          ) : null}
+
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start" }}>
             <AppText style={[{ marginLeft: 5 }, styles.modalText]}>Aller-retour ?</AppText>
 
             <Pressable
-              style={{
-                flexDirection: "row",
-                marginHorizontal: 16,
-                padding: 10,
-                borderRadius: 15,
-                borderWidth: 2,
-                borderColor: AppColors.lightGrayBackground
-              }}
+              style={[styles.buttonChoice, returnSelected ? styles.choiceNotSelected : styles.choiceSelected]}
               onPress={() => {
-                setLaunchTripStep(0);
+                setReturnSelected(false);
               }}>
               <AppText
                 style={{
-                  color: AppColors.black,
-                  fontSize: 16,
-                  fontWeight: "bold",
-                  lineHeight: 24
+                  color: returnSelected ? AppColors.black : defaultTextColor(AppColors.primaryColor)
                 }}>
                 Non
               </AppText>
             </Pressable>
             <Pressable
-              style={{
-                flexDirection: "row",
-                padding: 10,
-                borderRadius: 15,
-                backgroundColor: AppColors.primaryColor
-              }}
-              onPress={() => setLaunchTripStep(1)}>
+              style={[styles.buttonChoice, returnSelected ? styles.choiceSelected : styles.choiceNotSelected]}
+              onPress={() => {
+                setReturnSelected(true);
+              }}>
               <AppText
                 style={{
-                  color: defaultTextColor(AppColors.primaryColor),
-                  fontSize: 16,
-                  fontWeight: "bold",
-                  lineHeight: 24
+                  color: returnSelected ? defaultTextColor(AppColors.primaryColor) : AppColors.black
                 }}>
                 Oui
               </AppText>
@@ -695,7 +693,7 @@ const LaunchTripModal = ({
           </View>
           <Row spacing={8} style={{ justifyContent: "space-evenly" }}>
             <Column>
-              <AppText style={styles.modalText}>Départ à :</AppText>
+              <AppText style={styles.modalText}>Arrivée à :</AppText>
               <Center>
                 <TimeWheelPicker
                   date={TimeOnlyUtils.fromDate(startDate)}
@@ -704,7 +702,7 @@ const LaunchTripModal = ({
                 />
               </Center>
             </Column>
-            {launchTripStep === 1 && (
+            {returnSelected && (
               <Column>
                 <AppText style={styles.modalText}>Retour à :</AppText>
                 <Center>
@@ -752,5 +750,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     lineHeight: 24
+  },
+  buttonChoice: {
+    fontSize: 16,
+    fontWeight: "bold",
+    lineHeight: 24,
+    flexDirection: "row",
+    marginLeft: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 15,
+    borderWidth: 1
+  },
+  choiceSelected: {
+    borderColor: AppColors.primaryColor,
+    backgroundColor: AppColors.primaryColor
+  },
+  choiceNotSelected: {
+    borderColor: AppColors.lightGrayBackground
   }
 });

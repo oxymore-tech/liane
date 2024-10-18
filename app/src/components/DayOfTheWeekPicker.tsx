@@ -108,11 +108,10 @@ const styles = StyleSheet.create({
     rowGap: 4
   },
   dayContainer: {
-    //marginHorizontal: 6,
     textAlign: "center",
     justifyContent: "center",
     borderColor: AppColorPalettes.gray[600],
-    borderWidth: 2,
+    borderWidth: 1,
     borderRadius: 20
   },
   daySelectedContainer: {
