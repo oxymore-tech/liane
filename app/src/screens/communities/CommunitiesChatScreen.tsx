@@ -8,9 +8,10 @@ import {
   PaginatedResponse,
   RallyingPoint,
   ResolvedLianeRequest,
+  TimeOnly,
   TimeOnlyUtils
 } from "@liane/common";
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -86,27 +87,33 @@ export const CommunitiesChatScreen = () => {
     [trips.map(trip => trip.id)]
   );
 
-  const fetchTrip = async (id: string) => {
-    try {
-      const tripsTemp = await services.community.getIncomingTrips(id);
-      setTrips(tripsTemp);
-    } catch (e) {
-      AppLogger.debug("COMMUNITIES", "Au moment de récupérer les trajets prévus, une erreur c'est produite", e);
-    }
-  };
+  const fetchTrip = useCallback(
+    async (id: string) => {
+      try {
+        const tripsTemp = await services.community.getIncomingTrips(id);
+        setTrips(tripsTemp);
+      } catch (e) {
+        AppLogger.debug("COMMUNITIES", "Au moment de récupérer les trajets prévus, une erreur c'est produite", e);
+      }
+    },
+    [services.community]
+  );
 
-  const fetchLiane = async (id: string) => {
-    try {
-      const l: CoLiane = await services.community.get(id);
-      setLiane(l);
-      return l;
-    } catch (e) {
-      AppLogger.debug("COMMUNITIES", "Au moment de récupérer la liane, une erreur c'est produite", e);
-    }
-  };
+  const fetchLiane = useCallback(
+    async (id: string) => {
+      try {
+        const l: CoLiane = await services.community.get(id);
+        setLiane(l);
+        return l;
+      } catch (e) {
+        AppLogger.debug("COMMUNITIES", "Au moment de récupérer la liane, une erreur c'est produite", e);
+      }
+    },
+    [services.community]
+  );
 
-  const getDayOfWeek = (liane: Liane): string => {
-    const departureDate = new Date(liane.departureTime);
+  const getDayOfWeek = (l: Liane): string => {
+    const departureDate = new Date(l.departureTime);
     const dayIndex = departureDate.getUTCDay() - 1;
     return weekDays[dayIndex < 0 ? 6 : dayIndex];
   };
@@ -169,15 +176,6 @@ export const CommunitiesChatScreen = () => {
   const me = useMemo(() => liane?.members.find(m => m.user.id === user!.id), [liane?.members, user]);
   const name = me && me.lianeRequest ? me?.lianeRequest.name : `${me?.lianeRequest.wayPoints[0].label}  ➔ ${me?.lianeRequest.wayPoints[1].label}`;
 
-  const startDate = useMemo(() => {
-    const d = new Date();
-    if (!me) {
-      return d;
-    }
-    const c = me.lianeRequest.arriveBefore;
-    d.setHours(c.hour, c.minute);
-    return d;
-  }, [me]);
   const launchTrip = async (time: [Date, Date | undefined], from: string | undefined, to: string | undefined) => {
     setTripModalVisible(false);
     const geolocationLevel = await AppStorage.getSetting("geolocation");
@@ -192,7 +190,7 @@ export const CommunitiesChatScreen = () => {
       geolocationLevel: geolocationLevel || "None",
       recurrence: undefined
     });
-    queryClient.invalidateQueries(LianeQueryKey);
+    await queryClient.invalidateQueries(LianeQueryKey);
   };
 
   useEffect(() => {
@@ -209,7 +207,7 @@ export const CommunitiesChatScreen = () => {
       fetchLiane(route.params.lianeId).then();
       fetchTrip(route.params.lianeId).then();
     }
-  }, [route.params, services.community]);
+  }, [fetchLiane, fetchTrip, route.params, services.community]);
 
   useEffect(() => {
     if (liane && liane.id) {
@@ -252,7 +250,7 @@ export const CommunitiesChatScreen = () => {
         const result = await services.liane.leave(currentTrip.id);
         AppLogger.debug("COMMUNITIES", "A quitter une liane avec succès", result);
         liane?.id && (await fetchTrip(liane?.id));
-      } catch (error) {
+      } catch (e) {
         AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de la demande pour quitter une liane", error);
       }
     } else {
@@ -533,7 +531,6 @@ export const CommunitiesChatScreen = () => {
             tripModalVisible={tripModalVisible}
             setTripModalVisible={setTripModalVisible}
             launchTrip={launchTrip}
-            startDate={startDate}
           />
         )}
       </KeyboardAvoidingView>
@@ -541,7 +538,7 @@ export const CommunitiesChatScreen = () => {
   );
 };
 
-const getNextAvailableDay = (weekdays: string, start: Date): DayOfWeekFlag => {
+const getNextAvailableDay = (weekdays: string, start: TimeOnly): DayOfWeekFlag => {
   if (weekdays.length !== 7) {
     throw new Error("La chaîne weekdays doit contenir 7 caractères.");
   }
@@ -567,7 +564,7 @@ const getNextAvailableDay = (weekdays: string, start: Date): DayOfWeekFlag => {
   let nextDayIndex = findNextDay(currentDay);
 
   // If the current day is available but the current time is before the start time
-  if (weekdays[currentDay] === "1" && (currentHour < start.getHours() || (currentHour === start.getHours() && currentMinute < start.getMinutes()))) {
+  if (weekdays[currentDay] === "1" && (currentHour < start.hour || (currentHour === start.hour && currentMinute < (start.minute ?? 0)))) {
     nextDayIndex = currentDay;
   }
 
@@ -585,20 +582,38 @@ const LaunchTripModal = ({
   tripModalVisible,
   setTripModalVisible,
   launchTrip,
-  lianeRequest,
-  startDate
+  lianeRequest
 }: {
-  startDate: Date;
   lianeRequest: ResolvedLianeRequest;
   tripModalVisible: boolean;
   setTripModalVisible: (v: boolean) => void;
   launchTrip: (d: [Date, Date | undefined], from: string | undefined, to: string | undefined) => void;
 }) => {
   const [selectedTime, setSelectedTime] = useState<[Date, Date | undefined]>([new Date(), undefined]);
-  const [selectedDay, setSelectedDay] = useState<DayOfWeekFlag>(getNextAvailableDay(lianeRequest.weekDays, startDate));
+  const [selectedDay, setSelectedDay] = useState<DayOfWeekFlag>(getNextAvailableDay(lianeRequest.weekDays, lianeRequest.arriveBefore));
   const [from, setFrom] = useState<RallyingPoint>(lianeRequest.wayPoints[0]);
   const [to, setTo] = useState<RallyingPoint>(lianeRequest.wayPoints[lianeRequest.wayPoints.length - 1]);
   const [returnSelected, setReturnSelected] = useState<boolean>(true);
+
+  const startDate = useMemo(() => {
+    const d = new Date();
+    if (!lianeRequest) {
+      return d;
+    }
+    const c = lianeRequest.arriveBefore;
+    d.setHours(c.hour, c.minute);
+    return d;
+  }, [lianeRequest]);
+
+  const endDate = useMemo(() => {
+    const d = new Date();
+    if (!lianeRequest) {
+      return d;
+    }
+    const c = lianeRequest.returnAfter;
+    d.setHours(c.hour, c.minute);
+    return d;
+  }, [lianeRequest]);
 
   const tripDateTime = useMemo(() => {
     const todayIndex = (selectedTime[0].getDay() + 6) % 7;
@@ -619,7 +634,7 @@ const LaunchTripModal = ({
       : undefined;
 
     return { depart: addSeconds(selectedTime[0], firstDay * 3600 * 24), return: returnTime };
-  }, [selectedDay, selectedTime]);
+  }, [returnSelected, selectedDay, selectedTime, startDate]);
   const launch = () => {
     launchTrip([tripDateTime.depart, tripDateTime.return], from.id, to.id);
   };
@@ -632,7 +647,7 @@ const LaunchTripModal = ({
 
   return (
     <SimpleModal visible={tripModalVisible} setVisible={setTripModalVisible} backgroundColor={AppColors.white} hideClose>
-      <Column spacing={8}>
+      <Column>
         <AppText style={{ fontSize: 22, fontWeight: "bold", lineHeight: 24 }}>Lancer un trajet</AppText>
         <Column spacing={8}>
           <View>
@@ -643,9 +658,7 @@ const LaunchTripModal = ({
             </Row>
           </View>
           <View>
-            <Row spacing={6}>
-              <DayOfTheWeekPicker selectedDays={selectedDay} onChangeDays={setSelectedDay} enabledDays={"1111111"} dualOptionMode={true} />
-            </Row>
+            <DayOfTheWeekPicker selectedDays={selectedDay} onChangeDays={setSelectedDay} enabledDays={"1111111"} dualOptionMode={true} />
           </View>
           {selectedDay !== "0000000" && tripDateTime?.depart ? (
             <View style={{ flexDirection: "row", justifyContent: "flex-start" }}>
@@ -707,9 +720,9 @@ const LaunchTripModal = ({
                 <AppText style={styles.modalText}>Retour à :</AppText>
                 <Center>
                   <TimeWheelPicker
-                    date={TimeOnlyUtils.fromDate(startDate)}
+                    date={TimeOnlyUtils.fromDate(endDate)}
                     minuteStep={5}
-                    onChange={d => setSelectedTime(v => [v[0], TimeOnlyUtils.toDate(d, startDate)])}
+                    onChange={d => setSelectedTime(v => [v[0], TimeOnlyUtils.toDate(d, endDate)])}
                   />
                 </Center>
               </Column>

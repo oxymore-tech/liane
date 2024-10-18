@@ -101,11 +101,9 @@ const replaceSelectedDay = (selectedDay: string) => {
 const styles = StyleSheet.create({
   rowContainer: {
     paddingVertical: 8,
-    paddingHorizontal: 4,
     textAlign: "center",
     justifyContent: "center",
-    flexWrap: "wrap",
-    rowGap: 4
+    flexWrap: "wrap"
   },
   dayContainer: {
     textAlign: "center",
