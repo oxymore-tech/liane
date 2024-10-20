@@ -83,6 +83,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     var result = await connection.QueryAsync<LianeRawMatch>("""
                                                             SELECT "from",
                                                                    liane_request,
+                                                                   name,
                                                                    arrive_before,
                                                                    return_after,
                                                                    (SELECT count(*) FROM liane_member c WHERE c.liane_id = linked_to_b) AS total_members,
@@ -99,6 +100,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
                                                                    linked_to_b AS linked_to
                                                             FROM (SELECT lr_a.id AS "from",
                                                                          lr_b.id AS liane_request,
+                                                                         lr_b.name AS name,
                                                                          lr_b.arrive_before AS arrive_before,
                                                                          lr_b.return_after AS return_after,
                                                                          
@@ -146,6 +148,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     var result = await connection.QueryAsync<LianeRawMatch>("""
                                                             SELECT "from",
                                                                    liane_request,
+                                                                   name,
                                                                    arrive_before,
                                                                    return_after,
                                                                    (SELECT count(*) FROM liane_member c WHERE c.liane_id = linked_to_b) AS total_members,
@@ -162,6 +165,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
                                                                    linked_to_b AS linked_to
                                                             FROM (SELECT lr_a.id AS "from",
                                                                          lr_b.id AS liane_request,
+                                                                         lr_b.name AS name,
                                                                          lr_b.arrive_before AS arrive_before,
                                                                          lr_b.return_after AS return_after,
                                                                          
@@ -234,6 +238,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
 
       return new Match.Single(
         first.LianeRequest,
+        first.Name,
         weekDays,
         when,
         pickup,
@@ -288,6 +293,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
 internal sealed record LianeRawMatch(
   Guid From,
   Guid LianeRequest,
+  string Name,
   TimeOnly ArriveBefore,
   TimeOnly ReturnAfter,
   int TotalMembers,

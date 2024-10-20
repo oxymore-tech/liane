@@ -41,6 +41,7 @@ public abstract record Match
 
   public sealed record Single(
     Ref<Liane> Liane,
+    string Name,
     DayOfWeekFlag WeekDays,
     TimeRange When,
     RallyingPoint Pickup,

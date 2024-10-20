@@ -17,7 +17,7 @@ public sealed record Liane(
   TimeOnly ArriveBefore,
   TimeOnly ReturnAfter,
   DayOfWeekFlag WeekDays,
-  Ref<User> CreatedBy,
+  User CreatedBy,
   DateTime CreatedAt
 ) : IIdentity<Guid>, ISharedResource<LianeMember>
 {
