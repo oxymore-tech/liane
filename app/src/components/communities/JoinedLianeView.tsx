@@ -1,8 +1,7 @@
 import React from "react";
-import { Pressable, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
-import { AppColors } from "@/theme/colors";
+import { StyleProp, View, ViewStyle } from "react-native";
 import { UserPicture } from "@/components/UserPicture";
-import { CoLiane, ResolvedLianeRequest } from "@liane/common";
+import { CoLiane } from "@liane/common";
 
 export interface GroupsViewProps {
   liane: CoLiane;
@@ -10,6 +9,7 @@ export interface GroupsViewProps {
 }
 
 export const JoinedLianeView = ({ liane, style }: GroupsViewProps) => {
+  const members = liane.members.length > 0 ? liane.members.map(m => m.user) : [liane.createdBy];
   return (
     <View style={style}>
       <View style={{ flexGrow: 1, flexShrink: 1 }}>
@@ -20,8 +20,8 @@ export const JoinedLianeView = ({ liane, style }: GroupsViewProps) => {
             marginLeft: 8,
             marginTop: 5
           }}>
-          {liane.members.map(member => (
-            <UserPicture key={member.user.id} size={24} url={member.user.pictureUrl} id={member.user.id} style={{ marginLeft: -10 }} />
+          {members.map(member => (
+            <UserPicture key={member.id} size={24} url={member.pictureUrl} id={member.id} style={{ marginLeft: -10 }} />
           ))}
         </View>
       </View>

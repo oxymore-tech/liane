@@ -22,7 +22,6 @@ import { AppContext } from "@/components/context/ContextProvider";
 import { AppExpandingTextInput } from "@/components/base/AppExpandingTextInput";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppPressableIcon } from "@/components/base/AppPressable";
-import { DebugIdView } from "@/components/base/DebugIdView";
 import { AppStyles } from "@/theme/styles";
 import { AppLogger } from "@/api/logger";
 import { SimpleModal } from "@/components/modal/SimpleModal.tsx";
@@ -37,7 +36,6 @@ import { weekDays } from "@/util/hooks/days.ts";
 import { getLianeStatusStyle } from "@/components/trip/LianeStatusView.tsx";
 import { LianeQueryKey } from "@/screens/user/MyTripsScreen.tsx";
 import { useQueryClient } from "react-query";
-import { JoinedLianeView } from "@/components/communities/JoinedLianeView.tsx";
 import { UserPicture } from "@/components/UserPicture.tsx";
 
 export const CommunitiesChatScreen = () => {
@@ -422,8 +420,6 @@ export const CommunitiesChatScreen = () => {
                 </View>
               </View>
             ) : null}
-
-            <View>{chat?.currentGroup && <DebugIdView object={chat?.currentGroup} />}</View>
           </View>
         )}
       </View>

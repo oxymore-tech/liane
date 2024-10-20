@@ -10,10 +10,9 @@ import { UserPicture } from "@/components/UserPicture";
 import { AppColors, ContextualColors } from "@/theme/colors";
 import { SimpleModal } from "@/components/modal/SimpleModal";
 import { AppLogger } from "@/api/logger";
-import { CoLianeMember, User } from "@liane/common";
+import { CoLianeMember, FullUser } from "@liane/common";
 import { extractDaysTimes, extractWaypointFromTo } from "@/util/hooks/lianeRequest";
 import { AppContext } from "@/components/context/ContextProvider";
-import { set } from "react-hook-form";
 
 export const CommunitiesDetailScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesDetails">();
@@ -24,32 +23,6 @@ export const CommunitiesDetailScreen = () => {
   const [myModalVisible, setMyModalVisible] = useState<boolean>(false);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
 
-  const MemberItem = ({ member }: { member: CoLianeMember }) => {
-    const { to, from, steps } = useMemo(() => extractWaypointFromTo(member.lianeRequest.wayPoints), [member.lianeRequest]);
-
-    return (
-      <View style={styles.memberContainer}>
-        <View style={styles.memberInfo}>
-          <View style={styles.avatarContainer}>
-            <UserPicture key={member.user?.id} size={50} url={member.user?.pictureUrl} id={member.user?.id} />
-          </View>
-          <View style={styles.textContainer}>
-            <AppText style={styles.nameText}>{member.user?.pseudo}</AppText>
-            <AppText style={styles.locationText}>{`${from.label} ➔ ${to.label}`}</AppText>
-            <AppText style={styles.timeText}>{extractDaysTimes(member.lianeRequest)}</AppText>
-          </View>
-        </View>
-        <Pressable onPress={() => (member.user?.id === user?.id ? setMyModalVisible(true) : openModalUser(member.user))}>
-          <AppIcon name={"more-vertical"} />
-        </Pressable>
-      </View>
-    );
-  };
-
-  const openModalUser = (user: any) => {
-    setModalVisible(true);
-  };
-
   const closeModalUser = () => {
     setModalVisible(false);
   };
@@ -57,7 +30,6 @@ export const CommunitiesDetailScreen = () => {
   const reportUser = () => {
     AppLogger.debug("COMMUNITIES", "Report user");
     closeModalUser();
-    // TODO report user
   };
 
   const leaveLiane = async () => {
@@ -107,7 +79,11 @@ export const CommunitiesDetailScreen = () => {
       </View>
       <View style={styles.membersContainer}>
         <AppText style={styles.membersTitle}>Membres ({group.members.length})</AppText>
-        <FlatList data={group.members} renderItem={({ item }) => <MemberItem member={item} />} keyExtractor={item => item.user?.id || "id"} />
+        <FlatList
+          data={group.members}
+          renderItem={({ item }) => <MemberItem member={item} user={user} setMyModalVisible={setMyModalVisible} setModalVisible={setModalVisible} />}
+          keyExtractor={item => item.user?.id || "id"}
+        />
       </View>
       <SimpleModal visible={myModalVisible} setVisible={setMyModalVisible} backgroundColor={AppColors.white} hideClose>
         <Column>
@@ -139,6 +115,35 @@ export const CommunitiesDetailScreen = () => {
           </Pressable>
         </Column>
       </SimpleModal>
+    </View>
+  );
+};
+
+type MemberItemProps = {
+  member: CoLianeMember;
+  user?: FullUser;
+  setMyModalVisible: (visible: boolean) => void;
+  setModalVisible: (visible: boolean) => void;
+};
+
+const MemberItem = ({ member, user, setMyModalVisible, setModalVisible }: MemberItemProps) => {
+  const { to, from } = useMemo(() => extractWaypointFromTo(member.lianeRequest.wayPoints), [member.lianeRequest]);
+
+  return (
+    <View style={styles.memberContainer}>
+      <View style={styles.memberInfo}>
+        <View style={styles.avatarContainer}>
+          <UserPicture key={member.user?.id} size={50} url={member.user?.pictureUrl} id={member.user?.id} />
+        </View>
+        <View style={styles.textContainer}>
+          <AppText style={styles.nameText}>{member.user?.pseudo}</AppText>
+          <AppText style={styles.locationText}>{`${from.label} ➔ ${to.label}`}</AppText>
+          <AppText style={styles.timeText}>{extractDaysTimes(member.lianeRequest)}</AppText>
+        </View>
+      </View>
+      <Pressable onPress={() => (member.user?.id === user?.id ? setMyModalVisible(true) : setModalVisible(true))}>
+        <AppIcon name={"more-vertical"} />
+      </Pressable>
     </View>
   );
 };

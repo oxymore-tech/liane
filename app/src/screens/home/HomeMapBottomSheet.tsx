@@ -9,12 +9,13 @@ import { useAppNavigation } from "@/components/context/routing.ts";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type HomeMapBottomSheetProps = {
-  colianes?: CoLiane[];
+  lianes?: CoLiane[];
   isFetching: boolean;
   currentBoundbox?: BoundingBox;
   fetchLianeOnMap: (bound: BoundingBox) => void;
 };
-export const HomeMapBottomSheetContainer = ({ colianes, isFetching, currentBoundbox, fetchLianeOnMap }: HomeMapBottomSheetProps) => {
+
+export const HomeMapBottomSheetContainer = ({ lianes, isFetching, currentBoundbox, fetchLianeOnMap }: HomeMapBottomSheetProps) => {
   const refBottomSheet = useRef<BottomSheetRefProps>(null);
   const insets = useSafeAreaInsets();
   const { navigation } = useAppNavigation<"Home">();
@@ -27,8 +28,8 @@ export const HomeMapBottomSheetContainer = ({ colianes, isFetching, currentBound
         } as TripSection)
     );
   const sections = useMemo(() => {
-    return colianes ? convertToDateSections(colianes) : [];
-  }, [colianes]);
+    return lianes ? convertToDateSections(lianes) : [];
+  }, [lianes]);
 
   return (
     <AppBottomSheet

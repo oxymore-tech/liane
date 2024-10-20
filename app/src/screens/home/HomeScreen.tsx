@@ -1,24 +1,12 @@
-import { Pressable, RefreshControl, SectionBase, SectionList, StyleSheet, View } from "react-native";
-import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
-import {
-  BoundingBox,
-  CoLiane,
-  CoLianeMatch,
-  EmptyFeatureCollection,
-  fromPositions,
-  getBoundingBox,
-  Liane,
-  Ref,
-  ResolvedLianeRequest
-} from "@liane/common";
+import { SectionBase, StyleSheet, View } from "react-native";
+import React, { useContext, useRef, useState } from "react";
+import { AppColors } from "@/theme/colors";
+import { BoundingBox, CoLiane, EmptyFeatureCollection, fromPositions, getBoundingBox, Liane, Ref } from "@liane/common";
 import { AppContext } from "@/components/context/ContextProvider";
 import { FeatureCollection, Position } from "geojson";
-import { AnimatedFloatingBackButton, MapHeader, SearchModal } from "@/screens/home/HomeHeader";
+import { AnimatedFloatingBackButton, SearchModal } from "@/screens/home/HomeHeader";
 import { LianeMatchListView } from "@/screens/home/BottomSheetView";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-
-import { ItinerarySearchForm } from "@/screens/ItinerarySearchForm";
 import { useActor, useInterpret } from "@xstate/react";
 import { getSearchFilter, HomeMapContext, HomeMapMachine } from "@/screens/home/StateMachine";
 import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
@@ -115,7 +103,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
             onMapMoved={computeLianeDisplay}
           />
           <HomeMapBottomSheetContainer
-            colianes={lianes}
+            lianes={lianes}
             isFetching={!!isFetching}
             currentBoundbox={currentBoundbox}
             fetchLianeOnMap={fetchLianeOnMap}

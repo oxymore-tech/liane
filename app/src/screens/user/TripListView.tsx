@@ -16,7 +16,6 @@ import { AppLocalization } from "@/api/i18n";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
 import { LianeStatusView } from "@/components/trip/LianeStatusView";
-import { AppIcon } from "@/components/base/AppIcon";
 import { Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { UserPicture } from "@/components/UserPicture";
@@ -103,7 +102,6 @@ const LianeItem = ({ item, isTripStarted }: { item: Liane; isTripStarted: boolea
   const driver = useMemo(() => item.members.find(l => l.user.id === item.driver.user)!.user, [item]);
   const { wayPoints } = useMemo(() => getUserTrip(item, user!.id!), [item, user]);
   const carLocation = useCarDelay();
-  const me = useMemo(() => item.members.find(l => l.user.id === user!.id)!, [item.members, user]);
   const status = useTripStatus(item);
 
   return (

@@ -1,4 +1,16 @@
-import { DayOfWeekFlag, Entity, Liane, PaginatedRequestParams, PaginatedResponse, RallyingPoint, Ref, User, UTCDateTime, WayPoint } from "../api";
+import {
+  DayOfWeekFlag,
+  Entity,
+  Identity,
+  Liane,
+  PaginatedRequestParams,
+  PaginatedResponse,
+  RallyingPoint,
+  Ref,
+  User,
+  UTCDateTime,
+  WayPoint
+} from "../api";
 import { HttpClient } from "./http";
 import { TimeOnly, TimeRange } from "./time";
 import { BoundingBox } from "../util";
@@ -40,6 +52,7 @@ export type LianeState = Detached | Pending | Attached;
 
 export type Single = {
   type: "Single";
+  name: string;
   liane: Ref<CoLiane>;
   weekDays: DayOfWeekFlag;
   when: TimeRange;
@@ -65,7 +78,7 @@ export type Group = {
 
 export type CoMatch = Single | Group;
 
-export type CoLiane = Entity & {
+export type CoLiane = Identity & {
   members: CoLianeMember[];
   pendingMembers: CoLianeMember[];
   wayPoints: RallyingPoint[];
@@ -73,6 +86,8 @@ export type CoLiane = Entity & {
   arriveBefore: TimeOnly;
   returnAfter: TimeOnly;
   weekDays: DayOfWeekFlag;
+  createdAt: UTCDateTime;
+  createdBy: User;
 };
 
 export type CoLianeMember = {

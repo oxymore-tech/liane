@@ -70,29 +70,30 @@ type GroupItemProps = {
   onPress: () => void;
 };
 
-const GroupItem = ({ group, onPress }: GroupItemProps) => (
-  <Pressable onPress={onPress}>
-    <View style={styles.memberContainer}>
-      <View style={styles.memberInfo}>
-        <View style={styles.textContainer}>
-          <AppText style={styles.nameText}>{`${group.pickup.label} ➔ ${group.deposit.label}`}</AppText>
-          <AppText style={styles.locationText}>{`${extractDays(group.weekDays)}`}</AppText>
-          {group.type === "Group" && (
-            <AppText style={styles.timeText}>{`${group.matches?.length ?? 1} membre${group.matches?.length > 1 ? "s" : ""}`}</AppText>
+const GroupItem = ({ group, onPress }: GroupItemProps) => {
+  const totalMembers = group.type === "Group" ? group.totalMembers : 1;
+  return (
+    <Pressable onPress={onPress}>
+      <View style={styles.memberContainer}>
+        <View style={styles.memberInfo}>
+          <View style={styles.textContainer}>
+            <AppText style={styles.nameText}>{`${group.pickup.label} ➔ ${group.deposit.label}`}</AppText>
+            <AppText style={styles.locationText}>{`${extractDays(group.weekDays)}`}</AppText>
+            <AppText style={styles.timeText}>{`${totalMembers} membre${totalMembers > 1 ? "s" : ""}`}</AppText>
+          </View>
+        </View>
+        <View style={{ paddingRight: 10, flexDirection: "row", justifyContent: "flex-end" }}>
+          {group.type === "Single" && group.askToJoinAt && (
+            <View style={styles.notificationDotContainer}>
+              <View style={styles.notificationDot} />
+            </View>
           )}
+          <AppIcon name={"arrow-right"} />
         </View>
       </View>
-      <View style={{ paddingRight: 10, flexDirection: "row", justifyContent: "flex-end" }}>
-        {group.type === "Single" && group.askToJoinAt && (
-          <View style={styles.notificationDotContainer}>
-            <View style={styles.notificationDot} />
-          </View>
-        )}
-        <AppIcon name={"arrow-right"} />
-      </View>
-    </View>
-  </Pressable>
-);
+    </Pressable>
+  );
+};
 
 const styles = StyleSheet.create({
   mainContainer: {

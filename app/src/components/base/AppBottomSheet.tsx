@@ -1,5 +1,16 @@
 import { FlatListProps, ScrollViewProps, StyleProp, StyleSheet, View } from "react-native";
-import React, { createContext, forwardRef, PropsWithChildren, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
+import React, {
+  createContext,
+  forwardRef,
+  PropsWithChildren,
+  useCallback,
+  useContext,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState
+} from "react";
 import { FlatList, Gesture, GestureDetector, ScrollView } from "react-native-gesture-handler";
 import Animated, { interpolate, interpolateColor, runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
@@ -53,10 +64,13 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
     const fillLimit = padding?.top || 0;
     const currentStop = useRef<number>(initialStop);
 
-    const getPixelValue = (v: number) => {
-      "worklet";
-      return Math.min(v <= 1 ? v * height : v, height);
-    };
+    const getPixelValue = useCallback(
+      (v: number) => {
+        "worklet";
+        return Math.min(v <= 1 ? v * height : v, height);
+      },
+      [height]
+    );
 
     const pStops = stops.map(s => getPixelValue(s));
 
@@ -73,25 +87,32 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
       margin.value = { bottom: marginBottom, left: margins?.left ?? 0, right: margins?.right ?? 0 };
     }, [margin, marginBottom, margins?.bottom, margins?.left, margins?.right]);
 
-    const expanded = new Subject<boolean>();
+    const expanded = useMemo(() => new Subject<boolean>(), []);
 
-    const notifyExpanded = (v: boolean) => {
-      expanded.next(v);
-    };
+    const notifyExpanded = useCallback(
+      (v: boolean) => {
+        expanded.next(v);
+      },
+      [expanded]
+    );
 
     const updateCurrentStop = (index: number) => {
       currentStop.current = index;
     };
 
-    const isExpanded = () => {
+    const isExpanded = useCallback(() => {
       "worklet";
       return h.value + marginBottom + paddingTop >= pStops[pStops.length - 1];
-    };
-    const scrollTo = (y: number) => {
-      "worklet";
-      h.value = withSpring(getPixelValue(y), { damping: 50 });
-      runOnJS(notifyExpanded)(isExpanded());
-    };
+    }, [h.value, marginBottom, pStops, paddingTop]);
+
+    const scrollTo = useCallback(
+      (y: number) => {
+        "worklet";
+        h.value = withSpring(getPixelValue(y), { damping: 50 });
+        runOnJS(notifyExpanded)(isExpanded());
+      },
+      [getPixelValue, h, isExpanded, notifyExpanded]
+    );
 
     const PanThreshHold = 52;
     const findClosestStop = (value: number, direction: number) => {
@@ -119,6 +140,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
     useImperativeHandle(ref, () => ({ scrollTo, getTop: () => Math.min(height - h.value - marginBottom, height - pStops[0] - marginBottom) }), [
       h.value,
       height,
+      marginBottom,
       pStops,
       scrollTo
     ]);
@@ -375,6 +397,7 @@ export const AppBottomSheetScrollView = WithBottomSheetContext(
 const styles = StyleSheet.create({
   bottomSheetContainerDefaults: {
     backgroundColor: AppColors.white,
+    paddingTop: 12,
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12
   },

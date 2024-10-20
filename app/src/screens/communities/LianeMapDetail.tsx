@@ -10,7 +10,6 @@ import { AppRoundedButton } from "@/components/base/AppRoundedButton.tsx";
 import { AppLogger } from "@/api/logger.ts";
 import AppMapView from "@/components/map/AppMapView.tsx";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
-import { DisplayDays } from "@/components/communities/displayDaysView.tsx";
 import { DisplayWayPoints } from "@/components/communities/displayWaypointsView.tsx";
 import { LianeMatchLianeRouteLayer } from "@/components/map/layers/LianeMatchRouteLayer.tsx";
 import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay.tsx";
@@ -188,7 +187,7 @@ export const LianeMapDetailScreen = () => {
                   color={defaultTextColor(AppColors.primaryColor)}
                   onPress={joinLiane}
                   backgroundColor={AppColors.primaryColor}
-                  text={"Rejoindre "}
+                  text={"Rejoindre"}
                 />
               </View>
             ) : (
