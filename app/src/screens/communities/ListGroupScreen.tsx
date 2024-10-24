@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Center } from "@/components/base/AppLayout";
+import { Center, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppPressableIcon } from "@/components/base/AppPressable";
@@ -73,23 +73,23 @@ type GroupItemProps = {
 
 const GroupItem = ({ group, onPress }: GroupItemProps) => {
   return (
-    <Pressable onPress={onPress}>
-      <View style={styles.memberContainer}>
-        <View style={styles.memberInfo}>
-          <View style={styles.textContainer}>
-            <AppText style={styles.nameText}>{`${group.pickup.label} ➔ ${group.deposit.label}`}</AppText>
-            <AppText style={styles.locationText}>{`${extractDays(group.weekDays)}`}</AppText>
+    <Pressable onPress={onPress} style={styles.memberContainer}>
+      <View style={styles.memberInfo}>
+        <View style={styles.textContainer}>
+          <AppText style={styles.nameText}>{`${group.pickup.label} ➔ ${group.deposit.label}`}</AppText>
+          <AppText style={styles.locationText}>{`${extractDays(group.weekDays)}`}</AppText>
+          <Row style={{ justifyContent: "flex-end" }}>
             <AppAvatars users={group.members} />
+          </Row>
+        </View>
+      </View>
+      <View style={{ paddingRight: 10, flexDirection: "row", justifyContent: "flex-end" }}>
+        {group.type === "Single" && group.askToJoinAt && (
+          <View style={styles.notificationDotContainer}>
+            <View style={styles.notificationDot} />
           </View>
-        </View>
-        <View style={{ paddingRight: 10, flexDirection: "row", justifyContent: "flex-end" }}>
-          {group.type === "Single" && group.askToJoinAt && (
-            <View style={styles.notificationDotContainer}>
-              <View style={styles.notificationDot} />
-            </View>
-          )}
-          <AppIcon name={"arrow-right"} />
-        </View>
+        )}
+        <AppIcon name={"arrow-right"} />
       </View>
     </Pressable>
   );
@@ -137,8 +137,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 10,
     marginHorizontal: 16,
-    marginBottom: 10,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: AppColors.grayBackground,
     paddingLeft: 15,
     paddingVertical: 10,
     backgroundColor: AppColors.white

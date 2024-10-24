@@ -17,16 +17,15 @@ export type AvatarsProps = {
   max?: number;
 };
 
-export const AppAvatars = ({ users, size = 48, style, max = 5 }: AvatarsProps) => {
+export const AppAvatars = ({ users, size = 28, style, max = 5 }: AvatarsProps) => {
   const rest = users.length - max;
+  const filtered = rest === 1 ? users : users.filter((_, i) => i < max);
   return (
     <Row style={style}>
-      {users
-        .filter((_, i) => i < 5)
-        .map(user => (
-          <UserPicture key={user.id} size={size} url={user.pictureUrl} id={user.id} style={{ marginLeft: -10 }} />
-        ))}
-      {rest > 0 && (
+      {filtered.map(user => (
+        <AppAvatar key={user.id} size={size} user={user} style={{ marginLeft: -10 }} />
+      ))}
+      {rest > 1 && (
         <Center
           style={{
             backgroundColor: AppColorPalettes.gray[200],
@@ -84,7 +83,10 @@ export const AppAvatar = ({ user, size = 48, style, borderWidth = 0, borderColor
           }}
         />
       ) : (
-        <AppText>{user.pseudo[0]}</AppText>
+        <AppText>
+          {user.pseudo[0]}
+          {user.pseudo[1]}
+        </AppText>
       )}
     </Center>
   );

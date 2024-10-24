@@ -65,17 +65,6 @@ const Button = () => {
           </View>
         </Animated.View>
       )}
-      <AppPressableIcon
-        onTouchStart={() => setShowButtonLabel(true)}
-        onTouchEnd={() => setShowButtonLabel(false)}
-        onTouchCancel={() => setShowButtonLabel(false)}
-        size={32}
-        color={AppColors.white}
-        onPress={() => navigation.navigate("Publish", {})}
-        name={"plus-outline"}
-        style={{ padding: 12 }}
-        backgroundStyle={{ borderRadius: 24, backgroundColor: AppColors.primaryColor }}
-      />
     </View>
   );
 };

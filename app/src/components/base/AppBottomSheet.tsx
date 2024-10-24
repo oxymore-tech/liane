@@ -18,6 +18,7 @@ import { AppStyles } from "@/theme/styles";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Observable, Subject } from "rxjs";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
+import Handle from "@/components/base/Handle.tsx";
 
 export const AppBottomSheetHandleHeight = 60;
 
@@ -32,7 +33,7 @@ export interface BottomSheetProps extends PropsWithChildren {
   padding?: { top?: number };
   onScrolled?: (y: number) => void;
   canScroll?: boolean;
-  backgroundStyle?: StyleProp<any>;
+  style?: StyleProp<any>;
 }
 
 export type BottomSheetRefProps = {
@@ -56,13 +57,13 @@ interface BottomSheetContext {
 const BottomSheetContext = createContext<BottomSheetContext>();
 
 export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
-  ({ onScrolled, children, backgroundStyle, canScroll, stops, margins, padding, initialStop = 0 }, ref) => {
+  ({ onScrolled, children, style, canScroll, stops, margins, padding, initialStop = 0 }, ref) => {
     const marginBottom = margins?.bottom || 0;
     const insets = useSafeAreaInsets();
     const paddingTop = (padding?.top || insets.top + 16) - AppBottomSheetHandleHeight;
     const { height, width } = useAppWindowsDimensions();
     const fillLimit = padding?.top || 0;
-    const currentStop = useRef<number>(initialStop);
+    const currentStop = useSharedValue<number>(initialStop);
 
     const getPixelValue = useCallback(
       (v: number) => {
@@ -75,7 +76,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
     const pStops = stops.map(s => getPixelValue(s));
 
     // Current height of the bottom sheet
-    const h = useSharedValue(pStops[currentStop.current]);
+    const h = useSharedValue(pStops[currentStop.value]);
 
     // Context used to retain values while panning the bottom sheet
     const context = useSharedValue({ y: 0 });
@@ -97,7 +98,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
     );
 
     const updateCurrentStop = (index: number) => {
-      currentStop.current = index;
+      currentStop.value = index;
     };
 
     const isExpanded = useCallback(() => {
@@ -167,8 +168,8 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
       .enabled(canScroll || true);
 
     const bgColor = useMemo(() => {
-      return StyleSheet.flatten(backgroundStyle)?.backgroundColor || AppColors.white;
-    }, [backgroundStyle]);
+      return StyleSheet.flatten(style)?.backgroundColor || AppColors.white;
+    }, [style]);
 
     // Animate the expanded bottom sheet background
     const bSheetBgStyle = useAnimatedStyle(() => {
@@ -231,32 +232,10 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
               position: "absolute"
             }
           ]}>
-          <Animated.View>
-            <View
-              style={{
-                justifyContent: "center",
-                alignItems: "center",
-                flexDirection: "row",
-                backgroundColor: "transparent"
-              }}>
-              <View
-                style={{
-                  backgroundColor: backgroundStyle?.backgroundColor,
-                  width: 80,
-                  borderTopRightRadius: 40,
-                  borderTopLeftRadius: 40,
-                  paddingTop: 14,
-                  paddingBottom: 8
-                }}>
-                <Animated.View style={[styles.handler, handleStyle]} />
-                <Animated.View style={[styles.handler, handleStyle]} />
-              </View>
-            </View>
-          </Animated.View>
           <Animated.View
             style={[
               styles.bottomSheetContainerDefaults,
-              backgroundStyle,
+              style,
               styles.bottomSheetContainer,
               AppStyles.shadow,
               marginBottom > 0
@@ -267,6 +246,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
                 : {},
               bSheetStyle
             ]}>
+            <Handle animatedIndex={currentStop} animatedPosition={h} />
             <BottomSheetContext.Provider
               value={{
                 expanded,
@@ -290,7 +270,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
                   context.value = { y: h.value };
                 }
               }}>
-              <View style={backgroundStyle}>{children}</View>
+              <View style={style}>{children}</View>
             </BottomSheetContext.Provider>
           </Animated.View>
         </Animated.View>
@@ -407,13 +387,5 @@ const styles = StyleSheet.create({
     width: "100%",
     zIndex: 100,
     alignSelf: "center"
-  },
-  handler: {
-    width: 52,
-    height: 4,
-    backgroundColor: AppColorPalettes.gray[400],
-    alignSelf: "center",
-    marginVertical: 3,
-    borderRadius: 2
   }
 });

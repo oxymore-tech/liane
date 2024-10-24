@@ -21,7 +21,7 @@ import { AppLogger } from "@/api/logger";
 import { useObservable } from "@/util/hooks/subscription";
 
 export type HomeMapProps = {
-  onMovingStateChanged: (moving: boolean) => void;
+  onMovingStateChanged?: (moving: boolean) => void;
   bottomSheetObservable: Observable<BottomSheetObservableMessage>;
   displaySource: Observable<[FeatureCollection, Set<Ref<Liane>> | undefined]>;
   featureSubject?: Subject<GeoJSON.Feature[] | undefined>;
@@ -29,6 +29,7 @@ export type HomeMapProps = {
   onMapMoved?: (visibleBounds: Position[]) => void;
   ref: React.Ref<AppMapViewController>;
 } & PropsWithChildren;
+
 export const HomeMap = React.forwardRef<AppMapViewController, HomeMapProps>(
   (
     {
@@ -211,10 +212,10 @@ export const HomeMap = React.forwardRef<AppMapViewController, HomeMapProps>(
         showGeolocation={state.matches("map") || state.matches("point") ? "bottom" : undefined} //&& !movingDisplay}
         onRegionChanged={handleRegionChanged}
         onStopMovingRegion={() => {
-          onMovingStateChanged(false);
+          onMovingStateChanged && onMovingStateChanged(false);
         }}
         onStartMovingRegion={() => {
-          onMovingStateChanged(true);
+          onMovingStateChanged && onMovingStateChanged(true);
         }}
         ref={appMapRef}>
         {state.matches("map") && (

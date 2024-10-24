@@ -1,18 +1,16 @@
-import { SectionBase, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import React, { useContext, useRef, useState } from "react";
 import { AppColors } from "@/theme/colors";
 import { BoundingBox, CoLiane, EmptyFeatureCollection, fromPositions, getBoundingBox, Liane, Ref } from "@liane/common";
 import { AppContext } from "@/components/context/ContextProvider";
 import { FeatureCollection, Position } from "geojson";
 import { AnimatedFloatingBackButton, SearchModal } from "@/screens/home/HomeHeader";
-import { LianeMatchListView } from "@/screens/home/BottomSheetView";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useActor, useInterpret } from "@xstate/react";
 import { getSearchFilter, HomeMapContext, HomeMapMachine } from "@/screens/home/StateMachine";
 import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 import { Observable } from "rxjs";
 import { AppBackContextProvider } from "@/components/AppBackContextProvider";
-import { HomeBottomSheetContainer } from "@/screens/home/HomeBottomSheet";
 import { OfflineWarning } from "@/components/OfflineWarning";
 import { useBottomBarStyle } from "@/components/context/Navigation";
 import { useAppNavigation } from "@/components/context/routing";
@@ -21,36 +19,24 @@ import { HomeMap } from "@/screens/home/HomeMap";
 import { BottomSheetObservableMessage } from "@/components/base/AppBottomSheet";
 import { AppLogger } from "@/api/logger";
 import { AppMapViewController } from "@/components/map/AppMapView";
-import { useBehaviorSubject, useObservable } from "@/util/hooks/subscription";
+import { useBehaviorSubject } from "@/util/hooks/subscription";
 import { HomeMapBottomSheetContainer } from "@/screens/home/HomeMapBottomSheet.tsx";
 
-export interface TripSection extends SectionBase<CoLiane> {}
-
 const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureCollection, Set<Ref<Liane>> | undefined]> }) => {
-  const [movingDisplay, setMovingDisplay] = useState<boolean>(false);
   const machine = useContext(HomeMapContext);
   const [lianes, setLianes] = useState<CoLiane[]>();
   const [currentBoundbox, setCurrentBoundbox] = useState<BoundingBox>();
   const [isFetching, setFetching] = useState<boolean>();
   const [state] = useActor(machine);
-  const { status } = useContext(AppContext);
   const mapFeatureSubject = useBehaviorSubject<GeoJSON.Feature[] | undefined>(undefined);
-  const features = useObservable(mapFeatureSubject, undefined);
-  const hasFeatures = !!features;
   const appMapRef = useRef<AppMapViewController>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const bottomSheetScroll = useBehaviorSubject<BottomSheetObservableMessage>({ top: 0, expanded: false });
-  const loading = Object.values(state.value).find(s => s === "init" || s === "load") !== undefined;
-  const loadingDisplay = loading && state.context.reloadCause === "display"; //isLoadingDisplay ||
-  const loadingList = loading && !state.context.reloadCause;
-  const offline = status === "offline";
   const { navigation } = useAppNavigation<"Home">();
   const { services } = useContext(AppContext);
-  const isMatchState = state.matches("match");
   const isDetailState = state.matches("detail");
   const isMapState = state.matches("map");
   const isPointState = state.matches("point");
-  const bottomSheetDisplay = state.matches("form") ? "none" : movingDisplay ? "closed" : undefined;
 
   const bbStyle = useBottomBarStyle();
   React.useLayoutEffect(() => {
@@ -98,8 +84,6 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
             featureSubject={mapFeatureSubject}
             displaySource={displaySource}
             bottomSheetObservable={bottomSheetScroll}
-            onMovingStateChanged={setMovingDisplay}
-            onZoomChanged={z => AppLogger.debug("MAP", `zoom ${z}`)}
             onMapMoved={computeLianeDisplay}
           />
           <HomeMapBottomSheetContainer
@@ -149,16 +133,6 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
         )}
 
         <OfflineWarning />
-
-        {!offline && !isMapState && !isPointState && (
-          <HomeBottomSheetContainer
-            onScrolled={(v, expanded) => bottomSheetScroll.next({ expanded, top: v })}
-            display={bottomSheetDisplay}
-            canScroll={loadingDisplay && !movingDisplay}>
-            {isMatchState && <LianeMatchListView loading={loadingList} />}
-            {!loadingList && isDetailState && <View />}
-          </HomeBottomSheetContainer>
-        )}
 
         {isDetailState && <AnimatedFloatingBackButton onPress={() => machine.send("BACK")} />}
       </View>

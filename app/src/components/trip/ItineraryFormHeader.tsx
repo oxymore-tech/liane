@@ -1,5 +1,5 @@
 import Animated, { SlideInUp, SlideOutUp } from "react-native-reanimated";
-import { StyleProp, StyleSheet, ViewStyle } from "react-native";
+import { StyleProp, ViewStyle } from "react-native";
 import { ItineraryForm } from "@/components/forms/ItineraryForm";
 import React from "react";
 import { Trip } from "@liane/common";

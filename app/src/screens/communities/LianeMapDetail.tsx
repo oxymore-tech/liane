@@ -154,8 +154,8 @@ export const LianeMapDetailScreen = () => {
           stops={[AppBottomSheetHandleHeight, 0.55, 1]}
           padding={{ top: 80 }}
           initialStop={1}
-          backgroundStyle={{
-            backgroundColor: AppColors.white
+          style={{
+            backgroundColor: AppColors.gray100
           }}>
           <AppBottomSheetScrollView>
             {match && match.type === "Single" && match.askToJoinAt ? (
