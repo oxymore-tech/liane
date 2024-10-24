@@ -41,7 +41,7 @@ export const SelectOnMapView = ({ onSelect, title, liane }: SelectOnMapViewProps
     <View style={styles.container}>
       <AppMapView>
         {liane && <LianeMatchLianeRouteLayer wayPoints={wayPoints.map(w => w.rallyingPoint)} lianeId={liane} />}
-        <RallyingPointsDisplayLayer selected={selectedRP?.id} onSelect={setSelectedRP} />
+        <RallyingPointsDisplayLayer dispayCluster={true} selected={selectedRP?.id} onSelect={setSelectedRP} />
       </AppMapView>
       <View style={[styles.headerContainer, AppStyles.shadow]}>
         <PageHeader title={title} goBack={goBack} />

@@ -19,6 +19,7 @@ import { BottomSheetObservableMessage } from "@/components/base/AppBottomSheet";
 import { PickupDestinationsDisplayLayer } from "@/components/map/layers/PickupDestinationsDisplayLayer";
 import { AppLogger } from "@/api/logger";
 import { useObservable } from "@/util/hooks/subscription";
+import { RallyingPointsDisplayLayer } from "@/components/map/layers/RallyingPointsDisplayLayer.tsx";
 
 export type HomeMapProps = {
   onMovingStateChanged?: (moving: boolean) => void;
@@ -109,7 +110,6 @@ export const HomeMap = React.forwardRef<AppMapViewController, HomeMapProps>(
         bbox.paddingLeft = 72;
         bbox.paddingRight = 72;
         bbox.paddingBottom = Math.min(bSheetTop + 40, (height - bbox.paddingTop) / 2 + 24);
-        //console.debug(bbox, bSheetTop, height);
 
         return bbox;
       } else if (state.matches("point") && geometryBbox) {
@@ -218,6 +218,7 @@ export const HomeMap = React.forwardRef<AppMapViewController, HomeMapProps>(
           onMovingStateChanged && onMovingStateChanged(true);
         }}
         ref={appMapRef}>
+        <RallyingPointsDisplayLayer />
         {state.matches("map") && (
           <LianeDisplayLayer
             weekDays={state.context.filter.weekDays}
