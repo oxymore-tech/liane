@@ -79,10 +79,8 @@ public sealed class RallyingPointServiceImpl(IOsrmService osrmService, PostgisDa
     if (rallyingPointFilter.Search is not null)
     {
       var regex = ToSearchPattern(rallyingPointFilter.Search!);
-      filter &= Filter<RallyingPoint>.Regex(r => r.Label, regex)
-                | Filter<RallyingPoint>.Regex(r => r.City, regex)
-                | Filter<RallyingPoint>.Regex(r => r.ZipCode, regex)
-                | Filter<RallyingPoint>.Regex(r => r.Address, regex);
+      filter &= Filter<RallyingPoint>.Regex(r => r.City, regex)
+                | Filter<RallyingPoint>.Regex(r => r.Label, regex);
     }
 
     var center = rallyingPointFilter.GetLatLng();
