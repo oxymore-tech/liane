@@ -70,7 +70,7 @@ public sealed class LianeFetcher(LianeRequestFetcher lianeRequestFetcher, IUserS
           var lianePendingMembers = await pendingMembers
             .FilterSelectAsync(m => ToLianeMember(lianeRequestsFetcher, m, m.RequestedAt));
 
-          var createdBy = await userService.GetFullUser(lianeRequest.CreatedBy!);
+          var createdBy = await userService.Get(lianeRequest.CreatedBy!);
           return new Api.Community.Liane(
             lianeRequestId,
             lianeMembers.ToImmutableList(),
@@ -95,7 +95,7 @@ public sealed class LianeFetcher(LianeRequestFetcher lianeRequestFetcher, IUserS
       return null;
     }
 
-    var user = await userService.GetFullUser(memberRequest.CreatedBy!);
+    var user = await userService.Get(memberRequest.CreatedBy!);
     return new LianeMember(user, memberRequest, joinedAt, m.LastReadAt);
   }
 }

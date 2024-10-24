@@ -103,8 +103,7 @@ public sealed class UserServiceImpl(IMongoDatabase mongo) : BaseMongoCrudService
 
   protected override Task<Api.Auth.User> MapEntity(DbUser dbUser)
   {
-    return Task.FromResult(new Api.Auth.User(dbUser.Id, dbUser.CreatedAt, FullUser.GetPseudo(dbUser.UserInfo?.FirstName, dbUser.UserInfo?.LastName), dbUser.UserInfo?.Gender ?? Gender.Unspecified,
-      dbUser.UserInfo?.PictureUrl, dbUser.Stats));
+    return Task.FromResult(dbUser.MapToUser());
   }
 
   private async Task UpdateField<T>(string userId, Expression<Func<DbUser, T>> field, T value)

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Immutable;
+using Liane.Api.Auth;
 using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
 
@@ -34,6 +35,7 @@ public abstract record Match
   public abstract Ref<Liane> Liane { get; init; }
   public abstract DayOfWeekFlag WeekDays { get; init; }
   public abstract TimeRange When { get; init; }
+  public abstract ImmutableList<User> Members { get; init; }
   public abstract RallyingPoint Pickup { get; init; }
   public abstract RallyingPoint Deposit { get; init; }
   public abstract float Score { get; init; }
@@ -41,6 +43,7 @@ public abstract record Match
 
   public sealed record Single(
     Ref<Liane> Liane,
+    ImmutableList<User> Members,
     string Name,
     DayOfWeekFlag WeekDays,
     TimeRange When,
@@ -53,7 +56,7 @@ public abstract record Match
 
   public sealed record Group(
     Ref<Liane> Liane,
-    int TotalMembers,
+    ImmutableList<User> Members,
     ImmutableList<Ref<LianeRequest>> Matches,
     DayOfWeekFlag WeekDays,
     TimeRange When,

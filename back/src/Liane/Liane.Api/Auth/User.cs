@@ -34,15 +34,7 @@ public sealed record FullUser(
   string? PushToken = null
 ) : User(Id, CreatedAt, GetPseudo(FirstName, LastName), Gender, PictureUrl, Stats)
 {
-  public static string GetPseudo(string? firstName, string? lastName)
-  {
-    if (firstName is null)
-    {
-      return "Utilisateur inconnu";
-    }
-
-    return firstName;
-  }
+  public static string GetPseudo(string? firstName, string? lastName) => firstName ?? "Utilisateur inconnu";
 
   public static FullUser Unknown(string userId) => new(
     userId,
@@ -62,4 +54,4 @@ public sealed record UserInfo(
   Gender Gender
 );
 
-public sealed record UserStats(int TotalTrips = 0, int TotalAvoidedEmissions = 0, int TotalCreatedTrips = 0, int TotalJoinedTrips =0);
+public sealed record UserStats(int TotalTrips = 0, int TotalAvoidedEmissions = 0, int TotalCreatedTrips = 0, int TotalJoinedTrips = 0);

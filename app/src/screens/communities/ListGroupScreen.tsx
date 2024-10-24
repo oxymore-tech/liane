@@ -10,6 +10,7 @@ import { AppColors, ContextualColors } from "@/theme/colors";
 import { extractDays } from "@/util/hooks/days";
 import { CoMatch } from "@liane/common";
 import { extractWaypointFromTo } from "@/util/hooks/lianeRequest";
+import { AppAvatars } from "@/components/UserPicture.tsx";
 
 export const ListGroupScreen = () => {
   const { navigation, route } = useAppNavigation<"ListGroups">();
@@ -71,7 +72,6 @@ type GroupItemProps = {
 };
 
 const GroupItem = ({ group, onPress }: GroupItemProps) => {
-  const totalMembers = group.type === "Group" ? group.totalMembers : 1;
   return (
     <Pressable onPress={onPress}>
       <View style={styles.memberContainer}>
@@ -79,7 +79,7 @@ const GroupItem = ({ group, onPress }: GroupItemProps) => {
           <View style={styles.textContainer}>
             <AppText style={styles.nameText}>{`${group.pickup.label} ➔ ${group.deposit.label}`}</AppText>
             <AppText style={styles.locationText}>{`${extractDays(group.weekDays)}`}</AppText>
-            <AppText style={styles.timeText}>{`${totalMembers} membre${totalMembers > 1 ? "s" : ""}`}</AppText>
+            <AppAvatars users={group.members} />
           </View>
         </View>
         <View style={{ paddingRight: 10, flexDirection: "row", justifyContent: "flex-end" }}>

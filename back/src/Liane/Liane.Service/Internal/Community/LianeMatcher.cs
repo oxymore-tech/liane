@@ -17,7 +17,7 @@ using Match = Liane.Api.Community.Match;
 
 namespace Liane.Service.Internal.Community;
 
-public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICurrentContext currentContext)
+public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICurrentContext currentContext, LianeFetcher lianeFetcher)
 {
   public async Task<Match?> FindMatchBetween(IDbConnection connection, Guid from, Guid to, IDbTransaction? tx = null)
   {
@@ -27,42 +27,36 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
       return null;
     }
 
-    var snapedPoints = await rallyingPointService.Snap(rawMatches.FilterSelectMany<LianeRawMatch, LatLng>(r => [r.Deposit, r.Pickup, r.DepositReverse, r.PickupReverse]).ToImmutableHashSet());
-    return await ToMatch(rawMatches, snapedPoints, ImmutableDictionary<Guid, DateTime>.Empty);
+    var userId = currentContext.CurrentUser().Id;
+    var mapParams = await GetMapParams(connection, rawMatches, userId, tx);
+    return (await MapToMatches(rawMatches, mapParams)).FirstOrDefault();
   }
 
   public async Task<ImmutableList<Match>> FindMatchesBetween(IDbConnection connection, Guid from, IEnumerable<Guid> to, IDbTransaction? tx = null)
   {
     var rawMatches = await FindRawMatch(connection, from, to, tx);
-    var snapedPoints = await rallyingPointService.Snap(rawMatches.FilterSelectMany<LianeRawMatch, LatLng>(r => [r.Deposit, r.Pickup, r.DepositReverse, r.PickupReverse]).ToImmutableHashSet());
-    return await MapToMatches(snapedPoints, ImmutableDictionary<Guid, DateTime>.Empty, rawMatches);
+    var userId = currentContext.CurrentUser().Id;
+    var mapParams = await GetMapParams(connection, rawMatches, userId, tx);
+    return await MapToMatches(rawMatches, mapParams);
   }
 
   public async Task<ImmutableDictionary<Guid, ImmutableList<Match>>> FindMatches(IDbConnection connection, IEnumerable<Guid> linkedTo, IDbTransaction? tx = null)
   {
     var userId = currentContext.CurrentUser().Id;
     var rawMatches = await FindRawMatches(connection, userId, linkedTo, tx: tx);
-    var askToJoins = (await connection.QueryAsync<(Guid, DateTime)>(
-        """
-        SELECT liane_id, requested_at
-        FROM liane_request
-                 INNER JOIN liane_member ON liane_request.id = liane_member.liane_id
-        WHERE liane_request.created_by = @userId AND liane_member.joined_at IS NULL
-        """,
-        new { userId }, tx)
-      ).ToImmutableDictionary(m => m.Item1, m => m.Item2);
-    var snapedPoints = await rallyingPointService.Snap(rawMatches.FilterSelectMany<LianeRawMatch, LatLng>(r => [r.Deposit, r.Pickup, r.DepositReverse, r.PickupReverse]).ToImmutableHashSet());
+    var mapParams = await GetMapParams(connection, rawMatches, userId, tx);
     return await rawMatches
-      .GroupByAsync(m => m.From, g => MapToMatches(snapedPoints, askToJoins, g));
+      .GroupByAsync(m => m.From, g => MapToMatches(g, mapParams));
   }
 
-  private async Task<ImmutableList<Match>> MapToMatches(ImmutableDictionary<LatLng, RallyingPoint> snapedPoints, ImmutableDictionary<Guid, DateTime> askToJoins, IEnumerable<LianeRawMatch> rawMatches)
+  private async Task<ImmutableList<Match>> MapToMatches(IEnumerable<LianeRawMatch> rawMatches, MapParams mapParams)
   {
     var matches = await rawMatches.GroupBy(m => m.LinkedTo ?? m.LianeRequest)
-      .FilterSelectAsync(r => ToMatch(r.ToImmutableList(), snapedPoints, askToJoins));
+      .FilterSelectAsync(r => ToMatch(r.ToImmutableList(), mapParams));
     return matches
       .OrderByDescending(m => m.Score)
-      .ThenByDescending(m => m is Match.Group group ? group.TotalMembers : 0)
+      .ThenByDescending(m => m is Match.Group group ? group.Matches.Count : 1)
+      .ThenByDescending(m => m.Members.Count)
       .ThenByDescending(m => m is Match.Single { AskToJoinAt: not null })
       .ThenBy(m => m.Liane.IdAsGuid())
       .ToImmutableList();
@@ -86,7 +80,6 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
                                                                    name,
                                                                    arrive_before,
                                                                    return_after,
-                                                                   (SELECT count(*) FROM liane_member c WHERE c.liane_id = linked_to_b) AS total_members,
                                                                    week_days,
                                                                    
                                                                    st_length(intersection) / a_length AS score,
@@ -151,7 +144,6 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
                                                                    name,
                                                                    arrive_before,
                                                                    return_after,
-                                                                   (SELECT count(*) FROM liane_member c WHERE c.liane_id = linked_to_b) AS total_members,
                                                                    week_days,
                                                                    
                                                                    st_length(intersection) / a_length AS score,
@@ -202,18 +194,15 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     return result.ToImmutableList();
   }
 
-  private async Task<Match?> ToMatch(
-    ImmutableList<LianeRawMatch> rawMatches,
-    ImmutableDictionary<LatLng, RallyingPoint> snapedPoints,
-    ImmutableDictionary<Guid, DateTime> askToJoins
-  )
+  private async Task<Match?> ToMatch(ImmutableList<LianeRawMatch> rawMatches,
+    MapParams mapParams)
   {
     if (rawMatches.IsEmpty)
     {
       return null;
     }
 
-    var matchingPoints = rawMatches.Select(m => GetBestMatch(m, snapedPoints))
+    var matchingPoints = rawMatches.Select(m => GetBestMatch(m, mapParams.SnapedPoints))
       .Where(m => m is not null)
       .OrderByDescending(m => m!.Value.Score)
       .FirstOrDefault();
@@ -234,10 +223,12 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     if (rawMatches.Count == 1)
     {
       var first = rawMatches.First();
-      var askToJoinAt = askToJoins.TryGetValue(first.From, out var value) ? value : (DateTime?)null;
+      var askToJoinAt = mapParams.AskToJoins.TryGetValue(first.From, out var value) ? value : (DateTime?)null;
+      var liane = mapParams.Lianes.GetValueOrDefault(first.LianeRequest);
 
       return new Match.Single(
         first.LianeRequest,
+        liane is null ? [] : ImmutableList.Create(liane.CreatedBy),
         first.Name,
         weekDays,
         when,
@@ -251,13 +242,14 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
 
     {
       var first = rawMatches.First();
-      var liane = (Ref<Api.Community.Liane>)first.LinkedTo ?? first.LianeRequest;
+      var lianeRef = first.LinkedTo ?? first.LianeRequest;
+      var liane = mapParams.Lianes.GetValueOrDefault(lianeRef);
 
       var matches = rawMatches.Select(m => (Ref<LianeRequest>)m.LianeRequest).ToImmutableList();
 
       return new Match.Group(
-        liane,
-        first.TotalMembers,
+        lianeRef,
+        liane?.Members.FilterSelect(m => m.User.Value).ToImmutableList() ?? [],
         matches,
         weekDays,
         when,
@@ -269,24 +261,40 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     }
   }
 
-  private (Ref<RallyingPoint> Pickup, Ref<RallyingPoint> Deposit, float Score, bool Reverse)? GetBestMatch(LianeRawMatch match, ImmutableDictionary<LatLng, RallyingPoint> snapedPoints)
+  private static (Ref<RallyingPoint> Pickup, Ref<RallyingPoint> Deposit, float Score, bool Reverse)? GetBestMatch(LianeRawMatch match, ImmutableDictionary<LatLng, RallyingPoint> snapedPoints)
   {
     var pickup = match.Pickup.GetOrDefault(snapedPoints.GetValueOrDefault);
     var deposit = match.Deposit.GetOrDefault(snapedPoints.GetValueOrDefault);
     var pickupReverse = match.PickupReverse.GetOrDefault(snapedPoints.GetValueOrDefault);
     var depositReverse = match.DepositReverse.GetOrDefault(snapedPoints.GetValueOrDefault);
 
-    if (pickup is null || deposit is null)
+    if (pickup is not null && deposit is not null)
     {
-      if (pickupReverse is null || depositReverse is null)
-      {
-        return null;
-      }
-
-      return (pickupReverse, depositReverse, match.ScoreReverse, true);
+      return (pickup, deposit, match.Score, false);
     }
 
-    return (pickup, deposit, match.Score, false);
+    if (pickupReverse is null || depositReverse is null)
+    {
+      return null;
+    }
+
+    return (pickupReverse, depositReverse, match.ScoreReverse, true);
+  }
+
+  private async Task<MapParams> GetMapParams(IDbConnection connection, ImmutableList<LianeRawMatch> rawMatches, string userId, IDbTransaction? tx = null)
+  {
+    var lianes = await lianeFetcher.FetchLianes(connection, rawMatches.Select(r => r.LinkedTo ?? r.LianeRequest).Distinct(), tx);
+    var snapedPoints = await rallyingPointService.Snap(rawMatches.FilterSelectMany<LianeRawMatch, LatLng>(r => [r.Deposit, r.Pickup, r.DepositReverse, r.PickupReverse]).ToImmutableHashSet());
+    var askToJoins = (await connection.QueryAsync<(Guid, DateTime)>(
+        """
+        SELECT liane_id, requested_at
+        FROM liane_request
+                 INNER JOIN liane_member ON liane_request.id = liane_member.liane_id
+        WHERE liane_request.created_by = @userId AND liane_member.joined_at IS NULL
+        """,
+        new { userId }, tx)
+      ).ToImmutableDictionary(m => m.Item1, m => m.Item2);
+    return new MapParams(snapedPoints, askToJoins, lianes);
   }
 }
 
@@ -296,7 +304,6 @@ internal sealed record LianeRawMatch(
   string Name,
   TimeOnly ArriveBefore,
   TimeOnly ReturnAfter,
-  int TotalMembers,
   DayOfWeekFlag WeekDays,
   float Score,
   LatLng? Pickup,
@@ -305,4 +312,10 @@ internal sealed record LianeRawMatch(
   LatLng? PickupReverse,
   LatLng? DepositReverse,
   Guid? LinkedTo
+);
+
+internal sealed record MapParams(
+  ImmutableDictionary<LatLng, RallyingPoint> SnapedPoints,
+  ImmutableDictionary<Guid, DateTime> AskToJoins,
+  ImmutableDictionary<Guid, Api.Community.Liane> Lianes
 );

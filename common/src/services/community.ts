@@ -53,6 +53,7 @@ export type LianeState = Detached | Pending | Attached;
 export type Single = {
   type: "Single";
   name: string;
+  members: User[];
   liane: Ref<CoLiane>;
   weekDays: DayOfWeekFlag;
   when: TimeRange;
@@ -66,7 +67,7 @@ export type Single = {
 export type Group = {
   type: "Group";
   liane: Ref<CoLiane>;
-  totalMembers: number;
+  members: User[];
   matches: Ref<CoLianeRequest>[];
   weekDays: DayOfWeekFlag;
   when: TimeRange;
