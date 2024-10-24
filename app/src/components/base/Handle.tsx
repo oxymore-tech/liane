@@ -1,9 +1,7 @@
 import React, { useMemo } from "react";
 import { StyleProp, StyleSheet, ViewStyle } from "react-native";
-import { BottomSheetHandleProps } from "@gorhom/bottom-sheet";
-import Animated, { Extrapolate, interpolate, useAnimatedStyle, useDerivedValue } from "react-native-reanimated";
+import Animated, { Extrapolation, interpolate, SharedValue, useAnimatedStyle, useDerivedValue } from "react-native-reanimated";
 import { toRad } from "react-native-redash";
-import { AppColorPalettes } from "@/theme/colors.ts";
 
 // @ts-ignore
 export const transformOrigin = ({ x, y }, ...transformations) => {
@@ -11,19 +9,17 @@ export const transformOrigin = ({ x, y }, ...transformations) => {
   return [{ translateX: x }, { translateY: y }, ...transformations, { translateX: x * -1 }, { translateY: y * -1 }];
 };
 
-interface HandleProps extends BottomSheetHandleProps {
+interface HandleProps {
   style?: StyleProp<ViewStyle>;
+  animatedIndex: SharedValue<number>;
 }
 
 const Handle: React.FC<HandleProps> = ({ style, animatedIndex }) => {
-  //#region animations
-  const indicatorTransformOriginY = useDerivedValue(() => interpolate(animatedIndex.value, [0, 1, 2], [-1, 0, 1], Extrapolate.CLAMP));
-  //#endregion
+  const indicatorTransformOriginY = useDerivedValue(() => interpolate(animatedIndex.value, [0, 1, 2], [-1, 0, 1], Extrapolation.CLAMP));
 
-  //#region styles
   const containerStyle = useMemo(() => [styles.header, style], [style]);
   const containerAnimatedStyle = useAnimatedStyle(() => {
-    const borderTopRadius = interpolate(animatedIndex.value, [1, 2], [20, 0], Extrapolate.CLAMP);
+    const borderTopRadius = interpolate(animatedIndex.value, [1, 2], [20, 0], Extrapolation.CLAMP);
     return {
       borderTopLeftRadius: borderTopRadius,
       borderTopRightRadius: borderTopRadius
@@ -37,7 +33,7 @@ const Handle: React.FC<HandleProps> = ({ style, animatedIndex }) => {
     []
   );
   const leftIndicatorAnimatedStyle = useAnimatedStyle(() => {
-    const leftIndicatorRotate = interpolate(animatedIndex.value, [0, 1, 2], [toRad(-30), 0, toRad(30)], Extrapolate.CLAMP);
+    const leftIndicatorRotate = interpolate(animatedIndex.value, [0, 1, 2], [toRad(-30), 0, toRad(30)], Extrapolation.CLAMP);
     return {
       transform: transformOrigin(
         { x: 0, y: indicatorTransformOriginY.value },
@@ -58,7 +54,7 @@ const Handle: React.FC<HandleProps> = ({ style, animatedIndex }) => {
     []
   );
   const rightIndicatorAnimatedStyle = useAnimatedStyle(() => {
-    const rightIndicatorRotate = interpolate(animatedIndex.value, [0, 1, 2], [toRad(30), 0, toRad(-30)], Extrapolate.CLAMP);
+    const rightIndicatorRotate = interpolate(animatedIndex.value, [0, 1, 2], [toRad(30), 0, toRad(-30)], Extrapolation.CLAMP);
     return {
       transform: transformOrigin(
         { x: 0, y: indicatorTransformOriginY.value },
@@ -71,9 +67,7 @@ const Handle: React.FC<HandleProps> = ({ style, animatedIndex }) => {
       )
     };
   });
-  //#endregion
 
-  // render
   return (
     <Animated.View style={[containerStyle, containerAnimatedStyle]} renderToHardwareTextureAndroid={true}>
       <Animated.View style={[leftIndicatorStyle, leftIndicatorAnimatedStyle]} />
