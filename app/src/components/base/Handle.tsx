@@ -12,6 +12,7 @@ export const transformOrigin = ({ x, y }, ...transformations) => {
 interface HandleProps {
   style?: StyleProp<ViewStyle>;
   animatedIndex: SharedValue<number>;
+  animatedPosition: SharedValue<number>;
 }
 
 const Handle: React.FC<HandleProps> = ({ style, animatedIndex }) => {

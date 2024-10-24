@@ -13,7 +13,7 @@ import React, {
 } from "react";
 import { FlatList, Gesture, GestureDetector, ScrollView } from "react-native-gesture-handler";
 import Animated, { interpolate, interpolateColor, runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
-import { AppColorPalettes, AppColors } from "@/theme/colors";
+import { AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Observable, Subject } from "rxjs";
@@ -208,17 +208,6 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
       };
     });
 
-    // Animate the handle
-    const handleStyle = useAnimatedStyle(() => {
-      const backgroundColor = interpolateColor(
-        h.value,
-        [0, height - fillLimit - AppBottomSheetHandleHeight, height - fillLimit, height],
-        [AppColorPalettes.gray[300], AppColorPalettes.gray[300], "rgba(255,255,255,0)", "rgba(255,255,255,0)"]
-      );
-      return {
-        backgroundColor
-      };
-    });
     return (
       <GestureDetector gesture={gesture}>
         <Animated.View

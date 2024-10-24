@@ -142,7 +142,7 @@ export function NewRallyingPointRequestScreen() {
     <FormProvider {...methods}>
       <PageHeader title={"Proposer un point de ralliement"} navigation={navigation} />
       <View style={{ flex: 1, maxHeight: !location ? undefined : 152 }}>
-        <AppMapView showGeolocation={"top"} ref={mapRef} onPress={!location ? undefined : () => setValue("point.location", undefined)}>
+        <AppMapView ref={mapRef} onPress={!location ? undefined : () => setValue("point.location", undefined)}>
           {location && (
             <Animated.View entering={ZoomIn} exiting={ZoomOut}>
               <WayPointDisplay rallyingPoint={{ location, id: "selected" } as RallyingPoint} type={"from"} size={24} offsetY={-24} />

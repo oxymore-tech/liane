@@ -140,10 +140,8 @@ const LianeDetailPage = ({ match }: { match: LianeMatch | undefined }) => {
           stops={[AppBottomSheetHandleHeight + 96, 0.45, 1]}
           padding={{ top: 80 }}
           initialStop={1}
-          backgroundStyle={{
-            backgroundColor: AppColors.lightGrayBackground,
-            borderTopLeftRadius: 24,
-            borderTopRightRadius: 24
+          style={{
+            backgroundColor: AppColors.gray100
           }}>
           {match && (
             <AppBottomSheetScrollView style={{ paddingHorizontal: 12, backgroundColor: AppColors.lightGrayBackground }}>
