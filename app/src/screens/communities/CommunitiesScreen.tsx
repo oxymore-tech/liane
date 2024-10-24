@@ -59,7 +59,7 @@ export const CommunitiesScreen = () => {
             <AppText style={AppStyles.errorData}>Une erreur est survenue.</AppText>
             <AppText style={AppStyles.errorData}>Message: {error.message}</AppText>
             <View style={{ marginTop: 12 }}>
-              <AppButton color={AppColors.primaryColor} title={"Réessayer"} icon={"refresh-outline"} onPress={() => refetch(queriesData)} />
+              <AppButton color={AppColors.primaryColor} value="Réessayer" icon="refresh-outline" onPress={() => refetch(queriesData)} />
             </View>
           </Column>
         </View>

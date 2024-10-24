@@ -26,7 +26,7 @@ const EmptyResultView = (props: { message: string }) => (
 const ErrorView = (props: { message: string; retry: () => void }) => (
   <Column style={{ alignItems: "center" }} spacing={8}>
     <AppText>{props.message}</AppText>
-    <AppButton color={AppColors.primaryColor} title={"Réessayer"} icon={"refresh-outline"} onPress={props.retry} />
+    <AppButton color={AppColors.primaryColor} value="Réessayer" icon="refresh-outline" onPress={props.retry} />
   </Column>
 );
 

@@ -1,5 +1,5 @@
-import React from "react";
-import { ActivityIndicator, ColorValue, PressableProps, StyleProp, StyleSheet, TouchableOpacity, ViewStyle } from "react-native";
+import React, { useState } from "react";
+import { ActivityIndicator, ColorValue, PressableProps, StyleProp, StyleSheet, TouchableOpacity, View, ViewStyle } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppText } from "./AppText";
 import { AppDimensions } from "@/theme/dimensions";
@@ -10,6 +10,8 @@ import { UserPicture } from "../UserPicture";
 import { Row } from "./AppLayout";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppStyles } from "@/theme/styles.ts";
+import Animated, { FadeInRight, FadeOutRight } from "react-native-reanimated";
+import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider.tsx";
 
 // @ts-ignore
 export type AppButtonProps = PressableProps & {
@@ -20,12 +22,14 @@ export type AppButtonProps = PressableProps & {
   user?: User | null;
   loading?: boolean;
   style?: StyleProp<ViewStyle>;
-} & ({ title: string; icon?: IconName } | { icon: IconName; title?: string });
+  title?: string;
+} & ({ value: string; icon?: IconName } | { icon: IconName; value?: string });
 
 export function AppButton({
   color = AppColors.primaryColor,
   disabled = false,
   title,
+  value,
   icon,
   user = null,
   kind = "rounded",
@@ -35,22 +39,49 @@ export function AppButton({
   ...props
 }: AppButtonProps) {
   const { navigation } = useAppNavigation();
+  const { width } = useAppWindowsDimensions();
+  const [showTitle, setShowTitle] = useState(false);
   const backgroundColor = disabled ? AppColorPalettes.gray[300] : color;
   const textColor =
     foregroundColor ||
     (color === AppColors.white || color === AppColors.grayBackground || color === AppColors.lightGrayBackground
       ? AppColorPalettes.gray[800]
       : AppColors.white);
-  const borderRadius = AppDimensions.borderRadius * (kind === "rounded" ? 2 : 1);
+  const borderRadius = AppDimensions.borderRadius * (kind === "rounded" ? 200 : 1);
 
   const d = disabled || loading;
 
   return (
-    <AppPressable {...props} style={[style, { backgroundColor, borderRadius }]} disabled={d}>
-      <Row style={styles.contentContainer}>
+    <AppPressable
+      {...props}
+      onTouchStart={() => setShowTitle(true)}
+      onTouchEnd={() => setShowTitle(false)}
+      onTouchCancel={() => setShowTitle(false)}
+      style={[style, { backgroundColor, borderRadius }]}
+      disabled={d}>
+      {title && showTitle && (
+        <Animated.View entering={FadeInRight} exiting={FadeOutRight} style={{ position: "absolute", bottom: 0, right: 0, width }}>
+          <View
+            style={[
+              {
+                paddingVertical: 2,
+                paddingHorizontal: 8,
+                backgroundColor: AppColors.primaryColor,
+                borderRadius: 4,
+                flexShrink: 1,
+                alignSelf: "center"
+              },
+              AppStyles.shadow
+            ]}>
+            <AppText style={{ color: AppColors.white, fontWeight: "bold", fontSize: 16 }}>{title}</AppText>
+          </View>
+        </Animated.View>
+      )}
+
+      <Row style={styles.contentContainer} spacing={8}>
         {loading && <ActivityIndicator style={AppStyles.fullHeight} color={AppColors.white} size="large" />}
         {!loading && icon && <AppIcon style={styles.iconContainer} name={icon} color={textColor} size={28} />}
-        {title && <AppText style={[{ color: textColor }, styles.text]}>{title}</AppText>}
+        {value && <AppText style={[{ color: textColor }, styles.text]}>{value}</AppText>}
       </Row>
 
       {user && (
@@ -69,8 +100,7 @@ export function AppButton({
 
 const styles = StyleSheet.create({
   iconContainer: {
-    justifyContent: "center",
-    marginRight: 8
+    justifyContent: "center"
   },
   userIconContainer: {
     borderWidth: 1,

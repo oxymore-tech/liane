@@ -1,12 +1,11 @@
 import React, { useContext, useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { CoLiane, RallyingPoint, Ref, WayPoint } from "@liane/common";
+import { CoLiane, LatLng, RallyingPoint, Ref, WayPoint } from "@liane/common";
 import { useAppBackController } from "@/components/AppBackContextProvider";
-import { AppColors, defaultTextColor } from "@/theme/colors";
+import { AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { Column, Row } from "@/components/base/AppLayout";
 import AppMapView from "@/components/map/AppMapView";
-import LocationPin from "@/assets/location_pin.svg";
 import { RallyingPointItem } from "@/screens/ItinerarySearchForm";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { RallyingPointsDisplayLayer } from "@/components/map/layers/RallyingPointsDisplayLayer";
@@ -15,6 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppPressableIcon } from "@/components/base/AppPressable";
 import { LianeMatchLianeRouteLayer } from "@/components/map/layers/LianeMatchRouteLayer.tsx";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
+import { DefaultFloatingActions } from "@/components/context/FloatingActions.tsx";
 
 export interface SelectOnMapViewProps {
   onSelect: (rp: RallyingPoint) => void;
@@ -37,39 +37,26 @@ export const SelectOnMapView = ({ onSelect, title, liane }: SelectOnMapViewProps
     services.community.getTrip(liane).then(setWayPoints);
   }, [liane, services.community]);
 
+  const [userLocation, setUserLocation] = useState<LatLng>();
+
   return (
     <View style={styles.container}>
-      <AppMapView>
+      <AppMapView userLocation={userLocation}>
         {liane && <LianeMatchLianeRouteLayer wayPoints={wayPoints.map(w => w.rallyingPoint)} lianeId={liane} />}
         <RallyingPointsDisplayLayer dispayCluster={true} selected={selectedRP?.id} onSelect={setSelectedRP} />
       </AppMapView>
+      <DefaultFloatingActions onPosition={setUserLocation} actions={["position"]} position="middle" />
       <View style={[styles.headerContainer, AppStyles.shadow]}>
         <PageHeader title={title} goBack={goBack} />
       </View>
       {selectedRP && (
         <Column style={[styles.footerContainer, AppStyles.shadow, { paddingTop: 32, paddingBottom: 32 + bottom }]} spacing={8}>
-          <Row
-            style={{
-              alignItems: "center",
-              flex: 1,
-              justifyContent: "center",
-              paddingVertical: 8,
-              paddingHorizontal: 4,
-              borderRadius: 16,
-              position: "relative",
-              top: -4
-            }}
-            spacing={16}>
-            <LocationPin fill={defaultTextColor(AppColors.white)} height={32} />
-            <View style={{ flexShrink: 1, flexGrow: 1 }}>
-              <RallyingPointItem item={selectedRP} labelSize={18} showIcon={false} detailed={true} />
-            </View>
-            <View style={{ width: 24, flexShrink: 100 }} />
+          <Row style={{}} spacing={16}>
+            <RallyingPointItem item={selectedRP} labelSize={18} showIcon={false} detailed={true} />
+            <View style={{ flex: 1 }} />
             <AppPressableIcon name={"close"} onPress={() => setSelectedRP(undefined)} />
           </Row>
-          <Row spacing={8}>
-            <AppRoundedButton flex={2} backgroundColor={AppColors.primaryColor} text={"Choisir ce point"} onPress={() => onSelect(selectedRP)} />
-          </Row>
+          <AppRoundedButton backgroundColor={AppColors.primaryColor} text={"Choisir ce point"} onPress={() => onSelect(selectedRP)} />
         </Column>
       )}
     </View>

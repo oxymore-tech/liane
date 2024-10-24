@@ -54,9 +54,9 @@ export const HomeMapBottomSheetContainer = ({ lianes = [], isFetching, currentBo
           : `${lianes.length} liane${lianes.length > 1 ? "s" : ""} disponible${lianes.length > 1 ? "s" : ""} dans cette zone`}
       </AppText>
       <FlatList
-        refreshControl={<RefreshControl refreshing={isFetching || false} onRefresh={() => currentBoundbox && fetchLianeOnMap(currentBoundbox)} />}
+        scrollEnabled={true}
+        refreshControl={<RefreshControl refreshing={isFetching} onRefresh={() => currentBoundbox && fetchLianeOnMap(currentBoundbox)} />}
         data={lianes}
-        showsVerticalScrollIndicator={false}
         renderItem={props => <LianeOnMapItem {...props} openLiane={openLiane} />}
         keyExtractor={item => item.id!}
         onEndReachedThreshold={0.2}

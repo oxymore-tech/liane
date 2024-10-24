@@ -186,7 +186,7 @@ export const PublishScreen = () => {
       )}
       {step >= MaxSteps && (
         <View style={[styles.accordion, styles.bottom]}>
-          <AppButton title="Envoyer" icon="arrow-circle-right-outline" onPress={handleDone} loading={pending} />
+          <AppButton value="Envoyer" icon="arrow-circle-right-outline" onPress={handleDone} loading={pending} />
         </View>
       )}
     </View>
@@ -216,7 +216,7 @@ const StepForm = ({ title, children, disabled = false, onValidate }: StepFormPro
         {children}
       </Animated.View>
 
-      {onValidate && <AppButton title="Suivant" onPress={onValidate} disabled={disabled} />}
+      {onValidate && <AppButton value="Suivant" onPress={onValidate} disabled={disabled} />}
     </Column>
   );
 };
@@ -293,13 +293,13 @@ const VehicleStepView = ({ onChange, value }: StepProps<boolean>) => {
     <StepForm title="Je peux conduire ?">
       <View style={{ display: "flex", flexDirection: "row", justifyContent: "center", gap: 40 }}>
         <AppButton
-          title="Non"
+          value="Non"
           color={!value ? AppColors.primaryColor : AppColors.grayBackground}
           onPress={() => onChange(false)}
           style={{ width: 80 }}
         />
         <AppButton
-          title="Oui"
+          value="Oui"
           color={value ? AppColors.primaryColor : AppColors.grayBackground}
           onPress={() => onChange(true)}
           style={{ width: 80 }}

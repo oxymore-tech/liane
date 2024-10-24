@@ -1,24 +1,31 @@
-import React, { ComponentType, ForwardedRef, forwardRef, PropsWithChildren, useContext, useImperativeHandle, useRef, useState } from "react";
+import React, {
+  ComponentType,
+  ForwardedRef,
+  forwardRef,
+  PropsWithChildren,
+  ReactNode,
+  useContext,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState
+} from "react";
 import { Platform, StyleSheet, useWindowDimensions, View } from "react-native";
 import MapLibreGL, { Expression, Logger, MarkerViewProps, RegionPayload } from "@maplibre/maplibre-react-native";
 import { contains, DEFAULT_TLS, DisplayBoundingBox, FR_BBOX, fromBoundingBox, getMapStyleUrl, LatLng } from "@liane/common";
 import { AppColorPalettes } from "@/theme/colors";
-import { FeatureCollection, GeoJSON, Point, Position } from "geojson";
-import { PositionButton } from "@/components/map/PositionButton";
+import { FeatureCollection, Point, Position } from "geojson";
 import { AppContext } from "@/components/context/ContextProvider";
-import distance from "@turf/distance";
-import { Column, Row } from "@/components/base/AppLayout";
+import { Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import MapTilerLogo from "@/assets/images/maptiler-logo.svg";
 import { SubscriptionLike } from "rxjs";
-import { displayInfo } from "@/components/base/InfoDisplayer";
-import { AppLogger } from "@/api/logger";
 import { RNAppEnv } from "@/api/env";
 import { useSubject } from "@/util/hooks/subscription";
 import Images = MapLibreGL.Images;
 import UserLocation = MapLibreGL.UserLocation;
 
-//const rp_pickup_icon = require("../../../assets/icons/rp_orange.png");
 const rp_icon = require("../../../assets/icons/rp_gray.png");
 const rp_deposit_icon = require("../../../assets/icons/rp_pink.png");
 const rp_deposit_cluster_icon = require("../../../assets/icons/rp_pink_blank.png");
@@ -51,11 +58,11 @@ export const useAppMapViewController = () => useContext<AppMapViewController>(Ma
 
 export type MapMovedCallback = (payload: { zoomLevel: number; isUserInteraction: boolean; visibleBounds: GeoJSON.Position[] }) => void;
 export interface AppMapViewProps extends PropsWithChildren {
-  // position: LatLng;
   onRegionChanged?: MapMovedCallback;
   onStartMovingRegion?: () => void;
   onStopMovingRegion?: () => void;
-  showGeolocation?: "bottom" | "top";
+  extra?: ReactNode;
+  userLocation?: LatLng;
   bounds?: DisplayBoundingBox | undefined;
   onMapLoaded?: () => void;
   onLongPress?: ((coordinates: Position) => void) | undefined;
@@ -68,7 +75,8 @@ const AppMapView = forwardRef(
       onRegionChanged,
       onStartMovingRegion,
       children,
-      showGeolocation,
+      extra,
+      userLocation,
       bounds,
       onMapLoaded,
       onStopMovingRegion,
@@ -81,55 +89,56 @@ const AppMapView = forwardRef(
     const mapRef = useRef<MapLibreGL.MapView>();
     const cameraRef = useRef<MapLibreGL.Camera>();
     const [animated, setAnimated] = useState(false);
-    //const [showActions, setShowActions] = useState(showGeolocation);
 
     const wd = useWindowDimensions();
     const scale = Platform.OS === "android" ? wd.scale : 1;
     const regionSubject = useSubject<RegionPayload>();
 
-    const controller: AppMapViewController = {
-      getCenter: () => mapRef.current?.getCenter(),
-      setCenter: (p: LatLng, zoom?: number, duration = 350) => {
-        cameraRef.current?.setCamera({
-          centerCoordinate: [p.lng, p.lat],
-          zoomLevel: zoom,
-          animationMode: "easeTo",
-          animationDuration: duration
-        });
-        if (cameraRef.current) {
-          return new Promise<void>(resolve => setTimeout(resolve, duration));
-        }
-      },
-      queryFeatures: async (coordinates?: Position, filter?: Expression, layersId?: string[]) => {
-        if (coordinates) {
-          // query at point
-          const pointInView = await mapRef.current?.getPointInView(coordinates)!;
-          return mapRef.current?.queryRenderedFeaturesAtPoint(
-            pointInView, //[(pointInView[1] + 16) * scale, (pointInView[0] + 16) * scale, (pointInView[1] - 16) * scale, (pointInView[0] - 16) * scale],
-            filter,
-            layersId
-          );
-        } else {
-          // query visible viewport
-          const b = await mapRef.current?.getVisibleBounds()!;
-          const ne = await mapRef.current?.getPointInView(b[0])!;
-          const sw = await mapRef.current?.getPointInView(b[1])!;
-          return mapRef.current?.queryRenderedFeaturesInRect([sw[1] * scale, ne[0] * scale, 0, 0], filter, layersId);
-        }
-      },
-      getVisibleBounds: () => mapRef.current?.getVisibleBounds(),
-      getZoom: () => mapRef.current?.getZoom(),
-      fitBounds: (bbox: DisplayBoundingBox, duration?: number) =>
-        cameraRef.current?.fitBounds(bbox.ne, bbox.sw, [bbox.paddingTop, bbox.paddingRight, bbox.paddingBottom, bbox.paddingLeft], duration),
-      subscribeToRegionChanges: callback => regionSubject.subscribe(callback)
-    };
+    const controller: AppMapViewController = useMemo(() => {
+      return {
+        getCenter: () => mapRef.current?.getCenter(),
+        setCenter: (p: LatLng, zoom?: number, duration = 350) => {
+          cameraRef.current?.setCamera({
+            centerCoordinate: [p.lng, p.lat],
+            zoomLevel: zoom,
+            animationMode: "easeTo",
+            animationDuration: duration
+          });
+          if (cameraRef.current) {
+            return new Promise<void>(resolve => setTimeout(resolve, duration));
+          }
+        },
+        queryFeatures: async (coordinates?: Position, filter?: Expression, layersId?: string[]) => {
+          if (coordinates) {
+            // query at point
+            const pointInView = await mapRef.current?.getPointInView(coordinates)!;
+            return mapRef.current?.queryRenderedFeaturesAtPoint(pointInView, filter, layersId);
+          } else {
+            // query visible viewport
+            const b = await mapRef.current?.getVisibleBounds()!;
+            const ne = await mapRef.current?.getPointInView(b[0])!;
+            const sw = await mapRef.current?.getPointInView(b[1])!;
+            return mapRef.current?.queryRenderedFeaturesInRect([sw[1] * scale, ne[0] * scale, 0, 0], filter, layersId);
+          }
+        },
+        getVisibleBounds: () => mapRef.current?.getVisibleBounds(),
+        getZoom: () => mapRef.current?.getZoom(),
+        fitBounds: (bbox: DisplayBoundingBox, duration?: number) =>
+          cameraRef.current?.fitBounds(bbox.ne, bbox.sw, [bbox.paddingTop, bbox.paddingRight, bbox.paddingBottom, bbox.paddingLeft], duration),
+        subscribeToRegionChanges: callback => regionSubject.subscribe(callback)
+      };
+    }, [regionSubject, scale]);
 
     useImperativeHandle(ref, () => controller);
     const regionMoveCallbackRef = useRef<ReturnType<typeof setTimeout> | undefined>();
     const moving = useRef<boolean>(false);
 
-    const [showUserLocation, setShowUserLocation] = useState(false);
-    //const [flyingToLocation, setFlyingToLocation] = useState(false);
+    useEffect(() => {
+      if (!userLocation) {
+        return;
+      }
+      controller.setCenter(userLocation, undefined);
+    }, [controller, userLocation]);
 
     return (
       <View style={styles.map}>
@@ -142,7 +151,6 @@ const AppMapView = forwardRef(
             if (!moving.current) {
               moving.current = true;
               if (animated) {
-                // setShowActions(flyingToLocation || false);
                 if (onStartMovingRegion) {
                   onStartMovingRegion();
                 }
@@ -199,7 +207,6 @@ const AppMapView = forwardRef(
               });
             }
             setAnimated(true);
-            AppLogger.debug("MAP", "loading done");
             if (onMapLoaded) {
               onMapLoaded();
             }
@@ -230,51 +237,10 @@ const AppMapView = forwardRef(
             }}
           />
           <MapControllerContext.Provider value={controller}>{children}</MapControllerContext.Provider>
-          {showUserLocation && <UserLocation androidRenderMode="normal" />}
+          {userLocation && <UserLocation androidRenderMode="normal" />}
         </MapLibreGL.MapView>
 
-        {showGeolocation && (
-          <Column style={showGeolocation === "bottom" ? styles.locationBottom : styles.locationTop} spacing={8}>
-            {/*<AppPressableOverlay
-              backgroundStyle={[{ borderRadius: 20, backgroundColor: AppColors.white }, AppStyles.shadow]}
-              style={{ justifyContent: "center", alignItems: "center", height: 40, width: 40 }}>
-              <AppIcon
-                name={"options-2-outline"}
-                size={22}
-                style={{ justifyContent: "center", alignItems: "center" }}
-                color={AppColors.primaryColor}
-              />
-            </AppPressableOverlay>*/}
-
-            <PositionButton
-              //locationEnabled={showUserLocation}
-              onPosition={async currentLocation => {
-                if (!contains(FR_BBOX, currentLocation)) {
-                  displayInfo("Désolé, Liane n'est pas disponible sur votre territoire.");
-                  return;
-                }
-                setShowUserLocation(true);
-                const currentCenter = await mapRef.current?.getCenter()!;
-                const currentZoom = await mapRef.current?.getZoom()!;
-                const targetCoord = [currentLocation.lng, currentLocation.lat];
-                //setFlyingToLocation(true);
-                if (Math.abs(12 - currentZoom) >= 1 || distance(currentCenter, targetCoord) > 1) {
-                  cameraRef.current?.setCamera({
-                    centerCoordinate: targetCoord,
-                    zoomLevel: 12,
-                    animationMode: "flyTo",
-                    animationDuration: 1000
-                  });
-                  await new Promise(resolve => setTimeout(resolve, 1250));
-                } else {
-                  cameraRef.current?.flyTo(targetCoord);
-                }
-                //setFlyingToLocation(false);
-              }}
-              onPositionError={() => setShowUserLocation(false)}
-            />
-          </Column>
-        )}
+        {extra}
         <View
           style={{
             position: "absolute",
@@ -346,6 +312,10 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 12,
     paddingBottom: 32
   },
-  locationBottom: { position: "absolute", bottom: 24, right: 10 },
-  locationTop: { position: "absolute", right: 10, top: 10 }
+  locationTop: {
+    position: "absolute",
+    right: 10,
+    top: "50%",
+    justifyContent: "flex-end"
+  }
 });

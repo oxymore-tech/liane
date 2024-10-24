@@ -1,14 +1,11 @@
 import { StyleSheet, View } from "react-native";
 import React, { useContext, useRef, useState } from "react";
-import { AppColors } from "@/theme/colors";
-import { BoundingBox, CoLiane, EmptyFeatureCollection, fromPositions, getBoundingBox, Liane, Ref } from "@liane/common";
+import { BoundingBox, CoLiane, EmptyFeatureCollection, fromPositions, LatLng, Liane, Ref } from "@liane/common";
 import { AppContext } from "@/components/context/ContextProvider";
 import { FeatureCollection, Position } from "geojson";
-import { AnimatedFloatingBackButton, SearchModal } from "@/screens/home/HomeHeader";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useActor, useInterpret } from "@xstate/react";
 import { getSearchFilter, HomeMapContext, HomeMapMachine } from "@/screens/home/StateMachine";
-import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 import { Observable } from "rxjs";
 import { AppBackContextProvider } from "@/components/AppBackContextProvider";
 import { OfflineWarning } from "@/components/OfflineWarning";
@@ -21,6 +18,7 @@ import { AppLogger } from "@/api/logger";
 import { AppMapViewController } from "@/components/map/AppMapView";
 import { useBehaviorSubject } from "@/util/hooks/subscription";
 import { HomeMapBottomSheetContainer } from "@/screens/home/HomeMapBottomSheet.tsx";
+import { DefaultFloatingActions } from "@/components/context/FloatingActions.tsx";
 
 const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureCollection, Set<Ref<Liane>> | undefined]> }) => {
   const machine = useContext(HomeMapContext);
@@ -30,11 +28,9 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
   const [state] = useActor(machine);
   const mapFeatureSubject = useBehaviorSubject<GeoJSON.Feature[] | undefined>(undefined);
   const appMapRef = useRef<AppMapViewController>(null);
-  const [modalOpen, setModalOpen] = useState(false);
   const bottomSheetScroll = useBehaviorSubject<BottomSheetObservableMessage>({ top: 0, expanded: false });
   const { navigation } = useAppNavigation<"Home">();
   const { services } = useContext(AppContext);
-  const isDetailState = state.matches("detail");
   const isMapState = state.matches("map");
   const isPointState = state.matches("point");
 
@@ -74,67 +70,29 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
     }
     setFetching(false);
   };
-
+  const [userLocation, setUserLocation] = useState<LatLng>();
   return (
     <AppBackContextProvider backHandler={backHandler}>
       <View style={styles.page}>
         <View style={styles.container}>
           <HomeMap
+            userLocation={userLocation}
             ref={appMapRef}
             featureSubject={mapFeatureSubject}
             displaySource={displaySource}
             bottomSheetObservable={bottomSheetScroll}
             onMapMoved={computeLianeDisplay}
           />
+          <DefaultFloatingActions onPosition={setUserLocation} />
           <HomeMapBottomSheetContainer
             lianes={lianes}
             isFetching={!!isFetching}
             currentBoundbox={currentBoundbox}
             fetchLianeOnMap={fetchLianeOnMap}
           />
-          {["point", "map"].some(state.matches) && (
-            <>
-              <SearchModal
-                isOpened={modalOpen}
-                close={() => setModalOpen(false)}
-                onSelectTrip={trip => {
-                  machine.send("UPDATE", { data: trip });
-                  return true;
-                }}
-                onSelectFeature={placeFeature => {
-                  if (placeFeature.bbox) {
-                    appMapRef.current?.fitBounds(
-                      getBoundingBox(
-                        [
-                          [placeFeature.bbox[0], placeFeature.bbox[1]],
-                          [placeFeature.bbox[2], placeFeature.bbox[3]]
-                        ],
-                        8
-                      ),
-                      1000
-                    );
-                  } else if (placeFeature.geometry.type === "Point") {
-                    appMapRef.current
-                      ?.setCenter({ lng: placeFeature.geometry.coordinates[0], lat: placeFeature.geometry.coordinates[1] }, 13, 1000)
-                      ?.then(() => {
-                        if (placeFeature.place_type[0] === "rallying_point") {
-                          machine.send("SELECT", { data: placeFeature.properties });
-                        }
-                      });
-                  }
-                  return true;
-                }}
-              />
-            </>
-          )}
         </View>
-        {state.matches("form") && (
-          <Animated.View entering={FadeInDown} exiting={FadeOutDown} style={[styles.container, { backgroundColor: AppColors.white }]} />
-        )}
 
         <OfflineWarning />
-
-        {isDetailState && <AnimatedFloatingBackButton onPress={() => machine.send("BACK")} />}
       </View>
     </AppBackContextProvider>
   );

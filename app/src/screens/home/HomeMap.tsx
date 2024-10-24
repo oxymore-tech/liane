@@ -1,7 +1,7 @@
 import { Observable, Subject } from "rxjs";
 import { FeatureCollection, Polygon, Position } from "geojson";
-import { DisplayBoundingBox, getBoundingBox, getPoint, Liane, Ref } from "@liane/common";
-import React, { PropsWithChildren, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { DisplayBoundingBox, getBoundingBox, LatLng, Liane, Ref } from "@liane/common";
+import React, { useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { filterHasFullTrip, HomeMapContext } from "@/screens/home/StateMachine";
 import { useActor } from "@xstate/react";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
@@ -10,18 +10,13 @@ import AppMapView, { AppMapViewController } from "@/components/map/AppMapView";
 import envelope from "@turf/envelope";
 import { feature, featureCollection } from "@turf/helpers";
 import { LianeDisplayLayer } from "@/components/map/layers/LianeDisplayLayer";
-import { LianeShapeDisplayLayer } from "@/components/map/layers/LianeShapeDisplayLayer";
-import { PotentialLianeLayer } from "@/components/map/layers/PotentialLianeLayer";
-import { RallyingPointsFeaturesDisplayLayer } from "@/components/map/layers/RallyingPointsFeaturesDisplayLayer";
-import { AppColors } from "@/theme/colors";
-import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay";
 import { BottomSheetObservableMessage } from "@/components/base/AppBottomSheet";
-import { PickupDestinationsDisplayLayer } from "@/components/map/layers/PickupDestinationsDisplayLayer";
 import { AppLogger } from "@/api/logger";
 import { useObservable } from "@/util/hooks/subscription";
 import { RallyingPointsDisplayLayer } from "@/components/map/layers/RallyingPointsDisplayLayer.tsx";
 
 export type HomeMapProps = {
+  userLocation?: LatLng;
   onMovingStateChanged?: (moving: boolean) => void;
   bottomSheetObservable: Observable<BottomSheetObservableMessage>;
   displaySource: Observable<[FeatureCollection, Set<Ref<Liane>> | undefined]>;
@@ -29,72 +24,18 @@ export type HomeMapProps = {
   onZoomChanged?: (z: number) => void;
   onMapMoved?: (visibleBounds: Position[]) => void;
   ref: React.Ref<AppMapViewController>;
-} & PropsWithChildren;
+};
 
 export const HomeMap = React.forwardRef<AppMapViewController, HomeMapProps>(
-  (
-    {
-      onMovingStateChanged,
-      onZoomChanged,
-      bottomSheetObservable,
-      displaySource: matchDisplaySource,
-      featureSubject,
-      onMapMoved,
-      children
-    }: HomeMapProps,
-    ref
-  ) => {
+  ({ onMovingStateChanged, onZoomChanged, bottomSheetObservable, onMapMoved, userLocation }: HomeMapProps, ref) => {
     const machine = useContext(HomeMapContext);
     const [state] = useActor(machine);
-    const isMatchStateIdle = state.matches({ match: "idle" });
 
     const { top: bSheetTop } = useObservable(bottomSheetObservable, { expanded: false, top: 52 });
     const { height } = useAppWindowsDimensions();
     const { top: insetsTop } = useSafeAreaInsets();
 
     const [geometryBbox, setGeometryBbox] = useState<DisplayBoundingBox | undefined>();
-
-    const matchDisplayData = useObservable(matchDisplaySource, undefined);
-
-    const pickupsDisplay = useMemo(() => {
-      if (isMatchStateIdle) {
-        const filterSet = matchDisplayData?.[1];
-        let matches = state.context.matches!;
-        if (filterSet) {
-          matches = matches.filter(m => filterSet.has(m.trip.id!));
-        }
-        return matches!.map(m => getPoint(m, "pickup"));
-      }
-      return [];
-    }, [isMatchStateIdle, matchDisplayData, state.context.matches]);
-
-    const depositsDisplay = useMemo(() => {
-      if (isMatchStateIdle) {
-        const filterSet = matchDisplayData?.[1];
-        let matches = state.context.matches!;
-        if (filterSet) {
-          matches = matches.filter(m => filterSet.has(m.trip.id!));
-        }
-        return matches.map(m => getPoint(m, "deposit"));
-      }
-      return [];
-    }, [isMatchStateIdle, matchDisplayData, state.context.matches]);
-
-    const matchDisplay = useMemo(() => {
-      const baseData = matchDisplayData?.[0];
-      if (!baseData) {
-        return undefined;
-      }
-      const filterSet = matchDisplayData?.[1];
-      if (!filterSet) {
-        return baseData;
-      }
-      const newCollection: FeatureCollection = {
-        type: "FeatureCollection",
-        features: baseData.features.filter(f => f.properties!.lianes.find((l: string) => filterSet.has(l)))
-      };
-      return newCollection;
-    }, [matchDisplayData]);
 
     const mapBounds = useMemo(() => {
       if (state.matches("detail")) {
@@ -138,19 +79,7 @@ export const HomeMap = React.forwardRef<AppMapViewController, HomeMapProps>(
       return undefined;
     }, [state, insetsTop, bSheetTop, height, geometryBbox]);
 
-    const isMatchState = state.matches("match");
-    const isDetailState = state.matches("detail");
     const isPointState = state.matches("point");
-
-    const detailStateData = useMemo(() => {
-      if (!isDetailState) {
-        return undefined;
-      }
-      return {
-        pickup: getPoint(state.context.selectedMatch!, "pickup"),
-        deposit: getPoint(state.context.selectedMatch!, "deposit")
-      };
-    }, [isDetailState, state.context.selectedMatch]);
 
     //const [movingDisplay, setMovingDisplay] = useState<boolean>();
     const appMapRef = useRef<AppMapViewController>(null);
@@ -209,8 +138,8 @@ export const HomeMap = React.forwardRef<AppMapViewController, HomeMapProps>(
     return (
       <AppMapView
         bounds={mapBounds}
-        showGeolocation={state.matches("map") || state.matches("point") ? "bottom" : undefined} //&& !movingDisplay}
         onRegionChanged={handleRegionChanged}
+        userLocation={userLocation}
         onStopMovingRegion={() => {
           onMovingStateChanged && onMovingStateChanged(false);
         }}
@@ -219,71 +148,7 @@ export const HomeMap = React.forwardRef<AppMapViewController, HomeMapProps>(
         }}
         ref={appMapRef}>
         <RallyingPointsDisplayLayer />
-        {state.matches("map") && (
-          <LianeDisplayLayer
-            weekDays={state.context.filter.weekDays}
-            onSelect={rp => {
-              if (rp) {
-                machine.send("SELECT", { data: rp });
-                featureSubject?.next(rp.point_type === "active" ? undefined : []);
-              } else {
-                machine.send("BACK");
-              }
-            }}
-          />
-        )}
-        {state.matches("point") && (
-          <PickupDestinationsDisplayLayer
-            weekDays={state.context.filter.weekDays}
-            point={(state.context.filter.to || state.context.filter.from)!.id!}
-            type={state.context.filter.from ? "pickup" : "deposit"}
-            onSelect={rp => {
-              if (rp) {
-                machine.send("SELECT", { data: rp });
-              } else {
-                machine.send("BACK");
-              }
-            }}
-          />
-        )}
-        {(isMatchState || isDetailState) && (
-          <LianeShapeDisplayLayer useWidth={3} lianeDisplay={matchDisplay} lianeId={isDetailState ? state.context.selectedMatch!.trip.id : null} />
-        )}
-        {isMatchState && ((state.matches({ match: "idle" }) && state.context.matches!.length === 0) || state.matches({ match: "load" })) && (
-          <PotentialLianeLayer from={state.context.filter.from!} to={state.context.filter.to!} />
-        )}
-        {/*isDetailState && <LianeMatchRouteLayer from={state.context.filter.from!} to={state.context.filter.to!} match={state.context.selectedMatch!} />*/}
-
-        {isMatchStateIdle && (
-          <RallyingPointsFeaturesDisplayLayer
-            rallyingPoints={pickupsDisplay}
-            cluster={false}
-            interactive={false}
-            id="pickups"
-            color={AppColors.primaryColor}
-          />
-        )}
-        {isMatchStateIdle && (
-          <RallyingPointsFeaturesDisplayLayer
-            rallyingPoints={depositsDisplay}
-            cluster={false}
-            interactive={false}
-            id="deposits"
-            color={AppColors.primaryColor}
-          />
-        )}
-
-        {state.matches("point") && (
-          <WayPointDisplay rallyingPoint={(state.context.filter.to || state.context.filter.from)!} type={state.context.filter.from ? "from" : "to"} />
-        )}
-
-        {isDetailState && <WayPointDisplay rallyingPoint={detailStateData!.pickup} type={"from"} />}
-        {isDetailState && <WayPointDisplay rallyingPoint={detailStateData!.deposit} type={"to"} />}
-
-        {state.matches("match") && <WayPointDisplay rallyingPoint={state.context.filter.from!} type={"from"} />}
-        {state.matches("match") && <WayPointDisplay rallyingPoint={state.context.filter.to!} type={"to"} />}
-
-        {children}
+        <LianeDisplayLayer weekDays={state.context.filter.weekDays} />
       </AppMapView>
     );
   }

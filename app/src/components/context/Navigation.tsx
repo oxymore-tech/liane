@@ -1,16 +1,14 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect } from "react";
 import { createNativeStackNavigator, NativeStackHeaderProps } from "@react-navigation/native-stack";
-import { BottomTabBarProps, createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
-import { NavigationScreenTitles, useAppNavigation } from "@/components/context/routing";
+import { NavigationScreenTitles } from "@/components/context/routing";
 import { AppText } from "@/components/base/AppText";
-import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
-import { AppPressableIcon, AppPressableOverlay } from "@/components/base/AppPressable";
-import { NavigationState, ParamListBase, PartialState, Route, useNavigation } from "@react-navigation/native";
+import { AppPressableIcon } from "@/components/base/AppPressable";
+import { useNavigation } from "@react-navigation/native";
 import { Row } from "@/components/base/AppLayout";
 import { AppContext } from "@/components/context/ContextProvider";
 import { useObservable } from "@/util/hooks/subscription";
@@ -36,83 +34,10 @@ import { RallyingPointRequestsScreen } from "@/screens/user/RallyingPointRequest
 import SignUpScreen from "@/screens/signUp/SignUpScreen";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { WithBadge } from "@/components/base/WithBadge";
-import { useEffect } from "react";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-const Button = () => {
-  const [showButtonLabel, setShowButtonLabel] = useState(false);
-  const { width } = useAppWindowsDimensions();
-  const { navigation } = useAppNavigation();
-  return (
-    <View style={{ position: "relative", top: -8 }}>
-      {showButtonLabel && (
-        <Animated.View entering={FadeInDown} exiting={FadeOutDown} style={{ position: "absolute", top: -40, left: -width / 2 + 28, width }}>
-          <View
-            style={[
-              {
-                paddingVertical: 2,
-                paddingHorizontal: 8,
-                backgroundColor: AppColors.primaryColor,
-                borderRadius: 4,
-                flexShrink: 1,
-                alignSelf: "center"
-              },
-              AppStyles.shadow
-            ]}>
-            <AppText style={{ color: AppColors.white, fontWeight: "bold", fontSize: 16 }}>Créer une annonce</AppText>
-          </View>
-        </Animated.View>
-      )}
-    </View>
-  );
-};
-const ButtonTabBar = ({ state, descriptors, navigation, insets }: BottomTabBarProps) => {
-  const buildItem = (
-    r: Route<Extract<string, string>, ParamListBase[string]> & { state?: NavigationState | PartialState<NavigationState> },
-    i: number
-  ) => {
-    const { options } = descriptors[r.key];
-    const Icon = options.tabBarIcon;
-    const Label = options.tabBarLabel;
-    const focused = state.index === i;
-
-    const onPress = () => {
-      const event = navigation.emit({
-        type: "tabPress",
-        target: r.key,
-        canPreventDefault: true
-      });
-
-      if (!focused && !event.defaultPrevented) {
-        navigation.navigate(r.name);
-      }
-    };
-
-    return (
-      <View key={r.name} style={{ flex: 1 }}>
-        <AppPressableOverlay
-          backgroundStyle={{ borderRadius: 4 }}
-          style={[{ backgroundColor: focused ? options.tabBarActiveBackgroundColor : undefined }, options.tabBarItemStyle]}
-          onPress={onPress}>
-          {/*@ts-ignore*/}
-          {Icon && <Icon focused={focused} />}
-          {/*@ts-ignore*/}
-          {Label && !(Label instanceof String) && <Label focused={focused} />}
-        </AppPressableOverlay>
-      </View>
-    );
-  };
-
-  return (
-    <Row style={[{ paddingBottom: insets.bottom, justifyContent: "space-evenly", backgroundColor: AppColors.white }, AppStyles.shadow]}>
-      {state.routes.slice(0, 2).map((r, i) => buildItem(r, i))}
-      <Button />
-      {state.routes.slice(2, 4).map((r, i) => buildItem(r, i + 2))}
-    </Row>
-  );
-};
 function Home() {
   const { services, user, refreshUser } = useContext(AppContext);
   const notificationCount = useObservable<number>(services.notification.unreadNotificationCount, 0);
@@ -131,7 +56,6 @@ function Home() {
 
   return (
     <Tab.Navigator
-      tabBar={ButtonTabBar}
       screenOptions={{
         tabBarStyle: useBottomBarStyle(),
         tabBarShowLabel: true,

@@ -4,7 +4,6 @@ import { useQuery, useQueryClient } from "react-query";
 import { Liane, Ref, UnauthorizedError } from "@liane/common";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppText } from "@/components/base/AppText";
-import { AppTabs } from "@/components/base/AppTabs";
 import { Center, Column, Row, Space } from "@/components/base/AppLayout";
 import { AppButton } from "@/components/base/AppButton";
 import { AppContext } from "@/components/context/ContextProvider";
@@ -108,7 +107,7 @@ const MyTripsScreen = () => {
             <AppText style={AppStyles.errorData}>Une erreur est survenue.</AppText>
             <AppText style={AppStyles.errorData}>Message: {(trip.error as any).message}</AppText>
             <View style={{ marginTop: 12 }}>
-              <AppButton color={AppColors.primaryColor} title={"Réessayer"} icon={"refresh-outline"} onPress={() => trip.refetch()} />
+              <AppButton color={AppColors.primaryColor} value="Réessayer" icon="refresh-outline" onPress={() => trip.refetch()} />
             </View>
           </Column>
         </View>

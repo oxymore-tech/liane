@@ -23,7 +23,6 @@ import { AppStyles } from "@/theme/styles";
 import { useDebounceValue } from "@/util/hooks/debounce";
 import { AppBackContextProvider } from "@/components/AppBackContextProvider.tsx";
 import { SelectOnMapView } from "@/screens/publish/SelectOnMapView.tsx";
-import { AppButton } from "@/components/base/AppButton.tsx";
 
 export const RecentTrip = ({ trip, style }: { trip: Trip; style?: StyleProp<ViewStyle> }) => {
   return (
@@ -159,29 +158,32 @@ export const CachedPlaceLocationsView = ({
 
 export const RallyingPointItem = ({
   item,
-  color = AppColorPalettes.gray[800],
   labelSize = 14,
+  detailed = false,
   showIcon = true,
-  detailed = false
+  icon = "position-marker",
+  iconColor = AppColorPalettes.gray[800]
 }: {
   item: RallyingPoint;
   color?: ColorValue;
   labelSize?: number;
   showIcon?: boolean;
   detailed?: boolean;
+  icon?: IconName;
+  iconColor?: ColorValue;
 }) => {
   return (
-    <Row style={{ alignItems: "center", minHeight: 36 }} spacing={16}>
-      {showIcon && <AppIcon name={"rallying-point"} size={28} color={color} />}
-      <Column style={{ justifyContent: "space-evenly" }}>
-        <AppText style={[styles.bold, styles.page, { color, fontSize: labelSize }]}>{item.label}</AppText>
+    <Row spacing={16}>
+      {showIcon && <AppIcon name={icon} size={22} color={iconColor} />}
+      <Column>
+        <AppText style={[styles.bold, styles.page, { color: AppColorPalettes.gray[800], fontSize: labelSize }]}>{item.label}</AppText>
 
         {detailed && (
-          <AppText style={{ color }} numberOfLines={1}>
+          <AppText style={{ color: AppColorPalettes.gray[600] }} numberOfLines={1}>
             {item.address}
           </AppText>
         )}
-        <AppText style={{ color }} numberOfLines={1}>
+        <AppText style={{ color: AppColorPalettes.gray[600] }} numberOfLines={1}>
           {(item.zipCode ? item.zipCode + ", " : "") + item.city}
         </AppText>
       </Column>
@@ -300,7 +302,7 @@ export const RallyingPointSuggestions = ({
           onPress={async () => {
             await updateValue(item);
           }}>
-          <RallyingPointItem item={item} />
+          <RallyingPointItem item={item} icon="position-on" />
         </AppPressableOverlay>
       )}
     />
@@ -468,26 +470,12 @@ export const ItinerarySearchForm = ({
 
       {editable && currentPoint !== undefined && (
         <>
-          <Row style={{ paddingHorizontal: 4, paddingTop: 8, justifyContent: "space-between" }}>
-            <AppPressableOverlay
-              onPress={async () => {
-                const currentLocation = await services.location.currentLocation();
-                const closestPoint = await services.rallyingPoint.snap(currentLocation);
-                handleUpdateField(closestPoint);
-              }}>
-              <Row spacing={4}>
-                <AppIcon name={"position-on"} color={AppColors.blue} />
-                <AppText>Utiliser ma position</AppText>
-              </Row>
-            </AppPressableOverlay>
-            <AppPressableOverlay onPress={() => setMapOpen(currentPoint)}>
-              <Row spacing={4}>
-                <AppIcon name={"map-outline"} color={AppColorPalettes.blue[700]} />
-                <AppText>Choisir sur la carte</AppText>
-              </Row>
-            </AppPressableOverlay>
-          </Row>
-          <AppText style={{ fontWeight: "bold" }}>Choisissez un point de ralliement</AppText>
+          <AppPressableOverlay onPress={() => setMapOpen(currentPoint)} style={{ paddingHorizontal: 16, paddingVertical: 16 }}>
+            <Row spacing={16}>
+              <AppIcon name={"map-outline"} size={22} />
+              <AppText>Choisir sur la carte</AppText>
+            </Row>
+          </AppPressableOverlay>
           <RallyingPointSuggestions
             currentSearch={currentSearch}
             exceptValues={otherValue ? [otherValue.id!] : undefined}
