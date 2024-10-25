@@ -1,17 +1,6 @@
-import { FlatListProps, ScrollViewProps, StyleProp, StyleSheet, View } from "react-native";
-import React, {
-  createContext,
-  forwardRef,
-  PropsWithChildren,
-  useCallback,
-  useContext,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-  useState
-} from "react";
-import { FlatList, Gesture, GestureDetector, ScrollView } from "react-native-gesture-handler";
+import { StyleProp, StyleSheet, View } from "react-native";
+import React, { createContext, PropsWithChildren, useCallback, useEffect, useImperativeHandle, useMemo } from "react";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { interpolate, interpolateColor, runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
@@ -60,7 +49,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
   ({ onScrolled, children, style, canScroll, stops, margins, padding, initialStop = 0 }, ref) => {
     const marginBottom = margins?.bottom || 0;
     const insets = useSafeAreaInsets();
-    const paddingTop = (padding?.top || insets.top + 16) - AppBottomSheetHandleHeight;
+    const paddingTop = insets.top;
     const { height, width } = useAppWindowsDimensions();
     const fillLimit = padding?.top || 0;
     const currentStop = useSharedValue<number>(initialStop);
@@ -266,101 +255,6 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
       </GestureDetector>
     );
   }
-);
-
-// Wrapper component to handle scrolling (listview, etc.) inside a bottom sheet
-const WithBottomSheetContext =
-  <T,>(WrappedComponent: React.ComponentType<T & ScrollViewProps>) =>
-  (props: T & ScrollViewProps) => {
-    const context = useContext(BottomSheetContext);
-    const expandedScrollDelta = useSharedValue({ y: 0, expanded: false });
-
-    if (!context) {
-      return <WrappedComponent {...props} />;
-    }
-    const { onScroll, onEndScroll, onStartScroll, expanded } = context;
-    const [sheetExpanded, setBSheetExpanded] = useState(false);
-
-    useEffect(() => {
-      const sub = expanded.subscribe(setBSheetExpanded);
-      return () => sub.unsubscribe();
-    }, [expanded, expandedScrollDelta]);
-
-    const scrollRef = useRef<AppBottomSheetScrollRefProps>();
-    const scrollTo = (y: number) => {
-      scrollRef.current?.scrollTo(y);
-    };
-
-    // Handles pan gestures while bsheet is not expanded (ie. when pan gesture is caught by the list component)
-    const gesture = Gesture.Pan()
-      .onStart(event => {
-        onStartScroll(-event.translationY);
-      })
-      .onUpdate(event => {
-        const nowExpanded = onScroll(-event.translationY);
-        if (nowExpanded && !expandedScrollDelta.value.expanded) {
-          expandedScrollDelta.value.expanded = true;
-          expandedScrollDelta.value.y = event.translationY;
-        } else if (nowExpanded) {
-          runOnJS(scrollTo)(-event.translationY + expandedScrollDelta.value.y);
-        }
-      })
-      .onEnd(event => {
-        // Scroll to the closest stop
-        onEndScroll(-event.translationY);
-        expandedScrollDelta.value.expanded = false;
-      })
-      .enabled(!sheetExpanded);
-
-    return (
-      <GestureDetector gesture={gesture}>
-        <WrappedComponent
-          {...props}
-          ref={scrollRef}
-          showsVerticalScrollIndicator={sheetExpanded}
-          overScrollMode={"never"}
-          bounces={false}
-          scrollEventThrottle={16}
-          scrollEnabled={sheetExpanded}
-          onScroll={event => {
-            // reached top
-            //console.debug("scroll", event.nativeEvent);
-            if (event.nativeEvent.contentOffset.y === 0) {
-              setBSheetExpanded(false);
-            }
-          }}
-          onScrollEndDrag={event => {
-            if (event.nativeEvent.contentOffset.y === 0) {
-              setBSheetExpanded(false);
-            }
-          }}
-        />
-      </GestureDetector>
-    );
-  };
-
-interface AppBottomSheetScrollRefProps {
-  scrollTo: (y: number) => void;
-}
-
-export const AppBottomSheetFlatList = WithBottomSheetContext(
-  forwardRef<AppBottomSheetScrollRefProps, FlatListProps<any>>((props: FlatListProps<any>, ref) => {
-    const fRef = useRef<FlatList>(null);
-    useImperativeHandle(ref, () => ({
-      scrollTo: y => fRef.current?.scrollToOffset({ offset: y, animated: false })
-    }));
-    return <FlatList ref={fRef} {...props} />;
-  })
-);
-
-export const AppBottomSheetScrollView = WithBottomSheetContext(
-  forwardRef<AppBottomSheetScrollRefProps, ScrollViewProps>((props: ScrollViewProps, ref) => {
-    const fRef = useRef<ScrollView>(null);
-    useImperativeHandle(ref, () => ({
-      scrollTo: y => fRef.current?.scrollTo({ y, animated: false })
-    }));
-    return <ScrollView ref={fRef} {...props} />;
-  })
 );
 
 const styles = StyleSheet.create({

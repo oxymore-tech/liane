@@ -54,7 +54,7 @@ public sealed class LianeController(ILianeService lianeService, ITripService tri
     return lianeService.GetTrip(liane, null);
   }
   
-  [HttpGet("liane/{liane:guid}/trip/{id:guid}")]
+  [HttpGet("liane/{liane:guid}/trip/{lianeRequest:guid}")]
   public Task<ImmutableList<WayPoint>> GetTrip(Guid liane, Guid lianeRequest)
   {
     return lianeService.GetTrip(liane, lianeRequest);

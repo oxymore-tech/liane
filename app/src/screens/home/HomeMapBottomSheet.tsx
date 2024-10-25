@@ -1,6 +1,6 @@
 import { BoundingBox, CoLiane } from "@liane/common";
 import { AppColorPalettes, AppColors } from "@/theme/colors.ts";
-import { FlatList, RefreshControl } from "react-native";
+import { FlatList, RefreshControl } from "react-native-gesture-handler";
 import { LianeOnMapItem } from "@/screens/home/LianeOnMapItemView.tsx";
 import React, { useCallback, useContext, useRef } from "react";
 import { useAppNavigation } from "@/components/context/routing.ts";
@@ -40,7 +40,7 @@ export const HomeMapBottomSheetContainer = ({ lianes = [], isFetching, currentBo
       stops={[AppBottomSheetHandleHeight + 60 + insets.bottom, 0.45, 1]}
       initialStop={1}
       style={{
-        paddingHorizontal: 5,
+        paddingHorizontal: 8,
         backgroundColor: AppColors.gray100
       }}>
       <AppText
@@ -55,6 +55,7 @@ export const HomeMapBottomSheetContainer = ({ lianes = [], isFetching, currentBo
       </AppText>
       <FlatList
         scrollEnabled={true}
+        showsVerticalScrollIndicator={true}
         refreshControl={<RefreshControl refreshing={isFetching} onRefresh={() => currentBoundbox && fetchLianeOnMap(currentBoundbox)} />}
         data={lianes}
         renderItem={props => <LianeOnMapItem {...props} openLiane={openLiane} />}

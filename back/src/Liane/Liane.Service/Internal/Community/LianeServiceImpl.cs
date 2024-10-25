@@ -456,9 +456,8 @@ public sealed class LianeServiceImpl(
       return (resolved.WayPoints, resolved.ArriveBefore, resolved.WayPoints.Last());
     }
 
-    var matches = await matcher.FindMatchesBetween(connection, lianeRequest.Value, resolved.Members.Select(m => m.LianeRequest.IdAsGuid()).ToImmutableList(), tx);
+    var bestMatch = await matcher.FindMatchBetween(connection, liane, lianeRequest.Value, tx);
 
-    var bestMatch = matches.FirstOrDefault();
     if (bestMatch is null)
     {
       return (resolved.WayPoints, resolved.ArriveBefore, resolved.WayPoints.Last());

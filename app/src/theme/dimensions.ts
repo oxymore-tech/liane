@@ -10,7 +10,7 @@ export const AppDimensions = {
   },
 
   button: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     paddingVertical: 10
   }
 };

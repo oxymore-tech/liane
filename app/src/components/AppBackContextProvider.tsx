@@ -1,6 +1,6 @@
 // Return true if event was handled in the callback
 import { useBackHandler } from "@react-native-community/hooks";
-import React, { createContext, PropsWithChildren, useContext } from "react";
+import React, { createContext, PropsWithChildren, useContext, useMemo } from "react";
 import { RootNavigation } from "@/components/context/routing";
 
 export interface AppBackController {
@@ -9,17 +9,24 @@ export interface AppBackController {
 
 const AppBackActionContext = createContext<AppBackController>({ goBack: () => {} });
 
-export const AppBackContextProvider = (props: { backHandler: () => boolean } & PropsWithChildren) => {
-  useBackHandler(props.backHandler);
+export const AppBackContextProvider = ({ backHandler, children }: { backHandler?: () => boolean } & PropsWithChildren) => {
+  const handler = useMemo(() => {
+    if (backHandler) {
+      return backHandler;
+    }
+    return () => false;
+  }, [backHandler]);
+
+  useBackHandler(handler);
 
   const backController = {
     goBack: () => {
-      if (!props.backHandler()) {
+      if (!handler()) {
         RootNavigation.goBack();
       }
     }
   };
-  return <AppBackActionContext.Provider value={backController}>{props.children}</AppBackActionContext.Provider>;
+  return <AppBackActionContext.Provider value={backController}>{children}</AppBackActionContext.Provider>;
 };
 
 export const useAppBackController = () => {

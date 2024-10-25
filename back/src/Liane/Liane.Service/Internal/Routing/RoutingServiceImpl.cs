@@ -211,7 +211,9 @@ public sealed class RoutingServiceImpl(IOsrmService osrmService, ILogger<Routing
           distance,
           eta.AddSeconds(duration)
         );
-      }).ToImmutableList();
+      })
+      .OrderBy(w => w.Eta)
+      .ToImmutableList();
   }
 
   private static IEnumerable<LatLng> GetFromTo(LatLng fromLocation, LatLng toLocation)

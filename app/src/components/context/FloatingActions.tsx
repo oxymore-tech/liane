@@ -66,7 +66,7 @@ export const DefaultFloatingActions = ({ actions = ["add", "position"], position
           id: "add",
           icon: "plus-outline",
           title: "Créer une annonce",
-          color: "red",
+          color: AppColors.primaryColor,
           onPress: handleCreate
         } as FloatingActionProps
       ].filter(action => set.has(action.id))}

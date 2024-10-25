@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import AppMapView from "@/components/map/AppMapView";
-import { AppBottomSheet, AppBottomSheetHandleHeight, AppBottomSheetScrollView, BottomSheetRefProps } from "@/components/base/AppBottomSheet";
+import { AppBottomSheet, AppBottomSheetHandleHeight, BottomSheetRefProps } from "@/components/base/AppBottomSheet";
 import { Column, Row } from "@/components/base/AppLayout";
 import { FloatingBackButton } from "@/components/FloatingBackButton";
 import {
@@ -17,7 +17,7 @@ import {
 import { useTripStatus } from "@/components/trip/trip";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery } from "react-query";
@@ -144,9 +144,9 @@ const LianeDetailPage = ({ match }: { match: LianeMatch | undefined }) => {
             backgroundColor: AppColors.gray100
           }}>
           {match && (
-            <AppBottomSheetScrollView style={{ paddingHorizontal: 12, backgroundColor: AppColors.lightGrayBackground }}>
+            <ScrollView style={{ paddingHorizontal: 12, backgroundColor: AppColors.lightGrayBackground }}>
               <LianeDetailView liane={match} />
-            </AppBottomSheetScrollView>
+            </ScrollView>
           )}
 
           {!match && <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />}

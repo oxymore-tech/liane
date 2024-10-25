@@ -21,7 +21,7 @@ export const AppAvatars = ({ users, size = 28, style, max = 5 }: AvatarsProps) =
   const rest = users.length - max;
   const filtered = rest === 1 ? users : users.filter((_, i) => i < max);
   return (
-    <Row style={style}>
+    <Row style={[style, { marginLeft: 10 }]}>
       {filtered.map(user => (
         <AppAvatar key={user.id} size={size} user={user} style={{ marginLeft: -10 }} />
       ))}

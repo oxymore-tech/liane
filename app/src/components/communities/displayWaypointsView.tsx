@@ -3,7 +3,7 @@ import React, { ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 import { Hours, Minutes, RallyingPoint, TimeOnly, TimeOnlyUtils, WayPoint } from "@liane/common";
 import { AppText } from "@/components/base/AppText";
-import { AppColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { extractWaypointFromTo } from "@/util/hooks/lianeRequest";
 import { AppIcon, IconName } from "@/components/base/AppIcon.tsx";
 
@@ -91,7 +91,7 @@ export const DisplayRallyingPoints = ({ wayPoints, inverseTravel = false, startT
                 fontWeight: "normal",
                 fontSize: 17,
                 lineHeight: 25,
-                color: AppColors.black
+                color: AppColorPalettes.gray[600]
               }}>{`${step.label}`}</AppText>
           )}
         </View>
@@ -102,9 +102,7 @@ export const DisplayRallyingPoints = ({ wayPoints, inverseTravel = false, startT
   return (
     <View
       style={{
-        width: "100%",
-        marginTop: 15,
-        paddingHorizontal: 20
+        width: "100%"
       }}>
       <View
         style={[
@@ -113,7 +111,7 @@ export const DisplayRallyingPoints = ({ wayPoints, inverseTravel = false, startT
             flexDirection: "column",
             justifyContent: "space-between",
             alignItems: "center",
-            paddingVertical: 5
+            paddingVertical: 10
           },
           style
         ]}>

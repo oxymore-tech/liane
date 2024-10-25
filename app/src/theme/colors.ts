@@ -23,6 +23,7 @@ export enum AppColors {
 export const AppColorPalettes = {
   gray: {
     100: "#F3F4F6",
+    150: "#E5E5E5",
     200: "#D0D0D0",
     300: "#b2b2b2",
     400: "#9CA3AF",

@@ -84,7 +84,7 @@ export const DayOfTheWeekPicker = ({
               style={[
                 styles.textContainer,
                 selectedDaysString?.charAt(index) === "1" ? styles.textSelectedContainer : null,
-                { fontSize: fontSize ?? 16 }
+                { fontSize: fontSize ?? 20 }
               ]}>
               {day.substring(0, 2)}
             </Text>
@@ -102,24 +102,24 @@ const replaceSelectedDay = (selectedDay: string) => {
 
 const styles = StyleSheet.create({
   rowContainer: {
-    paddingVertical: 8,
     textAlign: "center",
     justifyContent: "center",
     flexWrap: "wrap"
   },
   dayContainer: {
     textAlign: "center",
+    alignItems: "center",
     justifyContent: "center",
-    borderColor: AppColorPalettes.gray[600],
-    borderWidth: 1,
-    borderRadius: 20
+    backgroundColor: AppColors.white,
+    borderRadius: 20,
+    width: 42,
+    height: 42
   },
   daySelectedContainer: {
-    borderColor: AppColors.primaryColor,
     backgroundColor: AppColors.primaryColor
   },
   textContainer: {
-    color: AppColorPalettes.gray[600],
+    color: AppColorPalettes.gray[200],
     textAlign: "center"
   },
   textSelectedContainer: {
@@ -128,7 +128,6 @@ const styles = StyleSheet.create({
   containerBorderStyle: {
     borderBottomWidth: 1,
     borderBottomColor: AppColors.lightGrayBackground,
-    marginHorizontal: 52,
     marginTop: 4
   }
 });

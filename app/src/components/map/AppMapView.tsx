@@ -25,6 +25,7 @@ import { RNAppEnv } from "@/api/env";
 import { useSubject } from "@/util/hooks/subscription";
 import Images = MapLibreGL.Images;
 import UserLocation = MapLibreGL.UserLocation;
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const rp_icon = require("../../../assets/icons/rp_gray.png");
 const rp_deposit_icon = require("../../../assets/icons/rp_pink.png");
@@ -89,6 +90,7 @@ const AppMapView = forwardRef(
     const mapRef = useRef<MapLibreGL.MapView>();
     const cameraRef = useRef<MapLibreGL.Camera>();
     const [animated, setAnimated] = useState(false);
+    const insets = useSafeAreaInsets();
 
     const wd = useWindowDimensions();
     const scale = Platform.OS === "android" ? wd.scale : 1;
@@ -141,7 +143,7 @@ const AppMapView = forwardRef(
     }, [controller, userLocation]);
 
     return (
-      <View style={styles.map}>
+      <View style={[styles.map, { paddingTop: insets.top }]}>
         <MapLibreGL.MapView
           onLongPress={onLongPress ? e => onLongPress((e.geometry as Point).coordinates) : undefined}
           onPress={onPress ? e => onPress((e.geometry as Point).coordinates) : undefined}
@@ -177,8 +179,6 @@ const AppMapView = forwardRef(
             if (regionMoveCallbackRef.current) {
               clearTimeout(regionMoveCallbackRef.current);
               regionMoveCallbackRef.current = undefined;
-            } else if (animated) {
-              //  setShowActions(flyingToLocation || false);
             }
           }}
           onRegionIsChanging={feature => regionSubject.next(feature.properties)}
@@ -188,7 +188,6 @@ const AppMapView = forwardRef(
               if (onStopMovingRegion) {
                 onStopMovingRegion();
               }
-              //   setShowActions(true);
               if (onRegionChanged) {
                 onRegionChanged(feature.properties);
               }
