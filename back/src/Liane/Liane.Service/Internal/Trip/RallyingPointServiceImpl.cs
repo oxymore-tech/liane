@@ -116,8 +116,26 @@ public sealed class RallyingPointServiceImpl(IOsrmService osrmService, PostgisDa
 
     var total = await connection.CountAsync(Query.Count<RallyingPoint>()
       .Where(filter));
-    var results = await connection.QueryAsync(query);
-    return new PaginatedResponse<RallyingPoint>(limit, null, results, (int)total);
+    IEnumerable<RallyingPoint> results = await connection.QueryAsync(query);
+
+    if (rallyingPointFilter.Search is { } search)
+    {
+      results = results.OrderBy(rp => MatchScore(rp, search));
+    }
+
+    return new PaginatedResponse<RallyingPoint>(limit, null, results.ToImmutableList(), (int)total);
+  }
+
+  private static int MatchScore(RallyingPoint rp, string search)
+  {
+    var city = rp.City.ToLowerInvariant();
+    if (city == search)
+    {
+      return 0;
+    }
+
+    var match = new Regex($@"{search}\b", RegexOptions.IgnoreCase).Match(city);
+    return match.Success ? match.Index : int.MaxValue;
   }
 
   private static string ToSearchPattern(string search)
