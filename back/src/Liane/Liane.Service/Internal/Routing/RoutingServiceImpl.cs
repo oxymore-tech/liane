@@ -196,11 +196,12 @@ public sealed class RoutingServiceImpl(IOsrmService osrmService, ILogger<Routing
     var tripResponse = await osrmService.Trip(points.Select(rp => rp.Location));
     var eta = DateTime.UtcNow.Date;
     return tripResponse.Waypoints
-      .Select(w =>
+      .Select((w, i) =>
       {
-        var rallyingPoint = points[w.WaypointIndex];
+        var rallyingPoint = points[i];
         return (w, rallyingPoint);
       })
+      .OrderBy(w => w.w.WaypointIndex)
       .Select((t, i) =>
       {
         var leg = i == 0 ? null : tripResponse.Trips[0].Legs[i - 1];

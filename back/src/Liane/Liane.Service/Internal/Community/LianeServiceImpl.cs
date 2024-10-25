@@ -462,9 +462,9 @@ public sealed class LianeServiceImpl(
     {
       return (resolved.WayPoints, resolved.ArriveBefore, resolved.WayPoints.Last());
     }
-
+    
     return (
-      resolved.WayPoints.Append(bestMatch.Pickup).Append(bestMatch.Deposit).DistinctBy(w => w.Id).ToImmutableList(),
+      resolved.WayPoints.Insert(1, bestMatch.Pickup).Insert(2, bestMatch.Deposit).DistinctBy(w => w.Id).ToImmutableList(),
       resolved.ArriveBefore,
       resolved.WayPoints.Last()
     );
