@@ -11,7 +11,7 @@ import { AppLogger } from "@/api/logger.ts";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
 import AppMapView from "@/components/map/AppMapView";
 
-import { DisplayWayPoints } from "@/components/communities/displayWaypointsView.tsx";
+import { DisplayWayPoints } from "@/components/communities/DisplayWayPoints";
 import { AppLocalization } from "@/api/i18n.ts";
 import { getBoundingBox, Liane } from "@liane/common";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider.tsx";
@@ -34,7 +34,7 @@ export const LianeTripDetailScreen = () => {
         const result = await services.community.joinTrip({ liane: trip.liane, trip: trip.id, takeReturnTrip: false });
         AppLogger.debug("COMMUNITIES", "Demande de rejoindre une liane avec succès", result);
         navigation.goBack();
-      } catch (error) {
+      } catch (e) {
         AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de la demande de rejoindre d'une liane", error);
       }
     } else {

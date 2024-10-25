@@ -31,7 +31,7 @@ import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker.tsx";
 import { MessageBubble } from "@/screens/communities/MessageBubble.tsx";
 import { useSubscription } from "@/util/hooks/subscription.ts";
 import { AppLocalization } from "@/api/i18n.ts";
-import { DisplayWayPoints } from "@/components/communities/displayWaypointsView.tsx";
+import { DisplayWayPoints } from "@/components/communities/DisplayWayPoints.tsx";
 import { weekDays } from "@/util/hooks/days.ts";
 import { getLianeStatusStyle } from "@/components/trip/LianeStatusView.tsx";
 import { LianeQueryKey } from "@/screens/user/MyTripsScreen.tsx";

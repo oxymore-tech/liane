@@ -1,3 +1,5 @@
+import { UTCDateTime } from "../api";
+
 export type Hours = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23;
 export type Minutes =
   | 0
@@ -66,9 +68,10 @@ export type TimeOnly = { hour: Hours; minute?: Minutes };
 export type MinuteStep = 1 | 2 | 3 | 5 | 10 | 15 | 20 | 30;
 
 export class TimeOnlyUtils {
-  static fromDate(date: Date, minuteStep: MinuteStep = 5): TimeOnly {
-    const minutes = ((Math.ceil(date.getMinutes() / minuteStep) * minuteStep) % 60) as Minutes;
-    return { hour: date.getHours() as Hours, minute: minutes };
+  static fromDate(date: Date | UTCDateTime, minuteStep: MinuteStep = 1): TimeOnly {
+    const d = date instanceof Date ? date : new Date(date);
+    const minutes = ((Math.ceil(d.getMinutes() / minuteStep) * minuteStep) % 60) as Minutes;
+    return { hour: d.getHours() as Hours, minute: minutes };
   }
 
   static toDate(value: TimeOnly, inputDate?: Date): Date {

@@ -8,7 +8,7 @@ import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
 import { AppLogger } from "@/api/logger.ts";
 import AppMapView from "@/components/map/AppMapView.tsx";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
-import { DisplayWayPoints } from "@/components/communities/displayWaypointsView.tsx";
+import { DisplayWayPoints } from "@/components/communities/DisplayWayPoints";
 import { LianeMatchLianeRouteLayer } from "@/components/map/layers/LianeMatchRouteLayer.tsx";
 import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay.tsx";
 import { CoLiane, CoMatch, getBoundingBox, WayPoint } from "@liane/common";
