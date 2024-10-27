@@ -146,8 +146,8 @@ public sealed class LianeMessageServiceImpl(
       MessageContent.LianeRequestModified => $"{sentBy} a modifié son annonce.",
       MessageContent.TripAdded m => $"{sentBy} lance un covoit pour le {FormatDate(m.Trip.Value?.DepartureTime)}",
       MessageContent.MemberRequested => $"{sentBy} souhaite rejoindre la liane.",
-      MessageContent.MemberAdded m => $"{sentBy} a accepté {await FormatUser(m.User)} dans la liane.",
-      MessageContent.MemberRejected m => $"{sentBy} a rejeté la demande de {await FormatUser(m.User)} pour rejoindre la liane.",
+      MessageContent.MemberAdded m => $"{await FormatUser(m.User)} a rejoint la liane.",
+      MessageContent.MemberRejected m => $"La demande de {await FormatUser(m.User)} pour rejoindre la liane n'a pas été acceptée.",
       MessageContent.MemberLeft m => $"{await FormatUser(m.User)} a quitté la liane",
       MessageContent.MemberJoinedTrip m => await FormatJoinedTrip(m),
       MessageContent.MemberLeftTrip m => $"{await FormatUser(m.User)} a quitté le trajet du {FormatDate(m.Trip.Value?.DepartureTime)}",
@@ -155,7 +155,7 @@ public sealed class LianeMessageServiceImpl(
       _ => null
     };
   }
-
+  
   private async Task<string> FormatJoinedTrip(MessageContent.MemberJoinedTrip m)
   {
     var msg = $"{await FormatUser(m.User)} a rejoint le trajet du {FormatDate(m.Trip.Value?.DepartureTime)}";

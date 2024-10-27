@@ -215,13 +215,12 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
     return () =>
     {
       // Wait 5 minutes then go to "finished" state
-      Task.Delay(LianeStatusUpdate.FinishedDelayInMinutes * 60 * 1000)
-        .ContinueWith(async _ =>
-        {
-          logger.LogInformation($"Liane {liane.Id} is now Finished");
-          await tripService.UpdateState(liane.Id, TripStatus.Finished);
-        })
-        .Start();
+      Task.Run(async () =>
+      {
+        await Task.Delay(LianeStatusUpdate.FinishedDelayInMinutes * 60 * 1000);
+        logger.LogInformation($"Liane {liane.Id} is now Finished");
+        await tripService.UpdateState(liane.Id, TripStatus.Finished);
+      });
     };
   }
 

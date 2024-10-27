@@ -57,7 +57,6 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
       .OrderByDescending(m => m.Score)
       .ThenByDescending(m => m is Match.Group group ? group.Matches.Count : 1)
       .ThenByDescending(m => m.Members.Count)
-      .ThenByDescending(m => m is Match.Single { AskToJoinAt: not null })
       .ThenBy(m => m.Liane.IdAsGuid())
       .ToImmutableList();
   }
@@ -106,8 +105,6 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
                                                                          st_length(a.geometry) AS                              a_length,
                                                                          st_length(a_reverse.geometry) AS                      a_length_reverse
                                                                   FROM liane_request lr_a
-                                                                          LEFT JOIN liane_member lm_a ON
-                                                                            lr_a.id = lm_a.liane_request_id
                                                                           INNER JOIN route a ON
                                                                             a.way_points = lr_a.way_points
                                                                           LEFT JOIN route a_reverse ON
@@ -122,7 +119,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
                                                                             lr_b.id = lm_b.liane_request_id AND NOT lm_b.liane_id = ANY(@linkedTo)
                                                                           INNER JOIN route b ON
                                                                             b.way_points = lr_b.way_points AND st_intersects(a.geometry, b.geometry)
-                                                                  WHERE ((@from IS NULL AND lr_a.created_by = @userId) OR lr_a.id = @from) AND lm_a.liane_request_id IS NULL
+                                                                  WHERE ((@from IS NULL AND lr_a.created_by = @userId) OR lr_a.id = @from)
                                                                   ) AS first_glance
                                                             WHERE st_length(intersection) / a_length > 0.35
                                                             ORDER BY st_length(intersection) / a_length DESC, "from"
@@ -170,8 +167,6 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
                                                                          st_length(a.geometry) AS                              a_length,
                                                                          st_length(a_reverse.geometry) AS                      a_length_reverse
                                                                   FROM liane_request lr_a
-                                                                          LEFT JOIN liane_member lm_a ON
-                                                                            lr_a.id = lm_a.liane_request_id
                                                                           INNER JOIN route a ON
                                                                             a.way_points = lr_a.way_points
                                                                           LEFT JOIN route a_reverse ON
@@ -223,7 +218,10 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     if (rawMatches.Count == 1)
     {
       var first = rawMatches.First();
-      var askToJoinAt = mapParams.AskToJoins.TryGetValue(first.From, out var value) ? value : (DateTime?)null;
+      JoinRequest? joinRequest = mapParams.PendingJoinRequests.TryGetValue(first.From, out var d)
+        ? new JoinRequest.Pending(d)
+        : mapParams.ReceivedJoinRequests.TryGetValue(first.From, out var d2)
+          ? new JoinRequest.Received(d2) : null;
       var liane = mapParams.Lianes.GetValueOrDefault(first.LianeRequest);
 
       return new Match.Single(
@@ -236,7 +234,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
         deposit,
         matchingPoints.Value.Score,
         matchingPoints.Value.Reverse,
-        askToJoinAt
+        joinRequest
       );
     }
 
@@ -256,7 +254,8 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
         await matchingPoints.Value.Pickup.Resolve(rallyingPointService.Get),
         await matchingPoints.Value.Deposit.Resolve(rallyingPointService.Get),
         matchingPoints.Value.Score,
-        matchingPoints.Value.Reverse
+        matchingPoints.Value.Reverse,
+        mapParams.PendingJoinRequests.TryGetValue(first.From, out var d) ? d : null
       );
     }
   }
@@ -285,16 +284,25 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
   {
     var lianes = await lianeFetcher.FetchLianes(connection, rawMatches.Select(r => r.LinkedTo ?? r.LianeRequest).Distinct(), tx);
     var snapedPoints = await rallyingPointService.Snap(rawMatches.FilterSelectMany<LianeRawMatch, LatLng>(r => [r.Deposit, r.Pickup, r.DepositReverse, r.PickupReverse]).ToImmutableHashSet());
-    var askToJoins = (await connection.QueryAsync<(Guid, DateTime)>(
+    var pendingJoinRequests = (await connection.QueryAsync<(Guid, DateTime)>(
         """
-        SELECT liane_id, requested_at
+        SELECT liane_request.id, requested_at
+        FROM liane_request
+                 INNER JOIN liane_member ON liane_request.id = liane_member.liane_request_id
+        WHERE liane_request.created_by = @userId AND liane_member.joined_at IS NULL
+        """,
+        new { userId }, tx)
+      ).ToImmutableDictionary(m => m.Item1, m => m.Item2);
+    var receivedJoinRequests = (await connection.QueryAsync<(Guid, DateTime)>(
+        """
+        SELECT liane_request.id, requested_at
         FROM liane_request
                  INNER JOIN liane_member ON liane_request.id = liane_member.liane_id
         WHERE liane_request.created_by = @userId AND liane_member.joined_at IS NULL
         """,
         new { userId }, tx)
       ).ToImmutableDictionary(m => m.Item1, m => m.Item2);
-    return new MapParams(snapedPoints, askToJoins, lianes);
+    return new MapParams(snapedPoints, pendingJoinRequests, receivedJoinRequests, lianes);
   }
 }
 
@@ -316,6 +324,7 @@ internal sealed record LianeRawMatch(
 
 internal sealed record MapParams(
   ImmutableDictionary<LatLng, RallyingPoint> SnapedPoints,
-  ImmutableDictionary<Guid, DateTime> AskToJoins,
+  ImmutableDictionary<Guid, DateTime> PendingJoinRequests,
+  ImmutableDictionary<Guid, DateTime> ReceivedJoinRequests,
   ImmutableDictionary<Guid, Api.Community.Liane> Lianes
 );

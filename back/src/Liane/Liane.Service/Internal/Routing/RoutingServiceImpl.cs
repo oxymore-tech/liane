@@ -198,19 +198,20 @@ public sealed class RoutingServiceImpl(IOsrmService osrmService, ILogger<Routing
     return tripResponse.Waypoints
       .Select((w, i) =>
       {
-        var rallyingPoint = points[i];
+        var rallyingPoint = points[w.WaypointIndex];
         return (w, rallyingPoint);
       })
-      .OrderBy(w => w.w.WaypointIndex)
+      // .OrderBy(w => w.w.WaypointIndex)
       .Select((t, i) =>
       {
         var leg = i == 0 ? null : tripResponse.Trips[0].Legs[i - 1];
         var duration = (int)(leg?.Duration ?? 0);
         var distance = (int)(leg?.Distance ?? 0);
+        eta = eta.AddSeconds(duration);
         return new WayPoint(t.rallyingPoint,
           duration,
           distance,
-          eta.AddSeconds(duration)
+          eta
         );
       })
       .OrderBy(w => w.Eta)

@@ -2,13 +2,13 @@
   "code": "Ok",
   "waypoints": [
     {
-      "name": "Rue de la Libert\u00E9",
+      "name": "Rue Notre-Dame",
       "location": [
-        3.499084,
-        44.518149
+        3.498635,
+        44.517901
       ],
-      "distance": 13.990154,
-      "hint": "DP3OgBH9zoAaAAAAFgAAACEAAAAAAAAAQKo5QU9oHEE21WhBAAAAABoAAAAWAAAAIQAAAAAAAACVHgAATGQ1AAVLpwJhZDUAiEqnAgEAPwUEBMYt",
+      "distance": 39.78545,
+      "hint": "26okgP___38bAAAAGwAAAFYAAAAAAAAANkM-QQAAAAC95BhCAAAAABsAAAAbAAAAVgAAAAAAAAAYJAAAi2I1AA1KpwJhZDUAiEqnAgEAbwlAWcjI",
       "nodes": null
     },
     {
@@ -18,7 +18,7 @@
         44.366035
       ],
       "distance": 101.209946,
-      "hint": "HhbPgEsWz4AOAAAACgAAAC4CAAAFAAAAPMt_QVIDLkE8LjNE7j3DQA4AAAAKAAAALgIAAAUAAACVHgAAnRs0ANP4pAI5GzQAR_WkAh4ALxEEBMYt",
+      "hint": "_vIAgPPwAIAOAAAACgAAAC4CAAAFAAAAPMt_QVIDLkE8LjNE7j3DQA4AAAAKAAAALgIAAAUAAAAYJAAAnRs0ANP4pAI5GzQAR_WkAh4ALxFAWcjI",
       "nodes": null
     },
     {
@@ -28,30 +28,30 @@
         44.32323
       ],
       "distance": 607.20026,
-      "hint": "Ac4EgLdxHoAAAAAACQAAAMgEAADoAgAAAAAAALFcJUFwsqpEmrZPRAAAAAAJAAAAyAQAAOgCAACVHgAAjqs2AJ5RpAKlmDYAJUGkAmsAbxMEBMYt",
+      "hint": "6_IAgMn-JIAAAAAACQAAAMgEAADoAgAAAAAAALFcJUFwsqpEmrZPRAAAAAAJAAAAyAQAAOgCAAAYJAAAjqs2AJ5RpAKlmDYAJUGkAmsAbxNAWcjI",
       "nodes": null
     }
   ],
   "routes": [
     {
-      "distance": 55818.1,
-      "duration": 3661.1,
-      "weight": 3661.1,
+      "distance": 55991,
+      "duration": 3692.6,
+      "weight": 3720,
       "weightName": "routability",
       "geometry": null,
       "legs": [
         {
-          "distance": 27364.9,
-          "duration": 1717.3,
+          "distance": 27534.6,
+          "duration": 1750,
           "steps": [],
-          "weight": 1717.3,
+          "weight": 1777.4,
           "annotation": null
         },
         {
-          "distance": 28453.2,
-          "duration": 1943.8,
+          "distance": 28456.4,
+          "duration": 1942.6,
           "steps": [],
-          "weight": 1943.8,
+          "weight": 1942.6,
           "annotation": null
         }
       ]

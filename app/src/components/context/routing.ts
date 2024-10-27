@@ -7,7 +7,7 @@ import {
   useNavigation,
   useRoute
 } from "@react-navigation/native";
-import { CoLiane, CoLianeRequest, CoMatch, Liane, Notification, ResolvedLianeRequest, UnionUtils, User } from "@liane/common";
+import { CoLiane, CoLianeRequest, CoMatch, Liane, Notification, ResolvedLianeRequest, User } from "@liane/common";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack/src/types";
 import { checkInitialNotification } from "@/api/service/notification";
 
@@ -33,7 +33,7 @@ export type NavigationParamList = {
   Notifications: undefined;
   RallyingPointRequests: undefined;
   CommunitiesDetails: { liane: CoLiane };
-  ListGroups: { groups: CoMatch[]; lianeRequest: ResolvedLianeRequest };
+  MatchList: { matches: CoMatch[]; lianeRequest: ResolvedLianeRequest };
 };
 
 export const NavigationScreenTitles = {

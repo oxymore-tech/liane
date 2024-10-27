@@ -61,19 +61,13 @@ public sealed class LianeController(ILianeService lianeService, ITripService tri
   }
 
   [HttpPost("liane/{liane:guid}/join/{id:guid}")]
-  public Task<bool> JoinRequest(Guid id, Guid liane)
+  public Task<Api.Community.Liane?> JoinRequest(Guid id, Guid liane)
   {
     return lianeService.JoinRequest(id, liane);
   }
 
-  [HttpPost("liane/{liane:guid}/accept/{lianeRequest:guid}")]
-  public Task<Api.Community.Liane> Accept(Guid lianeRequest, Guid liane)
-  {
-    return lianeService.Accept(lianeRequest, liane);
-  }
-
   [HttpPost("liane/{liane:guid}/reject/{lianeRequest:guid}")]
-  public Task<Api.Community.Liane> Reject(Guid lianeRequest, Guid liane)
+  public Task<bool> Reject(Guid lianeRequest, Guid liane)
   {
     return lianeService.Reject(lianeRequest, liane);
   }

@@ -21,6 +21,6 @@ public sealed record Liane(
   DateTime CreatedAt
 ) : IIdentity<Guid>, ISharedResource<LianeMember>
 {
-  public bool IsMember(Ref<User> user) => Members.Any(m => m.User.Id == user.Id) || PendingMembers.Any(m => m.User.Id == user.Id);
+  public bool IsMember(Ref<User> user, bool pendingMember = true) => Members.Any(m => m.User.Id == user.Id) || (pendingMember && PendingMembers.Any(m => m.User.Id == user.Id));
   public int TotalMembers => Members.Count + PendingMembers.Count;
 }

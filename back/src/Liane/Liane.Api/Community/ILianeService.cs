@@ -2,7 +2,6 @@ using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
-using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Community;
@@ -16,9 +15,8 @@ public interface ILianeService
   Task<ImmutableList<Liane>> List(LianeFilter filter);
 
   Task<Liane> Get(Ref<Liane> id);
-  Task<bool> JoinRequest(Ref<LianeRequest> mine, Ref<Liane> liane);
-  Task<Liane> Accept(Ref<LianeRequest> mine, Ref<Liane> liane);
-  Task<Liane> Reject(Ref<LianeRequest> mine, Ref<Liane> liane);
+  Task<Liane?> JoinRequest(Ref<Liane> a, Ref<Liane> b);
+  Task<bool> Reject(Ref<LianeRequest> mine, Ref<Liane> liane);
   Task<bool> Leave(Ref<Liane> liane);
 
   Task<ImmutableList<WayPoint>> GetTrip(Guid liane, Guid? lianeRequest);

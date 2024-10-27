@@ -192,7 +192,7 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
 
     // check that next point is Mende 
     Assert.AreEqual("Mende", actual.Car?.NextPoint.Id);
-    Assert.Less(Math.Abs(actual.Car!.Delay - 1450000), 10000); // Check difference with expected value is less than 10 seconds
+    Assert.Less(Math.Abs(actual.Car!.Delay - 1430000), 10000); // Check difference with expected value is less than 10 seconds
   }
 
   [Test]

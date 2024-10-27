@@ -1,7 +1,7 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Center, Column, Row } from "@/components/base/AppLayout";
+import { Center, Column } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
@@ -18,6 +18,7 @@ import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler
 import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker.tsx";
 import { AppAvatars } from "@/components/UserPicture.tsx";
 import { AppButton } from "@/components/base/AppButton.tsx";
+import { ContextActions, PendingAction } from "@/components/communities/ContextActions.tsx";
 
 function isLiane(l: CoLiane | CoMatch): l is CoLiane {
   return (l as any).wayPoints;
@@ -26,15 +27,16 @@ function isLiane(l: CoLiane | CoMatch): l is CoLiane {
 export const LianeMapDetailScreen = () => {
   const { navigation, route } = useAppNavigation<"LianeMapDetail">();
   const { liane: matchOrLiane, request: lianeRequest } = route.params;
-  const { services, user } = useContext(AppContext);
+  const { services } = useContext(AppContext);
   const { height } = useAppWindowsDimensions();
   const insets = useSafeAreaInsets();
   const [error, setError] = useState<Error | undefined>(undefined);
   const [bSheetTop, setBSheetTop] = useState<number>(0.55 * height);
   const [wayPoints, setWayPoints] = useState<WayPoint[]>([]);
 
+  const [pendingAction, setPendingAction] = useState<PendingAction>();
+
   const lianeId = useMemo(() => (isLiane(matchOrLiane) ? matchOrLiane.id : matchOrLiane.liane), [matchOrLiane]);
-  const match = useMemo(() => (isLiane(matchOrLiane) ? undefined : matchOrLiane), [matchOrLiane]);
 
   const members = useMemo(() => {
     if (isLiane(matchOrLiane)) {
@@ -66,49 +68,45 @@ export const LianeMapDetailScreen = () => {
     return bbox;
   }, [bSheetTop, height, insets.top, wayPoints]);
 
-  const joinLiane = async () => {
+  const handleJoin = useCallback(async () => {
     if (isLiane(matchOrLiane)) {
       navigation.navigate("Publish", { lianeId });
     } else if (lianeRequest && lianeRequest.id) {
+      setPendingAction("join");
       try {
         const result = await services.community.joinRequest(lianeRequest.id, matchOrLiane.liane);
         AppLogger.debug("COMMUNITIES", "Demande de rejoindre une liane avec succès", result);
         navigation.navigate("Lianes");
-      } catch (e) {
-        AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de la demande de rejoindre d'une liane", error);
+      } finally {
+        setPendingAction(undefined);
       }
-    } else {
-      AppLogger.debug("COMMUNITIES", "Pas de lianeRequest ID lors de la demande de rejoindre", lianeRequest);
     }
-  };
+  }, [lianeId, lianeRequest, matchOrLiane, navigation, services.community]);
 
-  const acceptLiane = async () => {
+  const handleReject = useCallback(async () => {
     if (lianeRequest && lianeRequest.id && lianeId) {
+      setPendingAction("reject");
       try {
-        const result = await services.community.accept(lianeId, lianeRequest.id);
-        AppLogger.debug("COMMUNITIES", "Acceptation une liane avec succès", result);
+        await services.community.reject(lianeId, lianeRequest.id);
         navigation.navigate("Lianes");
-      } catch (e) {
-        AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de l'acceptation d'une liane", error);
+      } finally {
+        setPendingAction(undefined);
       }
-    } else {
-      AppLogger.debug("COMMUNITIES", "Pas de lianeRequest ID lors de l'acceptation", lianeRequest);
     }
-  };
+  }, [lianeId, lianeRequest, navigation, services.community]);
 
-  const rejectLiane = async () => {
-    if (lianeRequest && lianeRequest.id && lianeId) {
-      try {
-        const result = await services.community.reject(lianeId, lianeRequest.id);
-        AppLogger.debug("COMMUNITIES", "Acceptation une liane avec succès", result);
-        navigation.navigate("Lianes");
-      } catch (e) {
-        AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de l'acceptation d'une liane", error);
-      }
-    } else {
-      AppLogger.debug("COMMUNITIES", "Pas de lianeRequest ID lors de l'acceptation", lianeRequest);
+  const handleLeave = useCallback(async () => {
+    if (!lianeId) {
+      return;
     }
-  };
+    setPendingAction("leave");
+    try {
+      await services.community.leave(lianeId);
+      navigation.navigate("Lianes");
+    } finally {
+      setPendingAction(undefined);
+    }
+  }, [lianeId, navigation, services.community]);
 
   return (
     <GestureHandlerRootView style={styles.mainContainer}>
@@ -168,34 +166,13 @@ export const LianeMapDetailScreen = () => {
           backgroundColor: AppColorPalettes.gray[100]
         }}>
         <ScrollView style={{ paddingHorizontal: 10 }}>
-          {match?.type === "Single" && match.askToJoinAt ? (
-            <View
-              style={{
-                justifyContent: "center",
-                alignItems: "center"
-              }}>
-              <AppText
-                style={{
-                  color: AppColorPalettes.gray[800],
-                  fontSize: 16,
-                  textAlign: "center"
-                }}>{`Cette personne souhaite rejoindre votre liane`}</AppText>
-              <Row>
-                <AppButton onPress={rejectLiane} color={AppColors.white} value={"Refuser "} />
-                <AppButton onPress={acceptLiane} color={AppColors.primaryColor} value={"Accepter "} />
-              </Row>
-            </View>
-          ) : members.some(member => member.id === user?.id) ? (
-            <View>
-              <AppButton onPress={joinLiane} color={AppColors.primaryColor} value={"Rejoindre"} />
-            </View>
-          ) : (
-            <View
-              style={{
-                paddingTop: 10
-              }}
-            />
-          )}
+          <ContextActions
+            matchOrLiane={matchOrLiane}
+            onJoin={handleJoin}
+            onReject={handleReject}
+            onLeave={handleLeave}
+            pendingAction={pendingAction}
+          />
           <Column spacing={10}>
             <DayOfTheWeekPicker selectedDays={matchOrLiane.weekDays} dualOptionMode={true} />
             <DisplayWayPoints wayPoints={wayPoints} style={{ backgroundColor: AppColorPalettes.gray[100], borderRadius: 20 }} />

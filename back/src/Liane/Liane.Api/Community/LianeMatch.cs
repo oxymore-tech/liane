@@ -20,9 +20,18 @@ public abstract record LianeState
 
   public sealed record Detached(ImmutableList<Match> Matches) : LianeState;
 
-  public sealed record Pending(Liane Liane) : LianeState;
-
   public sealed record Attached(Liane Liane) : LianeState;
+}
+
+[Union]
+public abstract record JoinRequest
+{
+  private JoinRequest()
+  {
+  }
+
+  public sealed record Pending(DateTime At) : JoinRequest;
+  public sealed record Received(DateTime At) : JoinRequest;
 }
 
 [Union]
@@ -51,7 +60,7 @@ public abstract record Match
     RallyingPoint Deposit,
     float Score,
     bool IsReverseDirection,
-    DateTime? AskToJoinAt
+    JoinRequest? JoinRequest
   ) : Match;
 
   public sealed record Group(
@@ -63,6 +72,7 @@ public abstract record Match
     RallyingPoint Pickup,
     RallyingPoint Deposit,
     float Score,
-    bool IsReverseDirection
+    bool IsReverseDirection,
+    DateTime? PendingRequest
   ) : Match;
 }

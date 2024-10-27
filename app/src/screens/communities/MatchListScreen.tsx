@@ -1,34 +1,45 @@
-import React, { useMemo, useState } from "react";
-import { FlatList, Pressable, StyleSheet, View } from "react-native";
+import React, { useMemo } from "react";
+import { Pressable, SectionList, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Center, Row } from "@/components/base/AppLayout";
+import { Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppPressableIcon } from "@/components/base/AppPressable";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppColors, ContextualColors } from "@/theme/colors";
 import { extractDays } from "@/util/hooks/days";
-import { CoMatch } from "@liane/common";
+import { ArrayUtils, CoMatch } from "@liane/common";
 import { extractWaypointFromTo } from "@/util/hooks/lianeRequest";
 import { AppAvatars } from "@/components/UserPicture.tsx";
 
-export const ListGroupScreen = () => {
-  const { navigation, route } = useAppNavigation<"ListGroups">();
-  const groups = route.params.groups;
+type Status = "Pending" | "Received" | "None";
+type Section = { data: CoMatch[]; status: Status };
+
+export const MatchListScreen = () => {
+  const { navigation, route } = useAppNavigation<"MatchList">();
+  const matches = route.params.matches;
   const lianeRequest = route.params.lianeRequest;
 
   const insets = useSafeAreaInsets();
-  const [error, setError] = useState<Error | undefined>(undefined);
   const { to, from } = useMemo(() => extractWaypointFromTo(lianeRequest?.wayPoints), [lianeRequest.wayPoints]);
   const daysReccurence = extractDays(lianeRequest.weekDays);
 
+  const sections = useMemo(() => {
+    return Object.entries(
+      ArrayUtils.groupBy(matches, m => {
+        if (m.type === "Single") {
+          if (!m.joinRequest) {
+            return "None";
+          }
+          return m.joinRequest.type;
+        }
+        return m.pendingRequest ? "Received" : "None";
+      })
+    ).map(([key, value]) => ({ data: value, status: key } as Section));
+  }, [matches]);
+
   return (
     <View style={styles.mainContainer}>
-      {error && (
-        <Center style={{ flex: 1 }}>
-          <AppText style={{ color: ContextualColors.redAlert.text }}>{error.message}</AppText>
-        </Center>
-      )}
       <View style={[styles.header, { paddingTop: insets.top }]}>
         <View style={styles.headerContent}>
           <View style={{ backgroundColor: AppColors.primaryColor, borderRadius: 90, marginRight: 5 }}>
@@ -55,13 +66,30 @@ export const ListGroupScreen = () => {
         </View>
       </View>
       <View style={styles.membersContainer}>
-        <FlatList
-          data={groups}
+        <SectionList
+          renderSectionHeader={renderSectionHeader}
+          sections={sections}
           renderItem={({ item }) => (
             <GroupItem key={item.liane} group={item} onPress={() => navigation.navigate("LianeMapDetail", { liane: item, request: lianeRequest })} />
           )}
         />
       </View>
+    </View>
+  );
+};
+
+const renderSectionHeader = ({ section }: { section: Section }) => {
+  let text = `${section.data.length} liane${section.data.length > 1 ? "s" : ""} disponible${section.data.length > 1 ? "s" : ""}`;
+  if (section.status === "Pending") {
+    text = `${section.data.length} demande${section.data.length > 1 ? "s" : ""} envoyée${section.data.length > 1 ? "s" : ""}`;
+  }
+  if (section.status === "Received") {
+    text = `${section.data.length} demande${section.data.length > 1 ? "s" : ""} reçu${section.data.length > 1 ? "s" : ""}`;
+  }
+
+  return (
+    <View style={styles.header}>
+      <AppText style={{ color: AppColors.black, fontWeight: "bold" }}>{text}</AppText>
     </View>
   );
 };
@@ -84,11 +112,6 @@ const GroupItem = ({ group, onPress }: GroupItemProps) => {
         </View>
       </View>
       <View style={{ paddingRight: 10, flexDirection: "row", justifyContent: "flex-end" }}>
-        {group.type === "Single" && group.askToJoinAt && (
-          <View style={styles.notificationDotContainer}>
-            <View style={styles.notificationDot} />
-          </View>
-        )}
         <AppIcon name={"arrow-right"} />
       </View>
     </Pressable>

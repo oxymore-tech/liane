@@ -38,17 +38,12 @@ export type Detached = {
   matches: CoMatch[];
 };
 
-export type Pending = {
-  type: "Pending";
-  liane: CoLiane;
-};
-
 export type Attached = {
   type: "Attached";
   liane: CoLiane;
 };
 
-export type LianeState = Detached | Pending | Attached;
+export type LianeState = Detached | Attached;
 
 export type Single = {
   type: "Single";
@@ -61,7 +56,7 @@ export type Single = {
   deposit: RallyingPoint;
   score: number;
   isReverseDirection?: boolean;
-  askToJoinAt?: UTCDateTime;
+  joinRequest?: JoinRequest;
 };
 
 export type Group = {
@@ -75,6 +70,12 @@ export type Group = {
   deposit: RallyingPoint;
   score: number;
   isReverseDirection?: boolean;
+  pendingRequest?: UTCDateTime;
+};
+
+export type JoinRequest = {
+  type: "Pending" | "Received";
+  at: UTCDateTime;
 };
 
 export type CoMatch = Single | Group;
@@ -150,9 +151,7 @@ export interface CommunityService {
 
   delete(lianeRequestId: string): Promise<void>;
 
-  joinRequest(mine: string, liane: string): Promise<boolean>;
-
-  accept(lianeRequest: string, liane: string): Promise<CoLiane>;
+  joinRequest(mine: string, liane: string): Promise<CoLiane | undefined>;
 
   reject(lianeRequest: string, liane: string): Promise<CoLiane>;
 
@@ -193,11 +192,7 @@ export class CommunityServiceClient implements CommunityService {
   }
 
   joinRequest(mine: string, liane: string) {
-    return this.http.postAs<boolean>(`/community/liane/${liane}/join/${mine}`);
-  }
-
-  accept(lianeRequest: string, liane: string) {
-    return this.http.postAs<CoLiane>(`/community/liane/${liane}/accept/${lianeRequest}`);
+    return this.http.postAs<CoLiane | undefined>(`/community/liane/${liane}/join/${mine}`);
   }
 
   reject(lianeRequest: string, liane: string) {

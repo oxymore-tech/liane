@@ -1,12 +1,13 @@
-import { capitalize, CoLiane, CoLianeMember, LianeMessage, MemberRequested, Ref, User } from "@liane/common";
-import React, { useMemo } from "react";
+import { capitalize, CoLiane, CoLianeMember, LianeMessage, Ref, User } from "@liane/common";
+import React, { useCallback, useMemo } from "react";
 import { View } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { AppLocalization } from "@/api/i18n.ts";
 import { UserPicture } from "@/components/UserPicture.tsx";
-import { MemberRequestedButton } from "@/components/trip/MemberRequestedButton.tsx";
+import { AppButton } from "@/components/base/AppButton.tsx";
+import { useAppNavigation } from "@/components/context/routing.ts";
 
 export const MessageBubble = ({
   coLiane,
@@ -19,6 +20,8 @@ export const MessageBubble = ({
   isSender: boolean;
   previousSender?: Ref<User> | undefined;
 }) => {
+  const { navigation } = useAppNavigation();
+
   const allMembers = useMemo<Record<Ref<User>, CoLianeMember>>(() => {
     return Object.fromEntries([...coLiane.members, ...coLiane.pendingMembers].map(m => [m.user.id, m]));
   }, [coLiane.members, coLiane.pendingMembers]);
@@ -29,6 +32,11 @@ export const MessageBubble = ({
   const date = capitalize(AppLocalization.toRelativeTimeString(new Date(message.createdAt!)));
   const backgroundColor = message.content.type === "Text" ? (isSender ? AppColors.primaryColor : AppColors.secondaryColor) : AppColors.white;
   const color = message.content.type === "Text" ? AppColors.white : isSender ? AppColors.primaryColor : AppColors.secondaryColor;
+
+  const handlePendingMember = useCallback(() => {
+    navigation.push("LianeMapDetail", { liane: coLiane });
+  }, [coLiane, navigation]);
+
   return (
     <Row
       spacing={8}
@@ -73,7 +81,9 @@ export const MessageBubble = ({
                 {message.content.value}
               </AppText>
               {message.content.type === "MemberRequested" && coLiane.pendingMembers.find(u => u.user.id === message.createdBy) && (
-                <MemberRequestedButton message={message as LianeMessage<MemberRequested>} coLiane={coLiane} />
+                <Row>
+                  <AppButton onPress={handlePendingMember} color={AppColors.primaryColor} value="Voir la demande" />
+                </Row>
               )}
               <AppText style={{ fontSize: 12, alignSelf: isSender ? "flex-end" : "flex-start", color }}>{date}</AppText>
             </>

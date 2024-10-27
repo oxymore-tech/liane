@@ -22,96 +22,80 @@ export const LianeRequestItem = ({ item, onRefresh, unreadLianes }: LianeRequest
   const { navigation } = useAppNavigation();
   const [myModalVisible, setMyModalVisible] = useState<boolean>(false);
   const { to, from } = useMemo(() => extractWaypointFromTo(item.lianeRequest?.wayPoints), [item.lianeRequest.wayPoints]);
-
+  const unread = useMemo(() => {
+    return !!unreadLianes[item.lianeRequest.id!];
+  }, [item.lianeRequest.id, unreadLianes]);
   return (
     <View>
       <Pressable
         style={{ justifyContent: "center", display: "flex" }}
         onPress={() => item.state.type === "Attached" && navigation.navigate("CommunitiesChat", { liane: item.state.liane })}>
-        <View>
-          <Row style={styles.driverContainer}>
-            <Row>
-              <View style={styles.headerContainer}>
-                <View
-                  style={{
-                    backgroundColor: AppColors.backgroundColor,
-                    paddingLeft: 10,
-                    flex: 1,
-                    borderRadius: 8,
-                    borderWidth: 1,
-                    borderColor: AppColors.grayBackground
-                  }}>
-                  <View style={{ padding: 10 }}>
-                    <AppText
-                      style={{
-                        fontSize: 22,
-                        fontWeight: "bold",
-                        flexShrink: 1,
-                        lineHeight: 27,
-                        color: "black"
-                      }}>
-                      {item?.lianeRequest?.name}
-                    </AppText>
-                    <AppText
-                      style={{
-                        fontSize: 20,
-                        fontWeight: "bold",
-                        flexShrink: 1,
-                        lineHeight: 27,
-                        color: "black"
-                      }}>
-                      {`${from.city}`}
-                    </AppText>
-                    <AppText
-                      style={{
-                        fontSize: 20,
-                        fontWeight: "bold",
-                        flexShrink: 1,
-                        lineHeight: 27,
-                        color: "black"
-                      }}>
-                      {`${to.city}`}
-                    </AppText>
-                    <AppText
-                      style={{
-                        fontSize: 15,
-                        fontWeight: "bold",
-                        flexShrink: 1,
-                        lineHeight: 20,
-                        color: AppColors.darkGray
-                      }}>
-                      {extractDaysOnly(item.lianeRequest)}
-                    </AppText>
-                    <Pressable
-                      style={{ position: "absolute", top: 10, right: 10 }}
-                      onPress={() => {
-                        setMyModalVisible(true);
-                      }}>
-                      <AppIcon name={"edit-2-outline"} color={AppColors.darkGray} size={22} />
-                    </Pressable>
-                    <View style={styles.subRowsContainer}>
-                      {item.state.type === "Detached" && <DetachedLianeItem lianeRequest={item.lianeRequest} state={item.state} />}
-
-                      {item.state.type === "Pending" && (
-                        <Row style={styles.subRow}>
-                          <AppText style={{ fontSize: 14, fontWeight: "bold", lineHeight: 23, color: AppColors.black }}>
-                            en attente de validation
-                          </AppText>
-                        </Row>
-                      )}
-
-                      {item.state.type === "Attached" && (
-                        <Row style={styles.subRow}>
-                          <JoinedLianeView liane={item.state.liane} />
-                        </Row>
-                      )}
-                    </View>
-                  </View>
-                </View>
+        <Row style={styles.driverContainer}>
+          <View style={styles.headerContainer}>
+            <View
+              style={{
+                backgroundColor: AppColors.backgroundColor,
+                paddingLeft: 10,
+                flex: 1,
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: AppColors.grayBackground,
+                padding: 10
+              }}>
+              <AppText
+                style={{
+                  fontSize: 22,
+                  fontWeight: "bold",
+                  flexShrink: 1,
+                  lineHeight: 27,
+                  color: "black"
+                }}>
+                {item?.lianeRequest?.name}
+              </AppText>
+              <AppText
+                style={{
+                  fontSize: 20,
+                  fontWeight: "bold",
+                  flexShrink: 1,
+                  lineHeight: 27,
+                  color: "black"
+                }}>
+                {`${from.city}`}
+              </AppText>
+              <AppText
+                style={{
+                  fontSize: 20,
+                  fontWeight: "bold",
+                  flexShrink: 1,
+                  lineHeight: 27,
+                  color: "black"
+                }}>
+                {`${to.city}`}
+              </AppText>
+              <AppText
+                style={{
+                  fontSize: 15,
+                  fontWeight: "bold",
+                  flexShrink: 1,
+                  lineHeight: 20,
+                  color: AppColors.darkGray
+                }}>
+                {extractDaysOnly(item.lianeRequest)}
+              </AppText>
+              <Pressable
+                style={{ position: "absolute", top: 10, right: 10 }}
+                onPress={() => {
+                  setMyModalVisible(true);
+                }}>
+                <AppIcon name={"edit-2-outline"} color={AppColors.darkGray} size={22} />
+              </Pressable>
+              <View style={styles.subRowsContainer}>
+                {item.state.type === "Detached" && <DetachedLianeItem lianeRequest={item.lianeRequest} state={item.state} unread={unread} />}
+                {item.state.type === "Attached" && <JoinedLianeView liane={item.state.liane} unread={unread} />}
               </View>
-            </Row>
-          </Row>
-        </View>
+            </View>
+          </View>
+        </Row>
       </Pressable>
       <ModalLianeRequestItem item={item} onRefresh={onRefresh} myModalVisible={myModalVisible} setMyModalVisible={setMyModalVisible} />
     </View>
@@ -134,10 +118,5 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 16,
     borderBottomRightRadius: 16,
     display: "flex"
-  },
-  subRow: {
-    flex: 1,
-    alignItems: "flex-end",
-    padding: 15
   }
 });

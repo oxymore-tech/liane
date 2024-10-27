@@ -23,7 +23,6 @@ import { PublishScreen } from "@/screens/publish/PublishScreen";
 import { LianeDetailScreen } from "@/screens/detail/LianeDetailScreen";
 import { LianeTripDetailScreen } from "@/screens/communities/LianeTripDetail.tsx";
 import { CommunitiesChatScreen } from "@/screens/communities/CommunitiesChatScreen";
-import { ListGroupScreen } from "@/screens/communities/ListGroupScreen";
 import { CommunitiesDetailScreen } from "@/screens/communities/CommunitiesDetailScreen";
 import { LianeMapDetailScreen } from "@/screens/communities/LianeMapDetail.tsx";
 import { TripGeolocationWizard } from "@/screens/home/TripGeolocationWizard";
@@ -34,6 +33,7 @@ import { RallyingPointRequestsScreen } from "@/screens/user/RallyingPointRequest
 import SignUpScreen from "@/screens/signUp/SignUpScreen";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { WithBadge } from "@/components/base/WithBadge";
+import { MatchListScreen } from "@/screens/communities/MatchListScreen.tsx";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -129,7 +129,7 @@ function Navigation() {
         <Stack.Screen name="Account" component={AccountScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Notifications" component={NotificationScreen} />
         <Stack.Screen name="RallyingPointRequests" component={RallyingPointRequestsScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="ListGroups" component={ListGroupScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="MatchList" component={MatchListScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
     );
   }

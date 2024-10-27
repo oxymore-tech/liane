@@ -1,0 +1,140 @@
+import { CoLiane, CoMatch } from "@liane/common";
+import { StyleSheet } from "react-native";
+import { AppText } from "@/components/base/AppText.tsx";
+import { AppColorPalettes, AppColors } from "@/theme/colors.ts";
+import { Column, Row } from "@/components/base/AppLayout.tsx";
+import { AppButton } from "@/components/base/AppButton.tsx";
+import { useContext } from "react";
+import { AppContext } from "@/components/context/ContextProvider.tsx";
+import { AppAvatar } from "@/components/UserPicture.tsx";
+
+export type ContextActionsProps = {
+  matchOrLiane: CoLiane | CoMatch;
+  onJoin: () => void;
+  onReject: () => void;
+  onLeave: () => void;
+  pendingAction?: PendingAction;
+};
+
+export type PendingAction = "join" | "reject" | "leave";
+
+export const ContextActions = ({ matchOrLiane, onJoin, onReject, onLeave, pendingAction }: ContextActionsProps) => {
+  if (isLiane(matchOrLiane)) {
+    return <LianeContextActions liane={matchOrLiane} onJoin={onJoin} onReject={onReject} onLeave={onLeave} pendingAction={pendingAction} />;
+  }
+
+  return <MatchContextActions match={matchOrLiane} onJoin={onJoin} onReject={onReject} pendingAction={pendingAction} />;
+};
+
+export type LianeContextActionsProps = {
+  liane: CoLiane;
+  onJoin: () => void;
+  onReject: () => void;
+  onLeave: () => void;
+  pendingAction?: PendingAction;
+};
+
+export const LianeContextActions = ({ liane, onJoin, onReject, onLeave, pendingAction }: LianeContextActionsProps) => {
+  const { user } = useContext(AppContext);
+
+  if (liane.members.find(m => m.user.id === user?.id)) {
+    return (
+      <Column>
+        <AppText style={styles.headerText}>{liane.pendingMembers.length > 0 ? "Demandes en cours" : "Vous êtes membre de cette liane"}</AppText>
+        <Column>
+          {liane.pendingMembers.map(m => (
+            <Row key={m.user.id}>
+              <AppAvatar user={m.user} />
+              <AppText>{m.user.pseudo}</AppText>
+              <AppButton onPress={onJoin} color={AppColors.primaryColor} value="Accepter" loading={pendingAction === "join"} />
+              <AppButton onPress={onReject} color={AppColors.white} value="Refuser" loading={pendingAction === "reject"} />
+            </Row>
+          ))}
+        </Column>
+      </Column>
+    );
+  }
+
+  if (liane.pendingMembers.find(m => m.user.id === user?.id)) {
+    return (
+      <Column>
+        <AppText style={styles.headerText}>{"Vous avez demander de rejoindre cette liane"}</AppText>
+        <Row>
+          <AppButton onPress={onReject} color={AppColors.white} value="Annuler ma demande" loading={pendingAction === "reject"} />
+        </Row>
+      </Column>
+    );
+  }
+
+  return (
+    <Column>
+      <AppText style={styles.headerText}>{`Voulez-vous rejoindre cette liane ?`}</AppText>
+      <Row>
+        <AppButton onPress={onJoin} color={AppColors.primaryColor} value="Rejoindre" loading={pendingAction === "join"} />
+      </Row>
+    </Column>
+  );
+};
+
+export type MatchContextActionsProps = {
+  match: CoMatch;
+  onJoin: () => void;
+  onReject: () => void;
+  pendingAction?: PendingAction;
+};
+
+export const MatchContextActions = ({ match, onJoin, onReject, pendingAction }: MatchContextActionsProps) => {
+  if ((match.type === "Single" && match.joinRequest?.type === "Pending") || (match.type === "Group" && match.pendingRequest)) {
+    return (
+      <Column>
+        <AppText style={styles.headerText}>{"Vous avez demander de rejoindre cette liane"}</AppText>
+        <Row>
+          <AppButton onPress={onReject} color={AppColors.white} value="Annuler ma demande" loading={pendingAction === "reject"} />
+        </Row>
+      </Column>
+    );
+  }
+
+  if (match.type === "Single" && match.joinRequest?.type === "Received") {
+    return (
+      <Column>
+        <AppText style={styles.headerText}>{"Cette personne demande de rejoindre votre liane"}</AppText>
+        <Row>
+          <AppButton onPress={onReject} color={AppColors.white} value="Annuler" loading={pendingAction === "reject"} />
+        </Row>
+      </Column>
+    );
+  }
+
+  if (match.type === "Group" && match.pendingRequest) {
+    return (
+      <Column>
+        <AppText style={styles.headerText}>{"Cette personne demande de rejoindre votre liane"}</AppText>
+        <Row>
+          <AppButton onPress={onReject} color={AppColors.white} value="Annuler" loading={pendingAction === "reject"} />
+        </Row>
+      </Column>
+    );
+  }
+
+  return (
+    <Column>
+      <AppText style={styles.headerText}>{`Voulez-vous rejoindre cette liane ?`}</AppText>
+      <Row>
+        <AppButton onPress={onJoin} color={AppColors.primaryColor} value="Rejoindre" loading={pendingAction === "join"} />
+      </Row>
+    </Column>
+  );
+};
+
+function isLiane(l: CoLiane | CoMatch): l is CoLiane {
+  return (l as any).wayPoints;
+}
+
+const styles = StyleSheet.create({
+  headerText: {
+    color: AppColorPalettes.gray[800],
+    fontSize: 16,
+    textAlign: "center"
+  }
+});

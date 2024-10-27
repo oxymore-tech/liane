@@ -10,9 +10,10 @@ import { useAppNavigation } from "@/components/context/routing.ts";
 export type DetachedLianeItemProps = {
   lianeRequest: ResolvedLianeRequest;
   state: Detached;
+  unread?: boolean;
 };
 
-export const DetachedLianeItem = ({ lianeRequest, state }: DetachedLianeItemProps) => {
+export const DetachedLianeItem = ({ lianeRequest, state, unread }: DetachedLianeItemProps) => {
   const { navigation } = useAppNavigation();
 
   if (state.matches.length === 0) {
@@ -22,13 +23,13 @@ export const DetachedLianeItem = ({ lianeRequest, state }: DetachedLianeItemProp
   return (
     <Pressable
       style={{ flexDirection: "row", justifyContent: "flex-end", alignItems: "flex-end", flex: 1, paddingVertical: 5 }}
-      onPress={() => navigation.navigate("ListGroups", { groups: state.matches, lianeRequest })}>
+      onPress={() => navigation.navigate("MatchList", { matches: state.matches, lianeRequest })}>
       <Row>
-        {state.matches.some(match => match.type === "Single" && !!match.askToJoinAt) ? (
+        {unread && (
           <View style={styles.notificationDotContainer}>
             <View style={styles.notificationDot} />
           </View>
-        ) : null}
+        )}
 
         <AppText
           style={{
