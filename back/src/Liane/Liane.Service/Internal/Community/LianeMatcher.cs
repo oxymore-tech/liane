@@ -220,8 +220,9 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
       var first = rawMatches.First();
       JoinRequest? joinRequest = mapParams.PendingJoinRequests.TryGetValue(first.From, out var d)
         ? new JoinRequest.Pending(d)
-        : mapParams.ReceivedJoinRequests.TryGetValue(first.From, out var d2)
-          ? new JoinRequest.Received(d2) : null;
+        : mapParams.ReceivedJoinRequests.TryGetValue(first.LianeRequest, out var d2)
+          ? new JoinRequest.Received(d2)
+          : null;
       var liane = mapParams.Lianes.GetValueOrDefault(first.LianeRequest);
 
       return new Match.Single(
@@ -282,7 +283,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
 
   private async Task<MapParams> GetMapParams(IDbConnection connection, ImmutableList<LianeRawMatch> rawMatches, string userId, IDbTransaction? tx = null)
   {
-    var lianes = await lianeFetcher.FetchLianes(connection, rawMatches.Select(r => r.LinkedTo ?? r.LianeRequest).Distinct(), tx);
+    var lianes = await lianeFetcher.FetchLianes(connection, rawMatches.FilterSelectMany<LianeRawMatch, Guid>(r => [r.LinkedTo, r.LianeRequest]).Distinct(), tx);
     var snapedPoints = await rallyingPointService.Snap(rawMatches.FilterSelectMany<LianeRawMatch, LatLng>(r => [r.Deposit, r.Pickup, r.DepositReverse, r.PickupReverse]).ToImmutableHashSet());
     var pendingJoinRequests = (await connection.QueryAsync<(Guid, DateTime)>(
         """
@@ -295,7 +296,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
       ).ToImmutableDictionary(m => m.Item1, m => m.Item2);
     var receivedJoinRequests = (await connection.QueryAsync<(Guid, DateTime)>(
         """
-        SELECT liane_request.id, requested_at
+        SELECT liane_member.liane_request_id, requested_at
         FROM liane_request
                  INNER JOIN liane_member ON liane_request.id = liane_member.liane_id
         WHERE liane_request.created_by = @userId AND liane_member.joined_at IS NULL

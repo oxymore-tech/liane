@@ -15,9 +15,9 @@ public sealed class EventDispatcher(
   ICurrentContext currentContext,
   ILogger<EventDispatcher> logger)
 {
-  public Task Dispatch(Ref<Api.Community.Liane> liane, MessageContent content) => Dispatch(liane, content, currentContext.CurrentUser().Id);
+  public Task Dispatch(Ref<Api.Community.Liane> liane, MessageContent content, DateTime? at = null) => Dispatch(liane, content, currentContext.CurrentUser().Id, at ?? DateTime.UtcNow);
 
-  private async Task Dispatch(Ref<Api.Community.Liane> liane, MessageContent content, Ref<Api.Auth.User> sender)
+  private async Task Dispatch(Ref<Api.Community.Liane> liane, MessageContent content, Ref<Api.Auth.User> sender, DateTime at)
   {
     // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
     if (liane is null)
@@ -26,7 +26,7 @@ public sealed class EventDispatcher(
       return;
     }
 
-    var lianeEvent = new LianeEvent<MessageContent>(liane, content, DateTime.UtcNow, sender);
+    var lianeEvent = new LianeEvent<MessageContent>(liane, content, at, sender);
     var eventListeners = serviceProvider.GetServices<IEventListener>()
       .Distinct();
     foreach (var eventListener in eventListeners)

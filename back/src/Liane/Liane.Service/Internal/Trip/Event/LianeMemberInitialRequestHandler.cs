@@ -15,14 +15,14 @@ public sealed class LianeMemberInitialRequestHandler(
 {
   public async Task OnEvent(LianeEvent<MessageContent.MemberRequested> e)
   {
-    var lianeRequest = await e.Content.LianeRequest.Resolve(i => lianeRequestFetcher.Get(i.IdAsGuid()));
+    var liane = await lianeRequestFetcher.Get(e.Liane.IdAsGuid());
     var sender = await e.Sender.Resolve(userService.Get);
     await notificationService.Notify(
       e.At,
       e.Sender,
-      e.Content.User,
+      liane.CreatedBy!,
       "Demande reçu",
-      $"{sender.Pseudo} souhaite rejoindre votre liane {lianeRequest.Name}",
+      $"{sender.Pseudo} souhaite rejoindre votre liane {liane.Name}",
       $"liane://liane/{e.Liane.Id}"
     );
   }

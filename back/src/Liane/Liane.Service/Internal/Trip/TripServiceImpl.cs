@@ -50,13 +50,9 @@ public sealed class TripServiceImpl(
   {
     var createdBy = owner ?? currentContext.CurrentUser().Id;
     var createdAt = DateTime.UtcNow;
-    return await CreateWithReturn(entity, createdBy, createdAt);
-  }
 
-  private async Task<Api.Trip.Trip> CreateWithReturn(TripRequest entity, Ref<Api.Auth.User> createdBy, DateTime createdAt)
-  {
     var toCreate = new List<LianeDb>();
-    // Handle return here
+
     if (entity.ReturnAt is not null)
     {
       var createdReturn = await ToDb(
@@ -84,7 +80,7 @@ public sealed class TripServiceImpl(
 
     var trip = await Get(created.Id);
 
-    await eventDispatcher.Dispatch(trip.Liane, new MessageContent.TripAdded("", trip));
+    await eventDispatcher.Dispatch(trip.Liane, new MessageContent.TripAdded("", trip), createdAt);
 
     return trip;
   }
@@ -307,7 +303,7 @@ public sealed class TripServiceImpl(
       await Delete(liane);
       return null;
     }
-    
+
     var newDriver = toUpdate.Driver.User == foundMember.User
       ? newMembers.First().User
       : toUpdate.Driver.User;
@@ -730,7 +726,7 @@ public sealed class TripServiceImpl(
 
     await Update(tripRef, Builders<LianeDb>.Update.Set(l => l.Members, trip.Members.Select(m => m.User.Id == sender ? m with { Departure = now } : m)));
 
-    await eventDispatcher.Dispatch(trip.Liane, new MessageContent.MemberHasStarted("", trip));
+    await eventDispatcher.Dispatch(trip.Liane, new MessageContent.MemberHasStarted("", trip), now);
   }
 
   private TripStatus GetUserState(Api.Trip.Trip trip, TripMember member)
