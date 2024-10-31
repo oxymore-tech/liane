@@ -100,7 +100,8 @@ export const FloatingActions = ({ position = "bottom", actions }: FloatingAction
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    right: 10
+    right: 10,
+    zIndex: 30
   },
   buttons: {
     backgroundColor: AppColors.white,
