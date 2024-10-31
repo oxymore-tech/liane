@@ -8,6 +8,7 @@ import { useCallback, useContext, useMemo } from "react";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
 import { Column } from "@/components/base/AppLayout.tsx";
 import { useAppNavigation } from "@/components/context/routing.ts";
+import { AppStyles } from "@/theme/styles.ts";
 
 export type FloatingActionProps = {
   id: Action;
@@ -87,7 +88,7 @@ function getPositionStyle(position: "bottom" | "middle" | "top"): StyleProp<View
 
 export const FloatingActions = ({ position = "bottom", actions }: FloatingActionsProps) => {
   return (
-    <View style={[styles.container, getPositionStyle(position)]}>
+    <View style={[styles.container, AppStyles.shadow, getPositionStyle(position)]}>
       <Column style={styles.buttons} spacing={5}>
         {actions.map(action => (
           <AppButton key={action.id} icon={action.icon} color={action.color} title={action.title} onPress={action.onPress} />
@@ -107,10 +108,7 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.white,
     display: "flex",
     alignItems: "flex-end",
-    zIndex: 40,
     padding: 10,
-    borderRadius: 100,
-    shadowColor: AppColors.black,
-    elevation: 4
+    borderRadius: 100
   }
 });
