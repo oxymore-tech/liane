@@ -34,7 +34,7 @@ export type LianeContextActionsProps = {
   pendingAction?: PendingAction;
 };
 
-export const LianeContextActions = ({ liane, onJoin, onReject, onLeave, pendingAction }: LianeContextActionsProps) => {
+export const LianeContextActions = ({ liane, onJoin, onReject, pendingAction }: LianeContextActionsProps) => {
   const { user } = useContext(AppContext);
 
   if (liane.members.find(m => m.user.id === user?.id)) {

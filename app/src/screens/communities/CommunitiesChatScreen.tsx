@@ -3,7 +3,6 @@ import {
   ArrayUtils,
   Chat,
   CoLiane,
-  CoMatch,
   DayOfWeekFlag,
   Liane,
   LianeMessage,
@@ -14,7 +13,7 @@ import {
   TimeOnlyUtils
 } from "@liane/common";
 import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, SectionList, StyleSheet, View } from "react-native";
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, SectionList, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Center, Column, Row } from "@/components/base/AppLayout";

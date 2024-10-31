@@ -3,7 +3,6 @@ import { AppText } from "@/components/base/AppText.tsx";
 import { AppColors } from "@/theme/colors.ts";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Row } from "@/components/base/AppLayout.tsx";
-import { AppIcon } from "@/components/base/AppIcon.tsx";
 import React from "react";
 import { useAppNavigation } from "@/components/context/routing.ts";
 

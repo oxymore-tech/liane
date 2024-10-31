@@ -6,7 +6,7 @@ import { Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { AppColors } from "@/theme/colors";
 import { JoinedLianeView } from "@/components/communities/JoinedLianeView";
-import { extractDaysOnly, extractWaypointFromTo } from "@/util/hooks/lianeRequest";
+import { extractWaypointFromTo } from "@/util/hooks/lianeRequest";
 import { DetachedLianeItem } from "@/components/communities/DetachedLianeItem.tsx";
 import { useAppNavigation } from "@/components/context/routing.ts";
 import { AppIcon } from "@/components/base/AppIcon.tsx";

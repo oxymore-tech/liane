@@ -4,7 +4,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { useAppNavigation } from "@/components/context/routing";
-import { AppPressableIcon } from "@/components/base/AppPressable";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppColors, ContextualColors } from "@/theme/colors";
 import { extractDays, extractTime } from "@/util/hooks/days";
