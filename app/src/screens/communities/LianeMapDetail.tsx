@@ -166,17 +166,33 @@ export const LianeMapDetailScreen = () => {
           backgroundColor: AppColorPalettes.gray[100]
         }}>
         <ScrollView style={{ paddingHorizontal: 10 }}>
-          <ContextActions
-            matchOrLiane={matchOrLiane}
-            onJoin={handleJoin}
-            onReject={handleReject}
-            onLeave={handleLeave}
-            pendingAction={pendingAction}
-          />
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "center",
+              flex: 1
+            }}>
+            <ContextActions
+              matchOrLiane={matchOrLiane}
+              onJoin={handleJoin}
+              onReject={handleReject}
+              onLeave={handleLeave}
+              pendingAction={pendingAction}
+            />
+          </View>
+
           <Column spacing={10}>
             <DayOfTheWeekPicker selectedDays={matchOrLiane.weekDays} dualOptionMode={true} />
             <DisplayWayPoints wayPoints={wayPoints} style={{ backgroundColor: AppColorPalettes.gray[100], borderRadius: 20 }} />
-            <AppAvatars users={members} size={40} max={10} />
+            <View
+              style={{
+                flex: 1,
+                flexDirection: "row",
+                justifyContent: "flex-end",
+                marginRight: 10
+              }}>
+              <AppAvatars users={members} size={40} max={10} />
+            </View>
           </Column>
         </ScrollView>
       </AppBottomSheet>
