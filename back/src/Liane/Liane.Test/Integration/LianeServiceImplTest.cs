@@ -456,8 +456,8 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       CollectionAssert.AreEqual(
         ImmutableList.Create(
           (mathilde.Id, "Salut JB, ça te dit de covoiturer demain ?"),
-          (jayBee.Id, $"{mathilde.Pseudo} a rejoint la liane."),
-          (jayBee.Id, $"{jayBee.Pseudo} a rejoint la liane.")
+          (jayBee.Id, $"{mathilde.Pseudo} a rejoint la liane"),
+          (jayBee.Id, $"{jayBee.Pseudo} a rejoint la liane")
         ), messages.Data.Select(ToTuple)
       );
       {
@@ -507,12 +507,12 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
           (mathilde.Id, "Bienvenue gugu, tu as bien fait de nous rejoindre, avec Jb on fait la route demain matin !"),
           (gugu.Id, "Comment ça marche ici ?"),
           (gugu.Id, "Bonjour à tous 🚘, vroum !"),
-          (jayBee.Id, $"{gugu.Pseudo} a rejoint la liane."),
-          (gugu.Id, $"{gugu.Pseudo} souhaite rejoindre la liane."),
+          (jayBee.Id, $"{gugu.Pseudo} a rejoint la liane"),
+          (gugu.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
           (jayBee.Id, "Bonjour Mathilde, je suis partant !"),
           (mathilde.Id, "Salut JB, ça te dit de covoiturer demain ?"),
-          (jayBee.Id, $"{mathilde.Pseudo} a rejoint la liane."),
-          (jayBee.Id, $"{jayBee.Pseudo} a rejoint la liane.")
+          (jayBee.Id, $"{mathilde.Pseudo} a rejoint la liane"),
+          (jayBee.Id, $"{jayBee.Pseudo} a rejoint la liane")
         ), messages.Data.Select(ToTuple)
       );
       allMessages = messages.Data;
@@ -529,7 +529,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
           (mathilde.Id, "Bienvenue gugu, tu as bien fait de nous rejoindre, avec Jb on fait la route demain matin !"),
           (gugu.Id, "Comment ça marche ici ?"),
           (gugu.Id, "Bonjour à tous 🚘, vroum !"),
-          (jayBee.Id, $"{gugu.Pseudo} a rejoint la liane.")
+          (jayBee.Id, $"{gugu.Pseudo} a rejoint la liane")
         ), messages.Data.Select(ToTuple)
       );
       Assert.IsNull(messages.Next);
@@ -558,8 +558,8 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       CollectionAssert.AreEqual(
         ImmutableList.Create(
           (gugu.Id, "Bonjour à tous 🚘, vroum !"),
-          (jayBee.Id, $"{gugu.Pseudo} a rejoint la liane."),
-          (gugu.Id, $"{gugu.Pseudo} souhaite rejoindre la liane."),
+          (jayBee.Id, $"{gugu.Pseudo} a rejoint la liane"),
+          (gugu.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
           (jayBee.Id, "Bonjour Mathilde, je suis partant !"),
           (mathilde.Id, "Salut JB, ça te dit de covoiturer demain ?")
         ), messages.Data.Select(ToTuple)
