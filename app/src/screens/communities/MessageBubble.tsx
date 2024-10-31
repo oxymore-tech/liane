@@ -1,12 +1,11 @@
 import { capitalize, CoLiane, CoLianeMember, LianeMessage, Ref, User } from "@liane/common";
 import React, { useCallback, useMemo } from "react";
-import { View } from "react-native";
+import { View, Pressable } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { AppLocalization } from "@/api/i18n.ts";
 import { UserPicture } from "@/components/UserPicture.tsx";
-import { AppButton } from "@/components/base/AppButton.tsx";
 import { useAppNavigation } from "@/components/context/routing.ts";
 
 export const MessageBubble = ({
@@ -30,8 +29,10 @@ export const MessageBubble = ({
 
   const firstBySender = previousSender !== sender?.user.id;
   const date = capitalize(AppLocalization.toRelativeTimeString(new Date(message.createdAt!)));
-  const backgroundColor = message.content.type === "Text" ? (isSender ? AppColors.primaryColor : AppColors.secondaryColor) : AppColors.white;
-  const color = message.content.type === "Text" ? AppColors.white : isSender ? AppColors.primaryColor : AppColors.secondaryColor;
+  const dateTime = capitalize(AppLocalization.formatTime(new Date(message.createdAt!)));
+
+  const backgroundColor = message.content.type === "Text" ? (isSender ? AppColors.primaryColor : AppColors.white) : "transparent";
+  const color = message.content.type !== "Text" ? AppColors.darkGray : isSender ? AppColors.white : AppColors.darkGray;
 
   const handlePendingMember = useCallback(() => {
     navigation.push("LianeMapDetail", { liane: coLiane });
@@ -42,13 +43,13 @@ export const MessageBubble = ({
       spacing={8}
       style={{
         marginBottom: 6,
-        alignSelf: isSender ? "flex-end" : "flex-start",
-        marginTop: firstBySender ? 6 : 0
+        alignSelf: isSender && message.content.type === "Text" ? "flex-end" : "flex-start",
+        marginTop: firstBySender && message.content.type === "Text" ? 6 : 0
       }}>
-      {!isSender && firstBySender && <UserPicture url={sender?.user.pictureUrl} id={sender?.user.id} size={32} />}
-      {!isSender && !firstBySender && <View style={{ width: 32 }} />}
+      {!isSender && firstBySender && message.content.type === "Text" && <UserPicture url={sender?.user.pictureUrl} id={sender?.user.id} size={32} />}
+      {!isSender && !firstBySender && message.content.type === "Text" && <View style={{ width: 32 }} />}
       <Column spacing={2}>
-        {!isSender && firstBySender && (
+        {!isSender && firstBySender && message.content.type === "Text" && (
           <AppText style={{ marginLeft: 6, alignSelf: "flex-start", fontSize: 14, fontWeight: "bold", color: AppColorPalettes.blue[800] }}>
             {sender?.user.pseudo}
           </AppText>
@@ -56,15 +57,15 @@ export const MessageBubble = ({
         <Column
           style={{
             backgroundColor,
-            alignSelf: isSender ? "flex-end" : "flex-start",
-            paddingVertical: 8,
+            alignSelf: isSender && message.content.type === "Text" ? "flex-end" : "flex-start",
+            paddingVertical: message.content.type === "Text" ? 8 : 2,
             paddingHorizontal: 12,
             borderBottomRightRadius: 8,
             borderBottomLeftRadius: 8,
-            borderTopLeftRadius: isSender ? 8 : firstBySender ? 0 : 8,
-            borderTopRightRadius: isSender ? (firstBySender ? 0 : 8) : 8,
-            marginRight: isSender ? 0 : 56,
-            marginLeft: isSender ? 56 : 0
+            borderTopLeftRadius: isSender && message.content.type === "Text" ? 8 : firstBySender ? 0 : 8,
+            borderTopRightRadius: isSender && message.content.type === "Text" ? (firstBySender ? 0 : 8) : 8,
+            marginRight: isSender && message.content.type === "Text" ? 0 : 56,
+            marginLeft: isSender && message.content.type === "Text" ? 56 : 0
           }}
           spacing={4}>
           {message.content.type === "Text" && (
@@ -78,14 +79,21 @@ export const MessageBubble = ({
           {message.content.type !== "Text" && (
             <>
               <AppText numberOfLines={-1} style={{ fontSize: 12 }}>
-                {message.content.value}
+                {`${dateTime} ${message.content.value}`}
               </AppText>
               {message.content.type === "MemberRequested" && coLiane.pendingMembers.find(u => u.user.id === message.createdBy) && (
                 <Row>
-                  <AppButton onPress={handlePendingMember} color={AppColors.primaryColor} value="Voir la demande" />
+                  <Pressable
+                    onPress={handlePendingMember}
+                    style={{
+                      backgroundColor: AppColors.white,
+                      borderRadius: 20,
+                      padding: 10
+                    }}>
+                    <AppText>Voir la demande</AppText>
+                  </Pressable>
                 </Row>
               )}
-              <AppText style={{ fontSize: 12, alignSelf: isSender ? "flex-end" : "flex-start", color }}>{date}</AppText>
             </>
           )}
         </Column>

@@ -4,13 +4,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { useAppNavigation } from "@/components/context/routing";
-import { AppPressableIcon } from "@/components/base/AppPressable";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppColors, ContextualColors } from "@/theme/colors";
-import { extractDays } from "@/util/hooks/days";
+import { extractDays, extractTime } from "@/util/hooks/days";
 import { ArrayUtils, CoMatch } from "@liane/common";
-import { extractWaypointFromTo } from "@/util/hooks/lianeRequest";
 import { AppAvatars } from "@/components/UserPicture.tsx";
+import { AppButton } from "@/components/base/AppButton.tsx";
 
 type Status = "Pending" | "Received" | "None";
 type Section = { data: CoMatch[]; status: Status };
@@ -21,8 +20,6 @@ export const MatchListScreen = () => {
   const lianeRequest = route.params.lianeRequest;
 
   const insets = useSafeAreaInsets();
-  const { to, from } = useMemo(() => extractWaypointFromTo(lianeRequest?.wayPoints), [lianeRequest.wayPoints]);
-  const daysReccurence = extractDays(lianeRequest.weekDays);
 
   const sections = useMemo(() => {
     return Object.entries(
@@ -40,32 +37,13 @@ export const MatchListScreen = () => {
 
   return (
     <View style={styles.mainContainer}>
-      <View style={[styles.header, { paddingTop: insets.top }]}>
-        <View style={styles.headerContent}>
-          <View style={{ backgroundColor: AppColors.primaryColor, borderRadius: 90, marginRight: 5 }}>
-            <AppPressableIcon onPress={() => navigation.goBack()} name={"arrow-ios-back-outline"} color={AppColors.white} size={32} />
-          </View>
-          <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 16, lineHeight: 27, color: AppColors.black }}>Lianes compatibles</AppText>
-        </View>
-        <View style={styles.headerSubContent}>
-          <AppText
-            style={{
-              fontWeight: "bold",
-              fontSize: 14,
-              lineHeight: 27,
-              color: AppColors.black
-            }}>{`${from.city} ➔ ${to.city} TOP`}</AppText>
-          <AppText
-            style={{
-              paddingLeft: 15,
-              fontWeight: "normal",
-              fontSize: 12,
-              lineHeight: 27,
-              color: AppColors.black
-            }}>{`${daysReccurence}`}</AppText>
-        </View>
-      </View>
-      <View style={styles.membersContainer}>
+      <Row
+        style={{ paddingTop: insets.top, backgroundColor: AppColors.white, justifyContent: "flex-start", alignItems: "center", padding: 5 }}
+        spacing={16}>
+        <AppButton onPress={() => navigation.goBack()} icon={"arrow-ios-back-outline"} color={AppColors.primaryColor} />
+        <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 16, lineHeight: 27, color: AppColors.black }}>Lianes compatibles</AppText>
+      </Row>
+      <View style={[styles.membersContainer, { paddingTop: 15 }]}>
         <SectionList
           renderSectionHeader={renderSectionHeader}
           sections={sections}
@@ -88,7 +66,7 @@ const renderSectionHeader = ({ section }: { section: Section }) => {
   }
 
   return (
-    <View style={styles.header}>
+    <View style={styles.headerSection}>
       <AppText style={{ color: AppColors.black, fontWeight: "bold" }}>{text}</AppText>
     </View>
   );
@@ -104,14 +82,30 @@ const GroupItem = ({ group, onPress }: GroupItemProps) => {
     <Pressable onPress={onPress} style={styles.memberContainer}>
       <View style={styles.memberInfo}>
         <View style={styles.textContainer}>
-          <AppText style={styles.nameText}>{`${group.pickup.label} ➔ ${group.deposit.label}`}</AppText>
-          <AppText style={styles.locationText}>{`${extractDays(group.weekDays)}`}</AppText>
-          <Row style={{ justifyContent: "flex-end" }}>
-            <AppAvatars users={group.members} />
-          </Row>
+          <View style={{ flexDirection: "row" }}>
+            <AppText style={styles.titleText}>{`${group.pickup.city} `}</AppText>
+            <AppText style={styles.nameText}>{`- ${group.pickup.label}`}</AppText>
+          </View>
+          <View style={{ flexDirection: "row" }}>
+            <AppText style={styles.titleText}>{`${group.deposit.city} `}</AppText>
+            <AppText style={styles.nameText}>{`- ${group.deposit.label}`}</AppText>
+          </View>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between"
+            }}>
+            <View style={{ flexDirection: "row" }}>
+              <AppText style={styles.locationText}>{`${extractDays(group.weekDays)}`}</AppText>
+              <AppText style={[styles.locationText, { marginLeft: 6 }]}>{`${extractTime(group.when)}`}</AppText>
+            </View>
+            <Row style={{ justifyContent: "flex-end", marginRight: 12 }}>
+              <AppAvatars users={group.members} />
+            </Row>
+          </View>
         </View>
       </View>
-      <View style={{ paddingRight: 10, flexDirection: "row", justifyContent: "flex-end" }}>
+      <View style={{ position: "absolute", top: 20, right: 15 }}>
         <AppIcon name={"arrow-right"} />
       </View>
     </Pressable>
@@ -135,6 +129,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0
   },
+  headerSection: {
+    flexDirection: "row",
+    justifyContent: "center"
+  },
   headerContent: {
     flex: 1,
     flexDirection: "row",
@@ -152,7 +150,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between"
   },
   membersContainer: {
-    marginTop: 170,
     height: "100%"
   },
   memberContainer: {
@@ -175,16 +172,21 @@ const styles = StyleSheet.create({
   textContainer: {
     flex: 1
   },
+  titleText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    lineHeight: 24
+  },
   nameText: {
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: "normal",
     lineHeight: 24
   },
   locationText: {
     fontSize: 14,
-    fontWeight: "bold",
+    fontWeight: "normal",
     lineHeight: 27,
-    color: AppColors.black
+    color: AppColors.darkGray
   },
   timeText: {
     fontSize: 14,

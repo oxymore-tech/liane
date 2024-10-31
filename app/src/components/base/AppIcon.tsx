@@ -26,6 +26,7 @@ import Book from "@/assets/icons/book-fill.svg";
 import Cloud from "@/assets/icons/cloud.svg";
 import ThumbUp from "@/assets/icons/thumb_up.svg";
 import ThumbDown from "@/assets/icons/thumb_down.svg";
+import Whatapp from "@/assets/icons/whatapp.svg";
 
 import { AppDimensions } from "@/theme/dimensions";
 import { AppColorPalettes } from "@/theme/colors";
@@ -89,6 +90,8 @@ export function AppIcon({ name, color = AppColorPalettes.gray[800], size = AppDi
       return <PositionMarker {...props} opacity={opacity} width={size} height={size} fill={color} />;
     case "position-end":
       return <PositionEnd {...props} opacity={opacity} width={size} height={size} fill={color} />;
+    case "whatapp":
+      return <Whatapp {...props} opacity={opacity} width={size} height={size} fill={color} />;
     default:
       return <Icon {...props} opacity={opacity} name={name} width={size} height={size} fill={color} />;
   }
@@ -113,7 +116,8 @@ const AppIconsNames = [
   "seat",
   "arrow-switch",
   "thumb-down",
-  "thumb-up"
+  "thumb-up",
+  "whatapp"
 ] as const;
 
 const EvaIconsNames = [

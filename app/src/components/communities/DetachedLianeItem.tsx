@@ -3,7 +3,6 @@ import { AppText } from "@/components/base/AppText.tsx";
 import { AppColors } from "@/theme/colors.ts";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Row } from "@/components/base/AppLayout.tsx";
-import { AppIcon } from "@/components/base/AppIcon.tsx";
 import React from "react";
 import { useAppNavigation } from "@/components/context/routing.ts";
 
@@ -39,10 +38,9 @@ export const DetachedLianeItem = ({ lianeRequest, state, unread }: DetachedLiane
             color: AppColors.darkGray,
             marginLeft: 5
           }}>
-          {state.matches.length === 1 ? "Voir la liane disponible" : `Voir les ${state.matches.length} lianes disponibles`}
+          {state.matches.length === 1 ? "1 proposition" : `${state.matches.length} propositions`}
         </AppText>
       </Row>
-      <AppIcon name={"arrow-right"} />
     </Pressable>
   );
 };
