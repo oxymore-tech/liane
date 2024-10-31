@@ -39,10 +39,9 @@ export const DetachedLianeItem = ({ lianeRequest, state, unread }: DetachedLiane
             color: AppColors.darkGray,
             marginLeft: 5
           }}>
-          {state.matches.length === 1 ? "Voir la liane disponible" : `Voir les ${state.matches.length} lianes disponibles`}
+          {state.matches.length === 1 ? "1 proposition" : `${state.matches.length} propositions`}
         </AppText>
       </Row>
-      <AppIcon name={"arrow-right"} />
     </Pressable>
   );
 };

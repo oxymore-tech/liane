@@ -36,62 +36,63 @@ export const LianeRequestItem = ({ item, onRefresh, unreadLianes }: LianeRequest
               style={{
                 backgroundColor: AppColors.backgroundColor,
                 paddingLeft: 10,
+                flexDirection: "row",
+                justifyContent: "flex-start",
+                alignItems: "center",
                 flex: 1,
                 borderRadius: 8,
                 borderWidth: 1,
                 borderColor: AppColors.grayBackground,
                 padding: 10
               }}>
-              <AppText
+              <View
                 style={{
-                  fontSize: 22,
-                  fontWeight: "bold",
-                  flexShrink: 1,
-                  lineHeight: 27,
-                  color: "black"
+                  margin: 3
                 }}>
-                {item?.lianeRequest?.name}
-              </AppText>
-              <AppText
+                <AppIcon name={"whatapp"} color={AppColors.darkGray} size={58} />
+              </View>
+              <View
                 style={{
-                  fontSize: 20,
-                  fontWeight: "bold",
-                  flexShrink: 1,
-                  lineHeight: 27,
-                  color: "black"
+                  paddingLeft: 10,
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  flex: 1
                 }}>
-                {`${from.city}`}
-              </AppText>
-              <AppText
-                style={{
-                  fontSize: 20,
-                  fontWeight: "bold",
-                  flexShrink: 1,
-                  lineHeight: 27,
-                  color: "black"
-                }}>
-                {`${to.city}`}
-              </AppText>
-              <AppText
-                style={{
-                  fontSize: 15,
-                  fontWeight: "bold",
-                  flexShrink: 1,
-                  lineHeight: 20,
-                  color: AppColors.darkGray
-                }}>
-                {extractDaysOnly(item.lianeRequest)}
-              </AppText>
-              <Pressable
-                style={{ position: "absolute", top: 10, right: 10 }}
-                onPress={() => {
-                  setMyModalVisible(true);
-                }}>
-                <AppIcon name={"edit-2-outline"} color={AppColors.darkGray} size={22} />
-              </Pressable>
-              <View style={styles.subRowsContainer}>
-                {item.state.type === "Detached" && <DetachedLianeItem lianeRequest={item.lianeRequest} state={item.state} unread={unread} />}
-                {item.state.type === "Attached" && <JoinedLianeView liane={item.state.liane} unread={unread} />}
+                <View>
+                  <AppText
+                    style={{
+                      fontSize: 22,
+                      fontWeight: "bold",
+                      flexShrink: 1,
+                      lineHeight: 27,
+                      color: "black"
+                    }}>
+                    {item?.lianeRequest?.name}
+                  </AppText>
+                </View>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "flex-end"
+                  }}>
+                  <View>
+                    <AppText style={styles.cityFont}>{`${from.city}`}</AppText>
+                    <AppText style={styles.cityFont}>{`${to.city}`}</AppText>
+                  </View>
+
+                  <View style={styles.subRowsContainer}>
+                    {item.state.type === "Detached" && <DetachedLianeItem lianeRequest={item.lianeRequest} state={item.state} unread={unread} />}
+                    {item.state.type === "Attached" && <JoinedLianeView liane={item.state.liane} unread={unread} />}
+                  </View>
+                </View>
+                <Pressable
+                  style={{ position: "absolute", top: 10, right: 10 }}
+                  onPress={() => {
+                    setMyModalVisible(true);
+                  }}>
+                  <AppIcon name={"edit-2-outline"} color={AppColors.darkGray} size={22} />
+                </Pressable>
               </View>
             </View>
           </View>
@@ -118,5 +119,12 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 16,
     borderBottomRightRadius: 16,
     display: "flex"
+  },
+  cityFont: {
+    fontSize: 15,
+    fontWeight: "normal",
+    flexShrink: 1,
+    lineHeight: 19,
+    color: AppColors.darkGray
   }
 });
