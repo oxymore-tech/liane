@@ -16,28 +16,43 @@ public sealed class MockPushServiceImpl : IPushMiddleware
   public Priority Priority => Priority.High;
 
   private readonly List<SentMessage> sent = new();
+  private readonly List<SentMessage> messages = new();
 
   public Task<bool> Push(Ref<User> receiver, Notification notification)
   {
     sent.Add(new SentMessage(notification.CreatedAt!.Value, receiver.Id, notification.Message));
-
     return Task.FromResult(true);
   }
 
   public Task<bool> PushMessage(User sender, Ref<User> receiver, Ref<Api.Community.Liane> liane, LianeMessage message)
   {
+    messages.Add(new SentMessage(message.CreatedAt!.Value, receiver.Id, message.Content.Value ?? ""));
     return Task.FromResult(true);
   }
 
-  public DateTime[] Assert(params (string? To, string Message)[] messages)
+  public DateTime[] Assert(params (string? To, string Message)[] msgs)
   {
     CollectionAssert.AreEqual(
       sent
         .OrderBy(s => s.At)
         .Select(s => (s.To, s.Message)),
-      messages
+      msgs
     );
     return sent
+      .OrderBy(s => s.At)
+      .Select(s => s.At)
+      .ToArray();
+  }
+  
+  public DateTime[] AssertMessage(params (string? To, string Message)[] msgs)
+  {
+    CollectionAssert.AreEqual(
+      messages
+        .OrderBy(s => s.At)
+        .Select(s => (s.To, s.Message)),
+      msgs
+    );
+    return messages
       .OrderBy(s => s.At)
       .Select(s => s.At)
       .ToArray();

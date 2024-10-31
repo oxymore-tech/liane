@@ -16,7 +16,7 @@ public interface ILianeService
 
   Task<Liane> Get(Ref<Liane> id);
   Task<Liane?> JoinRequest(Ref<Liane> a, Ref<Liane> b);
-  Task<bool> Reject(Ref<LianeRequest> mine, Ref<Liane> liane);
+  Task<bool> Reject(Ref<Liane> a, Ref<Liane> b);
   Task<bool> Leave(Ref<Liane> liane);
 
   Task<ImmutableList<WayPoint>> GetTrip(Guid liane, Guid? lianeRequest);

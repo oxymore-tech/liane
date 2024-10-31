@@ -1,13 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Auth;
 using Liane.Api.Community;
-using Liane.Api.Event;
 using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
-using Liane.Service.Internal.Event;
 using Liane.Test.Mock;
 using Liane.Test.Util;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,7 +24,6 @@ public sealed class LianeTxTest : BaseIntegrationTest
   private static readonly TimeRange DefaultTimeRange = new(new TimeOnly(9, 0), new TimeOnly(18, 0));
 
   private ILianeService tested = null!;
-  private ILianeMessageService messageService = null!;
   private MockCurrentContext currentContext = null!;
   private MockPushServiceImpl pushService = null!;
 
@@ -42,7 +39,6 @@ public sealed class LianeTxTest : BaseIntegrationTest
   protected override void Setup(IMongoDatabase db)
   {
     tested = ServiceProvider.GetRequiredService<ILianeService>();
-    messageService = ServiceProvider.GetRequiredService<ILianeMessageService>();
     currentContext = ServiceProvider.GetRequiredService<MockCurrentContext>();
     pushService = ServiceProvider.GetRequiredService<MockPushServiceImpl>();
   }
@@ -98,6 +94,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
 
     DateTime at;
     {
+      currentContext.SetCurrentUser(gugu);
       var liane = await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id);
       Assert.IsNull(liane);
 
@@ -121,6 +118,161 @@ public sealed class LianeTxTest : BaseIntegrationTest
             LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.651186168f, false, new JoinRequest.Received(at))
         ))));
     }
+
+    {
+      currentContext.SetCurrentUser(gugu);
+      var liane = await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id);
+      Assert.IsNull(liane);
+
+      var dateTimes = pushService.Assert(
+        (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre votre liane {lianeJayBee.Name}")
+      );
+      Assert.AreEqual(at, dateTimes[0]);
+    }
+
+    {
+      currentContext.SetCurrentUser(gugu);
+      var deleted = await tested.Reject(lianeGugu.Id, lianeJayBee.Id);
+      Assert.IsTrue(deleted);
+
+      var dateTimes = pushService.Assert(
+        (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre votre liane {lianeJayBee.Name}")
+      );
+      Assert.AreEqual(at, dateTimes[0]);
+    }
+
+    {
+      currentContext.SetCurrentUser(jayBee);
+      var list = await tested.Match();
+
+      AssertMatchesEquals(list,
+        new LianeMatch(lianeJayBee, new LianeState.Detached(ImmutableList.Create<Match>(
+          new Match.Single(lianeMathilde.Id, ImmutableList.Create(mathilde), "Mathilde", DayOfWeekFlag.All, DefaultTimeRange,
+            LabeledPositions.FloracFormares, LabeledPositions.BalsiegeParkingEglise, 0.704377413f, false, null),
+          new Match.Single(lianeSiloe.Id, ImmutableList.Create(siloe), "Siloe", DayOfWeekFlag.All, DefaultTimeRange,
+            LabeledPositions.IspagnacParking, LabeledPositions.Mende, 0.686026692f, false, null),
+          new Match.Single(lianeGugu.Id, ImmutableList.Create(gugu), "Gugu", DayOfWeekFlag.All, DefaultTimeRange,
+            LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.651186168f, false, null)
+        ))));
+    }
+  }
+
+  [Test]
+  public async Task GuguShouldJoinJayBee()
+  {
+    var (lianeGugu, lianeJayBee, lianeMathilde, lianeSiloe, _, _, _, _) = await SetupDefaultLianes();
+
+    {
+      currentContext.SetCurrentUser(gugu);
+      var list = await tested.Match();
+
+      AssertMatchesEquals(list,
+        new LianeMatch(lianeGugu, new LianeState.Detached(ImmutableList.Create<Match>(
+          new Match.Single(lianeJayBee.Id, ImmutableList.Create(jayBee), "JayBee", DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.7692702f,
+            false, null),
+          new Match.Single(lianeSiloe.Id, ImmutableList.Create(siloe), "Siloe", DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.7692702f,
+            false, null),
+          new Match.Single(lianeMathilde.Id, ImmutableList.Create(mathilde), "Mathilde", DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking,
+            LabeledPositions.BalsiegeParkingEglise,
+            0.5420033f,
+            false, null)
+        ))));
+    }
+
+    {
+      currentContext.SetCurrentUser(gugu);
+      var l1 = await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id);
+      Assert.IsNull(l1);
+    }
+
+    Api.Community.Liane liane;
+    {
+      currentContext.SetCurrentUser(jayBee);
+      liane = (await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id))!;
+    }
+
+    pushService.Assert(
+      (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre votre liane {lianeJayBee.Name}")
+    );
+    
+    pushService.AssertMessage(
+      (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
+      (jayBee.Id, $"{jayBee.Pseudo} a rejoint la liane"),
+      (jayBee.Id, $"{gugu.Pseudo} a rejoint la liane")
+    );
+
+    {
+      currentContext.SetCurrentUser(gugu);
+      var list = await tested.Match();
+
+      AssertMatchesEquals(list, new LianeMatch(lianeGugu, new LianeState.Attached(liane)));
+    }
+
+    {
+      currentContext.SetCurrentUser(jayBee);
+      var list = await tested.Match();
+
+      AssertMatchesEquals(list, new LianeMatch(lianeJayBee, new LianeState.Attached(liane)));
+    }
+  }
+
+  [Test]
+  public async Task JayBeeRejectGuguJoinRequest()
+  {
+    var (lianeGugu, lianeJayBee, lianeMathilde, lianeSiloe, _, _, _, _) = await SetupDefaultLianes();
+
+    {
+      currentContext.SetCurrentUser(gugu);
+      var list = await tested.Match();
+
+      AssertMatchesEquals(list,
+        new LianeMatch(lianeGugu, new LianeState.Detached(ImmutableList.Create<Match>(
+          new Match.Single(lianeJayBee.Id, ImmutableList.Create(jayBee), "JayBee", DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.7692702f,
+            false, null),
+          new Match.Single(lianeSiloe.Id, ImmutableList.Create(siloe), "Siloe", DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.7692702f,
+            false, null),
+          new Match.Single(lianeMathilde.Id, ImmutableList.Create(mathilde), "Mathilde", DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking,
+            LabeledPositions.BalsiegeParkingEglise,
+            0.5420033f,
+            false, null)
+        ))));
+    }
+
+    {
+      currentContext.SetCurrentUser(gugu);
+      var l1 = await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id);
+      Assert.IsNull(l1);
+    }
+
+    {
+      currentContext.SetCurrentUser(jayBee);
+      var rejected = await tested.Reject(lianeJayBee.Id, lianeGugu.Id);
+      Assert.IsTrue(rejected);
+    }
+
+    pushService.Assert(
+      (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre votre liane {lianeJayBee.Name}"),
+      (gugu.Id, "Vous n'avez pas été accepté dans la liane")
+    );
+    
+    pushService.AssertMessage(
+      (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
+      (jayBee.Id, $"La demande de {gugu.Pseudo} pour rejoindre la liane n'a pas été acceptée")
+    );
+
+    {
+      currentContext.SetCurrentUser(gugu);
+      var list = await tested.Match();
+
+      Assert.IsInstanceOf<LianeState.Detached>(list.First().State);
+    }
+
+    {
+      currentContext.SetCurrentUser(jayBee);
+      var list = await tested.Match();
+
+      Assert.IsInstanceOf<LianeState.Detached>(list.First().State);
+    }
   }
 
   private async Task<LianeRequest> CreateLianeRequest(User user, string name, Ref<RallyingPoint> from, Ref<RallyingPoint> to, Ref<RallyingPoint>? intermediate = null,
@@ -135,8 +287,6 @@ public sealed class LianeTxTest : BaseIntegrationTest
       returnAfter ?? DefaultTimeRange.End,
       true, weekDays, true, null, null));
   }
-
-  private static (string User, string Text) ToTuple(LianeMessage message) => (message.CreatedBy.Id, message.Content.Value ?? $"!!{message.Content.GetType().Name}!!");
 
   private static void AssertMatchesEquals(ImmutableList<LianeMatch> list, params LianeMatch[] expected)
   {

@@ -66,10 +66,10 @@ public sealed class LianeController(ILianeService lianeService, ITripService tri
     return lianeService.JoinRequest(id, liane);
   }
 
-  [HttpPost("liane/{liane:guid}/reject/{lianeRequest:guid}")]
-  public Task<bool> Reject(Guid lianeRequest, Guid liane)
+  [HttpPost("liane/{liane:guid}/reject/{id:guid}")]
+  public Task<bool> Reject(Guid id, Guid liane)
   {
-    return lianeService.Reject(lianeRequest, liane);
+    return lianeService.Reject(id, liane);
   }
 
   [HttpPost("liane/join_trip")]
