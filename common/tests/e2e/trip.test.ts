@@ -52,10 +52,10 @@ describe.sequential("Joining a trip", () => {
       });
 
       await secondUser.services.community.joinRequest(secondLianeRequest.id!, lianeRequest.id!);
-      const coLiane = await currentUser.services.community.accept(secondLianeRequest.id!, lianeRequest.id!);
+      const coLiane = await currentUser.services.community.joinRequest(secondLianeRequest.id!, lianeRequest.id!);
 
       const posted = await secondUser.services.liane.post({
-        liane: coLiane.id!,
+        liane: coLiane!.id!,
         from: pickup,
         to: destination,
         arriveAt: addSeconds(new Date(), 1830).toISOString(),
@@ -140,8 +140,7 @@ describe.sequential("Joining a trip", () => {
                   driver.services.event.sendPing({
                     trip: trip!.id!,
                     timestamp: new Date().getTime(),
-                    coordinate,
-                    type: "MemberPing"
+                    coordinate
                   })
                 );
             })
@@ -153,8 +152,7 @@ describe.sequential("Joining a trip", () => {
                   passenger.services.event.sendPing({
                     trip: trip!.id!,
                     timestamp: new Date().getTime(),
-                    coordinate,
-                    type: "MemberPing"
+                    coordinate
                   })
                 );
             })
