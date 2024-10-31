@@ -194,7 +194,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
     pushService.Assert(
       (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre votre liane {lianeJayBee.Name}")
     );
-    
+
     pushService.AssertMessage(
       (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
       (jayBee.Id, $"{jayBee.Pseudo} a rejoint la liane"),
@@ -254,7 +254,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
       (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre votre liane {lianeJayBee.Name}"),
       (gugu.Id, "Vous n'avez pas été accepté dans la liane")
     );
-    
+
     pushService.AssertMessage(
       (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
       (jayBee.Id, $"La demande de {gugu.Pseudo} pour rejoindre la liane n'a pas été acceptée")
@@ -273,6 +273,193 @@ public sealed class LianeTxTest : BaseIntegrationTest
 
       Assert.IsInstanceOf<LianeState.Detached>(list.First().State);
     }
+  }
+
+  [Test]
+  public async Task GuguJoinExistingLianeViaJaybeeDirectly()
+  {
+    var (lianeGugu, lianeJayBee, lianeMathilde, _, _, _, _, _) = await SetupDefaultLianes();
+
+    {
+      currentContext.SetCurrentUser(mathilde);
+      await tested.JoinRequest(lianeMathilde.Id, lianeJayBee.Id);
+    }
+
+    {
+      currentContext.SetCurrentUser(jayBee);
+      var liane = await tested.JoinRequest(lianeMathilde.Id, lianeJayBee.Id);
+      Assert.IsNotNull(liane);
+      Assert.AreEqual(lianeJayBee.Id, liane!.Id);
+      CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, mathilde.Id), liane!.Members.Select(m => m.User.Id));
+    }
+
+    {
+      currentContext.SetCurrentUser(gugu);
+      await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id);
+    }
+
+    {
+      currentContext.SetCurrentUser(jayBee);
+      var liane = await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id);
+      Assert.IsNotNull(liane);
+      Assert.AreEqual(lianeJayBee.Id, liane!.Id);
+      CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, mathilde.Id, gugu.Id), liane!.Members.Select(m => m.User.Id));
+    }
+
+    pushService.Assert(
+      (jayBee.Id, $"{mathilde.Pseudo} souhaite rejoindre votre liane {lianeJayBee.Name}"),
+      (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre votre liane {lianeJayBee.Name}")
+    );
+
+    pushService.AssertMessage(
+      (jayBee.Id, $"{mathilde.Pseudo} souhaite rejoindre la liane"),
+      (jayBee.Id, $"{jayBee.Pseudo} a rejoint la liane"),
+      (jayBee.Id, $"{mathilde.Pseudo} a rejoint la liane"),
+      (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
+      (mathilde.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
+      (jayBee.Id, $"{gugu.Pseudo} a rejoint la liane"),
+      (mathilde.Id, $"{gugu.Pseudo} a rejoint la liane")
+    );
+  }
+
+  [Test]
+  public async Task GuguIsRejectedFromLianeVieJaybee()
+  {
+    var (lianeGugu, lianeJayBee, lianeMathilde, _, _, _, _, _) = await SetupDefaultLianes();
+
+    {
+      currentContext.SetCurrentUser(mathilde);
+      await tested.JoinRequest(lianeMathilde.Id, lianeJayBee.Id);
+    }
+
+    {
+      currentContext.SetCurrentUser(jayBee);
+      var liane = await tested.JoinRequest(lianeMathilde.Id, lianeJayBee.Id);
+      Assert.IsNotNull(liane);
+      Assert.AreEqual(lianeJayBee.Id, liane!.Id);
+      CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, mathilde.Id), liane!.Members.Select(m => m.User.Id));
+    }
+
+    {
+      currentContext.SetCurrentUser(gugu);
+      await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id);
+    }
+
+    {
+      currentContext.SetCurrentUser(jayBee);
+      var rejected = await tested.Reject(lianeJayBee.Id, lianeGugu.Id);
+      Assert.IsTrue(rejected);
+    }
+
+    pushService.Assert(
+      (jayBee.Id, $"{mathilde.Pseudo} souhaite rejoindre votre liane {lianeJayBee.Name}"),
+      (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre votre liane {lianeJayBee.Name}"),
+      (gugu.Id, "Vous n'avez pas été accepté dans la liane")
+    );
+
+    pushService.AssertMessage(
+      (jayBee.Id, $"{mathilde.Pseudo} souhaite rejoindre la liane"),
+      (jayBee.Id, $"{jayBee.Pseudo} a rejoint la liane"),
+      (jayBee.Id, $"{mathilde.Pseudo} a rejoint la liane"),
+      (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
+      (mathilde.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
+      (jayBee.Id, $"La demande de {gugu.Pseudo} pour rejoindre la liane n'a pas été acceptée"),
+      (mathilde.Id, $"La demande de {gugu.Pseudo} pour rejoindre la liane n'a pas été acceptée")
+    );
+  }
+
+  [Test]
+  public async Task GuguJoinExistingLianeViaMathildeIndirectly()
+  {
+    var (lianeGugu, lianeJayBee, lianeMathilde, _, _, _, _, _) = await SetupDefaultLianes();
+
+    {
+      currentContext.SetCurrentUser(mathilde);
+      await tested.JoinRequest(lianeMathilde.Id, lianeJayBee.Id);
+    }
+
+    {
+      currentContext.SetCurrentUser(jayBee);
+      var liane = await tested.JoinRequest(lianeMathilde.Id, lianeJayBee.Id);
+      Assert.IsNotNull(liane);
+      Assert.AreEqual(lianeJayBee.Id, liane!.Id);
+      CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, mathilde.Id), liane!.Members.Select(m => m.User.Id));
+    }
+
+    {
+      currentContext.SetCurrentUser(gugu);
+      await tested.JoinRequest(lianeMathilde.Id, lianeGugu.Id);
+    }
+
+    {
+      currentContext.SetCurrentUser(jayBee);
+      var liane = await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id);
+      Assert.IsNotNull(liane);
+      Assert.AreEqual(lianeJayBee.Id, liane!.Id);
+      CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, mathilde.Id, gugu.Id), liane!.Members.Select(m => m.User.Id));
+    }
+
+    pushService.Assert(
+      (jayBee.Id, $"{mathilde.Pseudo} souhaite rejoindre votre liane {lianeJayBee.Name}"),
+      (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre votre liane {lianeJayBee.Name}")
+    );
+
+    pushService.AssertMessage(
+      (jayBee.Id, $"{mathilde.Pseudo} souhaite rejoindre la liane"),
+      (jayBee.Id, $"{jayBee.Pseudo} a rejoint la liane"),
+      (jayBee.Id, $"{mathilde.Pseudo} a rejoint la liane"),
+      (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
+      (mathilde.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
+      (jayBee.Id, $"{gugu.Pseudo} a rejoint la liane"),
+      (mathilde.Id, $"{gugu.Pseudo} a rejoint la liane")
+    );
+  }
+  
+  [Test]
+  public async Task GuguJoinExistingLianeViaMathildeIndirectly2()
+  {
+    var (lianeGugu, lianeJayBee, lianeMathilde, _, _, _, _, _) = await SetupDefaultLianes();
+
+    {
+      currentContext.SetCurrentUser(mathilde);
+      await tested.JoinRequest(lianeMathilde.Id, lianeJayBee.Id);
+    }
+
+    {
+      currentContext.SetCurrentUser(jayBee);
+      var liane = await tested.JoinRequest(lianeMathilde.Id, lianeJayBee.Id);
+      Assert.IsNotNull(liane);
+      Assert.AreEqual(lianeJayBee.Id, liane!.Id);
+      CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, mathilde.Id), liane!.Members.Select(m => m.User.Id));
+    }
+
+    {
+      currentContext.SetCurrentUser(gugu);
+      await tested.JoinRequest(lianeMathilde.Id, lianeGugu.Id);
+    }
+
+    {
+      currentContext.SetCurrentUser(mathilde);
+      var liane = await tested.JoinRequest(lianeMathilde.Id, lianeGugu.Id);
+      Assert.IsNotNull(liane);
+      Assert.AreEqual(lianeJayBee.Id, liane!.Id);
+      CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, mathilde.Id, gugu.Id), liane!.Members.Select(m => m.User.Id));
+    }
+
+    pushService.Assert(
+      (jayBee.Id, $"{mathilde.Pseudo} souhaite rejoindre votre liane {lianeJayBee.Name}"),
+      (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre votre liane {lianeJayBee.Name}")
+    );
+
+    pushService.AssertMessage(
+      (jayBee.Id, $"{mathilde.Pseudo} souhaite rejoindre la liane"),
+      (jayBee.Id, $"{jayBee.Pseudo} a rejoint la liane"),
+      (jayBee.Id, $"{mathilde.Pseudo} a rejoint la liane"),
+      (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
+      (mathilde.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
+      (jayBee.Id, $"{gugu.Pseudo} a rejoint la liane"),
+      (mathilde.Id, $"{gugu.Pseudo} a rejoint la liane")
+    );
   }
 
   private async Task<LianeRequest> CreateLianeRequest(User user, string name, Ref<RallyingPoint> from, Ref<RallyingPoint> to, Ref<RallyingPoint>? intermediate = null,

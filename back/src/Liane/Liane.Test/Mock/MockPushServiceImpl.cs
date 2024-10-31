@@ -35,6 +35,7 @@ public sealed class MockPushServiceImpl : IPushMiddleware
     CollectionAssert.AreEqual(
       sent
         .OrderBy(s => s.At)
+        .ThenBy(s => s.To)
         .Select(s => (s.To, s.Message)),
       msgs
     );
@@ -49,6 +50,7 @@ public sealed class MockPushServiceImpl : IPushMiddleware
     CollectionAssert.AreEqual(
       messages
         .OrderBy(s => s.At)
+        .ThenBy(s => s.To)
         .Select(s => (s.To, s.Message)),
       msgs
     );

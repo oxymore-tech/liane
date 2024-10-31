@@ -303,35 +303,46 @@ public sealed class LianeServiceImpl(
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
 
-    var userId = currentContext.CurrentUser().Id;
-
     var lrA = await connection.GetAsync<LianeRequestDb>(a.IdAsGuid(), tx);
     var lrB = await connection.GetAsync<LianeRequestDb>(b.IdAsGuid(), tx);
 
     var memberA = await connection.FirstOrDefaultAsync(Query.Select<LianeMemberDb>().Where(m => m.LianeRequestId, ComparisonOperator.Eq, a.IdAsGuid()), tx);
     var memberB = await connection.FirstOrDefaultAsync(Query.Select<LianeMemberDb>().Where(m => m.LianeRequestId, ComparisonOperator.Eq, b.IdAsGuid()), tx);
 
-    if (lrA.CreatedBy.Id == userId && memberA is not null)
+    if (memberA is null && memberB is null)
     {
-      return await Reject(connection, lrA, lrB, tx);
+      return false;
     }
 
-    if (lrB.CreatedBy.Id == userId && memberB is not null)
+    Guid? joinedLianeA = memberA?.JoinedAt is not null ? memberA.LianeId : null;
+    Guid? joinedLianeB = memberB?.JoinedAt is not null ? memberB.LianeId : null;
+
+    if (joinedLianeA is not null && joinedLianeB is not null)
     {
-      return await Reject(connection, lrB, lrA, tx);
+      return false;
     }
 
-    if (lrB.CreatedBy.Id == userId && memberA is not null)
+    if (joinedLianeA is not null)
     {
-      return await Reject(connection, lrA, lrB, tx);
+      return await Reject(connection, lrB, joinedLianeA.Value, tx);
     }
 
-    if (lrA.CreatedBy.Id == userId && memberB is not null)
+    if (joinedLianeB is not null)
     {
-      return await Reject(connection, lrB, lrA, tx);
+      return await Reject(connection, lrB, joinedLianeB.Value, tx);
     }
 
-    return false;
+    if (memberA is null && memberB?.LianeId == lrA.Id)
+    {
+      return await Reject(connection, lrB, lrA.Id, tx);
+    }
+
+    if (memberB is null && memberA?.LianeId == lrB.Id)
+    {
+      return await Reject(connection, lrA, lrB.Id, tx);
+    }
+
+    return await Reject(connection, lrB, lrA.Id, tx);
   }
 
   public async Task<Api.Community.Liane> Get(Ref<Api.Community.Liane> id)
@@ -400,10 +411,9 @@ public sealed class LianeServiceImpl(
     return true;
   }
 
-  private async Task<bool> Reject(IDbConnection connection, LianeRequestDb lianeRequest, LianeRequestDb lrB, IDbTransaction tx)
+  private async Task<bool> Reject(IDbConnection connection, LianeRequestDb lianeRequest, Guid lianeId, IDbTransaction tx)
   {
     var userId = currentContext.CurrentUser().Id;
-    var lianeId = lrB.Id;
     var foreignLiane = await lianeFetcher.FetchLiane(connection, lianeId, tx);
     if (foreignLiane.Members.Count > 0 && foreignLiane.Members.All(m => m.User.Id != userId))
     {
