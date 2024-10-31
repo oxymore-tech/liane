@@ -66,7 +66,27 @@ public sealed class LianeMessageServiceImpl(
   public async Task<ImmutableDictionary<Ref<Api.Community.Liane>, int>> GetUnreadLianes()
   {
     using var connection = db.NewConnection();
+    using var tx = connection.BeginTransaction();
+
     var userId = currentContext.CurrentUser().Id;
+    var unreadPendingJoinRequests = await connection.QueryAsync<(Guid, int)>("""
+                                                                             SELECT m.liane_request_id, COUNT(req.id)
+                                                                             FROM liane_member m
+                                                                               INNER JOIN liane_request req ON req.id = m.liane_request_id
+                                                                             WHERE m.joined_at IS NULL AND req.created_by = @userId
+                                                                             GROUP BY m.liane_request_id
+                                                                             """,
+      new { userId }
+      , tx);
+    var unreadReceivedJoinRequests = await connection.QueryAsync<(Guid, int)>("""
+                                                                              SELECT m.liane_id, COUNT(req.id) AS unread
+                                                                              FROM liane_member m
+                                                                                INNER JOIN liane_request req ON m.liane_request_id = req.id
+                                                                              WHERE m.joined_at IS NULL AND req.created_by = @userId
+                                                                              GROUP BY m.liane_id
+                                                                              """,
+      new { userId }
+      , tx);
     var unread = await connection.QueryAsync<(Guid, int)>("""
                                                           SELECT m.liane_id, COUNT(msg.id) AS unread
                                                           FROM liane_member m
@@ -77,8 +97,12 @@ public sealed class LianeMessageServiceImpl(
                                                           GROUP BY m.liane_id
                                                           """,
       new { userId }
-    );
-    return unread.ToImmutableDictionary(m => (Ref<Api.Community.Liane>)m.Item1.ToString(), m => m.Item2);
+      , tx);
+    return unreadPendingJoinRequests
+      .Concat(unreadReceivedJoinRequests)
+      .Concat(unread)
+      .GroupBy(t => t.Item1)
+      .ToImmutableDictionary(g => (Ref<Api.Community.Liane>)g.Key, g => g.Sum(t => t.Item2));
   }
 
   public async Task MarkAsRead(Ref<Api.Community.Liane> liane, DateTime timestamp)
@@ -155,7 +179,7 @@ public sealed class LianeMessageServiceImpl(
       _ => null
     };
   }
-  
+
   private async Task<string> FormatJoinedTrip(MessageContent.MemberJoinedTrip m)
   {
     var msg = $"{await FormatUser(m.User)} a rejoint le trajet du {FormatDate(m.Trip.Value?.DepartureTime)}";
