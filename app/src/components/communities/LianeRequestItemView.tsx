@@ -58,7 +58,7 @@ export const LianeRequestItem = ({ item, onRefresh, unreadLianes }: LianeRequest
                   justifyContent: "space-between",
                   flex: 1
                 }}>
-                <View>
+                <Row>
                   <AppText
                     style={{
                       fontSize: 22,
@@ -69,7 +69,14 @@ export const LianeRequestItem = ({ item, onRefresh, unreadLianes }: LianeRequest
                     }}>
                     {item?.lianeRequest?.name}
                   </AppText>
-                </View>
+                  <Pressable
+                    style={{ marginLeft: 8 }}
+                    onPress={() => {
+                      setMyModalVisible(true);
+                    }}>
+                    <AppIcon name={"edit-2-outline"} color={AppColors.darkGray} size={16} />
+                  </Pressable>
+                </Row>
                 <View
                   style={{
                     flexDirection: "row",
@@ -86,13 +93,13 @@ export const LianeRequestItem = ({ item, onRefresh, unreadLianes }: LianeRequest
                     {item.state.type === "Attached" && <JoinedLianeView liane={item.state.liane} unread={unread} />}
                   </View>
                 </View>
-                <Pressable
-                  style={{ position: "absolute", top: 10, right: 10 }}
-                  onPress={() => {
-                    setMyModalVisible(true);
-                  }}>
-                  <AppIcon name={"edit-2-outline"} color={AppColors.darkGray} size={22} />
-                </Pressable>
+                {unread && (
+                  <View style={{ position: "absolute", top: 5, right: 5 }}>
+                    <View style={styles.notificationDotContainer}>
+                      <View style={styles.notificationDot} />
+                    </View>
+                  </View>
+                )}
               </View>
             </View>
           </View>
@@ -126,5 +133,15 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     lineHeight: 19,
     color: AppColors.darkGray
+  },
+  notificationDotContainer: {
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  notificationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 6,
+    backgroundColor: AppColors.orange
   }
 });

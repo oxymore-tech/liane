@@ -10,6 +10,7 @@ import { AppColors, ContextualColors } from "@/theme/colors";
 import { extractDays, extractTime } from "@/util/hooks/days";
 import { ArrayUtils, CoMatch } from "@liane/common";
 import { AppAvatars } from "@/components/UserPicture.tsx";
+import { AppButton } from "@/components/base/AppButton.tsx";
 
 type Status = "Pending" | "Received" | "None";
 type Section = { data: CoMatch[]; status: Status };
@@ -37,15 +38,13 @@ export const MatchListScreen = () => {
 
   return (
     <View style={styles.mainContainer}>
-      <View style={[styles.header, { paddingTop: insets.top }]}>
-        <View style={styles.headerContent}>
-          <View style={{ backgroundColor: AppColors.primaryColor, borderRadius: 90, marginRight: 5 }}>
-            <AppPressableIcon onPress={() => navigation.goBack()} name={"arrow-ios-back-outline"} color={AppColors.white} size={32} />
-          </View>
-          <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 16, lineHeight: 27, color: AppColors.black }}>Lianes compatibles</AppText>
-        </View>
-      </View>
-      <View style={[styles.membersContainer, { paddingTop: insets.top + 75 }]}>
+      <Row
+        style={{ paddingTop: insets.top, backgroundColor: AppColors.white, justifyContent: "flex-start", alignItems: "center", padding: 5 }}
+        spacing={16}>
+        <AppButton onPress={() => navigation.goBack()} icon={"arrow-ios-back-outline"} color={AppColors.primaryColor} />
+        <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 16, lineHeight: 27, color: AppColors.black }}>Lianes compatibles</AppText>
+      </Row>
+      <View style={[styles.membersContainer, { paddingTop: 15 }]}>
         <SectionList
           renderSectionHeader={renderSectionHeader}
           sections={sections}
