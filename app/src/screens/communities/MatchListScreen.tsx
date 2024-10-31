@@ -9,7 +9,6 @@ import { AppIcon } from "@/components/base/AppIcon";
 import { AppColors, ContextualColors } from "@/theme/colors";
 import { extractDays, extractTime } from "@/util/hooks/days";
 import { ArrayUtils, CoMatch } from "@liane/common";
-import { extractWaypointFromTo } from "@/util/hooks/lianeRequest";
 import { AppAvatars } from "@/components/UserPicture.tsx";
 
 type Status = "Pending" | "Received" | "None";

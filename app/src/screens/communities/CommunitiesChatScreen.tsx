@@ -1,7 +1,9 @@
 import {
   addSeconds,
+  ArrayUtils,
   Chat,
   CoLiane,
+  CoMatch,
   DayOfWeekFlag,
   Liane,
   LianeMessage,
@@ -12,7 +14,7 @@ import {
   TimeOnlyUtils
 } from "@liane/common";
 import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from "react-native";
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, SectionList, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Center, Column, Row } from "@/components/base/AppLayout";
@@ -38,6 +40,8 @@ import { LianeQueryKey } from "@/screens/user/MyTripsScreen.tsx";
 import { useQueryClient } from "react-query";
 import { UserPicture } from "@/components/UserPicture.tsx";
 
+type Section = { data: LianeMessage[]; date: string };
+
 export const CommunitiesChatScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesChat">();
   const { user, services } = useContext(AppContext);
@@ -57,6 +61,19 @@ export const CommunitiesChatScreen = () => {
   const [currentTripIndex, setCurrentTripIndex] = useState<number>(0);
   const [tripModalVisible, setTripModalVisible] = useState(false);
   const currentTrip = trips[currentTripIndex];
+
+  const sections = useMemo(() => {
+    return Object.entries(
+      ArrayUtils.groupBy(messages, m => {
+        if (m.createdAt) {
+          const date = new Date(m.createdAt);
+          return AppLocalization.formatMonthDay(date);
+        }
+
+        return "none";
+      })
+    ).map(([key, value]) => ({ data: value, date: key } as Section));
+  }, [messages]);
 
   useSubscription<CoLiane>(
     services.realTimeHub.lianeUpdates,
@@ -330,6 +347,19 @@ export const CommunitiesChatScreen = () => {
     return null;
   };
 
+  const renderSectionHeader = ({ section }: { section: Section }) => {
+    return (
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "center",
+          marginVertical: 5
+        }}>
+        <AppText style={{ color: AppColors.darkGray, fontWeight: "normal" }}>{section.date}</AppText>
+      </View>
+    );
+  };
+
   return (
     <View style={{ backgroundColor: AppColors.lightGrayBackground, justifyContent: "flex-end", flex: 1 }}>
       <View style={{ marginTop: insets.top + 52 }}>
@@ -424,9 +454,10 @@ export const CommunitiesChatScreen = () => {
         )}
       </View>
       {chat && liane && (
-        <FlatList
+        <SectionList
+          renderSectionHeader={renderSectionHeader}
+          sections={sections}
           style={{ paddingHorizontal: 16 }}
-          data={messages}
           keyExtractor={m => m.id!}
           renderItem={({ item, index }) => (
             <MessageBubble
