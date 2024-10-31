@@ -64,7 +64,7 @@ export const CommunitiesChatScreen = () => {
 
   const sections = useMemo(() => {
     return Object.entries(
-      ArrayUtils.groupBy(messages, m => {
+      ArrayUtils.groupBy([...messages].reverse(), m => {
         if (m.createdAt) {
           const date = new Date(m.createdAt);
           return AppLocalization.formatMonthDay(date);
@@ -467,7 +467,6 @@ export const CommunitiesChatScreen = () => {
               previousSender={index < messages.length - 1 ? messages[index + 1].createdBy : undefined}
             />
           )}
-          inverted={true}
           onEndReachedThreshold={0.2}
           onEndReached={() => fetchNextPage()}
         />
