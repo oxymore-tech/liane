@@ -43,10 +43,30 @@ export const LianeContextActions = ({ liane, onJoin, onReject, onLeave, pendingA
         <AppText style={styles.headerText}>{liane.pendingMembers.length > 0 ? "Demandes en cours" : "Vous êtes membre de cette liane"}</AppText>
         <Column style={styles.subColumn}>
           {liane.pendingMembers.map(m => (
-            <Row key={m.user.id}>
+            <Row
+              key={m.user.id}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginBottom: 5
+              }}>
               <AppAvatar user={m.user} />
-              <AppText>{m.user.pseudo}</AppText>
-              <AppButton onPress={onJoin} color={AppColors.primaryColor} value="Accepter" loading={pendingAction === "join"} />
+              <AppText
+                style={{
+                  fontSize: 17,
+                  fontWeight: "bold",
+                  marginLeft: 5,
+                  marginRight: 15
+                }}>
+                {m.user.pseudo}
+              </AppText>
+              <AppButton
+                style={{ marginRight: 5 }}
+                onPress={onJoin}
+                color={AppColors.primaryColor}
+                value="Accepter"
+                loading={pendingAction === "join"}
+              />
               <AppButton onPress={onReject} color={AppColors.white} value="Refuser" loading={pendingAction === "reject"} />
             </Row>
           ))}
