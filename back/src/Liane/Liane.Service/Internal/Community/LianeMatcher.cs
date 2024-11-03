@@ -218,7 +218,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     if (rawMatches.Count == 1)
     {
       var first = rawMatches.First();
-      JoinRequest? joinRequest = mapParams.PendingJoinRequests.TryGetValue(first.From, out var d)
+      JoinRequest? joinRequest = mapParams.PendingJoinRequests.TryGetValue(first.LianeRequest, out var d)
         ? new JoinRequest.Pending(d)
         : mapParams.ReceivedJoinRequests.TryGetValue(first.LianeRequest, out var d2)
           ? new JoinRequest.Received(d2)

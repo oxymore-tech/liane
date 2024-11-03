@@ -2,7 +2,7 @@ import { capitalize, CoLiane, CoLianeMember, LianeMessage, Ref, User } from "@li
 import React, { useCallback, useMemo } from "react";
 import { View, Pressable } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
-import { Column, Row } from "@/components/base/AppLayout";
+import { Center, Column, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { AppLocalization } from "@/api/i18n.ts";
 import { UserPicture } from "@/components/UserPicture.tsx";
@@ -31,8 +31,8 @@ export const MessageBubble = ({
   const firstBySender = previousSender !== sender?.user.id;
   const date = capitalize(AppLocalization.toRelativeTimeString(new Date(message.createdAt!)));
 
-  const backgroundColor = message.content.type === "Text" ? (isSender ? AppColors.primaryColor : AppColors.white) : "transparent";
-  const color = message.content.type !== "Text" ? AppColors.darkGray : isSender ? AppColors.white : AppColors.darkGray;
+  const backgroundColor = message.content.type === "Text" ? (isSender ? AppColors.primaryColor : AppColors.secondaryColor) : "transparent";
+  const color = message.content.type !== "Text" ? AppColors.darkGray : isSender ? AppColors.white : AppColors.white;
 
   const handlePendingMember = useCallback(() => {
     navigation.push("LianeMapDetail", { liane: coLiane });
@@ -43,13 +43,15 @@ export const MessageBubble = ({
       <Column
         style={{
           marginBottom: 6,
-          backgroundColor: AppColorPalettes.gray[800],
+          backgroundColor: AppColorPalettes.gray[700],
           borderRadius: 8,
           padding: 8
         }}>
-        <Row style={{ justifyContent: "space-between" }}>
-          <AppText style={{ fontSize: 12, color: AppColorPalettes.gray[100] }}>{message.content.value}</AppText>
-          {message.content.type === "TripAdded" && <AppIcon name="liane" color={AppColors.primaryColor} size={24} />}
+        <Row style={{ justifyContent: "center" }}>
+          <Center style={{ flex: 1 }}>
+            <AppText style={{ fontSize: 12, color: AppColorPalettes.gray[400] }}>{message.content.value}</AppText>
+          </Center>
+          {message.content.type === "TripAdded" && <AppIcon name="liane" color={AppColors.white} size={24} />}
         </Row>
         {message.content.type === "MemberRequested" && coLiane.pendingMembers.find(u => u.user.id === message.createdBy) && (
           <Row>
@@ -64,7 +66,7 @@ export const MessageBubble = ({
             </Pressable>
           </Row>
         )}
-        <AppText style={{ fontSize: 12, color: AppColorPalettes.gray[400], alignSelf: "flex-end" }}>{date}</AppText>
+        <AppText style={{ fontSize: 10, color: AppColorPalettes.gray[400], alignSelf: "flex-end" }}>{date}</AppText>
       </Column>
     );
   }
@@ -80,11 +82,6 @@ export const MessageBubble = ({
       {!isSender && firstBySender && <UserPicture url={sender?.user.pictureUrl} id={sender?.user.id} size={32} />}
       {!isSender && !firstBySender && <View style={{ width: 32 }} />}
       <Column spacing={2}>
-        {!isSender && firstBySender && (
-          <AppText style={{ marginLeft: 6, alignSelf: "flex-start", fontSize: 14, fontWeight: "bold", color: AppColorPalettes.blue[800] }}>
-            {sender?.user.pseudo}
-          </AppText>
-        )}
         <Column
           style={{
             backgroundColor,
@@ -99,6 +96,11 @@ export const MessageBubble = ({
             marginLeft: isSender ? 56 : 0
           }}
           spacing={4}>
+          {!isSender && firstBySender && (
+            <AppText style={{ alignSelf: "flex-start", fontSize: 14, fontWeight: "bold", color: AppColorPalettes.blue[900] }}>
+              {sender?.user.pseudo}
+            </AppText>
+          )}
           <AppText numberOfLines={-1} style={{ fontSize: 15, color }}>
             {message.content.value}
           </AppText>

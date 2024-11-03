@@ -355,19 +355,6 @@ export const CommunitiesChatScreen = () => {
     return null;
   };
 
-  const renderSectionHeader = ({ section }: { section: Section }) => {
-    return (
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "center",
-          marginVertical: 5
-        }}>
-        <AppText style={{ color: AppColors.darkGray, fontWeight: "normal" }}>{section.date}</AppText>
-      </View>
-    );
-  };
-
   return (
     <View style={styles.mainContainer}>
       <Row
