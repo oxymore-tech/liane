@@ -16,7 +16,7 @@ import { AppLocalization } from "@/api/i18n";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
 import { LianeStatusView } from "@/components/trip/LianeStatusView";
-import { Row } from "@/components/base/AppLayout";
+import { Center, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { UserPicture } from "@/components/UserPicture";
 import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
@@ -43,8 +43,7 @@ export interface TripListViewProps {
 }
 
 export const TripListView = ({ data, isFetching, onRefresh, reverseSort, loadMore }: TripListViewProps) => {
-  //const insets = useSafeAreaInsets();
-  const bottom = 32; //96 + insets.bottom;
+  const bottom = 32;
   const { user } = useContext(AppContext);
   const userId = user!.id!;
   const sections = useMemo(() => {
@@ -63,6 +62,11 @@ export const TripListView = ({ data, isFetching, onRefresh, reverseSort, loadMor
       renderSectionHeader={renderSectionHeader}
       onEndReachedThreshold={0.2}
       onEndReached={loadMore}
+      ListEmptyComponent={
+        <Center>
+          <AppText style={AppStyles.noData}>Aucun trajet prévus</AppText>
+        </Center>
+      }
       renderSectionFooter={s => <View style={{ height: s.section === sections[sections.length - 1] ? bottom : 24 }} />}
     />
   );

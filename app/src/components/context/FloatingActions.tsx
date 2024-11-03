@@ -102,7 +102,9 @@ const styles = StyleSheet.create({
   container: {
     position: "absolute",
     right: 10,
-    zIndex: 30
+    zIndex: 30,
+    shadowColor: AppColors.black,
+    elevation: 4
   },
   buttons: {
     backgroundColor: AppColors.white,

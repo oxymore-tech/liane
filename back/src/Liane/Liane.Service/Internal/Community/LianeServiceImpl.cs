@@ -99,19 +99,21 @@ public sealed class LianeServiceImpl(
     var linkedToLianes = await lianeFetcher.FetchLianes(connection, lianeFilter);
 
     return lianeRequests.Select(r =>
-    {
-      if (linkedTo.TryGetValue(r.Id!.Value, out var member))
       {
-        var liane = linkedToLianes.GetValueOrDefault(member.LianeId);
-        if (liane is not null)
+        if (linkedTo.TryGetValue(r.Id!.Value, out var member))
         {
-          return new LianeMatch(r, new LianeState.Attached(liane));
+          var liane = linkedToLianes.GetValueOrDefault(member.LianeId);
+          if (liane is not null)
+          {
+            return new LianeMatch(r, new LianeState.Attached(liane));
+          }
         }
-      }
 
-      var result = matches.GetValueOrDefault(r.Id!.Value, ImmutableList<Match>.Empty);
-      return new LianeMatch(r, new LianeState.Detached(result));
-    }).ToImmutableList();
+        var result = matches.GetValueOrDefault(r.Id!.Value, ImmutableList<Match>.Empty);
+        return new LianeMatch(r, new LianeState.Detached(result));
+      })
+      .OrderBy(m => m.State is LianeState.Attached)
+      .ToImmutableList();
   }
 
   public async Task<ImmutableList<Api.Community.Liane>> List(LianeFilter filter)

@@ -55,7 +55,6 @@ export const HomeMapBottomSheetContainer = ({ lianes = [], isFetching, currentBo
       </AppText>
       <FlatList
         scrollEnabled={true}
-        showsVerticalScrollIndicator={true}
         refreshControl={<RefreshControl refreshing={isFetching} onRefresh={() => currentBoundbox && fetchLianeOnMap(currentBoundbox)} />}
         data={lianes}
         renderItem={props => <LianeOnMapItem {...props} openLiane={openLiane} />}

@@ -1,59 +1,27 @@
-import { Detached, ResolvedLianeRequest } from "@liane/common";
+import { Detached } from "@liane/common";
 import { AppText } from "@/components/base/AppText.tsx";
 import { AppColors } from "@/theme/colors.ts";
-import { Pressable, StyleSheet, View } from "react-native";
-import { Row } from "@/components/base/AppLayout.tsx";
 import React from "react";
-import { useAppNavigation } from "@/components/context/routing.ts";
 
 export type DetachedLianeItemProps = {
-  lianeRequest: ResolvedLianeRequest;
   state: Detached;
-  unread?: boolean;
 };
 
-export const DetachedLianeItem = ({ lianeRequest, state, unread }: DetachedLianeItemProps) => {
-  const { navigation } = useAppNavigation();
-
+export const DetachedLianeItem = ({ state }: DetachedLianeItemProps) => {
   if (state.matches.length === 0) {
-    return <AppText style={{ fontSize: 14, fontWeight: "bold", lineHeight: 23, color: AppColors.darkGray }}>en attente de conducteur</AppText>;
+    return <AppText style={{ fontSize: 14, fontWeight: "bold", lineHeight: 23, color: AppColors.darkGray }}> </AppText>;
   }
 
   return (
-    <Pressable
-      style={{ flexDirection: "row", justifyContent: "flex-end", alignItems: "flex-end", flex: 1, paddingVertical: 5 }}
-      onPress={() => navigation.navigate("MatchList", { matches: state.matches, lianeRequest })}>
-      <Row>
-        {unread && (
-          <View style={styles.notificationDotContainer}>
-            <View style={styles.notificationDot} />
-          </View>
-        )}
-
-        <AppText
-          style={{
-            fontSize: 14,
-            fontWeight: "bold",
-            lineHeight: 23,
-            color: AppColors.darkGray,
-            marginLeft: 5
-          }}>
-          {state.matches.length === 1 ? "1 proposition" : `${state.matches.length} propositions`}
-        </AppText>
-      </Row>
-    </Pressable>
+    <AppText
+      style={{
+        fontSize: 14,
+        fontWeight: "bold",
+        lineHeight: 23,
+        color: AppColors.darkGray,
+        marginLeft: 5
+      }}>
+      {state.matches.length === 1 ? "1 proposition" : `${state.matches.length} propositions`}
+    </AppText>
   );
 };
-
-const styles = StyleSheet.create({
-  notificationDotContainer: {
-    justifyContent: "center",
-    alignItems: "center"
-  },
-  notificationDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 6,
-    backgroundColor: AppColors.orange
-  }
-});

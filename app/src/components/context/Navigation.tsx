@@ -80,7 +80,7 @@ function Home() {
       {makeTab(
         "Lianes",
         ({ focused }) => {
-          return <TabIcon iconName={"people-outline"} focused={focused} size={iconSize} />;
+          return <TabIcon iconName={"liane"} focused={focused} size={iconSize} />;
         },
         CommunitiesScreen
       )}
