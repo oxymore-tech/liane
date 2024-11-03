@@ -23,9 +23,9 @@ export const DisplayWayPoints = ({ wayPoints, hideLabel, style, inverse = false 
   return (
     <View style={style}>
       {steps.map((s, i) => {
-        const icon = i === 0 ? "pin" : i === steps.length - 1 ? "position-end" : undefined;
+        const icon = i === 0 ? "pin" : i === steps.length - 1 ? "flag-outline" : undefined;
         const time = TimeOnlyUtils.fromDate(new Date(s.eta));
-        return <TripRow point={s.rallyingPoint} time={time} icon={icon} hideLabel={hideLabel} />;
+        return <TripRow key={s.rallyingPoint.id} point={s.rallyingPoint} time={time} icon={icon} hideLabel={hideLabel} />;
       })}
     </View>
   );

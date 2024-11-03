@@ -91,8 +91,8 @@ export const LianeRequestItem = ({ item, onRefresh, unreadLianes }: LianeRequest
                     alignItems: "flex-end"
                   }}>
                   <View>
-                    <AppText style={styles.cityFont}>{`${from.city}`}</AppText>
-                    <AppText style={styles.cityFont}>{`${to.city}`}</AppText>
+                    <AppText style={styles.cityFont}>{from.city}</AppText>
+                    <AppText style={styles.cityFont}>{to.city}</AppText>
                   </View>
                   <Row>
                     {unread && (

@@ -29,62 +29,15 @@ export const LianeOnMapItem = ({ item, openLiane }: LianeOnMapItemProps) => {
             borderColor: AppColors.grayBackground
           }}>
           <View style={{ paddingTop: 10, flexDirection: "row", justifyContent: "flex-start", paddingRight: 32 }}>
-            <AppText
-              style={{
-                fontSize: 18,
-                fontWeight: "bold",
-                flexShrink: 1,
-                lineHeight: 27,
-                paddingRight: 8,
-                color: AppColors.black
-              }}>
-              {from?.city}
-            </AppText>
-            <AppText
-              style={{
-                fontSize: 16,
-                fontWeight: "normal",
-                flexShrink: 1,
-                lineHeight: 27,
-                color: AppColorPalettes.gray[500]
-              }}>
-              {from?.label}
-            </AppText>
+            <AppText style={styles.city}>{from?.city}</AppText>
+            <AppText style={styles.label}>{from?.label}</AppText>
           </View>
           <View style={{ paddingBottom: 5, flexDirection: "row", justifyContent: "flex-start" }}>
-            <AppText
-              style={{
-                fontSize: 18,
-                fontWeight: "bold",
-                flexShrink: 1,
-                lineHeight: 27,
-                paddingRight: 8,
-                color: AppColors.black
-              }}>
-              {to?.city}
-            </AppText>
-            <AppText
-              style={{
-                fontSize: 16,
-                fontWeight: "normal",
-                flexShrink: 1,
-                lineHeight: 27,
-                color: AppColorPalettes.gray[500]
-              }}>
-              {to?.label}
-            </AppText>
+            <AppText style={styles.city}>{to?.city}</AppText>
+            <AppText style={styles.label}>{to?.label}</AppText>
           </View>
           <View style={{ paddingBottom: 10, flexDirection: "row", justifyContent: "flex-start" }}>
-            <AppText
-              style={{
-                fontSize: 15,
-                fontWeight: "normal",
-                flexShrink: 1,
-                lineHeight: 20,
-                color: AppColors.darkGray
-              }}>
-              {extractDaysOnly(item)}
-            </AppText>
+            <AppText style={styles.days}>{extractDaysOnly(item)}</AppText>
           </View>
           <View style={{ position: "absolute", top: 10, right: 10 }}>
             <AppIcon name={"arrow-right"} color={AppColors.darkGray} size={22} />
@@ -101,9 +54,26 @@ export const LianeOnMapItem = ({ item, openLiane }: LianeOnMapItemProps) => {
 };
 
 const styles = StyleSheet.create({
-  subRow: {
-    flex: 1,
-    alignItems: "flex-end",
-    padding: 15
+  city: {
+    fontSize: 18,
+    fontWeight: "bold",
+    flexShrink: 1,
+    lineHeight: 27,
+    paddingRight: 8,
+    color: AppColors.black
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: "normal",
+    flexShrink: 1,
+    lineHeight: 27,
+    color: AppColorPalettes.gray[500]
+  },
+  days: {
+    fontSize: 15,
+    fontWeight: "normal",
+    flexShrink: 1,
+    lineHeight: 20,
+    color: AppColors.darkGray
   }
 });

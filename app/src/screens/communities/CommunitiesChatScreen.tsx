@@ -12,9 +12,9 @@ import {
   TimeOnly,
   TimeOnlyUtils
 } from "@liane/common";
-import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, SectionList, StyleSheet, View } from "react-native";
-import { AppColorPalettes, AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, SectionList, StyleSheet, View } from "react-native";
+import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
@@ -38,6 +38,7 @@ import { getLianeStatusStyle } from "@/components/trip/LianeStatusView.tsx";
 import { LianeQueryKey } from "@/screens/user/MyTripsScreen.tsx";
 import { useQueryClient } from "react-query";
 import { UserPicture } from "@/components/UserPicture.tsx";
+import { AppButton } from "@/components/base/AppButton.tsx";
 
 type Section = { data: LianeMessage[]; date: string };
 
@@ -63,13 +64,9 @@ export const CommunitiesChatScreen = () => {
 
   const sections = useMemo(() => {
     return Object.entries(
-      ArrayUtils.groupBy([...messages].reverse(), m => {
-        if (m.createdAt) {
-          const date = new Date(m.createdAt);
-          return AppLocalization.formatMonthDay(date);
-        }
-
-        return "none";
+      ArrayUtils.groupBy(messages, m => {
+        const date = new Date(m.createdAt!);
+        return AppLocalization.formatMonthDay(date);
       })
     ).map(([key, value]) => ({ data: value, date: key } as Section));
   }, [messages]);
@@ -84,6 +81,18 @@ export const CommunitiesChatScreen = () => {
     },
     [liane?.id]
   );
+
+  const chatListRef = useRef<SectionList<LianeMessage, Section>>(null);
+
+  const scrollToEnd = useCallback(() => {
+    if (sections.length === 0) {
+      return;
+    }
+    const sectionIndex = sections.length - 1;
+    const itemIndex = sections[sectionIndex].data.length - 1;
+    const params = { itemIndex: itemIndex, animated: true, sectionIndex: sectionIndex };
+    chatListRef.current?.scrollToLocation(params);
+  }, [sections]);
 
   useSubscription<Liane>(
     services.realTimeHub.tripUpdates,
@@ -360,103 +369,112 @@ export const CommunitiesChatScreen = () => {
   };
 
   return (
-    <View style={{ backgroundColor: AppColors.lightGrayBackground, justifyContent: "flex-end", flex: 1 }}>
-      <View style={{ marginTop: insets.top + 52 }}>
-        {trips.length > 0 && (
-          <View style={{ width: "100%" }}>
+    <View style={styles.mainContainer}>
+      <Row
+        style={{ paddingTop: insets.top, backgroundColor: AppColors.white, justifyContent: "space-between", alignItems: "center", padding: 16 }}
+        spacing={16}>
+        <AppButton onPress={() => navigation.goBack()} icon={"arrow-ios-back-outline"} color={AppColors.primaryColor} />
+        <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 16, lineHeight: 27, color: AppColors.primaryColor }}>{name}</AppText>
+        <AppButton
+          onPress={() => liane && navigation.navigate("CommunitiesDetails", { liane: liane })}
+          icon={"edit-2-outline"}
+          color={AppColors.white}
+        />
+      </Row>
+      {trips.length > 0 && (
+        <View style={{ width: "100%", backgroundColor: AppColors.white }}>
+          <View
+            style={[
+              {
+                flexDirection: "row",
+                justifyContent: "space-between",
+                paddingHorizontal: 16,
+                marginTop: 12
+              },
+              showTripDetail ? null : { paddingBottom: 12 }
+            ]}>
+            <AppText
+              style={{
+                fontSize: 18,
+                fontWeight: "normal",
+                flexShrink: 1,
+                lineHeight: 27,
+                color: AppColors.black
+              }}>
+              {`${trips.length} trajet${trips.length > 1 ? "s" : ""} prévu${trips.length > 1 ? "s" : ""}`}
+            </AppText>
             <View
-              style={[
-                {
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  paddingHorizontal: 16,
-                  marginTop: 12
-                },
-                showTripDetail ? null : { paddingBottom: 12 }
-              ]}>
-              <AppText
-                style={{
-                  fontSize: 18,
-                  fontWeight: "normal",
-                  flexShrink: 1,
-                  lineHeight: 27,
-                  color: AppColors.black
-                }}>
-                {`${trips.length} trajets prévu${trips.length > 1 ? "s" : ""}`}
-              </AppText>
+              style={{
+                flexDirection: "row"
+              }}>
+              <Pressable onPress={goToPreviousLiane} style={{ paddingHorizontal: 10 }}>
+                <AppIcon name={"arrow2-left"} />
+              </Pressable>
+              <Pressable
+                onPress={() => setShowTripDetail(!showTripDetail)}
+                style={[
+                  { minWidth: 110, alignItems: "center" },
+                  showTripDetail
+                    ? { backgroundColor: AppColors.white, borderTopLeftRadius: 15, borderTopRightRadius: 15, paddingBottom: 8 }
+                    : { backgroundColor: AppColors.grayBackground, borderRadius: 15, borderWidth: 2, borderColor: AppColors.darkGray }
+                ]}>
+                <AppText
+                  style={{
+                    fontSize: 18,
+                    fontWeight: "normal",
+                    flexShrink: 1,
+                    lineHeight: 27,
+                    color: AppColors.black
+                  }}>
+                  {currentTrip && getDayOfWeek(currentTrip)}
+                </AppText>
+              </Pressable>
+              <Pressable onPress={goToNextLiane} style={{ paddingHorizontal: 10 }}>
+                <AppIcon name={"arrow-right"} />
+              </Pressable>
+            </View>
+          </View>
+          {showTripDetail ? (
+            <View style={{ backgroundColor: AppColors.white, flexDirection: "column" }}>
               <View
                 style={{
-                  flexDirection: "row"
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  paddingHorizontal: 20,
+                  paddingTop: 10,
+                  alignItems: "center"
                 }}>
-                <Pressable onPress={goToPreviousLiane} style={{ paddingHorizontal: 10 }}>
-                  <AppIcon name={"arrow2-left"} />
-                </Pressable>
-                <Pressable
-                  onPress={() => setShowTripDetail(!showTripDetail)}
-                  style={[
-                    { minWidth: 110, alignItems: "center" },
-                    showTripDetail
-                      ? { backgroundColor: AppColors.white, borderTopLeftRadius: 15, borderTopRightRadius: 15, paddingBottom: 8 }
-                      : { backgroundColor: AppColors.grayBackground, borderRadius: 15, borderWidth: 2, borderColor: AppColors.darkGray }
-                  ]}>
-                  <AppText
+                {liane && (
+                  <View
                     style={{
-                      fontSize: 18,
-                      fontWeight: "normal",
-                      flexShrink: 1,
-                      lineHeight: 27,
-                      color: AppColors.black
+                      flex: 1,
+                      flexDirection: "row",
+                      marginLeft: 25,
+                      paddingTop: 8
                     }}>
-                    {currentTrip && getDayOfWeek(currentTrip)}
-                  </AppText>
-                </Pressable>
-                <Pressable onPress={goToNextLiane} style={{ paddingHorizontal: 10 }}>
-                  <AppIcon name={"arrow-right"} />
-                </Pressable>
+                    {currentTrip.members.map(member => (
+                      <UserPicture key={member.user.id} size={24} url={member.user.pictureUrl} id={member.user.id} style={{ marginLeft: -10 }} />
+                    ))}
+                  </View>
+                )}
+
+                {tripActions()}
+              </View>
+              <View
+                style={{
+                  paddingBottom: 10
+                }}>
+                {currentTrip?.wayPoints && <DisplayWayPoints wayPoints={currentTrip.wayPoints} />}
               </View>
             </View>
-            {showTripDetail ? (
-              <View style={{ backgroundColor: AppColors.white, flexDirection: "column" }}>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    paddingHorizontal: 20,
-                    paddingTop: 10,
-                    alignItems: "center"
-                  }}>
-                  {liane && (
-                    <View
-                      style={{
-                        flex: 1,
-                        flexDirection: "row",
-                        marginLeft: 25,
-                        paddingTop: 8
-                      }}>
-                      {currentTrip.members.map(member => (
-                        <UserPicture key={member.user.id} size={24} url={member.user.pictureUrl} id={member.user.id} style={{ marginLeft: -10 }} />
-                      ))}
-                    </View>
-                  )}
-
-                  {tripActions()}
-                </View>
-                <View
-                  style={{
-                    paddingBottom: 10
-                  }}>
-                  {currentTrip?.wayPoints && <DisplayWayPoints wayPoints={currentTrip.wayPoints} />}
-                </View>
-              </View>
-            ) : null}
-          </View>
-        )}
-      </View>
+          ) : null}
+        </View>
+      )}
       {chat && liane && (
-        <SectionList
-          renderSectionHeader={renderSectionHeader}
-          sections={sections}
-          style={{ paddingHorizontal: 16 }}
+        <FlatList
+          refreshing={sections.length === 0}
+          data={messages}
+          style={{ flex: 1, paddingHorizontal: 16 }}
           keyExtractor={m => m.id!}
           renderItem={({ item, index }) => (
             <MessageBubble
@@ -467,95 +485,32 @@ export const CommunitiesChatScreen = () => {
             />
           )}
           onEndReachedThreshold={0.2}
-          onEndReached={() => fetchNextPage()}
+          onEndReached={fetchNextPage}
+          inverted
         />
       )}
       {!chat && liane && <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />}
-      {error && (
-        <Center style={{ flex: 1 }}>
-          <AppText style={{ color: ContextualColors.redAlert.text }}>{error.message}</AppText>
-        </Center>
-      )}
-      <View
-        style={{
-          backgroundColor: AppColors.white,
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          paddingTop: 16 + insets.top
-        }}>
-        <Row spacing={8} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-          <Row style={{ flex: 1 }}>
-            <AppPressableIcon onPress={() => navigation.goBack()} name={"arrow-ios-back-outline"} color={AppColors.primaryColor} size={32} />
-
-            {!!liane && (
-              <View
-                style={{
-                  justifyContent: "center",
-                  alignItems: "center",
-                  flex: 1
-                }}>
-                <AppText
-                  style={{
-                    fontSize: 22,
-                    fontWeight: "bold",
-                    flexShrink: 1,
-                    lineHeight: 27,
-                    color: AppColors.primaryColor
-                  }}>
-                  {name}
-                </AppText>
-              </View>
-            )}
-          </Row>
-          <Row>
-            {liane && (
-              <Pressable onPress={() => navigation.navigate("CommunitiesDetails", { liane: liane })}>
-                <AppIcon name={"edit-2-outline"} />
-              </Pressable>
-            )}
-          </Row>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "android" ? "height" : "padding"}
+        style={{ paddingBottom: 8, paddingHorizontal: 8, backgroundColor: AppColorPalettes.gray[150] }}>
+        <Row spacing={8}>
+          {!!liane && <AppButton color={AppColors.primaryColor} onPress={() => setTripModalVisible(true)} icon="plus-outline" />}
+          <AppExpandingTextInput
+            multiline={true}
+            backgroundStyle={{ backgroundColor: AppColors.white, borderRadius: 16, paddingLeft: 8 }}
+            onFocus={scrollToEnd}
+            trailing={
+              !isSending ? (
+                sendButton
+              ) : (
+                <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />
+              )
+            }
+            onChangeText={setInputValue}
+            value={inputValue}
+            clearButtonMode="always"
+          />
         </Row>
-      </View>
-
-      <KeyboardAvoidingView behavior={Platform.OS === "android" ? "height" : "padding"}>
-        <View
-          style={{
-            paddingHorizontal: 16,
-            paddingBottom: 12 + insets.bottom,
-            paddingTop: 12,
-            marginTop: 8
-          }}>
-          <Row spacing={16}>
-            {!!liane && (
-              <AppPressableIcon
-                size={32}
-                color={AppColors.white}
-                onPress={() => setTripModalVisible(true)}
-                name={"plus-outline"}
-                style={{ padding: 12 }}
-                backgroundStyle={{ borderRadius: 24, backgroundColor: AppColors.primaryColor, maxHeight: 58 }}
-              />
-            )}
-
-            <AppExpandingTextInput
-              multiline={true}
-              backgroundStyle={{ backgroundColor: AppColors.white, borderRadius: 16, padding: 16, flex: 1 }}
-              trailing={
-                !isSending ? (
-                  sendButton
-                ) : (
-                  <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />
-                )
-              }
-              onChangeText={setInputValue}
-              value={inputValue}
-              clearButtonMode="always"
-            />
-          </Row>
-        </View>
-
         {!!me && (
           <LaunchTripModal
             lianeRequest={me!.lianeRequest}
@@ -790,6 +745,14 @@ const LaunchTripModal = ({
 };
 
 const styles = StyleSheet.create({
+  mainContainer: {
+    backgroundColor: AppColors.grayBackground,
+    justifyContent: "flex-start",
+    flex: 1
+  },
+  chatContainer: {
+    flex: 1
+  },
   modalText: {
     fontSize: 16,
     fontWeight: "bold",

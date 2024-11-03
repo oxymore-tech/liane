@@ -13,7 +13,6 @@ import History from "@/assets/icons/history.svg";
 import PositionOn from "@/assets/icons/position-on.svg";
 import PositionOff from "@/assets/icons/position-off.svg";
 import PositionMarker from "@/assets/icons/position-marker.svg";
-import PositionEnd from "@/assets/icons/position-end.svg";
 
 import RallyingPoint from "@/assets/icons/liane_rallying_point.svg";
 import Seat from "@/assets/icons/seat.svg";
@@ -88,8 +87,6 @@ export function AppIcon({ name, color = AppColorPalettes.gray[800], size = AppDi
       return <ThumbDown {...props} opacity={opacity} width={size} height={size} fill={color} />;
     case "position-marker":
       return <PositionMarker {...props} opacity={opacity} width={size} height={size} fill={color} />;
-    case "position-end":
-      return <PositionEnd {...props} opacity={opacity} width={size} height={size} fill={color} />;
     case "liane":
       return <Liane {...props} opacity={opacity} width={size} height={size} fill={color} />;
     default:
@@ -109,7 +106,6 @@ const AppIconsNames = [
   "position-on",
   "position-off",
   "position-marker",
-  "position-end",
   "twisting-arrow",
   "directions-walk",
   "rallying-point",
