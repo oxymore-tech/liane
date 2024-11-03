@@ -112,7 +112,7 @@ public sealed class LianeServiceImpl(
         var result = matches.GetValueOrDefault(r.Id!.Value, ImmutableList<Match>.Empty);
         return new LianeMatch(r, new LianeState.Detached(result));
       })
-      .OrderBy(m => m.State is LianeState.Attached)
+      .OrderByDescending(m => m.State is LianeState.Attached)
       .ToImmutableList();
   }
 
