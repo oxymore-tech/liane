@@ -1,31 +1,21 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useQuery } from "react-query";
-import { CoLianeMatch, UnauthorizedError } from "@liane/common";
+import { UnauthorizedError } from "@liane/common";
 import { AppText } from "@/components/base/AppText";
-import { Center, Column } from "@/components/base/AppLayout";
+import { Column } from "@/components/base/AppLayout";
 import { AppButton } from "@/components/base/AppButton";
 import { AppContext } from "@/components/context/ContextProvider";
 import { LianeListView } from "@/components/communities/LianeListView";
-import { AppColorPalettes, AppColors } from "@/theme/colors";
+import { AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export const CommunitiesScreen = () => {
   const insets = useSafeAreaInsets();
   const { services } = useContext(AppContext);
-  const [unreadLianes, setUnreadLianes] = useState<Record<string, number>>({});
 
-  useEffect(() => {
-    services.community.getUnreadLianes().then(setUnreadLianes);
-  }, [services.community]);
-
-  const lianeMatches = useQuery(CoLianeMatchQueryKey, async () => {
-    console.log("coLianeMatches before");
-    const coLianeMatches = await services.community.match();
-    console.log("coLianeMatches after");
-    return coLianeMatches;
-  });
+  const lianeMatches = useQuery(CoLianeMatchQueryKey, () => services.community.match());
 
   const { isFetching, error, data } = lianeMatches;
 

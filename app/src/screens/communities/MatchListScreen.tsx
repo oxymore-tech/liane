@@ -30,7 +30,8 @@ export const MatchListScreen = () => {
           }
           return m.joinRequest.type;
         }
-        return m.pendingRequest ? "Received" : "None";
+
+        return m.pendingRequest ? "Pending" : "None";
       })
     ).map(([key, value]) => ({ data: value, status: key } as Section));
   }, [matches]);

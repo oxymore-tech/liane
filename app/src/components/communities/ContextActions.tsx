@@ -78,7 +78,7 @@ export const LianeContextActions = ({ liane, onJoin, onReject, pendingAction }: 
   if (liane.pendingMembers.find(m => m.user.id === user?.id)) {
     return (
       <Column style={styles.columnAlignment}>
-        <AppText style={styles.headerText}>{"Vous avez demander de rejoindre cette fffliane"}</AppText>
+        <AppText style={styles.headerText}>{"Vous avez demander à rejoindre cette liane"}</AppText>
         <Row style={styles.subColumn}>
           <AppButton onPress={onReject} color={AppColors.white} value="Annuler ma demande" loading={pendingAction === "reject"} />
         </Row>
@@ -107,7 +107,7 @@ export const MatchContextActions = ({ match, onJoin, onReject, pendingAction }: 
   if ((match.type === "Single" && match.joinRequest?.type === "Pending") || (match.type === "Group" && match.pendingRequest)) {
     return (
       <Column style={styles.columnAlignment}>
-        <AppText style={styles.headerText}>{"Vous avez demander de rejoindre cette liane"}</AppText>
+        <AppText style={styles.headerText}>{"Vous avez demander à rejoindre cette liane"}</AppText>
         <Row style={styles.subColumn}>
           <AppButton onPress={onReject} color={AppColors.white} value="Annuler ma demande" loading={pendingAction === "reject"} />
         </Row>
@@ -118,7 +118,7 @@ export const MatchContextActions = ({ match, onJoin, onReject, pendingAction }: 
   if (match.type === "Single" && match.joinRequest?.type === "Received") {
     return (
       <Column style={styles.columnAlignment}>
-        <AppText style={styles.headerText}>{"Cette personne demande de rejoindre votre liane"}</AppText>
+        <AppText style={styles.headerText}>{"Cette personne demande à rejoindre votre liane"}</AppText>
         <Row style={styles.subColumn}>
           <AppButton onPress={onReject} color={AppColors.white} value="Annuler" loading={pendingAction === "reject"} />
         </Row>
@@ -129,7 +129,7 @@ export const MatchContextActions = ({ match, onJoin, onReject, pendingAction }: 
   if (match.type === "Group" && match.pendingRequest) {
     return (
       <Column style={styles.columnAlignment}>
-        <AppText style={styles.headerText}>{"Cette personne demande de rejoindre votre liane"}</AppText>
+        <AppText style={styles.headerText}>{"Cette personne demande à rejoindre votre liane"}</AppText>
         <Row style={styles.subColumn}>
           <AppButton onPress={onReject} color={AppColors.white} value="Annuler" loading={pendingAction === "reject"} />
         </Row>

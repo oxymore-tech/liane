@@ -87,7 +87,7 @@ export const LianeMapDetailScreen = () => {
     if (lianeRequest && lianeRequest.id && lianeId) {
       setPendingAction("reject");
       try {
-        await services.community.reject(lianeId, lianeRequest.id);
+        await services.community.reject(lianeRequest.id, lianeId);
         navigation.navigate("Lianes");
       } finally {
         setPendingAction(undefined);

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { createNativeStackNavigator, NativeStackHeaderProps } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { StyleSheet, View } from "react-native";
@@ -11,7 +11,6 @@ import { AppPressableIcon } from "@/components/base/AppPressable";
 import { useNavigation } from "@react-navigation/native";
 import { Row } from "@/components/base/AppLayout";
 import { AppContext } from "@/components/context/ContextProvider";
-import { useObservable } from "@/util/hooks/subscription";
 import HomeScreen from "@/screens/home/HomeScreen";
 import MyTripsScreen from "@/screens/user/MyTripsScreen";
 import { CommunitiesScreen } from "@/screens/communities/CommunitiesScreen";
@@ -40,9 +39,11 @@ const Tab = createBottomTabNavigator();
 
 function Home() {
   const { services, user, refreshUser } = useContext(AppContext);
-  const notificationCount = useObservable<number>(services.notification.unreadNotificationCount, 0);
-  const notificationHub = useObservable<string[]>(services.realTimeHub.unreadNotifications, []);
+  const [unreadLianes, setUnreadLianes] = useState<Record<string, number>>({});
 
+  useEffect(() => {
+    services.community.getUnreadLianes().then(setUnreadLianes);
+  }, [services.community]);
   const iconSize = 24;
 
   const navigation = useNavigation();
@@ -72,15 +73,15 @@ function Home() {
       {makeTab(
         "Calendrier",
         ({ focused }) => {
-          return <BadgeTabIcon iconName={"calendar"} focused={focused} size={iconSize} value={Math.max(notificationCount, notificationHub.length)} />;
+          return <TabIcon iconName="calendar" focused={focused} size={iconSize} />;
         },
         MyTripsScreen,
-        { headerShown: false } //TODO generic header ?
+        { headerShown: false }
       )}
       {makeTab(
         "Lianes",
         ({ focused }) => {
-          return <TabIcon iconName={"liane"} focused={focused} size={iconSize} />;
+          return <BadgeTabIcon iconName="liane" focused={focused} size={iconSize} value={Object.entries(unreadLianes).length} />;
         },
         CommunitiesScreen
       )}
