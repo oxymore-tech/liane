@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: AppColorPalettes.pink[500],
+    backgroundColor: AppColorPalettes.orange[500],
     borderColor: AppColors.white,
     borderWidth: 1
   }

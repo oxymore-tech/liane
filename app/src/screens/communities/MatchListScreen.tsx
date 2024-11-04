@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { Pressable, SectionList, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Row } from "@/components/base/AppLayout";
+import { Center, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppIcon } from "@/components/base/AppIcon";
@@ -42,17 +42,21 @@ export const MatchListScreen = () => {
         style={{ paddingTop: insets.top, backgroundColor: AppColors.white, justifyContent: "flex-start", alignItems: "center", padding: 16 }}
         spacing={16}>
         <AppButton onPress={() => navigation.goBack()} icon={"arrow-ios-back-outline"} color={AppColors.primaryColor} />
-        <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 16, lineHeight: 27, color: AppColors.black }}>Lianes compatibles</AppText>
+        <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 16, lineHeight: 27, color: AppColors.black }}>Propositions</AppText>
       </Row>
-      <View style={styles.membersContainer}>
-        <SectionList
-          renderSectionHeader={renderSectionHeader}
-          sections={sections}
-          renderItem={({ item }) => (
-            <GroupItem key={item.liane} group={item} onPress={() => navigation.navigate("LianeMapDetail", { liane: item, request: lianeRequest })} />
-          )}
-        />
-      </View>
+      <SectionList
+        style={styles.membersContainer}
+        renderSectionHeader={renderSectionHeader}
+        ListEmptyComponent={
+          <Center>
+            <AppText style={{ color: AppColors.black, fontSize: 16, fontWeight: "bold" }}>Nous n'avons rien à vous proposer :-(</AppText>
+          </Center>
+        }
+        sections={sections}
+        renderItem={({ item }) => (
+          <GroupItem key={item.liane} group={item} onPress={() => navigation.navigate("LianeMapDetail", { liane: item, request: lianeRequest })} />
+        )}
+      />
     </View>
   );
 };
@@ -130,6 +134,7 @@ const styles = StyleSheet.create({
     justifyContent: "center"
   },
   membersContainer: {
+    paddingTop: 12,
     height: "100%"
   },
   memberContainer: {

@@ -1,4 +1,4 @@
-import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
+import { StyleProp, StyleSheet, ViewStyle } from "react-native";
 import { AppButton } from "@/components/base/AppButton.tsx";
 import { IconName } from "@/components/base/AppIcon.tsx";
 import { AppColors } from "@/theme/colors.ts";
@@ -27,7 +27,7 @@ export type Action = "add" | "position";
 
 export type DefaultFloatingActionsProps = {
   position?: "bottom" | "middle" | "top";
-  onPosition: (pos: LatLng) => void;
+  onPosition?: (pos: LatLng) => void;
   actions?: Action[];
 };
 
@@ -42,6 +42,10 @@ export const DefaultFloatingActions = ({ actions = ["add", "position"], position
 
     if (!contains(FR_BBOX, currentLocation)) {
       displayInfo("Désolé, Liane n'est pas disponible sur votre territoire.");
+      return;
+    }
+
+    if (!onPosition) {
       return;
     }
 
@@ -80,21 +84,19 @@ function getPositionStyle(position: "bottom" | "middle" | "top"): StyleProp<View
     case "bottom":
       return { bottom: 20 };
     case "top":
-      return { top: 20 };
+      return { top: 150 };
     default:
       return { top: "40%" };
   }
 }
 
-export const FloatingActions = ({ position = "bottom", actions }: FloatingActionsProps) => {
+const FloatingActions = ({ position = "bottom", actions }: FloatingActionsProps) => {
   return (
-    <View style={[styles.container, AppStyles.shadow, getPositionStyle(position)]}>
-      <Column style={styles.buttons} spacing={5}>
-        {actions.map(action => (
-          <AppButton key={action.id} icon={action.icon} color={action.color} title={action.title} onPress={action.onPress} />
-        ))}
-      </Column>
-    </View>
+    <Column style={[styles.container, AppStyles.shadow, getPositionStyle(position)]} spacing={5}>
+      {actions.map(action => (
+        <AppButton key={action.id} icon={action.icon} color={action.color} title={action.title} onPress={action.onPress} />
+      ))}
+    </Column>
   );
 };
 
@@ -103,10 +105,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 10,
     zIndex: 30,
-    shadowColor: AppColors.black,
-    elevation: 4
-  },
-  buttons: {
     backgroundColor: AppColors.white,
     display: "flex",
     alignItems: "flex-end",

@@ -9,12 +9,10 @@ import { AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import { AppPressableIcon } from "@/components/base/AppPressable";
 import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker";
-import { LianeQueryKey } from "@/screens/user/MyTripsScreen";
 
 import { AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { CoLianeRequest, DayOfWeekFlag, TimeOnly, TimeOnlyUtils, Trip } from "@liane/common";
-import { AppModalNavigationContext } from "@/components/AppModalNavigationProvider";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppLocalization } from "@/api/i18n";
 import { AppTextInput } from "@/components/base/AppTextInput.tsx";
@@ -23,6 +21,7 @@ import { Accordion } from "@/screens/publish/Accordion.tsx";
 import { PageHeader } from "@/components/context/Navigation.tsx";
 import { ItinerarySearchForm } from "@/screens/ItinerarySearchForm.tsx";
 import { AppButton } from "@/components/base/AppButton.tsx";
+import { CoLianeMatchQueryKey } from "@/screens/communities/CommunitiesScreen.tsx";
 
 type StepProps<T> = {
   onChange: (v: T) => void;
@@ -37,7 +36,6 @@ export const PublishScreen = () => {
   const { navigation, route } = useAppNavigation<"Publish">();
   const initialValue = route.params.initialValue;
   const lianeId = route.params.lianeId;
-  const { showTutorial, shouldShow } = useContext(AppModalNavigationContext);
 
   const [trip, setTrip] = useState<Partial<Trip>>({});
   const [lianeRequest, setLianeRequest] = useState<Partial<CoLianeRequest>>({
@@ -80,26 +78,23 @@ export const PublishScreen = () => {
       } as CoLianeRequest;
       if (initialValue && lianeRequest.id) {
         await services.community.update(lianeRequest.id, newLianeRequest);
+        await queryClient.invalidateQueries(CoLianeMatchQueryKey);
         navigation.navigate("Lianes");
       } else {
-        await queryClient.invalidateQueries(LianeQueryKey);
         const created = await services.community.create(newLianeRequest);
+        await queryClient.invalidateQueries(CoLianeMatchQueryKey);
 
         if (lianeId) {
           await services.community.joinRequest(created.id!, lianeId);
         }
 
         navigation.popToTop();
-        if (shouldShow) {
-          showTutorial("driver", created.id);
-        } else {
-          navigation.navigate("Lianes");
-        }
+        navigation.navigate("Lianes");
       }
     } finally {
       setPending(false);
     }
-  }, [initialValue, lianeId, lianeRequest, navigation, queryClient, services.community, shouldShow, showTutorial, trip.from, trip.to]);
+  }, [initialValue, lianeId, lianeRequest, navigation, queryClient, services.community, trip.from, trip.to]);
 
   const stepDone = useCallback(() => {
     if (step < previousStep) {

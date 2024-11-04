@@ -10,7 +10,7 @@ import { Column } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { DebugIdView } from "@/components/base/DebugIdView";
 import { SlideUpModal } from "@/components/modal/SlideUpModal";
-import { LianeQueryKey } from "@/screens/user/MyTripsScreen";
+import { TripQueryKey } from "@/screens/user/MyTripsScreen";
 import { AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { ChoiceModal } from "@/components/modal/ChoiceModal";
@@ -118,7 +118,7 @@ export const LianeActionsView = ({ match }: { match: LianeMatch }) => {
           // Update current page's content
           navigation.dispatch(CommonActions.setParams({ liane: updated }));
           // Update liane list
-          await queryClient.invalidateQueries(LianeQueryKey);
+          await queryClient.invalidateQueries(TripQueryKey);
           setTimeModalVisible(false);
         }}
         visible={timeModalVisible}
@@ -156,7 +156,7 @@ const deleteLiane = (
       text: "Supprimer",
       onPress: async () => {
         await services.liane.delete(liane.id!);
-        await queryClient.invalidateQueries(LianeQueryKey);
+        await queryClient.invalidateQueries(TripQueryKey);
         navigation.goBack();
       },
       style: "default"
@@ -204,7 +204,7 @@ const leaveLiane = (
       text: "Quitter",
       onPress: async () => {
         await services.liane.leave(liane.id!);
-        await queryClient.invalidateQueries(LianeQueryKey);
+        await queryClient.invalidateQueries(TripQueryKey);
         navigation.goBack();
       },
       style: "default"

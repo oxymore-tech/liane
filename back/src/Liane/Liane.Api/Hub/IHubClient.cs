@@ -14,6 +14,7 @@ public interface IHubClient
   Task<bool> ReceiveNotification(Notification notification);
 
   Task<bool> ReceiveLianeMessage(string conversationId, LianeMessage message);
+  
   Task ReceiveLatestLianeMessages(PaginatedResponse<LianeMessage> messages);
 
   Task Me(FullUser user);

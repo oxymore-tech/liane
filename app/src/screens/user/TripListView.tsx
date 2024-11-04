@@ -27,7 +27,7 @@ import { startGeolocationService } from "@/screens/detail/components/Geolocation
 import { useTripStatus } from "@/components/trip/trip";
 import { AppLogger } from "@/api/logger";
 import { AppStyles } from "@/theme/styles.ts";
-import { LianeQueryKey } from "@/screens/user/MyTripsScreen.tsx";
+import { TripQueryKey } from "@/screens/user/MyTripsScreen.tsx";
 import { useQueryClient } from "react-query";
 
 export interface TripSection extends SectionBase<Liane> {
@@ -191,7 +191,7 @@ const StartButton = ({ item }: { item: Liane }) => {
         services.liane
           .start(item.id!)
           .then(() => {
-            queryClient.invalidateQueries(LianeQueryKey);
+            queryClient.invalidateQueries(TripQueryKey);
             startGeolocationService(item);
           })
           .catch(e => {

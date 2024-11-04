@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect } from "react";
 import { createNativeStackNavigator, NativeStackHeaderProps } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { StyleSheet, View } from "react-native";
@@ -33,17 +33,16 @@ import SignUpScreen from "@/screens/signUp/SignUpScreen";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { WithBadge } from "@/components/base/WithBadge";
 import { MatchListScreen } from "@/screens/communities/MatchListScreen.tsx";
+import { useObservable } from "@/util/hooks/subscription.ts";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 function Home() {
   const { services, user, refreshUser } = useContext(AppContext);
-  const [unreadLianes, setUnreadLianes] = useState<Record<string, number>>({});
+  const notificationCount = useObservable<number>(services.notification.unreadNotificationCount, 0);
+  const notificationHub = useObservable<string[]>(services.realTimeHub.unreadNotifications, []);
 
-  useEffect(() => {
-    services.community.getUnreadLianes().then(setUnreadLianes);
-  }, [services.community]);
   const iconSize = 24;
 
   const navigation = useNavigation();
@@ -81,7 +80,7 @@ function Home() {
       {makeTab(
         "Lianes",
         ({ focused }) => {
-          return <BadgeTabIcon iconName="liane" focused={focused} size={iconSize} value={Object.entries(unreadLianes).length} />;
+          return <BadgeTabIcon iconName="liane" focused={focused} size={iconSize} value={Math.max(notificationCount, notificationHub.length)} />;
         },
         CommunitiesScreen
       )}

@@ -23,7 +23,7 @@ const NoHistoryView = () => {
     </Center>
   );
 };
-export const LianeHistoryQueryKey = "getLianeHistory";
+export const TripHistoryQueryKey = "getLianeHistory";
 
 const ArchivedTripsView = WithFetchPaginatedResponse<Liane>(
   ({ data, refresh, refreshing, fetchNextPage, isFetchingNextPage }) => {
@@ -39,7 +39,7 @@ const ArchivedTripsView = WithFetchPaginatedResponse<Liane>(
     );
   },
   (repository, params, cursor) => repository.liane.list(["Archived", "Canceled"], { cursor, limit: 10, asc: false }),
-  LianeHistoryQueryKey,
+  TripHistoryQueryKey,
   NoHistoryView
 );
 

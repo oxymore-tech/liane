@@ -118,9 +118,9 @@ export const MatchContextActions = ({ match, onJoin, onReject, pendingAction }: 
   if (match.type === "Single" && match.joinRequest?.type === "Received") {
     return (
       <Column style={styles.columnAlignment}>
-        <AppText style={styles.headerText}>{"Cette personne demande à rejoindre votre liane"}</AppText>
+        <AppText style={styles.headerText}>{"Quelqu'un souhaite créer un groupe"}</AppText>
         <Row style={styles.subColumn}>
-          <AppButton onPress={onReject} color={AppColors.white} value="Annuler" loading={pendingAction === "reject"} />
+          <AppButton onPress={onJoin} color={AppColors.primaryColor} value="Accepter" loading={pendingAction === "join"} />
         </Row>
       </Column>
     );
@@ -129,9 +129,9 @@ export const MatchContextActions = ({ match, onJoin, onReject, pendingAction }: 
   if (match.type === "Group" && match.pendingRequest) {
     return (
       <Column style={styles.columnAlignment}>
-        <AppText style={styles.headerText}>{"Cette personne demande à rejoindre votre liane"}</AppText>
+        <AppText style={styles.headerText}>{"Vous avez demander à rejoindre cette liane"}</AppText>
         <Row style={styles.subColumn}>
-          <AppButton onPress={onReject} color={AppColors.white} value="Annuler" loading={pendingAction === "reject"} />
+          <AppButton onPress={onReject} color={AppColors.white} value="Annuler ma demande" loading={pendingAction === "reject"} />
         </Row>
       </Column>
     );

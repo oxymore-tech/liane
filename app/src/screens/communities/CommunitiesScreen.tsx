@@ -10,6 +10,7 @@ import { LianeListView } from "@/components/communities/LianeListView";
 import { AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { DefaultFloatingActions } from "@/components/context/FloatingActions.tsx";
 
 export const CommunitiesScreen = () => {
   const insets = useSafeAreaInsets();
@@ -50,6 +51,7 @@ export const CommunitiesScreen = () => {
   return (
     <Column style={[styles.headerContainer, { paddingTop: insets.top }]}>
       <LianeListView data={list} isFetching={isFetching} onRefresh={() => lianeMatches.refetch()} />
+      <DefaultFloatingActions actions={["add"]} />
     </Column>
   );
 };

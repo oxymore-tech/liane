@@ -1,17 +1,16 @@
-import React, { useContext, useState } from "react";
+import React, { useCallback, useContext, useState } from "react";
 
-import { Pressable, View } from "react-native";
+import { Pressable } from "react-native";
 import { CoLianeMatch, CoLianeRequest } from "@liane/common";
 import { AppContext } from "@/components/context/ContextProvider";
-import { Column } from "@/components/base/AppLayout";
+import { Column, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
-import { AppColors, defaultTextColor } from "@/theme/colors";
+import { AppColors } from "@/theme/colors";
 import { AppLogger } from "@/api/logger";
 import { useAppNavigation } from "@/components/context/routing.ts";
 import { SimpleModal } from "@/components/modal/SimpleModal.tsx";
-import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
-import { TextField } from "@/components/forms/fields/TextField";
-import { AppRoundedButton } from "@/components/base/AppRoundedButton.tsx";
+import { AppButton } from "@/components/base/AppButton.tsx";
+import { AppTextInput } from "@/components/base/AppTextInput.tsx";
 
 type ModalLianeRequestItemProps = {
   item: CoLianeMatch;
@@ -19,19 +18,13 @@ type ModalLianeRequestItemProps = {
   myModalVisible: boolean;
   setMyModalVisible: (arg0: boolean) => void;
 };
-type FormValues = { name: string };
 
 export const ModalLianeRequestItem = ({ item, onRefresh, myModalVisible, setMyModalVisible }: ModalLianeRequestItemProps) => {
   const { services } = useContext(AppContext);
   const { navigation } = useAppNavigation();
   const [showLianeNameInput, setLianeNameInputVisible] = useState<boolean>(false);
 
-  const [error, setError] = useState<any>();
-  const methods = useForm<FormValues>({
-    //   mode: "onChange",
-    defaultValues: { name: item.lianeRequest.name }
-  });
-  const { formState, handleSubmit } = methods;
+  const [name, setName] = useState<string>(item.lianeRequest.name);
 
   const deleteLiane = async () => {
     const lianeRequest = item.lianeRequest;
@@ -44,23 +37,22 @@ export const ModalLianeRequestItem = ({ item, onRefresh, myModalVisible, setMyMo
           onRefresh();
         }
       } catch (e) {
-        AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de la suppression d'une liane", error);
+        AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de la suppression d'une liane", e);
       }
     } else {
       AppLogger.debug("COMMUNITIES", "Pas de liane ID lors de la suppression d'une liane", item);
     }
   };
 
-  const renameLiane = async (name: string) => {
+  const renameLiane = useCallback(async () => {
     const lianeRequest = item.lianeRequest;
 
     if (lianeRequest && lianeRequest.id) {
       try {
-        let newLiane = lianeRequest;
-        newLiane.name = name;
         const result = await services.community.update(lianeRequest.id, {
-          ...newLiane,
-          wayPoints: newLiane.wayPoints.map(object => object.id)
+          ...lianeRequest,
+          name: name,
+          wayPoints: lianeRequest.wayPoints.map(w => w.id)
         } as CoLianeRequest);
         AppLogger.debug("COMMUNITIES", "Suppression d'une liane avec succès", result);
         setLianeNameInputVisible(false);
@@ -69,20 +61,14 @@ export const ModalLianeRequestItem = ({ item, onRefresh, myModalVisible, setMyMo
           onRefresh();
         }
       } catch (e) {
-        AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de la suppression d'une liane", error);
+        AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de la suppression d'une liane", e);
       }
     } else {
       AppLogger.debug("COMMUNITIES", "Pas de liane ID lors de la suppression d'une liane", item);
     }
-  };
+  }, [item, name, onRefresh, services.community, setMyModalVisible]);
 
-  const onSubmit: SubmitHandler<FormValues> = async data => {
-    try {
-      await renameLiane(data.name);
-    } catch (e) {
-      setError(e);
-    }
-  };
+  const isValid = name.length > 0;
 
   return (
     <SimpleModal visible={myModalVisible} setVisible={setMyModalVisible} backgroundColor={AppColors.white} hideClose>
@@ -111,29 +97,11 @@ export const ModalLianeRequestItem = ({ item, onRefresh, myModalVisible, setMyMo
         </Column>
       ) : (
         <Column>
-          <FormProvider {...methods}>
-            <View>
-              <TextField name="name" label={"Nom de la liane"} />
-            </View>
-
-            <View style={{ paddingTop: 20, flexDirection: "row", justifyContent: "center", gap: 10 }}>
-              <AppRoundedButton
-                enabled={formState.isValid}
-                color={defaultTextColor(AppColors.primaryColor)}
-                onPress={() => setLianeNameInputVisible(false)}
-                backgroundColor={AppColors.grayBackground}
-                text={"Cancel"}
-              />
-              <View />
-              <AppRoundedButton
-                enabled={formState.isValid}
-                color={defaultTextColor(AppColors.primaryColor)}
-                onPress={handleSubmit(onSubmit, setError)}
-                backgroundColor={AppColors.primaryColor}
-                text={"Envoyer"}
-              />
-            </View>
-          </FormProvider>
+          <AppTextInput value={name} onChangeText={setName} autoFocus={true} placeholder="Choisissez un libéllé pour vous" />
+          <Row spacing={8} style={{ justifyContent: "center" }}>
+            <AppButton color={AppColors.secondaryColor} onPress={() => setLianeNameInputVisible(false)} value="Annuler" />
+            <AppButton disabled={!isValid} color={AppColors.primaryColor} onPress={renameLiane} value="Enregistrer" />
+          </Row>
         </Column>
       )}
     </SimpleModal>

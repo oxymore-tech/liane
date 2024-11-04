@@ -79,7 +79,7 @@ export function AppButton({
       )}
 
       <Row style={styles.contentContainer} spacing={8}>
-        {loading && <ActivityIndicator style={AppStyles.fullHeight} color={textColor} size="small" />}
+        {loading && <ActivityIndicator color={textColor} size="small" />}
         {!loading && icon && <AppIcon style={styles.iconContainer} name={icon} color={textColor} size={28} />}
         {value && <AppText style={[{ color: textColor }, styles.text]}>{value}</AppText>}
       </Row>

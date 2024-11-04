@@ -45,7 +45,7 @@ export const SelectOnMapView = ({ onSelect, title, liane }: SelectOnMapViewProps
         {liane && <LianeMatchLianeRouteLayer wayPoints={wayPoints.map(w => w.rallyingPoint)} lianeId={liane} />}
         <RallyingPointsDisplayLayer dispayCluster={true} selected={selectedRP?.id} onSelect={setSelectedRP} />
       </AppMapView>
-      <DefaultFloatingActions onPosition={setUserLocation} actions={["position"]} position="middle" />
+      <DefaultFloatingActions onPosition={setUserLocation} actions={["position"]} position="top" />
       <View style={[styles.headerContainer, AppStyles.shadow]}>
         <PageHeader title={title} goBack={goBack} />
       </View>

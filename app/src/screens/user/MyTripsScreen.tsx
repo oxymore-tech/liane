@@ -18,7 +18,7 @@ const MyTripsScreen = () => {
   const insets = useSafeAreaInsets();
 
   const { services } = useContext(AppContext);
-  const trip = useQuery(LianeQueryKey, async () => {
+  const trip = useQuery(TripQueryKey, async () => {
     return await services.liane.list(FutureStates, { cursor: undefined, limit: 25, asc: false });
   });
 
@@ -92,6 +92,6 @@ const styles = StyleSheet.create({
   }
 });
 
-export const LianeQueryKey = "trip";
-export const LianeDetailQueryKey = (id: Ref<Liane>) => ["trip", id];
+export const TripQueryKey = "trip";
+export const TripDetailQueryKey = (id: Ref<Liane>) => ["trip", id];
 export default MyTripsScreen;

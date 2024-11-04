@@ -4,7 +4,7 @@ import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 
 export const AppExpandingTextInput = ({ style, backgroundStyle, ...props }: AppTextInputProps & { backgroundStyle?: StyleProp<ViewStyle> }) => {
-  const [contentHeight, setContentHeight] = useState(40);
+  const [contentHeight, setContentHeight] = useState(52);
   const { height } = useAppWindowsDimensions();
   const padding = useMemo(() => {
     if (backgroundStyle) {

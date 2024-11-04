@@ -1,6 +1,6 @@
 import { capitalize, CoLiane, CoLianeMember, LianeMessage, Ref, User } from "@liane/common";
 import React, { useCallback, useMemo } from "react";
-import { View, Pressable } from "react-native";
+import { View } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
@@ -8,6 +8,7 @@ import { AppLocalization } from "@/api/i18n.ts";
 import { UserPicture } from "@/components/UserPicture.tsx";
 import { useAppNavigation } from "@/components/context/routing.ts";
 import { AppIcon } from "@/components/base/AppIcon.tsx";
+import { AppButton } from "@/components/base/AppButton.tsx";
 
 export const MessageBubble = ({
   coLiane,
@@ -54,17 +55,9 @@ export const MessageBubble = ({
           {message.content.type === "TripAdded" && <AppIcon name="liane" color={AppColors.white} size={24} />}
         </Row>
         {message.content.type === "MemberRequested" && coLiane.pendingMembers.find(u => u.user.id === message.createdBy) && (
-          <Row>
-            <Pressable
-              onPress={handlePendingMember}
-              style={{
-                backgroundColor: AppColors.white,
-                borderRadius: 20,
-                padding: 10
-              }}>
-              <AppText>Voir la demande</AppText>
-            </Pressable>
-          </Row>
+          <Center>
+            <AppButton onPress={handlePendingMember} color={AppColors.primaryColor} value="Voir la demande" />
+          </Center>
         )}
         <AppText style={{ fontSize: 10, color: AppColorPalettes.gray[400], alignSelf: "flex-end" }}>{date}</AppText>
       </Column>

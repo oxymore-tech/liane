@@ -1,9 +1,10 @@
 import React from "react";
 import { AppTextInput } from "@/components/base/AppTextInput";
-import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
-import { AppIcon } from "@/components/base/AppIcon";
-import { AppColorPalettes, AppColors } from "@/theme/colors";
+import { StyleSheet } from "react-native";
+import { AppColors } from "@/theme/colors";
 import { AppDimensions } from "@/theme/dimensions";
+import { Row } from "@/components/base/AppLayout.tsx";
+import { AppButton } from "@/components/base/AppButton.tsx";
 
 type PhoneNumberInputProps = {
   submitting?: boolean;
@@ -14,54 +15,42 @@ type PhoneNumberInputProps = {
 };
 
 export const PhoneNumberInput = ({ submit, onChange, submitting, canSubmit }: PhoneNumberInputProps) => {
-  const buttonColor = {
-    backgroundColor: canSubmit ? AppColorPalettes.blue[500] : AppColorPalettes.gray[400]
-  };
-
   return (
-    <View style={styles.container}>
-      <View style={styles.inputContainer}>
+    <Row style={styles.container}>
+      <Row style={styles.inputContainer}>
         <AppTextInput
           style={styles.input}
           placeholder="0XXXXXXXXX"
           autoFocus={true}
-          returnKeyLabel={"next"}
+          returnKeyLabel="next"
           onChangeText={onChange}
-          keyboardType={"phone-pad"}
-          autoComplete={"tel"}
-          textContentType={"telephoneNumber"}
+          keyboardType="phone-pad"
+          autoComplete="tel"
+          textContentType="telephoneNumber"
           onSubmitEditing={submit}
           maxLength={10}
+          trailing={<AppButton icon="phone-outline" color={AppColors.primaryColor} disabled={!canSubmit} onPress={submit} loading={submitting} />}
         />
-        <Pressable style={[styles.button, buttonColor]} disabled={!canSubmit} onPress={submit}>
-          {!submitting && <AppIcon name="arrow-circle-right-outline" color={AppColors.white} />}
-          {submitting && <ActivityIndicator color={AppColors.white} size={"small"} />}
-        </Pressable>
-      </View>
-    </View>
+      </Row>
+    </Row>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    display: "flex",
-    alignItems: "center"
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20
   },
   inputContainer: {
-    marginVertical: 16,
-    height: 52,
-    width: "75%",
-    minWidth: 250,
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: AppColors.white,
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
     borderRadius: 52,
     paddingLeft: 20
   },
   input: {
-    fontSize: AppDimensions.textSize.large,
-    color: AppColorPalettes.gray[800]
+    fontSize: AppDimensions.textSize.large
   },
   button: {
     height: 52,

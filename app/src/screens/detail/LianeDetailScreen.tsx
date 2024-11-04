@@ -21,7 +21,7 @@ import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery } from "react-query";
-import { LianeDetailQueryKey } from "@/screens/user/MyTripsScreen";
+import { TripDetailQueryKey } from "@/screens/user/MyTripsScreen";
 import { AppText } from "@/components/base/AppText";
 import { TripGeolocationProvider, useCarDelay, useTrackingInfo } from "@/screens/detail/TripGeolocationProvider";
 import { LianeMatchUserRouteLayer } from "@/components/map/layers/LianeMatchRouteLayer";
@@ -43,7 +43,7 @@ export const LianeDetailScreen = () => {
   const { route } = useAppNavigation<"LianeDetail">();
   const lianeParam = route.params!.liane;
 
-  const { data: liane, refetch } = useQuery(LianeDetailQueryKey(typeof lianeParam === "string" ? lianeParam : lianeParam.id!), () => {
+  const { data: liane, refetch } = useQuery(TripDetailQueryKey(typeof lianeParam === "string" ? lianeParam : lianeParam.id!), () => {
     if (typeof lianeParam === "string") {
       return services.liane.get(lianeParam);
     } else {

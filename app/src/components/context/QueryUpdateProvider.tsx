@@ -3,7 +3,7 @@ import { AppContext } from "@/components/context/ContextProvider";
 import { InfiniteData, useQueryClient } from "react-query";
 import { NotificationQueryKey } from "@/screens/notifications/NotificationScreen";
 import { Liane, Notification, PaginatedResponse, TripStatus } from "@liane/common";
-import { LianeDetailQueryKey, LianeQueryKey } from "@/screens/user/MyTripsScreen";
+import { TripDetailQueryKey, TripQueryKey } from "@/screens/user/MyTripsScreen";
 import { useSubscription } from "@/util/hooks/subscription";
 import { LianeGeolocation } from "@/api/service/location";
 
@@ -71,13 +71,13 @@ export const QueryUpdateProvider = (props: PropsWithChildren) => {
   useSubscription<Liane>(
     services.realTimeHub.tripUpdates,
     liane => {
-      queryClient.setQueryData<PaginatedResponse<Liane>>(LianeQueryKey, old => {
+      queryClient.setQueryData<PaginatedResponse<Liane>>(TripQueryKey, old => {
         if (!old) {
           return { pageSize: 1, data: [liane] };
         }
         return updateLianeList(old, liane);
       });
-      queryClient.setQueryData<Liane>(LianeDetailQueryKey(liane.id!), _ => liane);
+      queryClient.setQueryData<Liane>(TripDetailQueryKey(liane.id!), _ => liane);
       if (liane.state !== "NotStarted") {
         // Cancel eventual reminder
         services.reminder.cancelReminder(liane.id!);

@@ -1,6 +1,5 @@
 import {
   addSeconds,
-  ArrayUtils,
   Chat,
   CoLiane,
   DayOfWeekFlag,
@@ -12,8 +11,8 @@ import {
   TimeOnly,
   TimeOnlyUtils
 } from "@liane/common";
-import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, SectionList, StyleSheet, View } from "react-native";
+import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Center, Column, Row } from "@/components/base/AppLayout";
@@ -35,12 +34,10 @@ import { AppLocalization } from "@/api/i18n.ts";
 import { DisplayWayPoints } from "@/components/communities/DisplayWayPoints.tsx";
 import { weekDays } from "@/util/hooks/days.ts";
 import { getLianeStatusStyle } from "@/components/trip/LianeStatusView.tsx";
-import { LianeQueryKey } from "@/screens/user/MyTripsScreen.tsx";
+import { TripQueryKey } from "@/screens/user/MyTripsScreen.tsx";
 import { useQueryClient } from "react-query";
 import { UserPicture } from "@/components/UserPicture.tsx";
 import { AppButton } from "@/components/base/AppButton.tsx";
-
-type Section = { data: LianeMessage[]; date: string };
 
 export const CommunitiesChatScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesChat">();
@@ -62,15 +59,6 @@ export const CommunitiesChatScreen = () => {
   const [tripModalVisible, setTripModalVisible] = useState(false);
   const currentTrip = trips[currentTripIndex];
 
-  const sections = useMemo(() => {
-    return Object.entries(
-      ArrayUtils.groupBy(messages, m => {
-        const date = new Date(m.createdAt!);
-        return AppLocalization.formatMonthDay(date);
-      })
-    ).map(([key, value]) => ({ data: value, date: key } as Section));
-  }, [messages]);
-
   useSubscription<CoLiane>(
     services.realTimeHub.lianeUpdates,
     updatedLiane => {
@@ -81,18 +69,6 @@ export const CommunitiesChatScreen = () => {
     },
     [liane?.id]
   );
-
-  const chatListRef = useRef<SectionList<LianeMessage, Section>>(null);
-
-  const scrollToEnd = useCallback(() => {
-    if (sections.length === 0) {
-      return;
-    }
-    const sectionIndex = sections.length - 1;
-    const itemIndex = sections[sectionIndex].data.length - 1;
-    const params = { itemIndex: itemIndex, animated: true, sectionIndex: sectionIndex };
-    chatListRef.current?.scrollToLocation(params);
-  }, [sections]);
 
   useSubscription<Liane>(
     services.realTimeHub.tripUpdates,
@@ -153,15 +129,15 @@ export const CommunitiesChatScreen = () => {
     setCurrentTripIndex(newTripIndex < 0 ? trips.length - 1 : newTripIndex);
   };
 
-  const sendMessage = async (value: string) => {
+  const sendMessage = useCallback(async () => {
     let lianeTemp = liane;
     setIsSending(true);
 
-    if (lianeTemp && lianeTemp.id && value && value.length > 0) {
+    if (lianeTemp && lianeTemp.id && inputValue && inputValue.length > 0) {
       try {
         await chat?.send({
           type: "Text",
-          value: value
+          value: inputValue
         });
         setInputValue("");
       } catch (e) {
@@ -174,7 +150,7 @@ export const CommunitiesChatScreen = () => {
     }
 
     setIsSending(false);
-  };
+  }, [chat, inputValue, liane]);
 
   const appendMessage = (m: LianeMessage) => {
     setMessages(oldList => [m, ...oldList]);
@@ -215,7 +191,7 @@ export const CommunitiesChatScreen = () => {
       geolocationLevel: geolocationLevel || "None",
       recurrence: undefined
     });
-    await queryClient.invalidateQueries(LianeQueryKey);
+    await queryClient.invalidateQueries(TripQueryKey);
   };
 
   useEffect(() => {
@@ -255,19 +231,6 @@ export const CommunitiesChatScreen = () => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [liane, services.realTimeHub]);
-
-  const sendButton = (
-    <View style={{ maxWidth: 45 }}>
-      <AppPressableIcon
-        style={{ alignSelf: "flex-end" }}
-        onPress={async () => {
-          await sendMessage(inputValue).then(() => setInputValue(""));
-        }}
-        iconTransform={[{ rotate: "90deg" }, { translateY: 6 }]}
-        name={"navigation-outline"}
-      />
-    </View>
-  );
 
   const quitTrip = async () => {
     if (currentTrip && currentTrip.id) {
@@ -459,7 +422,6 @@ export const CommunitiesChatScreen = () => {
       )}
       {chat && liane && (
         <FlatList
-          refreshing={sections.length === 0}
           data={messages}
           style={{ flex: 1, paddingHorizontal: 16 }}
           keyExtractor={m => m.id!}
@@ -480,18 +442,24 @@ export const CommunitiesChatScreen = () => {
       <KeyboardAvoidingView
         behavior={Platform.OS === "android" ? "height" : "padding"}
         style={{ paddingBottom: 8, paddingHorizontal: 8, backgroundColor: AppColorPalettes.gray[150] }}>
-        <Row spacing={8}>
+        <Row spacing={8} style={{ alignItems: "center" }}>
           {!!liane && <AppButton color={AppColors.primaryColor} onPress={() => setTripModalVisible(true)} icon="plus-outline" />}
           <AppExpandingTextInput
             multiline={true}
-            backgroundStyle={{ backgroundColor: AppColors.white, borderRadius: 16, paddingLeft: 8 }}
-            onFocus={scrollToEnd}
+            backgroundStyle={{
+              backgroundColor: AppColors.white,
+              borderRadius: 16,
+              paddingLeft: 8,
+              minHeight: 52
+            }}
             trailing={
-              !isSending ? (
-                sendButton
-              ) : (
-                <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />
-              )
+              <AppButton
+                onPress={sendMessage}
+                disabled={inputValue.length === 0}
+                icon="paper-plane-outline"
+                loading={isSending}
+                color={AppColors.primaryColor}
+              />
             }
             onChangeText={setInputValue}
             value={inputValue}
