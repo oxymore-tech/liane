@@ -1,16 +1,6 @@
-import React, { useContext, useMemo, useState } from "react";
+import React, { useCallback, useContext, useMemo, useState } from "react";
 
-import {
-  ActivityIndicator,
-  Pressable,
-  RefreshControl,
-  SectionBase,
-  SectionList,
-  SectionListData,
-  SectionListRenderItemInfo,
-  StyleSheet,
-  View
-} from "react-native";
+import { Pressable, RefreshControl, SectionBase, SectionList, SectionListData, SectionListRenderItemInfo, StyleSheet, View } from "react-native";
 import { capitalize, extractDatePart, getUserTrip, Liane, Ref, User, UTCDateTime } from "@liane/common";
 import { AppLocalization } from "@/api/i18n";
 import { useAppNavigation } from "@/components/context/routing";
@@ -29,6 +19,8 @@ import { AppLogger } from "@/api/logger";
 import { AppStyles } from "@/theme/styles.ts";
 import { TripQueryKey } from "@/screens/user/MyTripsScreen.tsx";
 import { useQueryClient } from "react-query";
+import { AppButton } from "@/components/base/AppButton.tsx";
+import { AppModalNavigationContext } from "@/components/AppModalNavigationProvider.tsx";
 
 export interface TripSection extends SectionBase<Liane> {
   date: string;
@@ -64,7 +56,7 @@ export const TripListView = ({ data, isFetching, onRefresh, reverseSort, loadMor
       onEndReached={loadMore}
       ListEmptyComponent={
         <Center>
-          <AppText style={AppStyles.noData}>Aucun trajet prévus</AppText>
+          <AppText style={AppStyles.noData}>Aucun trajet prévu</AppText>
         </Center>
       }
       renderSectionFooter={s => <View style={{ height: s.section === sections[sections.length - 1] ? bottom : 24 }} />}
@@ -154,7 +146,7 @@ const LianeItem = ({ item, isTripStarted }: { item: Liane; isTripStarted: boolea
                 {item.members.map((m, i) => (
                   <View
                     key={m.user.id}
-                    style={{ position: "absolute", top: -16, right: 18 * (item.members.filter(m => m.user.id !== driver.id).length - (1 + i)) }}>
+                    style={{ position: "absolute", top: -16, right: 18 * (item.members.filter(u => u.user.id !== driver.id).length - (1 + i)) }}>
                     <UserPicture size={32} url={m.user.pictureUrl} id={m.user.id} />
                   </View>
                 ))}
@@ -171,39 +163,25 @@ const StartButton = ({ item }: { item: Liane }) => {
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const { services } = useContext(AppContext);
+  const { showTutorial, shouldShow } = useContext(AppModalNavigationContext);
 
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator style={[AppStyles.center]} color={AppColors.primaryColor} size="large" />
-      </View>
-    );
-  }
+  const handle = useCallback(async () => {
+    setLoading(true);
+    try {
+      if (shouldShow) {
+        showTutorial("driver", item.id);
+      }
+      await services.liane.start(item.id!);
+      await queryClient.invalidateQueries(TripQueryKey);
+      await startGeolocationService(item);
+    } catch (e) {
+      AppLogger.error("GEOPINGS", e);
+    } finally {
+      setLoading(false);
+    }
+  }, [item, queryClient, services.liane, shouldShow, showTutorial]);
 
-  return (
-    <AppPressableOverlay
-      backgroundStyle={{
-        backgroundColor: AppColors.primaryColor,
-        borderRadius: 20
-      }}
-      onPress={() => {
-        setLoading(true);
-        services.liane
-          .start(item.id!)
-          .then(() => {
-            queryClient.invalidateQueries(TripQueryKey);
-            startGeolocationService(item);
-          })
-          .catch(e => {
-            AppLogger.error("GEOPINGS", e);
-          })
-          .finally(() => setLoading(false));
-      }}>
-      <Row style={{ paddingVertical: 6, paddingHorizontal: 16 }} spacing={8}>
-        <AppText style={{ color: AppColors.white, fontSize: 18 }}>C'est parti ?</AppText>
-      </Row>
-    </AppPressableOverlay>
-  );
+  return <AppButton color={AppColors.primaryColor} loading={loading} onPress={handle} value="C'est parti ?" />;
 };
 const renderLianeItem = ({ item, index, section, isTripStarted }: SectionListRenderItemInfo<Liane, TripSection> & { isTripStarted: boolean }) => {
   const { navigation } = useAppNavigation();

@@ -173,7 +173,7 @@ export const PublishScreen = () => {
               render: () => <VehicleStepView value={lianeRequest.canDrive ?? true} onChange={canDrive => updateAndNext({ canDrive })} />
             },
             {
-              title: lianeRequest.name ?? "Libélé",
+              title: lianeRequest.name ?? "Libéllé",
               render: () => <NameStepView value={lianeRequest.name} onChange={v => updateAndNext({ name: v })} />
             }
           ]}
