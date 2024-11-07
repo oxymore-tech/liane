@@ -9,6 +9,7 @@ services:
 
   postgis:
     image: "postgis/postgis:15-3.3"
+    command: [ "-c", "shared_buffers=512MB", "-c", "max_connections=1000" ]
     environment:
       POSTGRES_DB: liane_test
       POSTGRES_USER: mongo

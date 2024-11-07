@@ -292,7 +292,7 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
         );
       var route = await osrmService.Route(liane.WayPoints.Select(w => w.RallyingPoint.Location), overview: "full");
       var routeAsLineString = route.Routes[0].Geometry.Coordinates.ToLineString();
-      var tripSession = await postgisService.CreateOfflineTrip(liane.Id, routeAsLineString);
+      await using var tripSession = await postgisService.CreateOfflineTrip(liane.Id, routeAsLineString);
       var tracker = new LianeTracker(tripSession, liane);
       foreach (var ping in lianeDb.Pings)
       {

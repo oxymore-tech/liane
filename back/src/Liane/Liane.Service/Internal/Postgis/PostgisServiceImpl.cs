@@ -14,19 +14,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Liane.Service.Internal.Postgis;
 
-public sealed partial class PostgisServiceImpl : IPostgisService
+public sealed partial class PostgisServiceImpl(PostgisDatabase db, ILogger<PostgisServiceImpl> logger, IRoutingService routingService) : IPostgisService
 {
-  private readonly PostgisDatabase db;
-  private readonly ILogger<PostgisServiceImpl> logger;
-  private readonly IRoutingService routingService;
-
-  public PostgisServiceImpl(PostgisDatabase db, ILogger<PostgisServiceImpl> logger, IRoutingService routingService)
-  {
-    this.db = db;
-    this.logger = logger;
-    this.routingService = routingService;
-  }
-
   public async Task UpdateGeometry(Api.Trip.Trip trip)
   {
     using var connection = db.NewConnection();
