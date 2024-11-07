@@ -40,7 +40,9 @@ export const LianeContextActions = ({ liane, onJoin, onReject, pendingAction }: 
   if (liane.members.find(m => m.user.id === user?.id)) {
     return (
       <Column style={styles.columnAlignment}>
-        <AppText style={styles.headerText}>{liane.pendingMembers.length > 0 ? "Demandes en cours" : "Vous êtes membre de cette liane"}</AppText>
+        <AppText style={styles.headerText}>
+          {liane.pendingMembers.length > 0 ? `Demande${liane.pendingMembers.length > 1 ? "s" : ""} en cours` : "Vous êtes membre de cette liane"}
+        </AppText>
         <Column style={styles.subColumn}>
           {liane.pendingMembers.map(m => (
             <Row
@@ -67,7 +69,7 @@ export const LianeContextActions = ({ liane, onJoin, onReject, pendingAction }: 
                 value="Accepter"
                 loading={pendingAction === "join"}
               />
-              <AppButton onPress={onReject} color={AppColors.white} value="Refuser" loading={pendingAction === "reject"} />
+              <AppButton onPress={onReject} color={AppColors.secondaryColor} value="Refuser" loading={pendingAction === "reject"} />
             </Row>
           ))}
         </Column>
@@ -80,7 +82,7 @@ export const LianeContextActions = ({ liane, onJoin, onReject, pendingAction }: 
       <Column style={styles.columnAlignment}>
         <AppText style={styles.headerText}>{"Vous avez demander à rejoindre cette liane"}</AppText>
         <Row style={styles.subColumn}>
-          <AppButton onPress={onReject} color={AppColors.white} value="Annuler ma demande" loading={pendingAction === "reject"} />
+          <AppButton onPress={onReject} color={AppColors.secondaryColor} value="Annuler ma demande" loading={pendingAction === "reject"} />
         </Row>
       </Column>
     );
@@ -109,7 +111,7 @@ export const MatchContextActions = ({ match, onJoin, onReject, pendingAction }: 
       <Column style={styles.columnAlignment}>
         <AppText style={styles.headerText}>{"Vous avez demander à rejoindre cette liane"}</AppText>
         <Row style={styles.subColumn}>
-          <AppButton onPress={onReject} color={AppColors.white} value="Annuler ma demande" loading={pendingAction === "reject"} />
+          <AppButton onPress={onReject} color={AppColors.secondaryColor} value="Annuler ma demande" loading={pendingAction === "reject"} />
         </Row>
       </Column>
     );
@@ -131,7 +133,7 @@ export const MatchContextActions = ({ match, onJoin, onReject, pendingAction }: 
       <Column style={styles.columnAlignment}>
         <AppText style={styles.headerText}>{"Vous avez demander à rejoindre cette liane"}</AppText>
         <Row style={styles.subColumn}>
-          <AppButton onPress={onReject} color={AppColors.white} value="Annuler ma demande" loading={pendingAction === "reject"} />
+          <AppButton onPress={onReject} color={AppColors.secondaryColor} value="Annuler ma demande" loading={pendingAction === "reject"} />
         </Row>
       </Column>
     );

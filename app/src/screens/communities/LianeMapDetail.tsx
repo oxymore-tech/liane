@@ -36,7 +36,7 @@ export const LianeMapDetailScreen = () => {
 
   const [pendingAction, setPendingAction] = useState<PendingAction>();
 
-  const lianeId = useMemo(() => (isLiane(matchOrLiane) ? matchOrLiane.id : matchOrLiane.liane), [matchOrLiane]);
+  const lianeId = useMemo(() => (isLiane(matchOrLiane) ? matchOrLiane.id! : matchOrLiane.liane), [matchOrLiane]);
 
   const members = useMemo(() => {
     if (isLiane(matchOrLiane)) {
@@ -69,19 +69,19 @@ export const LianeMapDetailScreen = () => {
   }, [bSheetTop, height, insets.top, wayPoints]);
 
   const handleJoin = useCallback(async () => {
-    if (isLiane(matchOrLiane)) {
-      navigation.navigate("Publish", { lianeId });
-    } else if (lianeRequest && lianeRequest.id) {
+    if (lianeRequest && lianeRequest.id) {
       setPendingAction("join");
       try {
-        const result = await services.community.joinRequest(lianeRequest.id, matchOrLiane.liane);
+        const result = await services.community.joinRequest(lianeRequest.id, lianeId);
         AppLogger.debug("COMMUNITIES", "Demande de rejoindre une liane avec succès", result);
         navigation.navigate("Lianes");
       } finally {
         setPendingAction(undefined);
       }
+    } else {
+      navigation.navigate("Publish", { lianeId });
     }
-  }, [lianeId, lianeRequest, matchOrLiane, navigation, services.community]);
+  }, [lianeId, lianeRequest, navigation, services.community]);
 
   const handleReject = useCallback(async () => {
     if (lianeRequest && lianeRequest.id && lianeId) {

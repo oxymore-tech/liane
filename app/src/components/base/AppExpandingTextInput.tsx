@@ -39,7 +39,7 @@ export const AppExpandingTextInput = ({ style, backgroundStyle, ...props }: AppT
         onContentSizeChange={event => {
           setContentHeight(event.nativeEvent.contentSize.height);
         }}
-        style={[style, { height: contentHeight, alignSelf: "flex-end", maxHeight: height / 3 }]}
+        style={[style, { height: contentHeight, maxHeight: height / 3 }]}
       />
     </View>
   );
