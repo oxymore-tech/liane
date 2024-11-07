@@ -321,7 +321,14 @@ export const CommunitiesChatScreen = () => {
   return (
     <View style={styles.mainContainer}>
       <Row
-        style={{ paddingTop: insets.top, backgroundColor: AppColors.white, justifyContent: "space-between", alignItems: "center", padding: 16 }}
+        style={{
+          paddingTop: insets.top,
+          paddingBottom: insets.bottom,
+          backgroundColor: AppColors.white,
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: 16
+        }}
         spacing={16}>
         <AppButton onPress={() => navigation.goBack()} icon={"arrow-ios-back-outline"} color={AppColors.primaryColor} />
         <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 16, lineHeight: 27, color: AppColors.primaryColor }}>{name}</AppText>
@@ -443,22 +450,25 @@ export const CommunitiesChatScreen = () => {
         behavior={Platform.OS === "android" ? "height" : "padding"}
         style={{ paddingBottom: 8, paddingHorizontal: 8, backgroundColor: AppColorPalettes.gray[150] }}>
         <Row spacing={8} style={{ alignItems: "center" }}>
-          {!!liane && <AppButton color={AppColors.primaryColor} onPress={() => setTripModalVisible(true)} icon="plus-outline" />}
+          <AppButton color={AppColors.primaryColor} onPress={() => setTripModalVisible(true)} icon="plus-outline" />
           <AppExpandingTextInput
             multiline={true}
+            placeholder="Message"
             backgroundStyle={{
               backgroundColor: AppColors.white,
               borderRadius: 16,
               paddingLeft: 8,
+              paddingRight: 2,
               minHeight: 52
             }}
             trailing={
               <AppButton
+                style={{ borderRadius: 16 }}
                 onPress={sendMessage}
                 disabled={inputValue.length === 0}
                 icon="paper-plane-outline"
                 loading={isSending}
-                color={AppColors.primaryColor}
+                color={AppColors.secondaryColor}
               />
             }
             onChangeText={setInputValue}

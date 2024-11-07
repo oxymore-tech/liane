@@ -15,13 +15,13 @@ export interface AppTextInputProps extends TextInputProps {
 export const AppTextInput = forwardRef(
   ({ leading, trailing, style, textColor, placeholder, placeholderTextColor, ...props }: AppTextInputProps, ref: ForwardedRef<TextInput>) => {
     return (
-      <Row spacing={8} style={styles.container}>
+      <Row spacing={8} style={[styles.container, style]}>
         {leading}
         <TextInput
           placeholder={placeholder}
           placeholderTextColor={placeholderTextColor ?? AppColorPalettes.gray[400]}
           ref={ref}
-          style={[AppStyles.text, AppStyles.input, styles.input, style, { color: textColor ?? AppColors.fontColor, flex: 1 }]}
+          style={[AppStyles.text, AppStyles.input, styles.input, { color: textColor ?? AppColors.fontColor, flex: 1 }]}
           {...props}
         />
         {trailing}
@@ -32,6 +32,7 @@ export const AppTextInput = forwardRef(
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     alignItems: "center"
   },
   input: {

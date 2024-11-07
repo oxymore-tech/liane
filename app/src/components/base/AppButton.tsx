@@ -57,7 +57,7 @@ export function AppButton({
       onTouchStart={() => setShowTitle(true)}
       onTouchEnd={() => setShowTitle(false)}
       onTouchCancel={() => setShowTitle(false)}
-      style={[style, { backgroundColor, borderRadius }]}
+      style={[{ backgroundColor, borderRadius }, style]}
       disabled={d}>
       {title && showTitle && (
         <Animated.View entering={FadeInRight} exiting={FadeOutRight} style={{ position: "absolute", bottom: 0, right: 0, width }}>
