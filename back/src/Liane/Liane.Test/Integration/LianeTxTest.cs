@@ -195,11 +195,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
       (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre votre liane {lianeJayBee.Name}")
     );
 
-    pushService.AssertMessage(
-      (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
-      (jayBee.Id, $"{jayBee.Pseudo} a rejoint la liane"),
-      (jayBee.Id, $"{gugu.Pseudo} a rejoint la liane")
-    );
+    pushService.AssertMessage();
 
     {
       currentContext.SetCurrentUser(gugu);
@@ -255,10 +251,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
       (gugu.Id, "Vous n'avez pas été accepté dans la liane")
     );
 
-    pushService.AssertMessage(
-      (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
-      (jayBee.Id, $"La demande de {gugu.Pseudo} pour rejoindre la liane n'a pas été acceptée")
-    );
+    pushService.AssertMessage();
 
     {
       currentContext.SetCurrentUser(gugu);
@@ -312,9 +305,6 @@ public sealed class LianeTxTest : BaseIntegrationTest
     );
 
     pushService.AssertMessage(
-      (jayBee.Id, $"{mathilde.Pseudo} souhaite rejoindre la liane"),
-      (jayBee.Id, $"{jayBee.Pseudo} a rejoint la liane"),
-      (jayBee.Id, $"{mathilde.Pseudo} a rejoint la liane"),
       (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
       (mathilde.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
       (jayBee.Id, $"{gugu.Pseudo} a rejoint la liane"),
@@ -358,9 +348,6 @@ public sealed class LianeTxTest : BaseIntegrationTest
     );
 
     pushService.AssertMessage(
-      (jayBee.Id, $"{mathilde.Pseudo} souhaite rejoindre la liane"),
-      (jayBee.Id, $"{jayBee.Pseudo} a rejoint la liane"),
-      (jayBee.Id, $"{mathilde.Pseudo} a rejoint la liane"),
       (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
       (mathilde.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
       (jayBee.Id, $"La demande de {gugu.Pseudo} pour rejoindre la liane n'a pas été acceptée"),
@@ -405,9 +392,6 @@ public sealed class LianeTxTest : BaseIntegrationTest
     );
 
     pushService.AssertMessage(
-      (jayBee.Id, $"{mathilde.Pseudo} souhaite rejoindre la liane"),
-      (jayBee.Id, $"{jayBee.Pseudo} a rejoint la liane"),
-      (jayBee.Id, $"{mathilde.Pseudo} a rejoint la liane"),
       (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
       (mathilde.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
       (jayBee.Id, $"{gugu.Pseudo} a rejoint la liane"),
@@ -452,9 +436,6 @@ public sealed class LianeTxTest : BaseIntegrationTest
     );
 
     pushService.AssertMessage(
-      (jayBee.Id, $"{mathilde.Pseudo} souhaite rejoindre la liane"),
-      (jayBee.Id, $"{jayBee.Pseudo} a rejoint la liane"),
-      (jayBee.Id, $"{mathilde.Pseudo} a rejoint la liane"),
       (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
       (mathilde.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
       (jayBee.Id, $"{gugu.Pseudo} a rejoint la liane"),
