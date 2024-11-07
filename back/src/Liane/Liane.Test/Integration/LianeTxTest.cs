@@ -414,7 +414,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
       (mathilde.Id, $"{gugu.Pseudo} a rejoint la liane")
     );
   }
-  
+
   [Test]
   public async Task GuguJoinExistingLianeViaMathildeIndirectly2()
   {
@@ -443,7 +443,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
       var liane = await tested.JoinRequest(lianeMathilde.Id, lianeGugu.Id);
       Assert.IsNotNull(liane);
       Assert.AreEqual(lianeJayBee.Id, liane!.Id);
-      CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, mathilde.Id, gugu.Id), liane!.Members.Select(m => m.User.Id));
+      CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, mathilde.Id, gugu.Id), liane.Members.Select(m => m.User.Id));
     }
 
     pushService.Assert(
@@ -460,6 +460,74 @@ public sealed class LianeTxTest : BaseIntegrationTest
       (jayBee.Id, $"{gugu.Pseudo} a rejoint la liane"),
       (mathilde.Id, $"{gugu.Pseudo} a rejoint la liane")
     );
+  }
+
+  [Test]
+  public async Task GuguShouldJoinThenLeftJayBeeLianeTheLianeIsEmptied()
+  {
+    var (lianeGugu, lianeJayBee, lianeMathilde, lianeSiloe, _, _, _, _) = await SetupDefaultLianes();
+
+    DateTime at;
+    {
+      currentContext.SetCurrentUser(gugu);
+      var liane = await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id);
+      Assert.IsNull(liane);
+    }
+
+    {
+      currentContext.SetCurrentUser(jayBee);
+      var liane = await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id);
+      Assert.IsNotNull(liane);
+      Assert.AreEqual(lianeJayBee.Id, liane!.Id);
+      CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, gugu.Id), liane.Members.Select(m => m.User.Id));
+    }
+
+    {
+      currentContext.SetCurrentUser(jayBee);
+      var result = await tested.Leave(lianeJayBee.Id);
+      Assert.IsTrue(result);
+    }
+
+    {
+      currentContext.SetCurrentUser(gugu);
+      var liane = await tested.Get(lianeJayBee.Id);
+      Assert.IsNotNull(liane);
+      Assert.AreEqual(lianeJayBee.Id, liane.Id);
+      CollectionAssert.AreEquivalent(ImmutableList.Create(gugu.Id), liane.Members.Select(m => m.User.Id));
+    }
+
+    {
+      currentContext.SetCurrentUser(jayBee);
+      var liane = await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id);
+      Assert.IsNull(liane);
+    }
+
+    {
+      currentContext.SetCurrentUser(jayBee);
+      var list = await tested.Match();
+
+      if (list[0].State is not LianeState.Detached detached)
+      {
+        Assert.Fail("Should be detached");
+        return;
+      }
+      
+      if (detached.Matches[0] is not Match.Single single)
+      {
+        Assert.Fail("Should be single");
+        return;
+      }
+      
+      Assert.IsInstanceOf<JoinRequest.Pending>(single.JoinRequest);
+    }
+    
+    {
+      currentContext.SetCurrentUser(gugu);
+      var liane = await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id);
+      Assert.IsNotNull(liane);
+      Assert.AreEqual(liane!.Id, lianeJayBee.Id);
+    }
+    
   }
 
   private async Task<LianeRequest> CreateLianeRequest(User user, string name, Ref<RallyingPoint> from, Ref<RallyingPoint> to, Ref<RallyingPoint>? intermediate = null,
