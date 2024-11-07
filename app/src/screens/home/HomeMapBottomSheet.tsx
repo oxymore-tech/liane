@@ -60,6 +60,7 @@ export const HomeMapBottomSheetContainer = ({ lianes = [], isFetching, currentBo
         renderItem={props => <LianeOnMapItem {...props} openLiane={openLiane} />}
         keyExtractor={item => item.id!}
         onEndReachedThreshold={0.2}
+        contentContainerStyle={{ marginBottom: 100, paddingBottom: 250 }}
       />
     </AppBottomSheet>
   );
