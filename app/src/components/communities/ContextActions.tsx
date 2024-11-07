@@ -120,8 +120,8 @@ export const MatchContextActions = ({ match, onJoin, onReject, pendingAction }: 
   if (match.type === "Single" && match.joinRequest?.type === "Received") {
     return (
       <Column style={styles.columnAlignment}>
-        <AppText style={styles.headerText}>{`${match.members[0].pseudo} souhaite vous rejoindre pour créer une liane`}</AppText>
-        <Row style={styles.subColumn}>
+        <AppText style={styles.headerText}>{`${match.members[0].pseudo} souhaite rejoindre votre liane`}</AppText>
+        <Row style={styles.subColumn} spacing={5}>
           <AppButton onPress={onJoin} color={AppColors.primaryColor} value="Accepter" loading={pendingAction === "join"} />
           <AppButton onPress={onReject} color={AppColors.secondaryColor} value="Refuser" loading={pendingAction === "reject"} />
         </Row>

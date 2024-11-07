@@ -53,11 +53,11 @@ export const AppLinking: LinkingOptions<NavigationParamList> = {
       LianeDetail: {
         path: "trip/:liane"
       },
-      /*ShareTripLocationScreen: {
-        path: "liane/:liane/start"
-      },*/
-      Chat: {
-        path: "chat/:conversationId"
+      MatchList: {
+        path: "liane/:lianeId/match"
+      },
+      Lianes: {
+        path: "liane"
       },
       CommunitiesChat: {
         path: "liane/:lianeId"

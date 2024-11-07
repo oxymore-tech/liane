@@ -17,7 +17,7 @@ public sealed class LianeMemberRejectedHandler(INotificationService notification
       e.Content.User,
       "Demande déclinée",
       "Vous n'avez pas été accepté dans la liane",
-      $"liane://liane/{e.Liane.Id}"
+      "liane://liane"
     );
   }
 }
