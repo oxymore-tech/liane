@@ -218,12 +218,17 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     if (rawMatches.Count == 1)
     {
       var first = rawMatches.First();
-     var joinRequest = GetJoinRequest(mapParams, first);
+      var joinRequest = GetJoinRequest(mapParams, first);
       var liane = mapParams.Lianes.GetValueOrDefault(first.LianeRequest);
+
+      if (liane is null)
+      {
+        return null;
+      }
 
       return new Match.Single(
         first.LianeRequest,
-        liane is null ? [] : ImmutableList.Create(liane.CreatedBy),
+        ImmutableList.Create(liane.CreatedBy),
         first.Name,
         weekDays,
         when,
