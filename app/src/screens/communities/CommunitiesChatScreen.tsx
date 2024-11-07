@@ -319,16 +319,9 @@ export const CommunitiesChatScreen = () => {
   };
 
   return (
-    <View style={styles.mainContainer}>
+    <View style={[styles.mainContainer, { paddingBottom: insets.bottom }]}>
       <Row
-        style={{
-          paddingTop: insets.top,
-          paddingBottom: insets.bottom,
-          backgroundColor: AppColors.white,
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: 16
-        }}
+        style={{ paddingTop: insets.top, backgroundColor: AppColors.white, justifyContent: "space-between", alignItems: "center", padding: 16 }}
         spacing={16}>
         <AppButton onPress={() => navigation.goBack()} icon={"arrow-ios-back-outline"} color={AppColors.primaryColor} />
         <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 16, lineHeight: 27, color: AppColors.primaryColor }}>{name}</AppText>
