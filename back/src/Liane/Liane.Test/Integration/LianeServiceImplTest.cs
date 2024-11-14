@@ -631,7 +631,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
 
       AssertMatchesEquals(list,
         new LianeMatch(lianeGugu, new LianeState.Detached(ImmutableList.Create<Match>(
-          new Match.Single(lianeMathilde.Id, ImmutableList.Create(mathilde), "Biojour", DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.Mende, LabeledPositions.QuezacParking, 0.7706745f, true,
+          new Match.Single(lianeMathilde.Id, ImmutableList.Create(mathilde), "Biojour", DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.Mende, LabeledPositions.QuezacParking, 0.70023006f, true,
             null)
         )))
       );

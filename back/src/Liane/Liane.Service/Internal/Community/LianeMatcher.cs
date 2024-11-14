@@ -82,15 +82,15 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
                                                                    week_days,
                                                                    
                                                                    st_length(intersection) / a_length AS score,
-                                                                   st_startpoint(intersection) AS pickup,
-                                                                   st_endpoint(intersection) AS deposit,
+                                                                   st_startpoint(st_geometryn(intersection, 1)) AS pickup,
+                                                                   st_endpoint(st_geometryn(intersection, a_count)) AS deposit,
                                                                    
-                                                                   st_length(intersection_reverse) / a_length_reverse AS score_reverse,
-                                                                   st_startpoint(intersection_reverse) AS pickup_reverse,
-                                                                   st_endpoint(intersection_reverse) AS deposit_reverse,
+                                                                   st_linelocatepoint(b_geometry, st_startpoint(st_geometryn(intersection, 1))) AS start_position,
+                                                                   st_linelocatepoint(b_geometry, st_endpoint(st_geometryn(intersection, a_count))) AS end_position,
                                                                    
                                                                    linked_to_b AS linked_to
                                                             FROM (SELECT lr_a.id AS "from",
+                                                                         b.geometry AS b_geometry,
                                                                          lr_b.id AS liane_request,
                                                                          lr_b.name AS name,
                                                                          lr_b.arrive_before AS arrive_before,
@@ -100,15 +100,14 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
                                                                          
                                                                          lm_b.liane_id AS linked_to_b,
                                                                          
-                                                                         st_linemerge(st_intersection(a.geometry, b.geometry)) intersection,
-                                                                         st_linemerge(st_intersection(a_reverse.geometry, b.geometry)) intersection_reverse,
-                                                                         st_length(a.geometry) AS                              a_length,
-                                                                         st_length(a_reverse.geometry) AS                      a_length_reverse
+                                                                         st_collectionextract(st_intersection(a.geometry, b.geometry)) intersection,
+                                                                         
+                                                                         st_numgeometries(st_collectionextract(st_intersection(a.geometry, b.geometry))) a_count,
+                                                                         
+                                                                         st_length(a.geometry) AS a_length
                                                                   FROM liane_request lr_a
                                                                           INNER JOIN route a ON
                                                                             a.way_points = lr_a.way_points
-                                                                          LEFT JOIN route a_reverse ON
-                                                                            lr_a.round_trip AND a_reverse.way_points = array_reverse(lr_a.way_points)
                                                                           INNER JOIN liane_request lr_b ON
                                                                             lr_b.id != lr_a.id
                                                                               AND ((@to IS NULL AND lr_b.is_enabled) OR lr_b.id = @to)
@@ -144,15 +143,15 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
                                                                    week_days,
                                                                    
                                                                    st_length(intersection) / a_length AS score,
-                                                                   st_startpoint(intersection) AS pickup,
-                                                                   st_endpoint(intersection) AS deposit,
+                                                                   st_startpoint(st_geometryn(intersection, 1)) AS pickup,
+                                                                   st_endpoint(st_geometryn(intersection, a_count)) AS deposit,
                                                                    
-                                                                   st_length(intersection_reverse) / a_length_reverse AS score_reverse,
-                                                                   st_startpoint(intersection_reverse) AS pickup_reverse,
-                                                                   st_endpoint(intersection_reverse) AS deposit_reverse,
+                                                                   st_linelocatepoint(b_geometry, st_startpoint(st_geometryn(intersection, 1))) AS start_position,
+                                                                   st_linelocatepoint(b_geometry, st_endpoint(st_geometryn(intersection, a_count))) AS end_position,
                                                                    
                                                                    linked_to_b AS linked_to
                                                             FROM (SELECT lr_a.id AS "from",
+                                                                         b.geometry AS b_geometry,
                                                                          lr_b.id AS liane_request,
                                                                          lr_b.name AS name,
                                                                          lr_b.arrive_before AS arrive_before,
@@ -162,15 +161,14 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
                                                                          
                                                                          lm_b.liane_id AS linked_to_b,
                                                                          
-                                                                         st_linemerge(st_intersection(a.geometry, b.geometry)) intersection,
-                                                                         st_linemerge(st_intersection(a_reverse.geometry, b.geometry)) intersection_reverse,
-                                                                         st_length(a.geometry) AS                              a_length,
-                                                                         st_length(a_reverse.geometry) AS                      a_length_reverse
+                                                                         st_collectionextract(st_intersection(a.geometry, b.geometry)) intersection,
+                                                            
+                                                                         st_numgeometries(st_collectionextract(st_intersection(a.geometry, b.geometry))) a_count,
+                                                            
+                                                                         st_length(a.geometry) AS a_length
                                                                   FROM liane_request lr_a
                                                                           INNER JOIN route a ON
                                                                             a.way_points = lr_a.way_points
-                                                                          LEFT JOIN route a_reverse ON
-                                                                            lr_a.round_trip AND a_reverse.way_points = array_reverse(lr_a.way_points)
                                                                           INNER JOIN liane_request lr_b ON
                                                                             lr_b.id != lr_a.id
                                                                               AND lr_b.id = ANY(@to)
@@ -287,26 +285,21 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
   {
     var pickup = match.Pickup.GetOrDefault(snapedPoints.GetValueOrDefault);
     var deposit = match.Deposit.GetOrDefault(snapedPoints.GetValueOrDefault);
-    var pickupReverse = match.PickupReverse.GetOrDefault(snapedPoints.GetValueOrDefault);
-    var depositReverse = match.DepositReverse.GetOrDefault(snapedPoints.GetValueOrDefault);
 
-    if (pickup is not null && deposit is not null)
-    {
-      return (pickup, deposit, match.Score, false);
-    }
-
-    if (pickupReverse is null || depositReverse is null)
+    if (pickup is null || deposit is null)
     {
       return null;
     }
 
-    return (pickupReverse, depositReverse, match.ScoreReverse, true);
+    return match.StartPosition < match.EndPosition
+      ? (pickup, deposit, match.Score, false)
+      : (deposit, pickup, match.Score, true);
   }
 
   private async Task<MapParams> GetMapParams(IDbConnection connection, ImmutableList<LianeRawMatch> rawMatches, string userId, IDbTransaction? tx = null)
   {
     var lianes = await lianeFetcher.FetchLianes(connection, rawMatches.FilterSelectMany<LianeRawMatch, Guid>(r => [r.LinkedTo, r.LianeRequest]).Distinct(), tx);
-    var snapedPoints = await rallyingPointService.Snap(rawMatches.FilterSelectMany<LianeRawMatch, LatLng>(r => [r.Deposit, r.Pickup, r.DepositReverse, r.PickupReverse]).ToImmutableHashSet());
+    var snapedPoints = await rallyingPointService.Snap(rawMatches.FilterSelectMany<LianeRawMatch, LatLng>(r => [r.Deposit, r.Pickup]).ToImmutableHashSet());
     var pendingJoinRequests = (await connection.QueryAsync<(Guid, DateTime)>(
         """
         SELECT liane_request.id, requested_at
@@ -339,9 +332,8 @@ internal sealed record LianeRawMatch(
   float Score,
   LatLng? Pickup,
   LatLng? Deposit,
-  float ScoreReverse,
-  LatLng? PickupReverse,
-  LatLng? DepositReverse,
+  float StartPosition,
+  float EndPosition,
   Guid? LinkedTo
 );
 
