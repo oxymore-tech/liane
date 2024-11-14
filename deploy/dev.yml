@@ -13,7 +13,6 @@ services:
 
   postgis:
     image: "kartoza/postgis:15-3.3"
-    command: [ "-c", "shared_buffers=512MB", "-c", "max_connections=1000" ]
     volumes:
       - "${LIANE_HOME}/data/postgis:/var/lib/postgresql/data"
     ports:
