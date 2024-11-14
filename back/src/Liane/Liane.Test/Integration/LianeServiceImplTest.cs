@@ -587,12 +587,12 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
 
   [Test]
   public async Task EveryRequestIsIndependant()
-  {
+  { 
     var (lianeGugu, lianeJayBee, lianeMathilde, lianeSiloe, _, _, _, _) = await SetupDefaultLianes();
     var lianeGuguMarch = await CreateLianeRequest(gugu, "Marché", LabeledPositions.BlajouxParking, LabeledPositions.Mende, weekDays: DayOfWeekFlag.Friday | DayOfWeekFlag.Saturday);
-
+    
     currentContext.SetCurrentUser(gugu);
-
+    
     // Gugu join JayBee : a new liane is created
     Api.Community.Liane joinedLiane;
     {
@@ -631,7 +631,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
 
       AssertMatchesEquals(list,
         new LianeMatch(lianeGugu, new LianeState.Detached(ImmutableList.Create<Match>(
-          new Match.Single(lianeMathilde.Id, ImmutableList.Create(mathilde), "Biojour", DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.Mende, LabeledPositions.QuezacParking, 0.70023006f, true,
+          new Match.Single(lianeMathilde.Id, ImmutableList.Create(mathilde), "Biojour", DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.70023006f, false,
             null)
         )))
       );
@@ -666,7 +666,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   private async Task<LianeRequest> CreateLianeRequest(User user, string name, Ref<RallyingPoint> from, Ref<RallyingPoint> to, Ref<RallyingPoint>? intermediate = null,
     DayOfWeekFlag weekDays = default,
     TimeOnly? arriveBefore = null,
-    TimeOnly? returnAfter = null, bool roundTrip = false)
+    TimeOnly? returnAfter = null, bool roundTrip = true)
   {
     currentContext.SetCurrentUser(user);
     var wayPoints = intermediate is null ? ImmutableList.Create(from, to) : ImmutableList.Create(from, intermediate, to);

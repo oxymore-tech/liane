@@ -283,7 +283,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
       var liane = await tested.JoinRequest(lianeMathilde.Id, lianeJayBee.Id);
       Assert.IsNotNull(liane);
       Assert.AreEqual(lianeJayBee.Id, liane!.Id);
-      CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, mathilde.Id), liane!.Members.Select(m => m.User.Id));
+      CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, mathilde.Id), liane.Members.Select(m => m.User.Id));
     }
 
     {
@@ -296,7 +296,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
       var liane = await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id);
       Assert.IsNotNull(liane);
       Assert.AreEqual(lianeJayBee.Id, liane!.Id);
-      CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, mathilde.Id, gugu.Id), liane!.Members.Select(m => m.User.Id));
+      CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, mathilde.Id, gugu.Id), liane.Members.Select(m => m.User.Id));
     }
 
     pushService.Assert(
@@ -327,7 +327,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
       var liane = await tested.JoinRequest(lianeMathilde.Id, lianeJayBee.Id);
       Assert.IsNotNull(liane);
       Assert.AreEqual(lianeJayBee.Id, liane!.Id);
-      CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, mathilde.Id), liane!.Members.Select(m => m.User.Id));
+      CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, mathilde.Id), liane.Members.Select(m => m.User.Id));
     }
 
     {
@@ -370,7 +370,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
       var liane = await tested.JoinRequest(lianeMathilde.Id, lianeJayBee.Id);
       Assert.IsNotNull(liane);
       Assert.AreEqual(lianeJayBee.Id, liane!.Id);
-      CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, mathilde.Id), liane!.Members.Select(m => m.User.Id));
+      CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, mathilde.Id), liane.Members.Select(m => m.User.Id));
     }
 
     {
@@ -383,7 +383,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
       var liane = await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id);
       Assert.IsNotNull(liane);
       Assert.AreEqual(lianeJayBee.Id, liane!.Id);
-      CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, mathilde.Id, gugu.Id), liane!.Members.Select(m => m.User.Id));
+      CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, mathilde.Id, gugu.Id), liane.Members.Select(m => m.User.Id));
     }
 
     pushService.Assert(
@@ -414,7 +414,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
       var liane = await tested.JoinRequest(lianeMathilde.Id, lianeJayBee.Id);
       Assert.IsNotNull(liane);
       Assert.AreEqual(lianeJayBee.Id, liane!.Id);
-      CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, mathilde.Id), liane!.Members.Select(m => m.User.Id));
+      CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, mathilde.Id), liane.Members.Select(m => m.User.Id));
     }
 
     {
@@ -446,9 +446,8 @@ public sealed class LianeTxTest : BaseIntegrationTest
   [Test]
   public async Task GuguShouldJoinThenLeftJayBeeLianeTheLianeIsEmptied()
   {
-    var (lianeGugu, lianeJayBee, lianeMathilde, lianeSiloe, _, _, _, _) = await SetupDefaultLianes();
+    var (lianeGugu, lianeJayBee, _, _, _, _, _, _) = await SetupDefaultLianes();
 
-    DateTime at;
     {
       currentContext.SetCurrentUser(gugu);
       var liane = await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id);

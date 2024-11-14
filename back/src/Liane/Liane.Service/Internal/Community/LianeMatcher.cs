@@ -74,54 +74,58 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     IDbTransaction? tx = null)
   {
     var result = await connection.QueryAsync<LianeRawMatch>("""
+                                                            WITH first_level AS (
+                                                              SELECT lr_a.id AS "from",
+                                                                     a.geometry AS a_geometry,
+                                                                     lr_b.id AS liane_request,
+                                                                     lr_b.name AS name,
+                                                                     lr_b.arrive_before AS arrive_before,
+                                                                     lr_b.return_after AS return_after,
+                                                                     matching_weekdays(lr_a.week_days, lr_b.week_days) AS week_days,
+                                                                     lm_b.liane_id AS linked_to_b,
+                                                                     st_intersection(a.geometry, b.geometry) intersection,
+                                                                     st_length(a.geometry) AS a_length
+                                                              FROM liane_request lr_a
+                                                                      INNER JOIN route a ON
+                                                                        a.way_points = lr_a.way_points
+                                                                      INNER JOIN liane_request lr_b ON
+                                                                        lr_b.id != lr_a.id
+                                                                          AND ((@to IS NULL AND lr_b.is_enabled) OR lr_b.id = @to)
+                                                                          AND NOT lr_b.id = ANY(@linkedTo)
+                                                                          AND lr_b.created_by != lr_a.created_by
+                                                                          AND matching_weekdays(lr_a.week_days, lr_b.week_days)::integer != 0
+                                                                      LEFT JOIN liane_member lm_b ON
+                                                                        lr_b.id = lm_b.liane_request_id AND NOT lm_b.liane_id = ANY(@linkedTo)
+                                                                      INNER JOIN route b ON
+                                                                        b.way_points = lr_b.way_points AND st_intersects(a.geometry, b.geometry)
+                                                              WHERE ((@from IS NULL AND lr_a.created_by = @userId) OR lr_a.id = @from)
+                                                            ),
+                                                            second_level AS (
+                                                              SELECT "from",
+                                                                      liane_request,
+                                                                      name,
+                                                                      arrive_before,
+                                                                      return_after,
+                                                                      week_days,
+                                                                      st_length(intersection) / a_length AS score,
+                                                                      linked_to_b AS linked_to,
+                                                                      match_routes(a_geometry, intersection) AS match
+                                                              FROM first_level
+                                                              WHERE st_length(intersection) / a_length > 0.35
+                                                              ORDER BY st_length(intersection) / a_length DESC, "from"
+                                                            )
                                                             SELECT "from",
                                                                    liane_request,
                                                                    name,
                                                                    arrive_before,
                                                                    return_after,
                                                                    week_days,
-                                                                   
-                                                                   st_length(intersection) / a_length AS score,
-                                                                   st_startpoint(st_geometryn(intersection, 1)) AS pickup,
-                                                                   st_endpoint(st_geometryn(intersection, a_count)) AS deposit,
-                                                                   
-                                                                   st_linelocatepoint(b_geometry, st_startpoint(st_geometryn(intersection, 1))) AS start_position,
-                                                                   st_linelocatepoint(b_geometry, st_endpoint(st_geometryn(intersection, a_count))) AS end_position,
-                                                                   
-                                                                   linked_to_b AS linked_to
-                                                            FROM (SELECT lr_a.id AS "from",
-                                                                         b.geometry AS b_geometry,
-                                                                         lr_b.id AS liane_request,
-                                                                         lr_b.name AS name,
-                                                                         lr_b.arrive_before AS arrive_before,
-                                                                         lr_b.return_after AS return_after,
-                                                                         
-                                                                         matching_weekdays(lr_a.week_days, lr_b.week_days) AS week_days,
-                                                                         
-                                                                         lm_b.liane_id AS linked_to_b,
-                                                                         
-                                                                         st_collectionextract(st_intersection(a.geometry, b.geometry)) intersection,
-                                                                         
-                                                                         st_numgeometries(st_collectionextract(st_intersection(a.geometry, b.geometry))) a_count,
-                                                                         
-                                                                         st_length(a.geometry) AS a_length
-                                                                  FROM liane_request lr_a
-                                                                          INNER JOIN route a ON
-                                                                            a.way_points = lr_a.way_points
-                                                                          INNER JOIN liane_request lr_b ON
-                                                                            lr_b.id != lr_a.id
-                                                                              AND ((@to IS NULL AND lr_b.is_enabled) OR lr_b.id = @to)
-                                                                              AND NOT lr_b.id = ANY(@linkedTo)
-                                                                              AND lr_b.created_by != lr_a.created_by
-                                                                              AND matching_weekdays(lr_a.week_days, lr_b.week_days)::integer != 0
-                                                                          LEFT JOIN liane_member lm_b ON
-                                                                            lr_b.id = lm_b.liane_request_id AND NOT lm_b.liane_id = ANY(@linkedTo)
-                                                                          INNER JOIN route b ON
-                                                                            b.way_points = lr_b.way_points AND st_intersects(a.geometry, b.geometry)
-                                                                  WHERE ((@from IS NULL AND lr_a.created_by = @userId) OR lr_a.id = @from)
-                                                                  ) AS first_glance
-                                                            WHERE st_length(intersection) / a_length > 0.35
-                                                            ORDER BY st_length(intersection) / a_length DESC, "from"
+                                                                   score,
+                                                                   (second_level.match).pickup,
+                                                                   (second_level.match).deposit,
+                                                                   (second_level.match).is_reverse_direction,
+                                                                   linked_to
+                                                            FROM second_level
                                                             """,
       new { userId, linkedTo = linkedTo.ToArray(), from, to },
       tx
@@ -135,51 +139,57 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
   private static async Task<ImmutableList<LianeRawMatch>> FindRawMatch(IDbConnection connection, Guid from, IEnumerable<Guid> to, IDbTransaction? tx = null)
   {
     var result = await connection.QueryAsync<LianeRawMatch>("""
+                                                            WITH first_level AS (
+                                                              SELECT lr_a.id AS "from",
+                                                                   a.geometry AS a_geometry,
+                                                                   lr_b.id AS liane_request,
+                                                                   lr_b.name AS name,
+                                                                   lr_b.arrive_before AS arrive_before,
+                                                                   lr_b.return_after AS return_after,
+                                                                   matching_weekdays(lr_a.week_days, lr_b.week_days) AS week_days,
+                                                                   lm_b.liane_id AS linked_to,
+                                                                   st_intersection(a.geometry, b.geometry) AS intersection,
+                                                                   st_length(a.geometry) AS a_length
+                                                              FROM liane_request lr_a
+                                                                      INNER JOIN route a ON
+                                                                        a.way_points = lr_a.way_points
+                                                                      INNER JOIN liane_request lr_b ON
+                                                                        lr_b.id != lr_a.id
+                                                                          AND lr_b.id = ANY(@to)
+                                                                          AND lr_b.created_by != lr_a.created_by
+                                                                          AND matching_weekdays(lr_a.week_days, lr_b.week_days)::integer != 0
+                                                                      LEFT JOIN liane_member lm_b ON
+                                                                        lr_b.id = lm_b.liane_request_id
+                                                                      INNER JOIN route b ON
+                                                                        b.way_points = lr_b.way_points
+                                                              WHERE lr_a.id = @from
+                                                            ),
+                                                            second_level AS (
+                                                              SELECT "from",
+                                                                      liane_request,
+                                                                      name,
+                                                                      arrive_before,
+                                                                      return_after,
+                                                                      week_days,
+                                                                      st_length(intersection) / a_length AS score,
+                                                                      linked_to,
+                                                                      match_routes(a_geometry, intersection) AS match
+                                                              FROM first_level
+                                                              WHERE st_length(intersection) / a_length > 0.35
+                                                              ORDER BY st_length(intersection) / a_length DESC, "from"
+                                                            )
                                                             SELECT "from",
                                                                    liane_request,
                                                                    name,
                                                                    arrive_before,
                                                                    return_after,
                                                                    week_days,
-                                                                   
-                                                                   st_length(intersection) / a_length AS score,
-                                                                   st_startpoint(st_geometryn(intersection, 1)) AS pickup,
-                                                                   st_endpoint(st_geometryn(intersection, a_count)) AS deposit,
-                                                                   
-                                                                   st_linelocatepoint(b_geometry, st_startpoint(st_geometryn(intersection, 1))) AS start_position,
-                                                                   st_linelocatepoint(b_geometry, st_endpoint(st_geometryn(intersection, a_count))) AS end_position,
-                                                                   
-                                                                   linked_to_b AS linked_to
-                                                            FROM (SELECT lr_a.id AS "from",
-                                                                         b.geometry AS b_geometry,
-                                                                         lr_b.id AS liane_request,
-                                                                         lr_b.name AS name,
-                                                                         lr_b.arrive_before AS arrive_before,
-                                                                         lr_b.return_after AS return_after,
-                                                                         
-                                                                         matching_weekdays(lr_a.week_days, lr_b.week_days) AS week_days,
-                                                                         
-                                                                         lm_b.liane_id AS linked_to_b,
-                                                                         
-                                                                         st_collectionextract(st_intersection(a.geometry, b.geometry)) intersection,
-                                                            
-                                                                         st_numgeometries(st_collectionextract(st_intersection(a.geometry, b.geometry))) a_count,
-                                                            
-                                                                         st_length(a.geometry) AS a_length
-                                                                  FROM liane_request lr_a
-                                                                          INNER JOIN route a ON
-                                                                            a.way_points = lr_a.way_points
-                                                                          INNER JOIN liane_request lr_b ON
-                                                                            lr_b.id != lr_a.id
-                                                                              AND lr_b.id = ANY(@to)
-                                                                              AND lr_b.created_by != lr_a.created_by
-                                                                              AND matching_weekdays(lr_a.week_days, lr_b.week_days)::integer != 0
-                                                                          LEFT JOIN liane_member lm_b ON
-                                                                            lr_b.id = lm_b.liane_request_id
-                                                                          INNER JOIN route b ON
-                                                                            b.way_points = lr_b.way_points
-                                                                  WHERE lr_a.id = @from
-                                                                  ) AS first_glance
+                                                                   score,
+                                                                   (second_level.match).pickup,
+                                                                   (second_level.match).deposit,
+                                                                   (second_level.match).is_reverse_direction,
+                                                                   linked_to
+                                                            FROM second_level
                                                             """,
       new { from, to },
       tx
@@ -291,9 +301,9 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
       return null;
     }
 
-    return match.StartPosition < match.EndPosition
-      ? (pickup, deposit, match.Score, false)
-      : (deposit, pickup, match.Score, true);
+    return match.IsReverseDirection
+      ? (deposit, pickup, match.Score, true)
+      : (pickup, deposit, match.Score, false);
   }
 
   private async Task<MapParams> GetMapParams(IDbConnection connection, ImmutableList<LianeRawMatch> rawMatches, string userId, IDbTransaction? tx = null)
@@ -332,8 +342,7 @@ internal sealed record LianeRawMatch(
   float Score,
   LatLng? Pickup,
   LatLng? Deposit,
-  float StartPosition,
-  float EndPosition,
+  bool IsReverseDirection,
   Guid? LinkedTo
 );
 

@@ -99,7 +99,6 @@ public abstract class BaseIntegrationTest
     services.AddService(Moq.Mock.Of<ILianeUpdatePushService>());
     services.AddService(Moq.Mock.Of<IImageService>());
     services.AddService<TripServiceImpl>();
-    services.AddService<TripServiceImpl>();
     services.AddService<RallyingPointRequestServiceImpl>();
     services.AddService<UserServiceImpl>();
     services.AddService<UserStatServiceImpl>();
