@@ -69,6 +69,33 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var lianeSamuel = await CreateLianeRequest(samuel, "Samuel", LabeledPositions.PointisInard, LabeledPositions.AireDesPyrénées, LabeledPositions.MartresTolosane, weekDays: DayOfWeekFlag.All);
     return (lianeGugu, lianeJayBee, lianeMathilde, lianeSiloe, lianeGargamel, lianeCaramelo, lianeBertrand, lianeSamuel);
   }
+  
+  [Test]
+  public async Task GuguModifyLianeRequestName()
+  {
+    currentContext.SetCurrentUser(gugu);
+    var lianeGugu = await CreateLianeRequest(gugu, "Gugu", LabeledPositions.BlajouxParking, LabeledPositions.Mende, weekDays: DayOfWeekFlag.All);
+    var actual = await tested.Update(lianeGugu.Id, lianeGugu with { Name = "Gugu 2" });
+    Assert.AreEqual(actual.Name, "Gugu 2");
+  }
+
+  [Test]
+  public async Task GuguModifyLianeRequestWeekDays()
+  {
+    currentContext.SetCurrentUser(gugu);
+    var lianeGugu = await CreateLianeRequest(gugu, "Gugu", LabeledPositions.BlajouxParking, LabeledPositions.Mende, weekDays: DayOfWeekFlag.All);
+    var actual = await tested.Update(lianeGugu.Id, lianeGugu with { WeekDays = DayOfWeekFlag.Wednesday | DayOfWeekFlag.Sunday });
+    Assert.AreEqual(DayOfWeekFlag.Wednesday | DayOfWeekFlag.Sunday, actual.WeekDays);
+  }
+
+  [Test]
+  public async Task GuguModifyLianeRequestWayPoints()
+  {
+    currentContext.SetCurrentUser(gugu);
+    var lianeGugu = await CreateLianeRequest(gugu, "Gugu", LabeledPositions.BlajouxParking, LabeledPositions.Mende, weekDays: DayOfWeekFlag.All);
+    var actual = await tested.Update(lianeGugu.Id, lianeGugu with { WayPoints = ImmutableList.Create((Ref<RallyingPoint>)LabeledPositions.Florac, LabeledPositions.LanuejolsParkingEglise) });
+    Assert.AreEqual(ImmutableList.Create((Ref<RallyingPoint>)LabeledPositions.Florac, LabeledPositions.LanuejolsParkingEglise), actual.WayPoints);
+  }
 
   [Test]
   public async Task GuguShouldMatchLianes()

@@ -38,16 +38,7 @@ public sealed class LianeServiceImpl(
 {
   public async Task<LianeRequest> Create(LianeRequest request)
   {
-    var wayPoints = request.WayPoints.Distinct().ToImmutableList();
-    if (wayPoints.Count <= 1)
-    {
-      throw new ArgumentException("At least 2 waypoints are required");
-    }
-
-    if (request.WeekDays.IsEmpty())
-    {
-      throw new ArgumentException("At least 1 weekday is required");
-    }
+    CheckWayPoints(request);
 
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
@@ -55,12 +46,7 @@ public sealed class LianeServiceImpl(
     var userId = currentContext.CurrentUser().Id;
     var id = request.Id ?? Uuid7.Guid();
 
-    var wayPointsArray = request.WayPoints.Deref();
-    var coordinates = (await request.WayPoints.SelectAsync(rallyingPointService.Get))
-      .Select(w => w.Location)
-      .ToImmutableList();
-    var route = await routingService.GetRoute(coordinates);
-    await connection.MergeAsync(new RouteDb(wayPointsArray, route.Coordinates.ToLineString()), tx);
+    var wayPointsArray = await MergeRoute(request.WayPoints, connection, tx);
 
     var now = DateTime.UtcNow;
     var lianeRequestDb = new LianeRequestDb(id, request.Name, wayPointsArray, request.RoundTrip, request.ArriveBefore, request.ReturnAfter, request.CanDrive, request.WeekDays, request.IsEnabled,
@@ -68,9 +54,9 @@ public sealed class LianeServiceImpl(
 
     await connection.InsertAsync(lianeRequestDb, tx);
 
-    tx.Commit();
-
     var created = await lianeRequestFetcher.FetchLianeRequest(connection, id, tx);
+    
+    tx.Commit();
 
     return created;
   }
@@ -151,23 +137,35 @@ public sealed class LianeServiceImpl(
 
   public async Task<LianeRequest> Update(Ref<LianeRequest> id, LianeRequest request)
   {
+    CheckWayPoints(request);
     var userId = currentContext.CurrentUser().Id;
     using var connection = db.NewConnection();
+    var tx = connection.BeginTransaction();
+
     var lianeRequestId = Guid.Parse(id);
+    
+    var wayPointsArray = await MergeRoute(request.WayPoints, connection, tx);
 
     var updated = await connection.UpdateAsync(Query.Update<LianeRequestDb>()
       .Set(r => r.Name, request.Name)
       .Set(r => r.IsEnabled, request.IsEnabled)
       .Set(r => r.RoundTrip, request.RoundTrip)
+      .Set(r => r.ArriveBefore, request.ArriveBefore)
+      .Set(r => r.ReturnAfter, request.ReturnAfter)
+      .Set(r => r.WeekDays, request.WeekDays)
+      .Set(r => r.CanDrive, request.CanDrive)
+      .Set(r => r.WayPoints, wayPointsArray)
       .Where(r => r.Id, ComparisonOperator.Eq, lianeRequestId)
-      .And(r => r.CreatedBy, ComparisonOperator.Eq, userId));
+      .And(r => r.CreatedBy, ComparisonOperator.Eq, userId), tx);
 
     if (updated == 0)
     {
       throw new UnauthorizedAccessException("User is not the owner of the liane request");
     }
 
-    var lianeRequestDb = await connection.GetAsync<LianeRequestDb>(lianeRequestId);
+    var lianeRequestDb = await connection.GetAsync<LianeRequestDb>(lianeRequestId, tx);
+    
+    tx.Commit();
 
     return new LianeRequest(
       lianeRequestDb.Id,
@@ -542,6 +540,32 @@ public sealed class LianeServiceImpl(
       resolved.WayPoints.Last()
     );
   }
+  
+  private async Task<string[]> MergeRoute( ImmutableList<Ref<RallyingPoint>> wayPoints, IDbConnection connection, IDbTransaction tx)
+  {
+    var wayPointsArray = wayPoints.Deref();
+    var coordinates = (await wayPoints.SelectAsync(rallyingPointService.Get))
+      .Select(w => w.Location)
+      .ToImmutableList();
+    var route = await routingService.GetRoute(coordinates);
+    await connection.MergeAsync(new RouteDb(wayPointsArray, route.Coordinates.ToLineString()), tx);
+    return wayPointsArray;
+  }
+
+  private static void CheckWayPoints(LianeRequest request)
+  {
+    var wayPoints = request.WayPoints.Distinct().ToImmutableList();
+    if (wayPoints.Count <= 1)
+    {
+      throw new ArgumentException("At least 2 waypoints are required");
+    }
+
+    if (request.WeekDays.IsEmpty())
+    {
+      throw new ArgumentException("At least 1 weekday is required");
+    }
+  }
+
 }
 
 public sealed record LianeMemberDb(
