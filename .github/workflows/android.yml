@@ -74,7 +74,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./app
-        run: yarn
+        run: yarn install
 
       - name: Check tslint and eslint
         working-directory: ./app

@@ -23,7 +23,7 @@ export const LoggerNamespaces = [
 
 export type LoggerNamespace = (typeof LoggerNamespaces)[number];
 
-const config = {
+const rootLogger = logger.createLogger({
   severity: __DEV__ ? "debug" : "info",
   dateFormat: "iso",
   transport: [consoleTransport, datadogTransport],
@@ -35,9 +35,7 @@ const config = {
     }
   },
   enabledExtensions: [...LoggerNamespaces]
-};
-
-const rootLogger = logger.createLogger(config);
+});
 
 const namespaceLoggers = (() => {
   return Object.fromEntries(LoggerNamespaces.map(n => [n, rootLogger.extend(n)]));

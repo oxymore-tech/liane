@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "dev": "vite",
-    "build": "vite build && yarn upgrade @liane/common --cwd ../app --check-files",
+    "build": "vite build && yarn up @liane/common --cwd ../app --check-files",
     "lint": "eslint ./src/ --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "prepublishOnly": "yarn test unit && vite build",
@@ -45,5 +45,5 @@
     "vite-plugin-dts": "^3.6.0",
     "vitest": "^0.34.6"
   },
-  "packageManager": "yarn@1.22.22"
+  "packageManager": "yarn@4.5.1"
 }
