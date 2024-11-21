@@ -45,8 +45,7 @@ public sealed class RallyingPointServiceImplTest : BaseIntegrationTest
   {
     var (_, _, originalPoints, originalCount) = await testedService.List(new RallyingPointFilter { Limit = 100 });
     var lianeService = ServiceProvider.GetRequiredService<ITripService>();
-    await lianeService.Create(new TripRequest(null, null!, DateTime.Now.AddHours(1), null, 1, originalPoints[0], originalPoints[1],
-      GeolocationLevel.None));
+    await lianeService.Create(new TripRequest(null, null!, DateTime.Now.AddHours(1), null, 1, originalPoints[0], originalPoints[1]));
 
     var idsToDelete = originalPoints.Skip(2).Select(r => (Ref<RallyingPoint>)r);
     var deleted = await testedService.DeleteMany(idsToDelete);

@@ -2,7 +2,7 @@ import { CoLiane, CoMatch } from "@liane/common";
 import { StyleSheet } from "react-native";
 import { AppText } from "@/components/base/AppText.tsx";
 import { AppColorPalettes, AppColors } from "@/theme/colors.ts";
-import { Column, Row } from "@/components/base/AppLayout.tsx";
+import { Center, Column, Row } from "@/components/base/AppLayout.tsx";
 import { AppButton } from "@/components/base/AppButton.tsx";
 import { useContext } from "react";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
@@ -45,31 +45,28 @@ export const LianeContextActions = ({ liane, onJoin, onReject, pendingAction }: 
         </AppText>
         <Column style={styles.subColumn}>
           {liane.pendingMembers.map(m => (
-            <Row
-              key={m.user.id}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginBottom: 5
-              }}>
-              <AppAvatar user={m.user} />
-              <AppText
-                style={{
-                  fontSize: 17,
-                  fontWeight: "bold",
-                  marginLeft: 5,
-                  marginRight: 15
-                }}>
-                {m.user.pseudo}
-              </AppText>
-              <AppButton
-                style={{ marginRight: 5 }}
-                onPress={onJoin}
-                color={AppColors.primaryColor}
-                value="Accepter"
-                loading={pendingAction === "join"}
-              />
-              <AppButton onPress={onReject} color={AppColors.secondaryColor} value="Refuser" loading={pendingAction === "reject"} />
+            <Row key={m.user.id} style={{ width: "100%", alignItems: "center" }}>
+              <Center>
+                <AppAvatar user={m.user} size={40} />
+                <AppText
+                  style={{
+                    fontSize: 12,
+                    marginLeft: 5,
+                    marginRight: 15
+                  }}>
+                  {m.user.pseudo}
+                </AppText>
+              </Center>
+              <Row>
+                <AppButton
+                  style={{ marginRight: 5 }}
+                  onPress={onJoin}
+                  color={AppColors.primaryColor}
+                  value="Accepter"
+                  loading={pendingAction === "join"}
+                />
+                <AppButton onPress={onReject} color={AppColors.secondaryColor} value="Refuser" loading={pendingAction === "reject"} />
+              </Row>
             </Row>
           ))}
         </Column>

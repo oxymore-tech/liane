@@ -12,11 +12,11 @@ import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker";
 
 import { AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
-import { CoLianeRequest, DayOfWeekFlag, TimeOnly, TimeOnlyUtils, Trip } from "@liane/common";
+import { CoLianeRequest, DayOfWeekFlag, TimeOnly, Trip } from "@liane/common";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppLocalization } from "@/api/i18n";
 import { AppTextInput } from "@/components/base/AppTextInput.tsx";
-import { TimeWheelPicker } from "@/components/TimeWheelPicker.tsx";
+import { TimeView } from "@/components/TimeView.tsx";
 import { Accordion } from "@/screens/publish/Accordion.tsx";
 import { PageHeader } from "@/components/context/Navigation.tsx";
 import { ItinerarySearchForm } from "@/screens/ItinerarySearchForm.tsx";
@@ -230,13 +230,6 @@ const DaysStepView = ({ onChange, value }: StepProps<DayOfWeekFlag>) => {
   );
 };
 
-function getRoundedTime(n: number): TimeOnly {
-  const now = new Date();
-  const m = now.getMinutes();
-  const rounded = new Date(now.setMinutes((m / 60) * n));
-  return TimeOnlyUtils.fromDate(rounded);
-}
-
 const TimeConstraintView = ({
   title,
   onChange,
@@ -262,7 +255,7 @@ const TimeConstraintView = ({
         </Pressable>
       ) : (
         <Animated.View exiting={FadeOut.duration(150)} entering={FadeIn.duration(150).springify().damping(20)}>
-          <TimeWheelPicker date={value || getRoundedTime(15)} minuteStep={15} onChange={onChange} minDate={undefined} />
+          <TimeView value={value} onChange={onChange} editable />
         </Animated.View>
       )}
     </View>
@@ -286,7 +279,7 @@ const TimeStepView = ({ title, onChange, value }: TimeStepProps) => {
 const VehicleStepView = ({ onChange, value }: StepProps<boolean>) => {
   return (
     <StepForm title="Je peux conduire ?">
-      <View style={{ display: "flex", flexDirection: "row", justifyContent: "center", gap: 40 }}>
+      <Row spacing={40}>
         <AppButton
           value="Non"
           color={!value ? AppColors.primaryColor : AppColors.grayBackground}
@@ -299,7 +292,7 @@ const VehicleStepView = ({ onChange, value }: StepProps<boolean>) => {
           onPress={() => onChange(true)}
           style={{ width: 80 }}
         />
-      </View>
+      </Row>
     </StepForm>
   );
 };

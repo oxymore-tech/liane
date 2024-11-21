@@ -40,19 +40,19 @@ export const WayPointView = ({
     <Row style={{ alignItems: "center" }} spacing={8}>
       {(!delay || isPast) && (
         <TimeView
-          style={[styles.mainWayPointTime, { color: isPast ? AppColorPalettes.gray[400] : AppColors.primaryColor }]}
+          textStyle={[styles.mainWayPointTime, { color: isPast ? AppColorPalettes.gray[400] : AppColors.primaryColor }]}
           value={wayPoint.effectiveTime ?? wayPoint.eta}
         />
       )}
       {!!delay && !isPast && (
         <Column>
           <TimeView
-            style={[styles.mainWayPointTime, { color: isPast ? AppColorPalettes.gray[400] : AppColors.primaryColor }]}
+            textStyle={[styles.mainWayPointTime, { color: isPast ? AppColorPalettes.gray[400] : AppColors.primaryColor }]}
             value={addSeconds(new Date(wayPoint.eta), delay).toISOString()}
           />
           <View style={{ height: 8 }} />
           <TimeView
-            style={{ position: "absolute", bottom: 0, right: 0, textDecorationLine: "line-through" }}
+            textStyle={{ position: "absolute", bottom: 0, right: 0, textDecorationLine: "line-through" }}
             value={wayPoint.effectiveTime ?? wayPoint.eta}
           />
         </Column>

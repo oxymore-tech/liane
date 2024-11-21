@@ -408,7 +408,6 @@ export const ItinerarySearchForm = ({
   editable = true,
   onRequestFocus
 }: ItinerarySearchFormProps) => {
-  const { services } = useContext(AppContext);
   const [currentPoint, setCurrentPoint] = useState<ToOrFrom | undefined>("to");
   const [currentSearch, setCurrentSearch] = useState<string>("");
   const [mapOpen, setMapOpen] = useState<ToOrFrom>();

@@ -1,5 +1,5 @@
 import { capitalize, CoLiane, CoLianeMember, LianeMessage, Ref, User } from "@liane/common";
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useContext, useMemo, useState } from "react";
 import { View } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { Center, Column, Row } from "@/components/base/AppLayout";
@@ -9,6 +9,7 @@ import { UserPicture } from "@/components/UserPicture.tsx";
 import { useAppNavigation } from "@/components/context/routing.ts";
 import { AppIcon } from "@/components/base/AppIcon.tsx";
 import { AppButton } from "@/components/base/AppButton.tsx";
+import { AppContext } from "@/components/context/ContextProvider.tsx";
 
 export const MessageBubble = ({
   coLiane,
@@ -21,7 +22,9 @@ export const MessageBubble = ({
   isSender: boolean;
   previousSender?: Ref<User> | undefined;
 }) => {
+  const { services } = useContext(AppContext);
   const { navigation } = useAppNavigation();
+  const [loading, setLoading] = useState(false);
 
   const allMembers = useMemo<Record<Ref<User>, CoLianeMember>>(() => {
     return Object.fromEntries([...coLiane.members, ...coLiane.pendingMembers].map(m => [m.user.id, m]));
@@ -35,9 +38,18 @@ export const MessageBubble = ({
   const backgroundColor = message.content.type === "Text" ? (isSender ? AppColors.primaryColor : AppColors.secondaryColor) : "transparent";
   const color = message.content.type !== "Text" ? AppColors.darkGray : isSender ? AppColors.white : AppColors.white;
 
-  const handlePendingMember = useCallback(() => {
-    navigation.push("LianeMapDetail", { liane: coLiane });
-  }, [coLiane, navigation]);
+  const handlePendingMember = useCallback(async () => {
+    if (message.content.type !== "MemberRequested") {
+      return;
+    }
+    setLoading(true);
+    try {
+      const request = await services.community.get(message.content.lianeRequest);
+      navigation.push("LianeMapDetail", { liane: coLiane, request });
+    } finally {
+      setLoading(false);
+    }
+  }, [coLiane, message.content, navigation, services.community]);
 
   if (message.content.type !== "Text") {
     return (
@@ -56,7 +68,7 @@ export const MessageBubble = ({
         </Row>
         {message.content.type === "MemberRequested" && coLiane.pendingMembers.find(u => u.user.id === message.createdBy) && (
           <Center>
-            <AppButton onPress={handlePendingMember} color={AppColors.primaryColor} value="Voir la demande" />
+            <AppButton onPress={handlePendingMember} color={AppColors.secondaryColor} value="Voir la demande" loading={loading} />
           </Center>
         )}
         <AppText style={{ fontSize: 10, color: AppColorPalettes.gray[400], alignSelf: "flex-end" }}>{date}</AppText>

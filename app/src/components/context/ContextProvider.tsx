@@ -25,7 +25,7 @@ interface AppContextProps {
   hubState?: HubState;
 }
 
-let SERVICES = CreateAppServices();
+const SERVICES = CreateAppServices();
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: { retry: false },
@@ -88,7 +88,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
 
     await initializeNotification();
 
-    let user = await AppStorage.getUser();
+    const user = await AppStorage.getUser();
     if (user) {
       await registerRumUser(user);
       await initPushNotification(user, SERVICES);

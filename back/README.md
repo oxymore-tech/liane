@@ -46,3 +46,16 @@ Une fois que dotnet est installé, vous pouvez lancer le projet en utilisant :
 
 Vous pouvez ensuite ouvrir http://localhost:5000/swagger qui affiche
 la documentation de chaque endpoint.
+
+## Reproduire un bug en local
+
+```bash
+# dumper la base de données de l'environnement dev sur la base de données locale
+liane dump_on_local
+```
+
+```bash
+# En losal on peut se faire passer pour utilisateur avec son numro de téléphone
+# en générant un token pour effectuer une requête
+xh "http://localhost:5000/api/trip" `liane token local 0628412298`
+```

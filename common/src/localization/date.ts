@@ -83,18 +83,22 @@ export class Localization {
     }
 
     if (!timeOnly.minute) {
-      return `${timeOnly.hour.toString()}h`;
+      return `${timeOnly.hour.toString().padStart(2, "0")}:00`;
     }
 
-    return `${timeOnly.hour.toString()}h${timeOnly.minute.toString().padStart(2, "0")}`;
+    return `${timeOnly.hour.toString().padStart(2, "0")}:${timeOnly.minute.toString().padStart(2, "0")}`;
   };
 
   formatDateTime = (date: Date | number) => {
-    return `${this.formatMonthDay(date)} à ${this.formatTime(date)}`;
+    return `${this.formatDateOnly(date)} à ${this.formatTime(date)}`;
   };
 
   formatDateOnly = (date: Date | number) => {
-    return `${this.formatMonthDay(date)}`;
+    return this.capitalizeFirstLetter(this.formatMonthDay(date));
+  };
+
+  capitalizeFirstLetter = (val: string) => {
+    return String(val).charAt(0).toUpperCase() + String(val).slice(1);
   };
 
   readonly daysList = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];

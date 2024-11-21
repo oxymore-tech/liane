@@ -278,7 +278,7 @@ public sealed class TripServiceImplTest : BaseIntegrationTest
     currentContext.SetAllowPastResourceCreation(true);
     var departureTime = DateTime.Parse("2023-08-08T08:08:00Z");
     var liane = await testedService.Create(
-      new TripRequest(null, null!, departureTime, null, 3, LabeledPositions.BlajouxParking, LabeledPositions.Mende, GeolocationLevel.None), augustin);
+      new TripRequest(null, null!, departureTime, null, 3, LabeledPositions.BlajouxParking, LabeledPositions.Mende), augustin);
     var actual = await testedService.Match(new Filter(LabeledPositions.Cocures, LabeledPositions.Mende, new DepartureOrArrivalTime(departureTime.AddHours(1), Direction.Arrival)),
       new Pagination());
 
@@ -303,8 +303,7 @@ public sealed class TripServiceImplTest : BaseIntegrationTest
 
     currentContext.SetCurrentUser(samuel);
     var liane = await testedService.Create(
-      new TripRequest(null, null!, DateTime.UtcNow.AddHours(23), null, 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille,
-        GeolocationLevel.None), samuel.Id);
+      new TripRequest(null, null!, DateTime.UtcNow.AddHours(23), null, 3, LabeledPositions.PointisInard, LabeledPositions.Tournefeuille), samuel.Id);
 
     currentContext.SetCurrentUser(bertrand);
     var actual = await testedService.Match(

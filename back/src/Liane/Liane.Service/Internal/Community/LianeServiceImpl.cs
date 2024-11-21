@@ -55,7 +55,7 @@ public sealed class LianeServiceImpl(
     await connection.InsertAsync(lianeRequestDb, tx);
 
     var created = await lianeRequestFetcher.FetchLianeRequest(connection, id, tx);
-    
+
     tx.Commit();
 
     return created;
@@ -143,7 +143,7 @@ public sealed class LianeServiceImpl(
     var tx = connection.BeginTransaction();
 
     var lianeRequestId = Guid.Parse(id);
-    
+
     var wayPointsArray = await MergeRoute(request.WayPoints, connection, tx);
 
     var updated = await connection.UpdateAsync(Query.Update<LianeRequestDb>()
@@ -164,7 +164,7 @@ public sealed class LianeServiceImpl(
     }
 
     var lianeRequestDb = await connection.GetAsync<LianeRequestDb>(lianeRequestId, tx);
-    
+
     tx.Commit();
 
     return new LianeRequest(
@@ -342,10 +342,24 @@ public sealed class LianeServiceImpl(
   public async Task<Api.Community.Liane> Get(Ref<Api.Community.Liane> id)
   {
     using var connection = db.NewConnection();
+    using var tx = connection.BeginTransaction();
     var userId = currentContext.CurrentUser().Id;
 
-    var liane = await lianeFetcher.FetchLiane(connection, id.IdAsGuid());
-    if (!liane.IsMember(userId))
+    var liane = await lianeFetcher.FetchLiane(connection, id.IdAsGuid(), tx);
+    if (liane.IsMember(userId))
+    {
+      return liane;
+    }
+
+    // check if the owner of the liane is a trying to join a liane (members of this foreign liane are autorized to get the user's liane) 
+    var member = await connection.FirstOrDefaultAsync(Query.Select<LianeMemberDb>().Where(m => m.LianeRequestId, ComparisonOperator.Eq, id), tx);
+    if (member?.LianeId is null)
+    {
+      throw new UnauthorizedAccessException("User is not part of the liane");
+    }
+
+    var foreginLiane = await lianeFetcher.FetchLiane(connection, id.IdAsGuid(), tx);
+    if (!foreginLiane.IsMember(userId))
     {
       throw new UnauthorizedAccessException("User is not part of the liane");
     }
@@ -540,8 +554,8 @@ public sealed class LianeServiceImpl(
       resolved.WayPoints.Last()
     );
   }
-  
-  private async Task<string[]> MergeRoute( ImmutableList<Ref<RallyingPoint>> wayPoints, IDbConnection connection, IDbTransaction tx)
+
+  private async Task<string[]> MergeRoute(ImmutableList<Ref<RallyingPoint>> wayPoints, IDbConnection connection, IDbTransaction tx)
   {
     var wayPointsArray = wayPoints.Deref();
     var coordinates = (await wayPoints.SelectAsync(rallyingPointService.Get))
@@ -565,7 +579,6 @@ public sealed class LianeServiceImpl(
       throw new ArgumentException("At least 1 weekday is required");
     }
   }
-
 }
 
 public sealed record LianeMemberDb(

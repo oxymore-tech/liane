@@ -10,6 +10,5 @@ public sealed record TripRequest(
   DateTime? ReturnAt,
   int AvailableSeats,
   [property: SerializeAsResolvedRef] Ref<RallyingPoint> From,
-  [property: SerializeAsResolvedRef] Ref<RallyingPoint> To,
-  GeolocationLevel GeolocationLevel
+  [property: SerializeAsResolvedRef] Ref<RallyingPoint> To
 ) : IIdentity<string>;

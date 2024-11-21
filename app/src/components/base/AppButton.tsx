@@ -113,7 +113,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: AppDimensions.button.paddingHorizontal / 2,
-    zIndex: 1,
     marginVertical: AppDimensions.button.paddingVertical
   },
   text: {

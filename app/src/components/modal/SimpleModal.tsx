@@ -3,7 +3,7 @@ import { ColorValue, KeyboardAvoidingView, Platform, StyleSheet, View } from "re
 import { AppColors, defaultTextColor } from "@/theme/colors";
 import { Row } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
-import React, { PropsWithChildren } from "react";
+import React, { PropsWithChildren, useCallback } from "react";
 import { AppPressable } from "@/components/base/AppPressable";
 
 export interface SimpleModalProps extends PropsWithChildren {
@@ -13,7 +13,7 @@ export interface SimpleModalProps extends PropsWithChildren {
   hideClose?: boolean;
 }
 export const SimpleModal = ({ backgroundColor = AppColors.darkBlue, visible, setVisible, children, hideClose }: SimpleModalProps) => {
-  const hide = () => setVisible(false);
+  const hide = useCallback(() => setVisible(false), [setVisible]);
   return (
     <Modal onBackButtonPress={hide} onBackdropPress={hide} isVisible={visible} onSwipeComplete={hide} style={styles.modal}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "position" : "height"}>

@@ -225,7 +225,7 @@ public sealed class TripServiceImpl(
       throw new ValidationException("To", ValidationMessage.WrongFormat);
     }
 
-    var members = new List<TripMember> { new(createdBy, tripRequest.From, tripRequest.To, tripRequest.AvailableSeats, GeolocationLevel: tripRequest.GeolocationLevel) };
+    var members = new List<TripMember> { new(createdBy, tripRequest.From, tripRequest.To, tripRequest.AvailableSeats, GeolocationLevel: GeolocationLevel.None) };
     var driverData = new Driver(createdBy, tripRequest.AvailableSeats > 0);
     var wayPoints = await GetWayPoints(at, driverData.User, members);
     var wayPointDbs = wayPoints.Select(w => new WayPointDb(w.RallyingPoint, w.Duration, w.Distance, w.Eta)).ToImmutableList();

@@ -24,6 +24,6 @@ public class Fakers
     .CustomInstantiator(f =>
     {
       var rallyingPoints = f.PickRandom(LabeledPositions.RallyingPoints, 2).ToArray();
-      return new TripRequest(null, null!, f.Date.Soon(15), null, 2, rallyingPoints[0], rallyingPoints[1], GeolocationLevel.None);
+      return new TripRequest(null, null!, f.Date.Soon(15), null, 2, rallyingPoints[0], rallyingPoints[1]);
     });
 }

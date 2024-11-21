@@ -102,7 +102,7 @@ const createState = <T>(
   }
 ) => {
   const trueCondition = () => true;
-  let state: StateNodeConfig<HomeMapContext, any, Event> = {
+  const state: StateNodeConfig<HomeMapContext, any, Event> = {
     initial: "init",
     ...idleState,
     on: {

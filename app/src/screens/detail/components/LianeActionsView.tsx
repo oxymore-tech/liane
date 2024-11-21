@@ -1,6 +1,6 @@
 import React, { useContext, useMemo, useState } from "react";
 import { QueryClient, useQueryClient } from "react-query";
-import { Alert, View } from "react-native";
+import { Alert } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Liane, LianeMatch, TimeOnlyUtils } from "@liane/common";
 import { NavigationParamList, useAppNavigation } from "@/components/context/routing";
@@ -15,7 +15,7 @@ import { AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { ChoiceModal } from "@/components/modal/ChoiceModal";
 import { CommonActions } from "@react-navigation/native";
-import { TimeWheelPicker } from "@/components/TimeWheelPicker";
+import { TimeView } from "@/components/TimeView";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 
 export const LianeActionsView = ({ match }: { match: LianeMatch }) => {
@@ -68,7 +68,7 @@ export const LianeActionsView = ({ match }: { match: LianeMatch }) => {
     }
 
     return buttonList;
-  }, []);
+  }, [currentUserIsMember, currentUserIsOwner, liane, navigation, queryClient, services]);
 
   return (
     <Column style={{ marginTop: 16 }}>
@@ -125,15 +125,7 @@ export const LianeActionsView = ({ match }: { match: LianeMatch }) => {
         setVisible={setTimeModalVisible}>
         <Column spacing={16} style={{ marginBottom: 16 }}>
           <AppText style={{ ...AppStyles.title, marginVertical: 8, paddingLeft: 8 }}>À quelle heure partez-vous ?</AppText>
-
-          <View>
-            <TimeWheelPicker
-              date={TimeOnlyUtils.fromDate(date)}
-              minuteStep={5}
-              onChange={d => setDate(TimeOnlyUtils.toDate(d, date))}
-              minDate={initialMinDate}
-            />
-          </View>
+          <TimeView value={date} onChange={d => setDate(d)} minDate={initialMinDate} />
         </Column>
       </SlideUpModal>
     </Column>

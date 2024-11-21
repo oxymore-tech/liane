@@ -92,7 +92,7 @@ const LianeDetailPage = ({ match }: { match: LianeMatch | undefined }) => {
     bbox.paddingRight = 72;
     bbox.paddingBottom = Math.min(bSheetTopPixels + 40, (height - bbox.paddingTop) / 2 + 24);
     return bbox;
-  }, [match?.trip.id, bSheetTop, insetsTop, height]);
+  }, [match, bSheetTop, height, tripMatch, insetsTop]);
 
   const driver = useMemo(() => match?.trip.members.find(m => m.user.id === match?.trip.driver.user)!.user, [match]);
   const trackingInfo = useTrackingInfo();

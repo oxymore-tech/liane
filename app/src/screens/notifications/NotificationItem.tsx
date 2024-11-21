@@ -3,7 +3,7 @@ import { AppLocalization } from "@/api/i18n";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
-import { AppIcon, IconName } from "@/components/base/AppIcon";
+import { AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import React, { useContext } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
@@ -16,7 +16,6 @@ export const NotificationItem = ({ notification: item, read }: { notification: N
   const datetime = capitalize(AppLocalization.toRelativeTimeString(new Date(item.createdAt!)));
   const { navigation } = useAppNavigation();
 
-  let icon: IconName = "message-square-outline";
   const nav = getNotificationNavigation(item);
   return (
     <AppPressableOverlay
@@ -32,7 +31,7 @@ export const NotificationItem = ({ notification: item, read }: { notification: N
       <Column style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
         <Row>
           <Center style={{ paddingHorizontal: 8, paddingTop: 12 }}>
-            <AppIcon name={icon} />
+            <AppIcon name="message-square-outline" />
           </Center>
           <Column style={{ justifyContent: "space-evenly", paddingHorizontal: 8, flexShrink: 1 }} spacing={2}>
             <AppText style={{ color: AppColorPalettes.gray[500] }}>{datetime}</AppText>

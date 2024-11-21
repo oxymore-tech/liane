@@ -8,7 +8,15 @@ module.exports = {
     "react/react-in-jsx-scope": "off",
     "react-native/no-inline-styles": "off",
     "react-hooks/rules-of-hooks": "off",
-    "@typescript-eslint/no-unused-vars": "warn"
+    "@typescript-eslint/no-unused-vars": "warn",
+    "no-var": "error",
+    "prefer-const": [
+      "error",
+      {
+        destructuring: "any",
+        ignoreReadBeforeAssign: false
+      }
+    ]
   },
   plugins: ["prettier"]
 };

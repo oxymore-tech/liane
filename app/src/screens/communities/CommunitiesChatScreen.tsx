@@ -1,36 +1,18 @@
-import {
-  addSeconds,
-  Chat,
-  CoLiane,
-  DayOfWeekFlag,
-  Liane,
-  LianeMessage,
-  PaginatedResponse,
-  RallyingPoint,
-  ResolvedLianeRequest,
-  TimeOnly,
-  TimeOnlyUtils
-} from "@liane/common";
+import { Chat, CoLiane, Liane, LianeMessage, PaginatedResponse, RallyingPoint, Ref } from "@liane/common";
 import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from "react-native";
-import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Center, Column, Row } from "@/components/base/AppLayout";
+import { Row } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppExpandingTextInput } from "@/components/base/AppExpandingTextInput";
 import { useAppNavigation } from "@/components/context/routing";
-import { AppPressableIcon } from "@/components/base/AppPressable";
 import { AppStyles } from "@/theme/styles";
 import { AppLogger } from "@/api/logger";
-import { SimpleModal } from "@/components/modal/SimpleModal.tsx";
-import { AppStorage } from "@/api/storage.ts";
-import { TimeWheelPicker } from "@/components/TimeWheelPicker.tsx";
-import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker.tsx";
 import { MessageBubble } from "@/screens/communities/MessageBubble.tsx";
 import { useSubscription } from "@/util/hooks/subscription.ts";
-import { AppLocalization } from "@/api/i18n.ts";
 import { DisplayWayPoints } from "@/components/communities/DisplayWayPoints.tsx";
 import { weekDays } from "@/util/hooks/days.ts";
 import { getLianeStatusStyle } from "@/components/trip/LianeStatusView.tsx";
@@ -38,6 +20,7 @@ import { TripQueryKey } from "@/screens/user/MyTripsScreen.tsx";
 import { useQueryClient } from "react-query";
 import { UserPicture } from "@/components/UserPicture.tsx";
 import { AppButton } from "@/components/base/AppButton.tsx";
+import { LaunchTripModal } from "@/screens/communities/LaunchTripModal.tsx";
 
 export const CommunitiesChatScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesChat">();
@@ -130,7 +113,7 @@ export const CommunitiesChatScreen = () => {
   };
 
   const sendMessage = useCallback(async () => {
-    let lianeTemp = liane;
+    const lianeTemp = liane;
     setIsSending(true);
 
     if (lianeTemp && lianeTemp.id && inputValue && inputValue.length > 0) {
@@ -176,23 +159,25 @@ export const CommunitiesChatScreen = () => {
 
   const me = useMemo(() => liane?.members.find(m => m.user.id === user!.id), [liane?.members, user]);
   const name = me && me.lianeRequest ? me?.lianeRequest.name : `${me?.lianeRequest.wayPoints[0].label}  ➔ ${me?.lianeRequest.wayPoints[1].label}`;
+  const [launching, setLaunching] = useState(false);
 
-  const launchTrip = async (time: [Date, Date | undefined], from: string | undefined, to: string | undefined) => {
-    setTripModalVisible(false);
-    const geolocationLevel = await AppStorage.getSetting("geolocation");
-
-    await services.liane.post({
-      liane: liane!.id!,
-      arriveAt: time[0].toISOString(),
-      returnAt: time[1]?.toISOString(),
-      from: from ?? me!.lianeRequest.wayPoints[0].id!,
-      to: to ?? me!.lianeRequest.wayPoints[1].id!,
-      availableSeats: me!.lianeRequest.canDrive ? 1 : -1,
-      geolocationLevel: geolocationLevel || "None",
-      recurrence: undefined
-    });
-    await queryClient.invalidateQueries(TripQueryKey);
-  };
+  const launchTrip = useCallback(
+    async (arriveAt: Date, returnAt: Date | undefined, from: Ref<RallyingPoint>, to: Ref<RallyingPoint>) => {
+      setLaunching(true);
+      await services.liane.post({
+        liane: liane!.id!,
+        arriveAt: arriveAt.toISOString(),
+        returnAt: returnAt?.toISOString(),
+        from,
+        to,
+        availableSeats: me!.lianeRequest.canDrive ? 1 : -1
+      });
+      await queryClient.invalidateQueries(TripQueryKey);
+      setLaunching(false);
+      setTripModalVisible(false);
+    },
+    [liane, me, queryClient, services.liane]
+  );
 
   useEffect(() => {
     setLiane(undefined);
@@ -475,230 +460,11 @@ export const CommunitiesChatScreen = () => {
             tripModalVisible={tripModalVisible}
             setTripModalVisible={setTripModalVisible}
             launchTrip={launchTrip}
+            launching={launching}
           />
         )}
       </KeyboardAvoidingView>
     </View>
-  );
-};
-
-const getNextAvailableDay = (weekdays: string, start: TimeOnly): DayOfWeekFlag => {
-  if (weekdays.length !== 7) {
-    throw new Error("La chaîne weekdays doit contenir 7 caractères.");
-  }
-  if (!/^[01]{7}$/.test(weekdays)) {
-    throw new Error("La chaîne weekdays doit contenir uniquement des 0 et des 1.");
-  }
-
-  const now = new Date();
-  const currentDay = (now.getDay() + 6) % 7;
-  const currentHour = now.getHours();
-  const currentMinute = now.getMinutes();
-
-  function findNextDay(startIndex: number): number {
-    for (let i = 0; i < 7; i++) {
-      const dayIndex = (startIndex + i) % 7;
-      if (weekdays[dayIndex] === "1") {
-        return dayIndex;
-      }
-    }
-    return -1;
-  }
-
-  let nextDayIndex = findNextDay(currentDay);
-
-  // If the current day is available but the current time is before the start time
-  if (weekdays[currentDay] === "1" && (currentHour < start.hour || (currentHour === start.hour && currentMinute < (start.minute ?? 0)))) {
-    nextDayIndex = currentDay;
-  }
-
-  if (nextDayIndex === -1) {
-    throw new Error("Aucun jour disponible trouvé.");
-  }
-
-  const result = "0000000".split("");
-  result[nextDayIndex] = "1";
-
-  return result.join("") as DayOfWeekFlag;
-};
-
-const LaunchTripModal = ({
-  tripModalVisible,
-  setTripModalVisible,
-  launchTrip,
-  lianeRequest
-}: {
-  lianeRequest: ResolvedLianeRequest;
-  tripModalVisible: boolean;
-  setTripModalVisible: (v: boolean) => void;
-  launchTrip: (d: [Date, Date | undefined], from: string | undefined, to: string | undefined) => void;
-}) => {
-  const [selectedTime, setSelectedTime] = useState<[Date, Date | undefined]>([new Date(), undefined]);
-  const [selectedDay, setSelectedDay] = useState<DayOfWeekFlag>(getNextAvailableDay(lianeRequest.weekDays, lianeRequest.arriveBefore));
-  const [from, setFrom] = useState<RallyingPoint>(lianeRequest.wayPoints[0]);
-  const [to, setTo] = useState<RallyingPoint>(lianeRequest.wayPoints[lianeRequest.wayPoints.length - 1]);
-  const [returnSelected, setReturnSelected] = useState<boolean>(true);
-
-  const startDate = useMemo(() => {
-    const d = new Date();
-    if (!lianeRequest) {
-      return d;
-    }
-    const c = lianeRequest.arriveBefore;
-    d.setHours(c.hour, c.minute);
-    return d;
-  }, [lianeRequest]);
-
-  const endDate = useMemo(() => {
-    const d = new Date();
-    if (!lianeRequest) {
-      return d;
-    }
-    const c = lianeRequest.returnAfter;
-    d.setHours(c.hour, c.minute);
-    return d;
-  }, [lianeRequest]);
-
-  const tripDateTime = useMemo(() => {
-    const todayIndex = (selectedTime[0].getDay() + 6) % 7;
-    let selectedDays = selectedDay
-      .split("")
-      .map((day, index) => (day === "1" ? index : -1))
-      .filter(index => index !== -1);
-    let firstDay = (selectedDays[0] - todayIndex + 7) % 7;
-    if (firstDay === 0 && selectedTime[0].valueOf() < new Date().valueOf()) {
-      firstDay = 7;
-    }
-    let returnDay = selectedDays.length > 1 ? (selectedDays[1] - todayIndex + 7) % 7 : firstDay;
-
-    let returnTime = returnSelected
-      ? selectedTime[1]
-        ? addSeconds(selectedTime[1], returnDay * 3600 * 24)
-        : addSeconds(startDate, returnDay * 3600 * 24)
-      : undefined;
-
-    return { depart: addSeconds(selectedTime[0], firstDay * 3600 * 24), return: returnTime };
-  }, [returnSelected, selectedDay, selectedTime, startDate]);
-  const launch = () => {
-    launchTrip([tripDateTime.depart, tripDateTime.return], from.id, to.id);
-  };
-
-  const switchDestination = () => {
-    const ToTemp = to;
-    setTo(from);
-    setFrom(ToTemp);
-  };
-
-  return (
-    <SimpleModal visible={tripModalVisible} setVisible={setTripModalVisible} backgroundColor={AppColors.white} hideClose>
-      <Column>
-        <AppText style={{ fontSize: 22, fontWeight: "bold", lineHeight: 24 }}>Lancer un trajet</AppText>
-        <Column spacing={8}>
-          <View>
-            <Row spacing={6} style={{ flexDirection: "row", justifyContent: "flex-start" }}>
-              <AppText style={[{ marginTop: 5 }, styles.modalText]}>{from.city}</AppText>
-              <AppPressableIcon name={"flip-2-outline"} onPress={switchDestination} />
-              <AppText style={[{ marginTop: 5 }, styles.modalText]}>{to.city}</AppText>
-            </Row>
-          </View>
-          <View>
-            <DayOfTheWeekPicker selectedDays={selectedDay} onChangeDays={setSelectedDay} enabledDays={"1111111"} dualOptionMode={true} />
-          </View>
-          {selectedDay !== "0000000" && tripDateTime?.depart ? (
-            <View style={{ flexDirection: "row", justifyContent: "flex-start" }}>
-              <View
-                style={{
-                  width: "auto",
-                  marginTop: 5,
-                  backgroundColor: AppColors.lightGrayBackground,
-                  paddingHorizontal: 8,
-                  borderRadius: 20,
-                  paddingVertical: 4
-                }}>
-                <AppText style={[styles.modalText]}>{AppLocalization.formatDateOnly(tripDateTime.depart)}</AppText>
-              </View>
-            </View>
-          ) : null}
-
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start" }}>
-            <AppText style={[{ marginLeft: 5 }, styles.modalText]}>Aller-retour ?</AppText>
-
-            <Pressable
-              style={[styles.buttonChoice, returnSelected ? styles.choiceNotSelected : styles.choiceSelected]}
-              onPress={() => {
-                setReturnSelected(false);
-              }}>
-              <AppText
-                style={{
-                  color: returnSelected ? AppColors.black : defaultTextColor(AppColors.primaryColor)
-                }}>
-                Non
-              </AppText>
-            </Pressable>
-            <Pressable
-              style={[styles.buttonChoice, returnSelected ? styles.choiceSelected : styles.choiceNotSelected]}
-              onPress={() => {
-                setReturnSelected(true);
-              }}>
-              <AppText
-                style={{
-                  color: returnSelected ? defaultTextColor(AppColors.primaryColor) : AppColors.black
-                }}>
-                Oui
-              </AppText>
-            </Pressable>
-          </View>
-          <Row spacing={8} style={{ justifyContent: "space-evenly" }}>
-            <Column>
-              <AppText style={styles.modalText}>Arrivée à :</AppText>
-              <Center>
-                <TimeWheelPicker
-                  date={TimeOnlyUtils.fromDate(startDate)}
-                  minuteStep={5}
-                  onChange={d => setSelectedTime(v => [TimeOnlyUtils.toDate(d, startDate), v[1]])}
-                />
-              </Center>
-            </Column>
-            {returnSelected && (
-              <Column>
-                <AppText style={styles.modalText}>Retour à :</AppText>
-                <Center>
-                  <TimeWheelPicker
-                    date={TimeOnlyUtils.fromDate(endDate)}
-                    minuteStep={5}
-                    onChange={d => setSelectedTime(v => [v[0], TimeOnlyUtils.toDate(d, endDate)])}
-                  />
-                </Center>
-              </Column>
-            )}
-          </Row>
-          <Row style={{ justifyContent: "center", alignItems: "center" }}>
-            <Pressable
-              style={{
-                flexDirection: "row",
-                paddingVertical: 10,
-                marginHorizontal: 20,
-                width: "100%",
-                borderRadius: 25,
-                backgroundColor: AppColors.primaryColor,
-                justifyContent: "center",
-                alignItems: "center"
-              }}
-              onPress={launch}>
-              <AppText
-                style={{
-                  color: defaultTextColor(AppColors.primaryColor),
-                  fontSize: 16,
-                  fontWeight: "bold",
-                  lineHeight: 24
-                }}>
-                Valider
-              </AppText>
-            </Pressable>
-          </Row>
-        </Column>
-      </Column>
-    </SimpleModal>
   );
 };
 
@@ -710,28 +476,5 @@ const styles = StyleSheet.create({
   },
   chatContainer: {
     flex: 1
-  },
-  modalText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    lineHeight: 24
-  },
-  buttonChoice: {
-    fontSize: 16,
-    fontWeight: "bold",
-    lineHeight: 24,
-    flexDirection: "row",
-    marginLeft: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 15,
-    borderWidth: 1
-  },
-  choiceSelected: {
-    borderColor: AppColors.primaryColor,
-    backgroundColor: AppColors.primaryColor
-  },
-  choiceNotSelected: {
-    borderColor: AppColors.lightGrayBackground
   }
 });

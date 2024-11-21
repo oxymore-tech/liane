@@ -94,8 +94,6 @@ export type LianeRequest = Identity & {
   availableSeats: number;
   from: Ref<RallyingPoint>;
   to: Ref<RallyingPoint>;
-  recurrence?: DayOfWeekFlag;
-  geolocationLevel: GeolocationLevel;
 };
 
 export type Liane = Entity & {
