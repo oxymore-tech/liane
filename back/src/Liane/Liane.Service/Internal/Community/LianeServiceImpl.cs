@@ -345,20 +345,21 @@ public sealed class LianeServiceImpl(
     using var tx = connection.BeginTransaction();
     var userId = currentContext.CurrentUser().Id;
 
-    var liane = await lianeFetcher.FetchLiane(connection, id.IdAsGuid(), tx);
+    var idAsGuid = id.IdAsGuid();
+    var liane = await lianeFetcher.FetchLiane(connection, idAsGuid, tx);
     if (liane.IsMember(userId))
     {
       return liane;
     }
 
     // check if the owner of the liane is a trying to join a liane (members of this foreign liane are autorized to get the user's liane) 
-    var member = await connection.FirstOrDefaultAsync(Query.Select<LianeMemberDb>().Where(m => m.LianeRequestId, ComparisonOperator.Eq, id), tx);
+    var member = await connection.FirstOrDefaultAsync(Query.Select<LianeMemberDb>().Where(m => m.LianeRequestId, ComparisonOperator.Eq, idAsGuid), tx);
     if (member?.LianeId is null)
     {
       throw new UnauthorizedAccessException("User is not part of the liane");
     }
 
-    var foreginLiane = await lianeFetcher.FetchLiane(connection, id.IdAsGuid(), tx);
+    var foreginLiane = await lianeFetcher.FetchLiane(connection, member.LianeId, tx);
     if (!foreginLiane.IsMember(userId))
     {
       throw new UnauthorizedAccessException("User is not part of the liane");
