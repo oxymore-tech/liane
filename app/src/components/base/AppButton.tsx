@@ -79,9 +79,9 @@ export function AppButton({
       )}
 
       <Row style={styles.contentContainer} spacing={8}>
-        {loading && <ActivityIndicator color={textColor} size="small" />}
-        {!loading && icon && <AppIcon style={styles.iconContainer} name={icon} color={textColor} size={28} />}
-        {value && <AppText style={[{ color: textColor }, styles.text]}>{value}</AppText>}
+        {!loading && icon && <AppIcon style={styles.iconContainer} opacity={loading ? 0 : 1} name={icon} color={textColor} size={28} />}
+        {value && <AppText style={[{ color: textColor }, styles.text, loading && { opacity: 0 }]}>{value}</AppText>}
+        {loading && <ActivityIndicator style={styles.loader} color={textColor} size="small" />}
       </Row>
 
       {user && (
@@ -99,6 +99,9 @@ export function AppButton({
 }
 
 const styles = StyleSheet.create({
+  loader: {
+    position: "absolute"
+  },
   iconContainer: {
     justifyContent: "center"
   },

@@ -40,6 +40,7 @@ export const WayPointDisplay = ({
     default:
       icon = undefined;
   }
+
   if (!active) {
     color = AppColorPalettes.gray[400];
   }

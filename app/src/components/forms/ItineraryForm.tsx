@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { StyleProp, StyleSheet, TextInput, View, ViewStyle } from "react-native";
+import { StyleProp, TextInput, View, ViewStyle } from "react-native";
 import { Column } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppColors } from "@/theme/colors";
@@ -7,7 +7,6 @@ import { RallyingPointField } from "@/screens/home/HomeHeader";
 import { RallyingPoint } from "@liane/common";
 import { AppPressableIcon } from "@/components/base/AppPressable";
 import { ToOrFrom } from "@/components/trip/ItineraryFormHeader.tsx";
-import { AppText } from "@/components/base/AppText.tsx";
 
 export interface ItineraryFormProps {
   editable?: boolean;

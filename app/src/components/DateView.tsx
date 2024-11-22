@@ -1,9 +1,9 @@
 import React, { useCallback, useState } from "react";
 import { AppText } from "@/components/base/AppText";
 import { Pressable, StyleProp, StyleSheet, ViewStyle } from "react-native";
-import RNDateTimePicker from "@react-native-community/datetimepicker";
 import { AppLocalization } from "@/api/i18n.ts";
 import { AppColors } from "@/theme/colors.ts";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 
 export type DateViewProps = {
   onChange: (d: Date) => void;
@@ -22,7 +22,7 @@ export const DateView = ({ style, onChange, date = new Date(), minDate, maxDate,
   }, [edit]);
 
   const handleChange = useCallback(
-    (_event: any, selectedDate: Date | undefined) => {
+    (selectedDate: Date | undefined) => {
       setEdit(false);
       if (!selectedDate) {
         return;
@@ -37,7 +37,18 @@ export const DateView = ({ style, onChange, date = new Date(), minDate, maxDate,
       style={[styles.container, editable && { backgroundColor: AppColors.lightGrayBackground }, style]}
       onPress={handlePress}
       disabled={!editable}>
-      {editable && edit && <RNDateTimePicker mode="date" value={date} onChange={handleChange} minimumDate={minDate} maximumDate={maxDate} />}
+      {editable && (
+        <DateTimePickerModal
+          mode="date"
+          date={date}
+          onConfirm={handleChange}
+          minuteInterval={5}
+          isVisible={edit}
+          minimumDate={minDate}
+          maximumDate={maxDate}
+          onCancel={handlePress}
+        />
+      )}
       <AppText style={styles.hourStyle}>{AppLocalization.formatDateOnly(date)}</AppText>
     </Pressable>
   );

@@ -73,9 +73,11 @@ export const LaunchTripModal = ({ tripModalVisible, setTripModalVisible, launchT
             <TimeView value={arriveBefore} onChange={setArriveBefore} editable />
           </Row>
 
-          <Row spacing={8} style={{ alignItems: "baseline", justifyContent: "space-between" }}>
+          <Row spacing={8} style={{ alignItems: "center", justifyContent: "space-between" }}>
             <Row>
-              <AppText style={[styles.modalText, !roundTrip && { textDecorationLine: "line-through" }]}>Retour depuis {to.city}</AppText>
+              <AppText style={[styles.modalText, { marginRight: 5 }, !roundTrip && { textDecorationLine: "line-through" }]}>
+                Retour depuis {to.city}
+              </AppText>
               <Switch
                 trackColor={{ false: AppColors.grayBackground, true: AppColors.primaryColor }}
                 thumbColor={roundTrip ? AppColors.white : AppColors.grayBackground}
@@ -108,8 +110,6 @@ function getNextAvailableDay(weekDays: DayOfWeekFlag, arriveBefore: TimeOnly): D
 
   const planned = new Date(now);
   planned.setHours(arriveBefore.hour, arriveBefore.minute ?? 0);
-
-  console.log("currentDay_fromMonday", currentDay_fromMonday);
 
   for (let i = currentDay_fromMonday; i < 7 + currentDay_fromMonday; i++) {
     const offset = i - currentDay_fromMonday;

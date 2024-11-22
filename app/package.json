@@ -52,7 +52,7 @@
     "react-native-logs": "^5.0.1",
     "react-native-map-link": "^2.11.3",
     "react-native-modal": "^13.0.1",
-    "react-native-modal-datetime-picker": "^17.1.0",
+    "react-native-modal-datetime-picker": "^18.0.0",
     "react-native-permissions": "^4.0.4",
     "react-native-reanimated": "^3.6.1",
     "react-native-redash": "^18.1.3",

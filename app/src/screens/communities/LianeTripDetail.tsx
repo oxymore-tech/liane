@@ -1,11 +1,10 @@
-import React, { useContext, useMemo, useState } from "react";
+import React, { useContext, useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Center } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppPressableIcon } from "@/components/base/AppPressable";
-import { AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
+import { AppColors, defaultTextColor } from "@/theme/colors";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton.tsx";
 import { AppLogger } from "@/api/logger.ts";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
@@ -26,7 +25,6 @@ export const LianeTripDetailScreen = () => {
   const { height } = useAppWindowsDimensions();
 
   const insets = useSafeAreaInsets();
-  const [error, setError] = useState<Error | undefined>(undefined);
 
   const joinTrip = async () => {
     if (trip && trip.id) {
@@ -35,7 +33,7 @@ export const LianeTripDetailScreen = () => {
         AppLogger.debug("COMMUNITIES", "Demande de rejoindre une liane avec succès", result);
         navigation.goBack();
       } catch (e) {
-        AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de la demande de rejoindre d'une liane", error);
+        AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de la demande de rejoindre d'une liane", e);
       }
     } else {
       AppLogger.debug("COMMUNITIES", "Pas de lianeRequest ID lors de la demande de rejoindre", trip);
@@ -53,15 +51,10 @@ export const LianeTripDetailScreen = () => {
     bbox.paddingRight = 72;
     bbox.paddingBottom = Math.min(bSheetTopPixels + 40, (height - bbox.paddingTop) / 2 + 24);
     return bbox;
-  }, [trip?.id, insetsTop, height]);
+  }, [trip, height, insetsTop]);
 
   return (
     <View style={styles.mainContainer}>
-      {error && (
-        <Center style={{ flex: 1 }}>
-          <AppText style={{ color: ContextualColors.redAlert.text }}>{error.message}</AppText>
-        </Center>
-      )}
       <View style={{ paddingTop: insets.top, height: "100%", width: "100%" }}>
         <View style={{ flexDirection: "row", position: "absolute", top: insets.top + 25, left: 15, zIndex: 40 }}>
           <View style={{ backgroundColor: AppColors.white, borderRadius: 90, marginRight: 5 }}>

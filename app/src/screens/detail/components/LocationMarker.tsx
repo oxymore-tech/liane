@@ -1,6 +1,6 @@
 import React from "react";
 import { LianeMemberDisplay } from "@/components/map/markers/LianeMemberDisplay";
-import { LatLng, TimeInMilliseconds, TimeInSeconds, User, UTCDateTime } from "@liane/common";
+import { LatLng, TimeInMilliseconds, User, UTCDateTime } from "@liane/common";
 import { useRealtimeDelay } from "@/util/hooks/delay";
 
 export const LocationMarker = (props: {

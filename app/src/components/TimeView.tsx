@@ -2,9 +2,9 @@ import React, { useCallback, useMemo, useState } from "react";
 import { AppText } from "@/components/base/AppText";
 import { Pressable, StyleProp, StyleSheet, TextStyle, ViewStyle } from "react-native";
 import { TimeOnly, TimeOnlyUtils, UTCDateTime } from "@liane/common";
-import RNDateTimePicker from "@react-native-community/datetimepicker";
 import { AppLocalization } from "@/api/i18n.ts";
 import { AppColors } from "@/theme/colors.ts";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 
 const minuteStep = 5;
 
@@ -88,7 +88,7 @@ export const InternalTimeView = ({ style, textStyle, onChange, value, minDate, m
   }, [edit]);
 
   const handleTimeChange = useCallback(
-    (_event: any, selectedDate: Date | undefined) => {
+    (selectedDate: Date | undefined) => {
       setEdit(false);
       const hour = selectedDate?.getHours();
       const minute = selectedDate?.getMinutes();
@@ -102,7 +102,16 @@ export const InternalTimeView = ({ style, textStyle, onChange, value, minDate, m
       style={[styles.container, editable && { backgroundColor: AppColors.lightGrayBackground }, style]}
       onPress={handlePress}
       disabled={!editable}>
-      {editable && edit && <RNDateTimePicker mode="time" value={TimeOnlyUtils.toDate(dateValue)} onChange={handleTimeChange} minuteInterval={5} />}
+      {editable && (
+        <DateTimePickerModal
+          mode="time"
+          date={TimeOnlyUtils.toDate(dateValue)}
+          onConfirm={handleTimeChange}
+          minuteInterval={5}
+          isVisible={edit}
+          onCancel={handlePress}
+        />
+      )}
       <AppText style={[textStyle, styles.hourStyle]}>{AppLocalization.formatTimeOnly(dateValue)}</AppText>
     </Pressable>
   );

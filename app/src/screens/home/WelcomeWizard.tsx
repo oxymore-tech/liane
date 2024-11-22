@@ -18,12 +18,12 @@ export const WelcomeWizardModal = () => {
   }, [user?.id]);
   const endTutorial = () => {
     setShow(false);
-    AppStorage.hideTutorial("welcome");
+    AppStorage.hideTutorial("welcome").then();
   };
   const next = () => setPage(page + 1);
   const prev = () => setPage(page - 1);
   return (
-    <Modal useNativeDriverForBackdrop={true} isVisible={false} style={{ margin: 0 }}>
+    <Modal useNativeDriverForBackdrop={true} isVisible={false && show} style={{ margin: 0 }}>
       {page === 0 && <WelcomePage1 prev={endTutorial} next={next} />}
       {page === 1 && <WelcomePageRp prev={prev} next={next} />}
       {page === 2 && <WelcomePageMap prev={prev} next={next} />}

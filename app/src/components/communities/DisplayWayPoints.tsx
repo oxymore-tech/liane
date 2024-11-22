@@ -58,7 +58,7 @@ const TripRow = ({ point, time, icon, hideLabel }: TripProps) => {
         <AppIcon style={styles.separateIcon} name={icon as IconName} color={AppColors.primaryColor} />
       ) : (
         <View style={styles.separateIcon}>
-          <View style={{ backgroundColor: AppColors.primaryColor, borderRadius: 16, margin: 5, padding: 4 }} />
+          <View style={{ backgroundColor: AppColors.primaryColor, borderRadius: 16, margin: 5, padding: 4, marginHorizontal: 8 }} />
         </View>
       )}
       <View style={{ flexDirection: "column", justifyContent: "center" }}>

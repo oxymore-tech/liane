@@ -1,7 +1,7 @@
 import React, { useContext, useMemo, useState } from "react";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Center, Column } from "@/components/base/AppLayout";
+import { Column } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppPressableIcon } from "@/components/base/AppPressable";
@@ -19,7 +19,6 @@ export const CommunitiesDetailScreen = () => {
   const { services, user } = useContext(AppContext);
   const group = route.params.liane;
   const insets = useSafeAreaInsets();
-  const [error, setError] = useState<Error | undefined>(undefined);
   const [myModalVisible, setMyModalVisible] = useState<boolean>(false);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
 
@@ -49,11 +48,6 @@ export const CommunitiesDetailScreen = () => {
 
   return (
     <View style={styles.mainContainer}>
-      {error && (
-        <Center style={{ flex: 1 }}>
-          <AppText style={{ color: ContextualColors.redAlert.text }}>{error.message}</AppText>
-        </Center>
-      )}
       <View style={[styles.header, { paddingTop: insets.top }]}>
         <View style={styles.headerContent}>
           <View style={{ flexDirection: "row", width: "100%" }}>

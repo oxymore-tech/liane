@@ -11,14 +11,15 @@ export const useSubscription = <T>(observable: Subscribable<T>, callback: (v: T)
   }, deps);
 };
 
-export const useSubscriptionValue = <T>(subscribe: (callback: (v: T) => void) => SubscriptionLike) => {
+export const useSubscriptionValue = <T>(subscribe: (callback: (v: T) => void) => SubscriptionLike, deps: DependencyList) => {
   const [value, setValue] = React.useState<T>();
   React.useEffect(() => {
     const sub = subscribe(v => setValue(v));
     return () => {
       sub.unsubscribe();
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
   return value;
 };
 
@@ -32,6 +33,7 @@ export const useObservable = <T>(observable: Observable<T>, defaultValue: T) => 
     return () => {
       sub.unsubscribe();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return value;
 };
@@ -45,5 +47,6 @@ export const useSubject = <T>() => {
 export const useBehaviorSubject = <T>(initialValue: T) => {
   return React.useMemo(() => {
     return new BehaviorSubject<T>(initialValue);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 };

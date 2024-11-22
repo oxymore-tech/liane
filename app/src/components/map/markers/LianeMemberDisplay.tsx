@@ -34,7 +34,7 @@ export const LianeMemberDisplay = ({
   isMoving: boolean;
 }) => {
   const controller = useAppMapViewController();
-  const region = useSubscriptionValue(controller.subscribeToRegionChanges);
+  const region = useSubscriptionValue(controller.subscribeToRegionChanges, [controller]);
   const zoom = region?.zoomLevel || 10;
   const formattedDelay = delay ? AppLocalization.formatDuration(delay) : undefined;
   const description = isMoving ? (formattedDelay ? " arrive dans " + formattedDelay : "") : "est à l'arrêt";

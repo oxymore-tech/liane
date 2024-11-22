@@ -52,7 +52,8 @@ export const ModalLianeRequestItem = ({ item, onRefresh, myModalVisible, setMyMo
         const result = await services.community.update(lianeRequest.id, {
           ...lianeRequest,
           name: name,
-          wayPoints: lianeRequest.wayPoints.map(w => w.id)
+          wayPoints: lianeRequest.wayPoints.map(w => w.id),
+          createdBy: lianeRequest.createdBy.id
         } as CoLianeRequest);
         AppLogger.debug("COMMUNITIES", "Suppression d'une liane avec succès", result);
         setLianeNameInputVisible(false);

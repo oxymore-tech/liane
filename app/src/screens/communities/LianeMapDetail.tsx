@@ -145,17 +145,6 @@ export const LianeMapDetailScreen = () => {
           }
           return <WayPointDisplay key={`liane_${w.rallyingPoint.id}`} rallyingPoint={w.rallyingPoint} type={type} />;
         })}
-        {lianeRequest?.wayPoints.map((w, i) => {
-          let type: "to" | "from" | "step";
-          if (i === 0) {
-            type = "from";
-          } else if (i === lianeRequest.wayPoints.length - 1) {
-            type = "to";
-          } else {
-            type = "step";
-          }
-          return <WayPointDisplay key={w.id} rallyingPoint={w} type={type} />;
-        })}
       </AppMapView>
       <AppBottomSheet
         onScrolled={v => setBSheetTop(v)}
@@ -165,7 +154,7 @@ export const LianeMapDetailScreen = () => {
         style={{
           backgroundColor: AppColorPalettes.gray[100]
         }}>
-        <ScrollView style={{ paddingHorizontal: 10 }}>
+        <ScrollView style={{ paddingHorizontal: 10, paddingBottom: insets.bottom + 50 }}>
           <View
             style={{
               flexDirection: "row",
@@ -174,6 +163,7 @@ export const LianeMapDetailScreen = () => {
             }}>
             <ContextActions
               matchOrLiane={matchOrLiane}
+              lianeRequest={lianeRequest}
               onJoin={handleJoin}
               onReject={handleReject}
               onLeave={handleLeave}
@@ -181,7 +171,7 @@ export const LianeMapDetailScreen = () => {
             />
           </View>
 
-          <Column spacing={10}>
+          <Column spacing={10} style={styles.bottom}>
             <DayOfTheWeekPicker selectedDays={matchOrLiane.weekDays} dualOptionMode={true} />
             <DisplayWayPoints wayPoints={wayPoints} style={{ backgroundColor: AppColorPalettes.gray[100], borderRadius: 20 }} />
             <View
@@ -206,5 +196,9 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     flex: 1,
     height: "100%"
+  },
+  bottom: {
+    marginVertical: 16,
+    paddingBottom: 50
   }
 });
