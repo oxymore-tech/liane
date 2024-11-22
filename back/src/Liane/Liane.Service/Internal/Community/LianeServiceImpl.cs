@@ -217,21 +217,24 @@ public sealed class LianeServiceImpl(
 
     var userId = currentContext.CurrentUser().Id;
 
-    var lrA = await connection.GetAsync<LianeRequestDb>(a.IdAsGuid(), tx);
-    var lrB = await connection.GetAsync<LianeRequestDb>(b.IdAsGuid(), tx);
-
-    if (lrA.CreatedBy.Id == lrB.CreatedBy.Id)
+    var idA = a.IdAsGuid();
+    var idB = b.IdAsGuid();
+    
+    if (idA == idB)
+    {
+      return null;
+    }
+    
+    var lianeA = await lianeFetcher.FetchLiane(connection, idA, tx);
+    var lianeB = await lianeFetcher.FetchLiane(connection, idB, tx);
+    
+    if (!lianeA.IsMember(userId) && !lianeB.IsMember(userId))
     {
       return null;
     }
 
-    if (lrA.CreatedBy.Id != userId && lrB.CreatedBy.Id != userId)
-    {
-      return null;
-    }
-
-    var memberA = await connection.FirstOrDefaultAsync(Query.Select<LianeMemberDb>().Where(m => m.LianeRequestId, ComparisonOperator.Eq, a.IdAsGuid()), tx);
-    var memberB = await connection.FirstOrDefaultAsync(Query.Select<LianeMemberDb>().Where(m => m.LianeRequestId, ComparisonOperator.Eq, b.IdAsGuid()), tx);
+    var memberA = await connection.FirstOrDefaultAsync(Query.Select<LianeMemberDb>().Where(m => m.LianeRequestId, ComparisonOperator.Eq, idA), tx);
+    var memberB = await connection.FirstOrDefaultAsync(Query.Select<LianeMemberDb>().Where(m => m.LianeRequestId, ComparisonOperator.Eq, idB), tx);
 
     Guid? joinedLianeA = memberA?.JoinedAt is not null ? memberA.LianeId : null;
     Guid? joinedLianeB = memberB?.JoinedAt is not null ? memberB.LianeId : null;
@@ -246,10 +249,10 @@ public sealed class LianeServiceImpl(
       var liane = await lianeFetcher.FetchLiane(connection, joinedLianeA.Value, tx);
       if (liane.IsMember(userId, false))
       {
-        return await AddMemberInLiane(connection, lrB, liane.Id, userId, false, tx);
+        return await AddMemberInLiane(connection, lianeB, liane.Id, userId, false, tx);
       }
 
-      await InsertJoinRequest(connection, lrB.Id, liane.Id, tx, userId);
+      await InsertJoinRequest(connection, lianeB.Id, liane.Id, tx, userId);
       return null;
     }
 
@@ -258,35 +261,35 @@ public sealed class LianeServiceImpl(
       var liane = await lianeFetcher.FetchLiane(connection, joinedLianeB.Value, tx);
       if (liane.IsMember(userId, false))
       {
-        return await AddMemberInLiane(connection, lrA, liane.Id, userId, false, tx);
+        return await AddMemberInLiane(connection, lianeA, liane.Id, userId, false, tx);
       }
 
-      await InsertJoinRequest(connection, lrA.Id, liane.Id, tx, userId);
+      await InsertJoinRequest(connection, lianeA.Id, liane.Id, tx, userId);
       return null;
     }
 
-    if (memberA is null && memberB?.LianeId == lrA.Id)
+    if (memberA is null && memberB?.LianeId == lianeA.Id)
     {
-      if (lrA.CreatedBy.Id != userId)
+      if (lianeA.CreatedBy.Id != userId)
       {
         return null;
       }
 
-      return await AddMemberInLiane(connection, lrB, lrA.Id, userId, true, tx);
+      return await AddMemberInLiane(connection, lianeB, lianeA.Id, userId, true, tx);
     }
 
-    if (memberB is null && memberA?.LianeId == lrB.Id)
+    if (memberB is null && memberA?.LianeId == lianeB.Id)
     {
-      if (lrB.CreatedBy.Id != userId)
+      if (lianeB.CreatedBy.Id != userId)
       {
         return null;
       }
 
-      return await AddMemberInLiane(connection, lrA, lrB.Id, userId, true, tx);
+      return await AddMemberInLiane(connection, lianeA, lianeB.Id, userId, true, tx);
     }
 
     {
-      var (mine, foreign) = lrA.CreatedBy.Id == userId ? (lrA.Id, lrB.Id) : (lrB.Id, lrA.Id);
+      var (mine, foreign) = lianeA.CreatedBy.Id == userId ? (lianeA.Id, lianeB.Id) : (lianeB.Id, lianeA.Id);
       await InsertJoinRequest(connection, mine, foreign, tx, userId);
       return null;
     }
@@ -451,7 +454,7 @@ public sealed class LianeServiceImpl(
     return true;
   }
 
-  private async Task<Api.Community.Liane> AddMemberInLiane(IDbConnection connection, LianeRequestDb request, Guid liane, Ref<Api.Auth.User> userId, bool newLiane, IDbTransaction tx)
+  private async Task<Api.Community.Liane> AddMemberInLiane(IDbConnection connection, Api.Community.Liane request, Guid liane, Ref<Api.Auth.User> userId, bool newLiane, IDbTransaction tx)
   {
     await connection.UpdateAsync(Query.Update<LianeMemberDb>()
       .Set(m => m.LianeId, liane)
