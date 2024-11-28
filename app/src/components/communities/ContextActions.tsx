@@ -113,7 +113,7 @@ export const MatchContextActions = ({ match, onJoin, onReject, pendingAction }: 
   if ((match.type === "Single" && match.joinRequest?.type === "Pending") || (match.type === "Group" && match.pendingRequest)) {
     return (
       <Center style={styles.columnAlignment}>
-        <AppText style={styles.headerText}>{"Vous avez demander à rejoindre cette liane"}</AppText>
+        <AppText style={styles.headerText}>{"Vous avez demandé à rejoindre cette liane"}</AppText>
         <Row>
           <AppButton onPress={onReject} color={AppColors.secondaryColor} value="Annuler ma demande" loading={pendingAction === "reject"} />
         </Row>
@@ -136,7 +136,7 @@ export const MatchContextActions = ({ match, onJoin, onReject, pendingAction }: 
   if (match.type === "Group" && match.pendingRequest) {
     return (
       <Center style={styles.columnAlignment}>
-        <AppText style={styles.headerText}>{"Vous avez demander à rejoindre cette liane"}</AppText>
+        <AppText style={styles.headerText}>{"Vous avez demandé à rejoindre cette liane"}</AppText>
         <Row>
           <AppButton onPress={onReject} color={AppColors.secondaryColor} value="Annuler ma demande" loading={pendingAction === "reject"} />
         </Row>

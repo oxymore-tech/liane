@@ -15,13 +15,13 @@ export interface AppTextInputProps extends TextInputProps {
 export const AppTextInput = forwardRef(
   ({ leading, trailing, style, textColor, placeholder, placeholderTextColor, ...props }: AppTextInputProps, ref: ForwardedRef<TextInput>) => {
     return (
-      <Row spacing={8} style={[styles.container, style]}>
+      <Row spacing={8} style={styles.container}>
         {leading}
         <TextInput
           placeholder={placeholder}
           placeholderTextColor={placeholderTextColor ?? AppColorPalettes.gray[400]}
           ref={ref}
-          style={[AppStyles.text, AppStyles.input, styles.input, { color: textColor ?? AppColors.fontColor, flex: 1 }]}
+          style={[AppStyles.text, AppStyles.input, styles.input, { color: textColor ?? AppColors.fontColor, flex: 1 }, style]}
           {...props}
         />
         {trailing}

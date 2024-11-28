@@ -42,8 +42,8 @@ export const TextField = <T extends { [k: string]: string | undefined }>({
     <Column>
       <AppText style={{ opacity: (field.value && field.value.length > 0) || placeholder ? 1 : 0, marginLeft: 16 }}>{label}</AppText>
       <View style={[AppStyles.inputContainer, { borderColor: borderColor }]}>
-        {!expandable && <AppTextInput style={AppStyles.input} placeholder={ph} onChangeText={field.onChange} value={field.value} />}
-        {expandable && <AppExpandingTextInput style={AppStyles.input} placeholder={ph} onChangeText={field.onChange} value={field.value} />}
+        {!expandable && <AppTextInput placeholder={ph} onChangeText={field.onChange} value={field.value} />}
+        {expandable && <AppExpandingTextInput placeholder={ph} onChangeText={field.onChange} value={field.value} />}
       </View>
       {!!errorMessage && <AppText style={{ paddingHorizontal: 16, color: ContextualColors.redAlert.text }}>{errorMessage}</AppText>}
     </Column>

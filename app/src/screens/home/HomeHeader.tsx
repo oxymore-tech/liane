@@ -64,7 +64,6 @@ export const RallyingPointField = forwardRef(
           ref={inputRef}
           editable={editable}
           selection={editable ? undefined : { start: 0 }}
-          style={[AppStyles.input]}
           leading={icon}
           placeholder={placeholder}
           value={value}

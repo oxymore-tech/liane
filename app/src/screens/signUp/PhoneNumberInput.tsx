@@ -1,10 +1,10 @@
 import React from "react";
 import { AppTextInput } from "@/components/base/AppTextInput";
-import { StyleSheet } from "react-native";
-import { AppColors } from "@/theme/colors";
+import { ActivityIndicator, Pressable, StyleSheet } from "react-native";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppDimensions } from "@/theme/dimensions";
 import { Row } from "@/components/base/AppLayout.tsx";
-import { AppButton } from "@/components/base/AppButton.tsx";
+import { AppIcon } from "@/components/base/AppIcon.tsx";
 
 type PhoneNumberInputProps = {
   submitting?: boolean;
@@ -15,12 +15,16 @@ type PhoneNumberInputProps = {
 };
 
 export const PhoneNumberInput = ({ submit, onChange, submitting, canSubmit }: PhoneNumberInputProps) => {
+  const buttonColor = {
+    backgroundColor: canSubmit ? AppColorPalettes.blue[500] : AppColorPalettes.gray[400]
+  };
+
   return (
     <Row style={styles.container}>
       <Row style={styles.inputContainer}>
         <AppTextInput
           style={styles.input}
-          placeholder="0XXXXXXXXX"
+          placeholder="0#########"
           autoFocus={true}
           returnKeyLabel="next"
           onChangeText={onChange}
@@ -29,8 +33,11 @@ export const PhoneNumberInput = ({ submit, onChange, submitting, canSubmit }: Ph
           textContentType="telephoneNumber"
           onSubmitEditing={submit}
           maxLength={10}
-          trailing={<AppButton icon="phone-outline" color={AppColors.primaryColor} disabled={!canSubmit} onPress={submit} loading={submitting} />}
         />
+        <Pressable style={[styles.button, buttonColor]} disabled={!canSubmit} onPress={submit}>
+          {!submitting && <AppIcon name="arrow-circle-right-outline" color={AppColors.white} />}
+          {submitting && <ActivityIndicator color={AppColors.white} size={"small"} />}
+        </Pressable>
       </Row>
     </Row>
   );
@@ -47,7 +54,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: AppColors.white,
     borderRadius: 52,
-    paddingLeft: 20
+    paddingLeft: 20,
+    width: 270
   },
   input: {
     fontSize: AppDimensions.textSize.large
