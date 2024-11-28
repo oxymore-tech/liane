@@ -28,13 +28,17 @@ export const LaunchTripModal = ({ tripModalVisible, setTripModalVisible, launchT
 
   const [date, setDate] = useState(plannedDate);
 
+  const minDate = new Date();
+  const maxDate = new Date();
+  maxDate.setDate(maxDate.getDate() + 7);
+
   const launch = useCallback(() => {
-    const arriveAt = new Date(plannedDate);
+    const arriveAt = new Date(date);
     arriveAt.setHours(arriveBefore.hour, arriveBefore.minute ?? 0);
-    const returnAt = roundTrip ? new Date(plannedDate) : undefined;
+    const returnAt = roundTrip ? new Date(date) : undefined;
     returnAt?.setHours(returnAfter.hour, returnAfter.minute ?? 0);
     launchTrip(arriveAt, returnAt, from.id!, to.id!);
-  }, [arriveBefore.hour, arriveBefore.minute, from.id, launchTrip, plannedDate, returnAfter.hour, returnAfter.minute, roundTrip, to.id]);
+  }, [arriveBefore.hour, arriveBefore.minute, date, from.id, returnAfter.hour, returnAfter.minute, roundTrip, to.id]);
 
   const handleSetVisible = useCallback(
     (visible: boolean) => {
@@ -65,7 +69,7 @@ export const LaunchTripModal = ({ tripModalVisible, setTripModalVisible, launchT
           <ItineraryForm from={from} to={to} onValuesSwitched={switchDestination} editable={false} style={[styles.itinerary, styles.breathe]} />
 
           <Center>
-            <DateView date={date} onChange={setDate} editable />
+            <DateView date={date} onChange={setDate} editable minDate={minDate} maxDate={maxDate} />
           </Center>
 
           <Row spacing={8} style={{ alignItems: "baseline", justifyContent: "space-between" }}>
