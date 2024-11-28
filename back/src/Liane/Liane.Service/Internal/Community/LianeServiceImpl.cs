@@ -114,7 +114,7 @@ public sealed class LianeServiceImpl(
                                                   SELECT DISTINCT COALESCE(lm.liane_id, lr.id) AS id
                                                   FROM liane_request lr
                                                   INNER JOIN  route r ON lr.way_points = r.way_points
-                                                  LEFT JOIN liane_member lm ON lr.id = lm.liane_request_id
+                                                  LEFT JOIN liane_member lm ON lr.id = lm.liane_request_id AND lm.joined_at is not null
                                                   WHERE ST_Intersects(@bbox, r.geometry)
                                                   """, new { bbox = filter.Bbox.AsPolygon() });
       lianeRequestFilter &= Filter<LianeRequestDb>.Where(r => r.Id, ComparisonOperator.In, ids);
