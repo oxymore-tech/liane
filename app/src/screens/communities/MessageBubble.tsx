@@ -11,17 +11,14 @@ import { AppIcon } from "@/components/base/AppIcon.tsx";
 import { AppButton } from "@/components/base/AppButton.tsx";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
 
-export const MessageBubble = ({
-  coLiane,
-  message,
-  isSender,
-  previousSender
-}: {
+type MessageBubblePros = {
   coLiane: CoLiane;
   message: LianeMessage;
   isSender: boolean;
   previousSender?: Ref<User> | undefined;
-}) => {
+};
+
+export const MessageBubble = ({ coLiane, message, isSender, previousSender }: MessageBubblePros) => {
   const { services } = useContext(AppContext);
   const { navigation } = useAppNavigation();
   const [loading, setLoading] = useState(false);
