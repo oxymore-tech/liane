@@ -38,7 +38,7 @@ public sealed class LianeMessageServiceImpl(
     var member = await MarkAsRead(connection, lianeId, tx, DateTime.UtcNow);
 
     var filter = Filter<LianeMessageDb>.Where(m => m.LianeId, ComparisonOperator.Eq, lianeId)
-                 & Filter<LianeMessageDb>.Where(m => m.CreatedAt, ComparisonOperator.Gt, member.JoinedAt);
+                 & Filter<LianeMessageDb>.Where(m => m.CreatedAt, ComparisonOperator.Gte, member.JoinedAt);
 
     var query = Query.Select<LianeMessageDb>()
       .Where(filter)

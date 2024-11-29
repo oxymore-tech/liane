@@ -69,7 +69,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
     var lianeSamuel = await CreateLianeRequest(samuel, "Samuel", LabeledPositions.PointisInard, LabeledPositions.AireDesPyrénées, LabeledPositions.MartresTolosane, weekDays: DayOfWeekFlag.All);
     return (lianeGugu, lianeJayBee, lianeMathilde, lianeSiloe, lianeGargamel, lianeCaramelo, lianeBertrand, lianeSamuel);
   }
-  
+
   [Test]
   public async Task GuguModifyLianeRequestName()
   {
@@ -475,7 +475,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       {
         var unread = await messageService.GetUnreadLianes();
         CollectionAssert.AreEqual(ImmutableList.Create(
-          (liane.Id, 3)
+          (liane.Id, 1)
         ), unread.Select(l => (l.Key.IdAsGuid(), l.Value)));
       }
       var messages = await messageService.GetMessages(liane, new Pagination(SortAsc: false));
@@ -523,7 +523,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       {
         var unread = await messageService.GetUnreadLianes();
         CollectionAssert.AreEqual(ImmutableList.Create(
-          (liane.Id, 4)
+          (liane.Id, 5)
         ), unread.Select(l => (l.Key.IdAsGuid(), l.Value)));
       }
       var messages = await messageService.GetMessages(liane, new Pagination(SortAsc: false));
@@ -614,12 +614,12 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
 
   [Test]
   public async Task EveryRequestIsIndependant()
-  { 
+  {
     var (lianeGugu, lianeJayBee, lianeMathilde, lianeSiloe, _, _, _, _) = await SetupDefaultLianes();
     var lianeGuguMarch = await CreateLianeRequest(gugu, "Marché", LabeledPositions.BlajouxParking, LabeledPositions.Mende, weekDays: DayOfWeekFlag.Friday | DayOfWeekFlag.Saturday);
-    
+
     currentContext.SetCurrentUser(gugu);
-    
+
     // Gugu join JayBee : a new liane is created
     Api.Community.Liane joinedLiane;
     {
@@ -652,11 +652,11 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   {
     var lianeGugu = await CreateLianeRequest(gugu, "Marché Mende", LabeledPositions.BlajouxParking, LabeledPositions.Mende, weekDays: DayOfWeekFlag.All, roundTrip: true);
     var lianeMathilde = await CreateLianeRequest(mathilde, "Biojour", LabeledPositions.Mende, LabeledPositions.Florac, weekDays: DayOfWeekFlag.All);
-    
+
     {
       currentContext.SetCurrentUser(gugu);
       var list = await tested.Match();
-    
+
       // Should be fixed later 
       AssertMatchesEquals(list,
         new LianeMatch(lianeGugu, new LianeState.Detached(ImmutableList.Create<Match>(
