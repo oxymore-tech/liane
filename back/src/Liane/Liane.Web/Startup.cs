@@ -99,7 +99,6 @@ public static class Startup
     services.AddService<LianeMessageServiceImpl>();
 
     services.AddService<PushServiceImpl>();
-    services.AddService<NotificationServiceImpl>();
 
     services.AddSettings<FirebaseSettings>(context);
     services.AddService<FirebaseMessagingImpl>();

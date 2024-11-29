@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useContext, useMemo } from "react";
 import { Pressable, SectionList, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Center, Row } from "@/components/base/AppLayout";
@@ -10,14 +10,18 @@ import { extractDays, extractTime } from "@/util/hooks/days";
 import { ArrayUtils, CoMatch } from "@liane/common";
 import { AppAvatars } from "@/components/UserPicture.tsx";
 import { AppButton } from "@/components/base/AppButton.tsx";
+import { useObservable } from "@/util/hooks/subscription.ts";
+import { AppContext } from "@/components/context/ContextProvider.tsx";
 
 type Status = "Pending" | "Received" | "None";
 type Section = { data: CoMatch[]; status: Status };
 
 export const MatchListScreen = () => {
+  const { services } = useContext(AppContext);
   const { navigation, route } = useAppNavigation<"MatchList">();
   const matches = route.params.matches;
   const lianeRequest = route.params.lianeRequest;
+  const unread = useObservable(services.realTimeHub.unreadNotifications, {});
 
   const insets = useSafeAreaInsets();
 
@@ -54,7 +58,12 @@ export const MatchListScreen = () => {
         }
         sections={sections}
         renderItem={({ item }) => (
-          <GroupItem key={item.liane} group={item} onPress={() => navigation.navigate("LianeMapDetail", { liane: item, request: lianeRequest })} />
+          <GroupItem
+            key={item.liane}
+            unread={!!unread[item.liane]}
+            group={item}
+            onPress={() => navigation.navigate("LianeMapDetail", { liane: item, request: lianeRequest })}
+          />
         )}
       />
     </View>
@@ -78,11 +87,12 @@ const renderSectionHeader = ({ section }: { section: Section }) => {
 };
 
 type GroupItemProps = {
+  unread?: boolean;
   group: CoMatch;
   onPress: () => void;
 };
 
-const GroupItem = ({ group, onPress }: GroupItemProps) => {
+const GroupItem = ({ group, onPress, unread }: GroupItemProps) => {
   return (
     <Pressable onPress={onPress} style={styles.memberContainer}>
       <View style={styles.memberInfo}>
@@ -108,6 +118,7 @@ const GroupItem = ({ group, onPress }: GroupItemProps) => {
               <AppAvatars users={group.members} />
             </Row>
           </View>
+          {unread && <View style={styles.dot} />}
         </View>
       </View>
       <View style={{ position: "absolute", top: 20, right: 15 }}>
@@ -179,11 +190,8 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     color: AppColors.black
   },
-  notificationDotContainer: {
-    justifyContent: "center",
-    alignItems: "center"
-  },
-  notificationDot: {
+  dot: {
+    position: "absolute",
     width: 8,
     height: 8,
     borderRadius: 6,

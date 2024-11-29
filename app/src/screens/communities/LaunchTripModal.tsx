@@ -38,7 +38,7 @@ export const LaunchTripModal = ({ tripModalVisible, setTripModalVisible, launchT
     const returnAt = roundTrip ? new Date(date) : undefined;
     returnAt?.setHours(returnAfter.hour, returnAfter.minute ?? 0);
     launchTrip(arriveAt, returnAt, from.id!, to.id!);
-  }, [arriveBefore.hour, arriveBefore.minute, date, from.id, returnAfter.hour, returnAfter.minute, roundTrip, to.id]);
+  }, [arriveBefore.hour, arriveBefore.minute, date, from.id, launchTrip, returnAfter.hour, returnAfter.minute, roundTrip, to.id]);
 
   const handleSetVisible = useCallback(
     (visible: boolean) => {

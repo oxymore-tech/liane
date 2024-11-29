@@ -1,8 +1,7 @@
-import React, { PropsWithChildren, useContext, useEffect } from "react";
+import React, { PropsWithChildren, useContext } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
-import { InfiniteData, useQueryClient } from "react-query";
-import { NotificationQueryKey } from "@/screens/notifications/NotificationScreen";
-import { Liane, Notification, PaginatedResponse, TripStatus } from "@liane/common";
+import { useQueryClient } from "react-query";
+import { Liane, PaginatedResponse, TripStatus } from "@liane/common";
 import { TripDetailQueryKey, TripQueryKey } from "@/screens/user/MyTripsScreen";
 import { useSubscription } from "@/util/hooks/subscription";
 import { LianeGeolocation } from "@/api/service/location";
@@ -10,15 +9,9 @@ import { LianeGeolocation } from "@/api/service/location";
 /**
  * This component is responsible for updating local query cache
  */
-export type IQueryUpdater = {
-  readNotifications: (userId: string) => void;
-};
+export type IQueryUpdater = {};
 // @ts-ignore
 const QueryUpdaterContext = React.createContext<IQueryUpdater>();
-
-export const useQueryUpdater = () => {
-  return useContext<IQueryUpdater>(QueryUpdaterContext);
-};
 
 export const FutureStates: TripStatus[] = ["NotStarted", "Started"];
 
@@ -38,30 +31,6 @@ const updateLianeList = (old: PaginatedResponse<Liane>, liane: Liane) => {
   return old;
 };
 
-const updateNotificationPages = (old: InfiniteData<PaginatedResponse<Notification>>, n: Notification) => {
-  if (old.pages.length === 0) {
-    return { ...old, pages: [{ pageSize: 1, data: [n] }] };
-  } else {
-    old.pages[0].data.unshift(n);
-    old.pages[0] = { ...old.pages[0], pageSize: old.pages[0].pageSize + 1 };
-    return old;
-  }
-};
-
-const readNotifications = (old: InfiniteData<PaginatedResponse<Notification>>, userId: string) => {
-  return {
-    ...old!,
-    pages: old!.pages.map(p => ({
-      ...p,
-      data: p.data.map(item => {
-        const userIndex = item.recipients.findIndex(r => r.user === userId);
-        item.recipients[userIndex] = { ...item.recipients[userIndex], readAt: new Date().toISOString() };
-        return item;
-      })
-    }))
-  };
-};
-
 export const QueryUpdateProvider = (props: PropsWithChildren) => {
   const { services } = useContext(AppContext);
   const queryClient = useQueryClient();
@@ -78,10 +47,6 @@ export const QueryUpdateProvider = (props: PropsWithChildren) => {
         return updateLianeList(old, liane);
       });
       queryClient.setQueryData<Liane>(TripDetailQueryKey(liane.id!), _ => liane);
-      if (liane.state !== "NotStarted") {
-        // Cancel eventual reminder
-        services.reminder.cancelReminder(liane.id!);
-      }
 
       // Cancel pings if necessary
       LianeGeolocation.currentLiane().then(async current => {
@@ -96,28 +61,5 @@ export const QueryUpdateProvider = (props: PropsWithChildren) => {
     []
   );
 
-  // Update notifications local cache
-  useEffect(() => {
-    const sub = services.realTimeHub.subscribeToNotifications(async (n: Notification) => {
-      queryClient.setQueryData<InfiniteData<PaginatedResponse<Notification>>>(NotificationQueryKey, old => {
-        if (!old) {
-          return { pages: [{ pageSize: 1, data: [n] }], pageParams: [undefined] };
-        } else {
-          return updateNotificationPages(old, n);
-        }
-      });
-      return sub.unsubscribe();
-    });
-  }, [queryClient, services.realTimeHub]);
-  return (
-    <QueryUpdaterContext.Provider
-      value={{
-        readNotifications: userId =>
-          queryClient.setQueryData<InfiniteData<PaginatedResponse<Notification>>>(NotificationQueryKey, old =>
-            readNotifications(old ?? { pageParams: [undefined], pages: [] }, userId)
-          )
-      }}>
-      {props.children}
-    </QueryUpdaterContext.Provider>
-  );
+  return <QueryUpdaterContext.Provider value={{}}>{props.children}</QueryUpdaterContext.Provider>;
 };

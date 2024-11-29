@@ -1,5 +1,4 @@
-using System.Collections.Generic;
-using System.Collections.Immutable;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Auth;
@@ -7,23 +6,12 @@ using Liane.Api.Community;
 using Liane.Api.Event;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Community;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Liane.Service.Internal.Event;
 
-public sealed class PushServiceImpl : IPushService
+public sealed class PushServiceImpl(IServiceProvider serviceProvider, LianeFetcher lianeFetcher, IUserService userService) : IPushService
 {
-  private readonly ImmutableList<IPushMiddleware> pushMiddlewares;
-  private readonly LianeFetcher lianeFetcher;
-  private readonly IUserService userService;
-
-  public PushServiceImpl(IEnumerable<IPushMiddleware> pushMiddlewares, LianeFetcher lianeFetcher, IUserService userService)
-  {
-    this.lianeFetcher = lianeFetcher;
-    this.userService = userService;
-    this.pushMiddlewares = pushMiddlewares.OrderBy(p => p.Priority)
-      .ToImmutableList();
-  }
-
   public async Task PushMessage(Ref<Api.Community.Liane> liane, LianeMessage message)
   {
     var resolvedLiane = await lianeFetcher.Get(liane.IdAsGuid());
@@ -36,6 +24,7 @@ public sealed class PushServiceImpl : IPushService
 
   private async Task PushMessageInternal(Api.Auth.User sender, Ref<Api.Auth.User> receiver, Ref<Api.Community.Liane> liane, LianeMessage message)
   {
+    var pushMiddlewares = GetPushMiddlewares();
     foreach (var pushService in pushMiddlewares)
     {
       if (await pushService.PushMessage(sender, receiver, liane, message))
@@ -47,6 +36,7 @@ public sealed class PushServiceImpl : IPushService
 
   public async Task<bool> Push(Ref<Api.Auth.User> receiver, Notification notification)
   {
+    var pushMiddlewares = GetPushMiddlewares();
     foreach (var pushService in pushMiddlewares)
     {
       if (await pushService.Push(receiver, notification))
@@ -56,5 +46,12 @@ public sealed class PushServiceImpl : IPushService
     }
 
     return false;
+  }
+
+  private IOrderedEnumerable<IPushMiddleware> GetPushMiddlewares()
+  {
+    return serviceProvider.GetServices<IPushMiddleware>()
+      .Distinct()
+      .OrderBy(p => p.Priority);
   }
 }

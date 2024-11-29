@@ -50,8 +50,8 @@ describe.sequential("Joining a trip", () => {
         roundTrip: false,
         name: "Test trip from B"
       });
-
       await secondUser.services.community.joinRequest(secondLianeRequest.id!, lianeRequest.id!);
+      console.log("OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOo");
       const coLiane = await currentUser.services.community.joinRequest(secondLianeRequest.id!, lianeRequest.id!);
 
       const posted = await secondUser.services.liane.post({
@@ -60,9 +60,9 @@ describe.sequential("Joining a trip", () => {
         to: destination,
         arriveAt: addSeconds(new Date(), 1830).toISOString(),
         returnAt: addSeconds(new Date(), 3600 * 5).toISOString(),
-        availableSeats: 2,
-        geolocationLevel: "None"
+        availableSeats: 2
       });
+      console.log("VVVVVVVOOOOOOOOOOOOOOOOOIIIIIIIIIIIIIIIIIIIII", posted);
       const tripList = await secondUser.services.liane.list(["NotStarted", "Started"], { asc: true, cursor: undefined, limit: 20 });
       expect(tripList.data.length).toBe(2);
       expect(tripList.data[0]).toEqual(posted);

@@ -1,9 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Liane.Api.Auth;
 using Liane.Api.Community;
-using Liane.Api.Event;
 using Liane.Api.Hub;
 using Liane.Api.Trip;
 using Liane.Service.Internal.Event;
@@ -24,7 +22,6 @@ public sealed class ChatHub(
   ICurrentContext currentContext,
   IUserService userService,
   IHubService hubService,
-  INotificationService notificationService,
   ILianeUpdatePushService lianeUpdatePushService)
   : Hub<IHubClient>
 {
@@ -69,8 +66,8 @@ public sealed class ChatHub(
     }
 
     await Clients.Caller.Me(user);
-    var unreadNotificationsIds = await notificationService.GetUnread();
-    await Clients.Caller.ReceiveUnreadOverview(new UnreadOverview(unreadNotificationsIds));
+    var unreadNotificationsIds = await lianeMessageService.GetUnreadLianes();
+    await Clients.Caller.ReceiveUnreadOverview(unreadNotificationsIds);
   }
 
   public override async Task OnDisconnectedAsync(Exception? exception)
@@ -88,8 +85,4 @@ public sealed class ChatHub(
     return await lianeUpdatePushService.GetLastTrackingInfo(lianeId);
   }
 
-  public async Task ReadNotifications(IEnumerable<Guid> notifications)
-  {
-    await notificationService.MarkAsRead(notifications);
-  }
 }

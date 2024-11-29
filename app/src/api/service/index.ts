@@ -5,8 +5,6 @@ import {
   HubService,
   LianeService,
   LianeServiceClient,
-  NotificationService,
-  NotificationServiceClient,
   CommunityServiceClient,
   RallyingPointClient,
   RallyingPointService,
@@ -20,7 +18,6 @@ import {
 } from "@liane/common";
 import { RNAppEnv } from "@/api/env";
 import { AppStorage } from "@/api/storage";
-import { ReminderService } from "@/api/service/reminder";
 import { ReactNativeLocationService } from "@/api/service/location";
 import { AppLogger as logger, ReactNativeLogger } from "@/api/logger";
 
@@ -32,8 +29,6 @@ export type AppServices = {
   realTimeHub: HubService;
   location: LocationService;
   routing: RoutingService;
-  notification: NotificationService;
-  reminder: ReminderService;
   community: CommunityService;
 };
 
@@ -43,11 +38,9 @@ export const CreateAppServices = (): AppServices => ({
   logger,
   auth: new AuthServiceClient(http, AppStorage),
   liane: new LianeServiceClient(http),
-  reminder: new ReminderService(AppStorage, logger),
   rallyingPoint: new RallyingPointClient(http),
   realTimeHub: new HubServiceClient(RNAppEnv.baseUrl, logger as AppLogger, AppStorage, http),
   location: new ReactNativeLocationService(RNAppEnv, AppStorage, http, DEFAULT_TLS),
   routing: new RoutingServiceClient(http),
-  notification: new NotificationServiceClient(http),
   community: new CommunityServiceClient(http)
 });

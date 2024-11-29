@@ -1,13 +1,5 @@
-import {
-  createNavigationContainerRef,
-  LinkingOptions,
-  NavigationContainerRefWithCurrent,
-  NavigationProp,
-  RouteProp,
-  useNavigation,
-  useRoute
-} from "@react-navigation/native";
-import { CoLiane, CoLianeRequest, CoMatch, Liane, Notification, ResolvedLianeRequest, User } from "@liane/common";
+import { createNavigationContainerRef, LinkingOptions, RouteProp, useNavigation, useRoute } from "@react-navigation/native";
+import { CoLiane, CoLianeRequest, CoMatch, Liane, ResolvedLianeRequest, User } from "@liane/common";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack/src/types";
 import { checkInitialNotification } from "@/api/service/notification";
 
@@ -29,8 +21,6 @@ export type NavigationParamList = {
   TripGeolocationWizard: { showAs: "driver" | "passenger" | undefined | null; lianeId: string | undefined } | undefined;
   ArchivedTrips: undefined;
   Settings: undefined;
-  //OpenValidateTrip: { liane: Liane };
-  Notifications: undefined;
   RallyingPointRequests: undefined;
   CommunitiesDetails: { liane: CoLiane };
   MatchList: { matches: CoMatch[]; lianeRequest: ResolvedLianeRequest };
@@ -72,12 +62,5 @@ export const useAppNavigation = <ScreenName extends keyof NavigationParamList>()
 
   return { navigation, route };
 };
-
-export function getNotificationNavigation(notification: Notification) {
-  if (!notification.uri) {
-    return;
-  }
-  return (navigation: NavigationProp<any> | NavigationContainerRefWithCurrent<any>) => navigation.navigate(notification.uri!);
-}
 
 export const RootNavigation = createNavigationContainerRef<NavigationParamList>();

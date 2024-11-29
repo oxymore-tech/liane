@@ -27,21 +27,20 @@ import { LianeMapDetailScreen } from "@/screens/communities/LianeMapDetail.tsx";
 import { TripGeolocationWizard } from "@/screens/home/TripGeolocationWizard";
 import { ProfileEditScreen } from "@/screens/user/ProfileEditScreen";
 import { AccountScreen } from "@/screens/user/AccountScreen";
-import NotificationScreen from "@/screens/notifications/NotificationScreen";
 import { RallyingPointRequestsScreen } from "@/screens/user/RallyingPointRequestsScreen";
 import SignUpScreen from "@/screens/signUp/SignUpScreen";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { WithBadge } from "@/components/base/WithBadge";
 import { MatchListScreen } from "@/screens/communities/MatchListScreen.tsx";
 import { useObservable } from "@/util/hooks/subscription.ts";
+import { map } from "rxjs";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 function Home() {
   const { services, user, refreshUser } = useContext(AppContext);
-  const notificationCount = useObservable<number>(services.notification.unreadNotificationCount, 0);
-  const notificationHub = useObservable<string[]>(services.realTimeHub.unreadNotifications, []);
+  const notifications = useObservable<number>(services.realTimeHub.unreadNotifications.pipe(map(n => Object.entries(n).length)), 0);
 
   const iconSize = 24;
 
@@ -80,7 +79,7 @@ function Home() {
       {makeTab(
         "Lianes",
         ({ focused }) => {
-          return <BadgeTabIcon iconName="liane" focused={focused} size={iconSize} value={Math.max(notificationCount, notificationHub.length)} />;
+          return <BadgeTabIcon iconName="liane" focused={focused} size={iconSize} value={notifications} />;
         },
         CommunitiesScreen
       )}
@@ -127,7 +126,6 @@ function Navigation() {
           options={{ headerShown: false, animation: "slide_from_bottom" }}
         />
         <Stack.Screen name="Account" component={AccountScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Notifications" component={NotificationScreen} />
         <Stack.Screen name="RallyingPointRequests" component={RallyingPointRequestsScreen} options={{ headerShown: false }} />
         <Stack.Screen name="MatchList" component={MatchListScreen} options={{ headerShown: false }} />
       </Stack.Navigator>

@@ -63,6 +63,7 @@ export const CodeInput = ({ canSubmit, onChange, submitting, submit, retry, code
       <View style={styles.inputContainer}>
         <Column style={{ flex: 1 }}>
           <AppTextInput
+            value={code}
             style={styles.input}
             placeholder="123456"
             autoFocus={true}

@@ -2,7 +2,7 @@ import React, { Component, createContext, ReactNode } from "react";
 import { AppServices, CreateAppServices } from "@/api/service";
 import { AuthUser, FullUser, HubState, LatLng, NetworkUnavailable, UnauthorizedError } from "@liane/common";
 import { initializeRum, registerRumUser } from "@/api/rum";
-import { displayNotifeeNotification, initializeNotification, initPushNotification } from "@/api/service/notification";
+import { initializeNotification, initPushNotification } from "@/api/service/notification";
 import { ActivityIndicator, AppState, AppStateStatus, NativeEventSubscription, StyleSheet, View } from "react-native";
 import { AppColors } from "@/theme/colors";
 import NetInfo, { NetInfoSubscription } from "@react-native-community/netinfo";
@@ -64,7 +64,6 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
   private unsubscribeToNetworkChange: NetInfoSubscription | undefined = undefined;
   private unsubscribeToHubState: SubscriptionLike | undefined = undefined;
   private userChangeSubscription: SubscriptionLike | undefined = undefined;
-  private notificationSubscription: SubscriptionLike | undefined = undefined;
 
   constructor(props: ContextProviderProps) {
     super(props);
@@ -128,11 +127,6 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
   }
 
   componentDidMount() {
-    this.notificationSubscription = SERVICES.realTimeHub.subscribeToNotifications(async n => {
-      await SERVICES.notification.receiveNotification(n); // does nothing if this.state.appState !== "active"); -> TODO disconnect from hub when app is not active
-      await displayNotifeeNotification(n);
-    });
-
     this.userChangeSubscription = SERVICES.realTimeHub.userUpdates.subscribe(async u => {
       await registerRumUser({ ...u });
       this.setState(prev => ({
@@ -173,9 +167,6 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     }
     if (this.unsubscribeToHubState) {
       this.unsubscribeToHubState.unsubscribe();
-    }
-    if (this.notificationSubscription) {
-      this.notificationSubscription.unsubscribe();
     }
     if (this.userChangeSubscription) {
       this.userChangeSubscription.unsubscribe();

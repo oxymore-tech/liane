@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Threading.Tasks;
 using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
 using Google.Apis.Auth.OAuth2;
 using Liane.Api.Auth;
 using Liane.Api.Community;
-using Liane.Api.Event;
 using Liane.Api.Util.Ref;
 using Microsoft.Extensions.Logging;
 using Notification = Liane.Api.Event.Notification;
@@ -42,10 +40,9 @@ public sealed class FirebaseMessagingImpl : IPushMiddleware
   public Task<bool> PushMessage(Api.Auth.User sender, Ref<Api.Auth.User> receiver, Ref<Api.Community.Liane> liane, LianeMessage message)
   {
     return Push(receiver, new Notification(
-      default,
+      message.Id,
       message.CreatedBy,
       message.CreatedAt!.Value,
-      ImmutableList<Recipient>.Empty,
       sender.Pseudo,
       message.Content.Value ?? "",
       $"liane://liane/{liane.Id}"
@@ -58,7 +55,7 @@ public sealed class FirebaseMessagingImpl : IPushMiddleware
     {
       return false;
     }
-    
+
     var receiverUser = await userService.GetFullUser(receiver);
     if (receiverUser == null)
     {

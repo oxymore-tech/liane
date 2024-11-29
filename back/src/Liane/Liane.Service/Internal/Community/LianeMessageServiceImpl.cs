@@ -151,6 +151,12 @@ public sealed class LianeMessageServiceImpl(
     await connection.InsertAsync(new LianeMessageDb(id, lianeId, content, userId, now), tx);
     var lianeMessage = new LianeMessage(id, userId, now, content);
 
+    var lianeMemberDb = await TryGetMember(connection, lianeId, userId, tx);
+    if (lianeMemberDb is not null)
+    {
+      await MarkAsRead(connection, tx, now, lianeMemberDb);
+    }
+
     await pushService.PushMessage(lianeId, lianeMessage);
     tx.Commit();
     return lianeMessage;
@@ -212,6 +218,12 @@ public sealed class LianeMessageServiceImpl(
   {
     var lianeMemberDb = await CheckIsMember(connection, lianeId, tx: tx);
 
+    return await MarkAsRead(connection, tx, now, lianeMemberDb);
+  }
+
+  private static async Task<LianeMemberDb> MarkAsRead(IDbConnection connection, IDbTransaction tx, DateTime now,
+    LianeMemberDb lianeMemberDb)
+  {
     var update = Query.Update<LianeMemberDb>()
       .Set(m => m.LastReadAt, now)
       .Where(l => l.LianeRequestId, ComparisonOperator.Eq, lianeMemberDb.LianeRequestId)

@@ -1,10 +1,9 @@
 import { FullUser, Liane, PaginatedResponse, Ref, TrackingInfo } from "../api";
-import { Notification } from "./notification";
 import { AppLogger } from "../logger";
 import { AppStorage } from "../storage";
 import { HttpClient } from "./http";
 import { HubConnection, HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
-import { BehaviorSubject, Observable, Subject, SubscriptionLike } from "rxjs";
+import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { NetworkUnavailable, UnauthorizedError } from "../exception";
 import { CoLiane, LianeMessage } from "./community";
 import { AbstractChat, Chat, ChatType, GroupTypeOf, MessageTypeOf } from "./chat";
@@ -24,15 +23,11 @@ export interface HubService {
 
   disconnectFromChat(): Promise<void>;
 
-  subscribeToNotifications(callback: OnNotificationCallback): SubscriptionLike;
-
   updateActiveState(active: boolean): void;
 
   subscribeToTrackingInfo(lianeId: string, callback: OnLocationCallback): Promise<{ closed: boolean; unsubscribe: () => Promise<void> }>;
 
-  readNotifications(ids?: Ref<Notification>[]): Promise<void>;
-
-  unreadNotifications: Observable<Ref<Notification>[]>;
+  unreadNotifications: Observable<Record<Ref<CoLiane>, number>>;
   tripUpdates: Observable<Liane>;
   lianeUpdates: Observable<CoLiane>;
   userUpdates: Observable<FullUser>;
@@ -42,19 +37,15 @@ export interface HubService {
 export type ConsumeMessage<TMessage> = (res: TMessage) => void;
 
 export type OnLatestMessagesCallback<TMessage> = (res: PaginatedResponse<TMessage>) => void;
-export type OnNotificationCallback = (n: Notification) => void;
 export type OnLocationCallback = (l: TrackingInfo) => void;
 
-type UnreadOverview = Readonly<{
-  notifications: Ref<Notification>[];
-}>;
+type UnreadOverview = Record<Ref<CoLiane>, number>;
 
 export abstract class AbstractHubService implements HubService {
-  protected readonly notificationSubject: Subject<Notification> = new Subject<Notification>();
   tripUpdates = new Subject<Liane>();
   lianeUpdates = new Subject<CoLiane>();
   userUpdates = new Subject<FullUser>();
-  unreadNotifications = new BehaviorSubject<Ref<Notification>[]>([]);
+  unreadNotifications = new BehaviorSubject<Record<Ref<CoLiane>, number>>({});
   hubState = new Subject<HubState>();
   protected currentChat?: AbstractChat;
   protected onReceiveLocationUpdateCallback: OnLocationCallback | undefined;
@@ -65,24 +56,9 @@ export abstract class AbstractHubService implements HubService {
     protected readonly logger: AppLogger
   ) {}
 
-  protected receiveNotification = async (notification: Notification) => {
-    // Called on new notification
-    this.logger.debug("HUB", "received :", this.appStateActive, notification);
-
-    if (this.appStateActive) {
-      this.notificationSubject.next(notification);
-      return true;
-    }
-    return false;
-  };
-
-  subscribeToNotifications = (callback: OnNotificationCallback) => this.notificationSubject.subscribe(callback);
-
   abstract start(): Promise<void>;
 
   abstract stop(): Promise<void>;
-
-  abstract readNotifications(ids?: Ref<Notification>[]): Promise<void>;
 
   updateActiveState(active: boolean) {
     this.appStateActive = active;
@@ -183,7 +159,6 @@ export class HubServiceClient extends AbstractHubService {
       await this.storage.storeUser(next);
       this.receiveUserUpdate(next);
     });
-    this.hub.on("ReceiveNotification", this.receiveNotification);
     this.hub.on("ReceiveTrackingInfo", this.receiveLocationUpdateCallback);
     this.hub.on("ReceiveLianeUpdate", this.receiveLianeUpdate);
     this.hub.on("ReceiveTripUpdate", this.receiveTripUpdate);
@@ -245,11 +220,6 @@ export class HubServiceClient extends AbstractHubService {
     this.isStarted = false;
   }
 
-  async readNotifications(ids?: Ref<Notification>[]) {
-    await this.hub.invoke("ReadNotifications", ids ?? this.unreadNotifications.getValue());
-    this.unreadNotifications.next([]);
-  }
-
   async subscribeToTrackingInfo(lianeId: string, callback: OnLocationCallback): Promise<{ closed: boolean; unsubscribe: () => Promise<void> }> {
     const lastUpdate: TrackingInfo = await this.hub.invoke("GetLastTrackingInfo", lianeId);
 
@@ -284,7 +254,7 @@ export class HubServiceClient extends AbstractHubService {
   protected receiveUnreadOverview = async (unread: UnreadOverview) => {
     // Called when hub is started
     this.logger.info("HUB", "unread", unread);
-    this.unreadNotifications.next(unread.notifications);
+    this.unreadNotifications.next(unread);
   };
 
   private async startAndRetry() {

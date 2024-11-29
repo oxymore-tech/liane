@@ -77,7 +77,7 @@ export const LianeMapDetailScreen = () => {
     } else {
       navigation.navigate("Publish", { liane: matchOrLiane });
     }
-  }, [lianeId, lianeRequest, navigation, services.community]);
+  }, [lianeId, lianeRequest, matchOrLiane, navigation, services.community]);
 
   const handleReject = useCallback(async () => {
     if (lianeRequest && lianeRequest.id && lianeId) {

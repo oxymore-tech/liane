@@ -17,7 +17,8 @@ namespace Liane.Web.Hubs;
 public sealed class HubServiceImpl(
   IHubContext<ChatHub, IHubClient> hubContext,
   ILogger<HubServiceImpl> logger,
-  ILianeTrackerCache trackerCache
+  ILianeTrackerCache trackerCache,
+  ILianeMessageService lianeMessageService
 ) : IHubService, IPushMiddleware, ILianeUpdatePushService
 {
   private MemoryCache CurrentConnections { get; } = new(new MemoryCacheOptions());
@@ -37,8 +38,8 @@ public sealed class HubServiceImpl(
       var connectionId = GetConnectionId(recipient);
       if (connectionId is not null)
       {
-        await hubContext.Clients.Client(connectionId)
-          .ReceiveNotification(notification);
+        var unreadNotificationsIds = await lianeMessageService.GetUnreadLianes();
+        await hubContext.Clients.Client(connectionId).ReceiveUnreadOverview(unreadNotificationsIds);
         return false;
       }
     }
@@ -70,11 +71,6 @@ public sealed class HubServiceImpl(
 
     logger.LogInformation("{receiver} is disconnected", receiver);
     return false;
-  }
-
-  public bool IsConnected(Ref<User> user)
-  {
-    return GetConnectionId(user) is not null;
   }
 
   public Task AddConnectedUser(Ref<User> user, string connectionId)
