@@ -404,6 +404,7 @@ public sealed class LianeServiceImpl(
                                                                            INNER JOIN route b on b.way_points = lr.way_points
                                                                           WHERE lr.id = @liane
                                                                       ) AS ii
+                                                                 WHERE st_length(intersection) / st_length(@route) > 0.35
                                                                  LIMIT 1
                                                                  """,
       new { route, liane }
