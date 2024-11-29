@@ -76,7 +76,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     var result = await connection.QueryAsync<LianeRawMatch>("""
                                                             WITH first_level AS (
                                                               SELECT lr_a.id AS "from",
-                                                                     b.geometry AS b_geometry,
+                                                                     a.geometry AS a_geometry,
                                                                      lr_b.id AS liane_request,
                                                                      lr_b.name AS name,
                                                                      lr_b.arrive_before AS arrive_before,
@@ -109,7 +109,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
                                                                       week_days,
                                                                       st_length(intersection) / a_length AS score,
                                                                       linked_to_b AS linked_to,
-                                                                      match_routes(b_geometry, intersection) AS match
+                                                                      match_routes(a_geometry, intersection) AS match
                                                               FROM first_level
                                                               WHERE st_length(intersection) / a_length > 0.35
                                                               ORDER BY st_length(intersection) / a_length DESC, "from"
@@ -141,7 +141,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     var result = await connection.QueryAsync<LianeRawMatch>("""
                                                             WITH first_level AS (
                                                               SELECT lr_a.id AS "from",
-                                                                   b.geometry AS b_geometry,
+                                                                   a.geometry AS a_geometry,
                                                                    lr_b.id AS liane_request,
                                                                    lr_b.name AS name,
                                                                    lr_b.arrive_before AS arrive_before,
@@ -173,7 +173,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
                                                                       week_days,
                                                                       st_length(intersection) / a_length AS score,
                                                                       linked_to,
-                                                                      match_routes(b_geometry, intersection) AS match
+                                                                      match_routes(a_geometry, intersection) AS match
                                                               FROM first_level
                                                               WHERE st_length(intersection) / a_length > 0.35
                                                               ORDER BY st_length(intersection) / a_length DESC, "from"
