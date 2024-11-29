@@ -647,18 +647,18 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   }
 
   [Test]
-  public async Task ShouldMatchNoMatterWhatDirection()
+  public async Task ShouldMatchInReverseDirection()
   {
     var lianeGugu = await CreateLianeRequest(gugu, "Marché Mende", LabeledPositions.BlajouxParking, LabeledPositions.Mende, weekDays: DayOfWeekFlag.All, roundTrip: true);
     var lianeMathilde = await CreateLianeRequest(mathilde, "Biojour", LabeledPositions.Mende, LabeledPositions.Florac, weekDays: DayOfWeekFlag.All);
-
+    
     {
       currentContext.SetCurrentUser(gugu);
       var list = await tested.Match();
-
+    
       AssertMatchesEquals(list,
         new LianeMatch(lianeGugu, new LianeState.Detached(ImmutableList.Create<Match>(
-          new Match.Single(lianeMathilde.Id, ImmutableList.Create(mathilde), "Biojour", DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.QuezacParking, LabeledPositions.Mende, 0.70023006f, false,
+          new Match.Single(lianeMathilde.Id, ImmutableList.Create(mathilde), "Biojour", DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.Mende, LabeledPositions.QuezacParking, 0.700230062f, true,
             null)
         )))
       );
