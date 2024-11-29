@@ -5,7 +5,7 @@ import { Center, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppIcon } from "@/components/base/AppIcon";
-import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { extractDays, extractTime } from "@/util/hooks/days";
 import { ArrayUtils, CoMatch } from "@liane/common";
 import { AppAvatars } from "@/components/UserPicture.tsx";
@@ -135,9 +135,6 @@ const styles = StyleSheet.create({
     flex: 1,
     height: "100%"
   },
-  errorText: {
-    color: ContextualColors.redAlert.text
-  },
   headerSection: {
     paddingTop: 16,
     paddingBottom: 10,
@@ -167,28 +164,6 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     flex: 1
-  },
-  titleText: {
-    fontSize: 20,
-    fontWeight: "bold",
-    lineHeight: 24
-  },
-  nameText: {
-    fontSize: 16,
-    fontWeight: "normal",
-    lineHeight: 24
-  },
-  locationText: {
-    fontSize: 14,
-    fontWeight: "normal",
-    lineHeight: 27,
-    color: AppColors.darkGray
-  },
-  timeText: {
-    fontSize: 14,
-    fontWeight: "normal",
-    lineHeight: 16,
-    color: AppColors.black
   },
   dot: {
     position: "absolute",

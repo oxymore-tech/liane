@@ -8,5 +8,5 @@ namespace Liane.Service.Internal.Trip.Event;
 // Autodiscovered by DI
 public sealed class LianeEventInChatHandler(ILianeMessageService messageService) : IEventListener
 {
-  public Task OnEvent(LianeEvent<MessageContent> e) => messageService.SendMessage(e.Liane, e.Content);
+  public Task OnEvent(LianeEvent<MessageContent> e) => messageService.SendMessage(e.Liane, e.Content, e.At);
 }

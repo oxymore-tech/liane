@@ -519,8 +519,8 @@ public sealed class LianeServiceImpl(
   {
     var at = DateTime.UtcNow;
     await connection.InsertAsync(new LianeMemberDb(request, liane, at, null, null), tx);
-    await eventDispatcher.Dispatch(liane, new MessageContent.MemberRequested("", userId, request), at);
     tx.Commit();
+    await eventDispatcher.Dispatch(liane, new MessageContent.MemberRequested("", userId, request), at);
   }
 
   private static Direction CheckDirection(ImmutableList<Ref<RallyingPoint>> lianeRequestWayPoints, ImmutableList<WayPoint> tripWayPoints)

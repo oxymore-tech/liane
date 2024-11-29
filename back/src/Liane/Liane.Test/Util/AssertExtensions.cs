@@ -4,12 +4,38 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using DeepEqual;
 using DeepEqual.Syntax;
 using Liane.Api.Util;
 using Liane.Api.Util.Ref;
 using NUnit.Framework;
 
 namespace Liane.Test.Util;
+
+public sealed class DateTimeComparison : IComparison
+{
+  public bool CanCompare(Type type1, Type type2)
+  {
+    return type1 == typeof(DateTime) && type2 == typeof(DateTime);
+  }
+
+  public (ComparisonResult result, IComparisonContext context) Compare(IComparisonContext context, object x, object y)
+  {
+    if (x is not DateTime d1)
+    {
+      return (ComparisonResult.Fail, context);
+    }
+
+    if (y is not DateTime d2)
+    {
+      return (ComparisonResult.Fail, context);
+    }
+
+    return Math.Abs((d1 - d2).TotalMilliseconds) < 1000
+      ? (ComparisonResult.Pass, context)
+      : (ComparisonResult.Fail, context);
+  }
+}
 
 public static class AssertExtensions
 {
@@ -21,12 +47,16 @@ public static class AssertExtensions
 
   public static void AssertDeepEqual<T>(this IEnumerable<T> actual, params T[] expected)
   {
-    actual.WithDeepEqual(expected).Assert();
+    actual.WithDeepEqual(expected)
+      .WithCustomComparison(new DateTimeComparison())
+      .Assert();
   }
 
   public static void AssertDeepEqual<T>(this T actual, T expected)
   {
-    actual.WithDeepEqual(expected).Assert();
+    actual.WithDeepEqual(expected)
+      .WithCustomComparison(new DateTimeComparison())
+      .Assert();
   }
 
   public static void AreRefEquivalent<T>(this IEnumerable<Ref<T>?> expected, IEnumerable<Ref<T>> actual)

@@ -91,7 +91,7 @@ public sealed class LianeMessageServiceImpl(
                                                           SELECT m.liane_id, COUNT(msg.id) AS unread
                                                           FROM liane_member m
                                                             INNER JOIN liane_request r ON m.liane_request_id = r.id
-                                                            LEFT JOIN liane_message msg ON msg.liane_id = m.liane_id AND msg.created_at > m.joined_at
+                                                            LEFT JOIN liane_message msg ON msg.liane_id = m.liane_id AND msg.created_at > m.joined_at AND msg.created_by != @userId
                                                           WHERE m.joined_at IS NOT NULL AND r.created_by = @userId
                                                             AND (m.last_read_at IS NULL OR msg.created_at > m.last_read_at)
                                                           GROUP BY m.liane_id
@@ -126,7 +126,7 @@ public sealed class LianeMessageServiceImpl(
     return lianeMemberDb;
   }
 
-  public async Task<LianeMessage?> SendMessage(Ref<Api.Community.Liane> liane, MessageContent content)
+  public async Task<LianeMessage?> SendMessage(Ref<Api.Community.Liane> liane, MessageContent content, DateTime? at)
   {
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
@@ -138,7 +138,7 @@ public sealed class LianeMessageServiceImpl(
       throw new UnauthorizedAccessException("User is not part of the liane");
     }
 
-    var now = DateTime.UtcNow;
+    var now = at ?? DateTime.UtcNow;
 
     content = content with { Value = await FormatMessage(userId, content) };
 
@@ -151,14 +151,8 @@ public sealed class LianeMessageServiceImpl(
     await connection.InsertAsync(new LianeMessageDb(id, lianeId, content, userId, now), tx);
     var lianeMessage = new LianeMessage(id, userId, now, content);
 
-    var lianeMemberDb = await TryGetMember(connection, lianeId, userId, tx);
-    if (lianeMemberDb is not null)
-    {
-      await MarkAsRead(connection, tx, now, lianeMemberDb);
-    }
-
-    await pushService.PushMessage(lianeId, lianeMessage);
     tx.Commit();
+    await pushService.PushMessage(lianeId, lianeMessage);
     return lianeMessage;
   }
 

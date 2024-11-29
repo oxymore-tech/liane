@@ -10,7 +10,7 @@ public interface ILianeMessageService
 {
   Task<PaginatedResponse<LianeMessage>> GetMessages(Ref<Liane> liane) => GetMessages(liane, Pagination.Empty);
   Task<PaginatedResponse<LianeMessage>> GetMessages(Ref<Liane> liane, Pagination pagination);
-  Task<LianeMessage?> SendMessage(Ref<Liane> liane, MessageContent content);
+  Task<LianeMessage?> SendMessage(Ref<Liane> liane, MessageContent content, DateTime? at = null);
   Task MarkAsRead(Ref<Liane> liane, DateTime timestamp);
   Task<ImmutableDictionary<Ref<Liane>, int>> GetUnreadLianes();
 }
