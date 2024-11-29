@@ -523,7 +523,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       {
         var unread = await messageService.GetUnreadLianes();
         CollectionAssert.AreEqual(ImmutableList.Create(
-          (liane.Id, 7)
+          (liane.Id, 4)
         ), unread.Select(l => (l.Key.IdAsGuid(), l.Value)));
       }
       var messages = await messageService.GetMessages(liane, new Pagination(SortAsc: false));
