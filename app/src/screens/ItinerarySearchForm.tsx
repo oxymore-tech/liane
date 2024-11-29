@@ -385,6 +385,8 @@ export const PlaceSuggestions = (props: {
   );
 };
 
+export type Notice = { type: "info" | "error"; message: string } | "loading";
+
 export type ItinerarySearchFormProps = {
   trip: Partial<Trip>;
   liane?: Ref<CoLiane>;
@@ -395,6 +397,7 @@ export type ItinerarySearchFormProps = {
   formStyle?: StyleProp<ViewStyle>;
   editable?: boolean;
   onRequestFocus?: (field: "from" | "to") => void;
+  notice?: Notice;
 };
 
 export const ItinerarySearchForm = ({
@@ -406,7 +409,8 @@ export const ItinerarySearchForm = ({
   formWrapperStyle,
   formStyle,
   editable = true,
-  onRequestFocus
+  onRequestFocus,
+  notice
 }: ItinerarySearchFormProps) => {
   const [currentPoint, setCurrentPoint] = useState<ToOrFrom | undefined>("to");
   const [currentSearch, setCurrentSearch] = useState<string>("");
@@ -467,21 +471,43 @@ export const ItinerarySearchForm = ({
         updateTrip={updateTrip}
       />
 
-      {editable && currentPoint !== undefined && (
+      {editable && (
         <>
-          <AppPressableOverlay onPress={() => setMapOpen(currentPoint)} style={{ paddingHorizontal: 16, paddingVertical: 16 }}>
-            <Row spacing={16}>
-              <AppIcon name={"map-outline"} size={22} />
-              <AppText>Choisir sur la carte</AppText>
+          {notice && (
+            <Row
+              style={{
+                paddingTop: 16
+              }}>
+              {notice === "loading" ? (
+                <ActivityIndicator style={styles.loader} color={AppColorPalettes.gray[500]} size="small" />
+              ) : (
+                <AppText
+                  style={{
+                    fontWeight: "bold",
+                    color: notice.type === "info" ? AppColorPalettes.gray[500] : AppColorPalettes.orange[500]
+                  }}>
+                  {notice.message}
+                </AppText>
+              )}
             </Row>
-          </AppPressableOverlay>
-          <RallyingPointSuggestions
-            currentSearch={currentSearch}
-            exceptValues={otherValue ? [otherValue.id!] : undefined}
-            onSelect={rp => {
-              handleUpdateField(rp);
-            }}
-          />
+          )}
+          {currentPoint !== undefined && (
+            <>
+              <AppPressableOverlay onPress={() => setMapOpen(currentPoint)} style={{ paddingHorizontal: 16, paddingVertical: 16 }}>
+                <Row spacing={16}>
+                  <AppIcon name={"map-outline"} size={22} />
+                  <AppText>Choisir sur la carte</AppText>
+                </Row>
+              </AppPressableOverlay>
+              <RallyingPointSuggestions
+                currentSearch={currentSearch}
+                exceptValues={otherValue ? [otherValue.id!] : undefined}
+                onSelect={rp => {
+                  handleUpdateField(rp);
+                }}
+              />
+            </>
+          )}
         </>
       )}
     </Column>
@@ -489,6 +515,9 @@ export const ItinerarySearchForm = ({
 };
 
 const styles = StyleSheet.create({
+  loader: {
+    width: "100%"
+  },
   page: {
     flex: 1
   },

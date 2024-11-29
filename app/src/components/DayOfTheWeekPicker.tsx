@@ -1,13 +1,13 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { DayOfWeekFlag } from "@liane/common";
 import { AppLocalization } from "@/api/i18n";
 
 import { Row } from "@/components/base/AppLayout";
 
-import { AppColorPalettes, AppColors } from "@/theme/colors";
-import { AppPressableOverlay } from "@/components/base/AppPressable";
+import { AppColors } from "@/theme/colors";
+import { DayItem } from "@/components/DayItem.tsx";
 
 type DayOfTheWeekPickerProps = {
   selectedDays?: DayOfWeekFlag;
@@ -16,6 +16,7 @@ type DayOfTheWeekPickerProps = {
   daysSize?: number;
   borderBottomDisplayed?: boolean;
   enabledDays?: DayOfWeekFlag;
+  requiredDays?: DayOfWeekFlag;
   singleOptionMode?: boolean;
   dualOptionMode?: boolean;
 };
@@ -26,6 +27,7 @@ export const DayOfTheWeekPicker = ({
   fontSize,
   daysSize,
   enabledDays,
+  requiredDays,
   borderBottomDisplayed = false,
   singleOptionMode = false,
   dualOptionMode = false
@@ -69,26 +71,17 @@ export const DayOfTheWeekPicker = ({
     <View>
       <Row style={styles.rowContainer} spacing={6}>
         {AppLocalization.daysList.map((day: string, index: number) => (
-          <AppPressableOverlay
-            disabled={!onChangeDays || enabledDays?.charAt(index) === "0"}
-            key={index}
-            onPress={() => onChangeDays && selectDate(index)}
-            backgroundStyle={[
-              styles.dayContainer,
-              selectedDaysString?.charAt(index) === "1" ? styles.daySelectedContainer : null,
-              { borderRadius: size },
-              !!enabledDays && enabledDays.charAt(index) === "0" ? { borderColor: AppColorPalettes.gray[300] } : {}
-            ]}
-            style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
-            <Text
-              style={[
-                styles.textContainer,
-                selectedDaysString?.charAt(index) === "1" ? styles.textSelectedContainer : null,
-                { fontSize: fontSize ?? 20 }
-              ]}>
-              {day.substring(0, 2)}
-            </Text>
-          </AppPressableOverlay>
+          <DayItem
+            key={day}
+            index={index}
+            day={day}
+            selected={selectedDaysString.charAt(index) === "1"}
+            disabled={enabledDays?.charAt(index) === "0"}
+            required={requiredDays?.charAt(index) === "1"}
+            size={size}
+            fontSize={fontSize}
+            onSelect={() => onChangeDays && selectDate(index)}
+          />
         ))}
       </Row>
       {borderBottomDisplayed && <View style={styles.containerBorderStyle} />}
@@ -105,25 +98,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     justifyContent: "center",
     flexWrap: "wrap"
-  },
-  dayContainer: {
-    textAlign: "center",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: AppColors.white,
-    borderRadius: 20,
-    width: 42,
-    height: 42
-  },
-  daySelectedContainer: {
-    backgroundColor: AppColors.primaryColor
-  },
-  textContainer: {
-    color: AppColorPalettes.gray[200],
-    textAlign: "center"
-  },
-  textSelectedContainer: {
-    color: AppColors.white
   },
   containerBorderStyle: {
     borderBottomWidth: 1,

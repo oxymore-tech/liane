@@ -136,6 +136,20 @@ export type MessageContent =
 
 export type LianeMessage<T extends MessageContent = MessageContent> = Entity & { content: T };
 
+export type PendingMatch = {
+  pickup?: RallyingPoint;
+  deposit?: RallyingPoint;
+  isReverseDirection: boolean;
+};
+
+export function isLiane(l: CoLiane | CoMatch): l is CoLiane {
+  return (l as any).wayPoints;
+}
+
+export function getLianeId(matchOrLiane: CoLiane | CoMatch): string {
+  return isLiane(matchOrLiane) ? matchOrLiane.id! : matchOrLiane.liane;
+}
+
 export interface CommunityService {
   match(): Promise<CoLianeMatch[]>;
 
@@ -144,6 +158,8 @@ export interface CommunityService {
   get(liane: string): Promise<CoLiane>;
 
   getTrip(liane: string, lianeRequest?: string): Promise<WayPoint[]>;
+
+  matches(liane: string, from: Ref<RallyingPoint>, to: Ref<RallyingPoint>): Promise<PendingMatch | null>;
 
   create(lianeRequest: CoLianeRequest): Promise<CoLianeRequest>;
 
@@ -206,6 +222,10 @@ export class CommunityServiceClient implements CommunityService {
   getTrip(liane: string, lianeRequest?: string): Promise<WayPoint[]> {
     const suffix = lianeRequest ? `/${lianeRequest}` : "";
     return this.http.get<WayPoint[]>(`/community/liane/${liane}/trip${suffix}`);
+  }
+
+  matches(liane: string, from: Ref<RallyingPoint>, to: Ref<RallyingPoint>) {
+    return this.http.get<PendingMatch | null>(`/community/liane/${liane}/match/${from}/${to}`);
   }
 
   joinTrip(query: JoinTripQuery) {

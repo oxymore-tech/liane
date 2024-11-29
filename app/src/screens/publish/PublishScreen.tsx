@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useContext, useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import Animated, { FadeIn, FadeOut, FadeOutRight, SlideInLeft, SlideOutLeft } from "react-native-reanimated";
 import { useQueryClient } from "react-query";
@@ -12,14 +12,14 @@ import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker";
 
 import { AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
-import { CoLianeRequest, DayOfWeekFlag, TimeOnly, Trip } from "@liane/common";
+import { CoLianeRequest, DayOfWeekFlag, getLianeId, ResolvedLianeRequest, TimeOnly, Trip } from "@liane/common";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppLocalization } from "@/api/i18n";
 import { AppTextInput } from "@/components/base/AppTextInput.tsx";
 import { TimeView } from "@/components/TimeView.tsx";
 import { Accordion } from "@/screens/publish/Accordion.tsx";
 import { PageHeader } from "@/components/context/Navigation.tsx";
-import { ItinerarySearchForm } from "@/screens/ItinerarySearchForm.tsx";
+import { ItinerarySearchForm, Notice } from "@/screens/ItinerarySearchForm.tsx";
 import { AppButton } from "@/components/base/AppButton.tsx";
 import { CoLianeMatchQueryKey } from "@/screens/communities/CommunitiesScreen.tsx";
 
@@ -30,44 +30,55 @@ type StepProps<T> = {
 
 const MaxSteps = 5;
 
+function init(initialValue?: Partial<ResolvedLianeRequest>): { value: Partial<CoLianeRequest>; trip: Partial<Trip> } {
+  if (!initialValue) {
+    return {
+      value: {
+        name: "",
+        roundTrip: true,
+        arriveBefore: { hour: 9 },
+        returnAfter: { hour: 18 },
+        canDrive: true,
+        weekDays: "0000000",
+        isEnabled: true
+      },
+      trip: {}
+    };
+  }
+
+  const { wayPoints, ...value } = initialValue;
+  if (!wayPoints) {
+    return {
+      value: value as any,
+      trip: {}
+    };
+  }
+  return {
+    value: value as any,
+    trip: {
+      to: wayPoints[wayPoints.length - 1],
+      from: wayPoints[0]
+    }
+  };
+}
+
 export const PublishScreen = () => {
   const { services } = useContext(AppContext);
   const queryClient = useQueryClient();
   const { navigation, route } = useAppNavigation<"Publish">();
-  const initialValue = route.params.initialValue;
-  const lianeId = route.params.lianeId;
+  const lianeId = useMemo(() => (route.params.liane ? getLianeId(route.params.liane) : undefined), [route.params.liane]);
+  const initValues = useMemo(() => init(route.params.initialValue), [route.params.initialValue]);
 
-  const [trip, setTrip] = useState<Partial<Trip>>({});
-  const [lianeRequest, setLianeRequest] = useState<Partial<CoLianeRequest>>({
-    name: "",
-    roundTrip: true,
-    arriveBefore: { hour: 9 },
-    returnAfter: { hour: 18 },
-    canDrive: true,
-    weekDays: "0000000",
-    isEnabled: true
-  });
+  const [trip, setTrip] = useState<Partial<Trip>>(initValues.trip);
+  const [lianeRequest, setLianeRequest] = useState<Partial<CoLianeRequest>>(initValues.value);
 
-  const [step, setStep] = useState<number>(lianeId ? -1 : initialValue ? MaxSteps : -1);
+  const [step, setStep] = useState<number>(lianeId ? -1 : route.params.initialValue ? MaxSteps : -1);
   const [previousStep, setPreviousStep] = useState<number>(-1);
   const [pending, setPending] = useState(false);
 
-  useEffect(() => {
-    // Set initial value if exist
-    if (route.params.initialValue) {
-      setLianeRequest({
-        ...route.params.initialValue,
-        wayPoints: route.params.initialValue.wayPoints && route.params.initialValue.wayPoints.map(object => object.id)
-      } as CoLianeRequest);
-
-      if (route.params.initialValue.wayPoints) {
-        setTrip({
-          to: route.params.initialValue.wayPoints[route.params.initialValue.wayPoints.length - 1],
-          from: route.params.initialValue.wayPoints[0]
-        });
-      }
-    }
-  }, [route.params]);
+  const [notice, setNotice] = useState<Notice | undefined>(
+    lianeId ? { type: "info", message: "Veuillez sélectionner des points compatibles" } : undefined
+  );
 
   const handleDone = useCallback(async () => {
     setPending(true);
@@ -76,7 +87,7 @@ export const PublishScreen = () => {
         ...lianeRequest,
         wayPoints: [trip.from!.id!, trip.to!.id!]
       } as CoLianeRequest;
-      if (initialValue && lianeRequest.id) {
+      if (route.params.initialValue && lianeRequest.id) {
         await services.community.update(lianeRequest.id, newLianeRequest);
         await queryClient.invalidateQueries(CoLianeMatchQueryKey);
         navigation.navigate("Lianes");
@@ -94,7 +105,7 @@ export const PublishScreen = () => {
     } finally {
       setPending(false);
     }
-  }, [initialValue, lianeId, lianeRequest, navigation, queryClient, services.community, trip.from, trip.to]);
+  }, [route.params.initialValue, lianeId, lianeRequest, navigation, queryClient, services.community, trip.from, trip.to]);
 
   const stepDone = useCallback(() => {
     if (step < previousStep) {
@@ -114,14 +125,29 @@ export const PublishScreen = () => {
   );
 
   const handleUpdateTrip = useCallback(
-    (t: Partial<Trip>) => {
+    async (t: Partial<Trip>) => {
       const updated = { ...trip, ...t };
       setTrip(updated);
-      if (updated.from && updated.to) {
-        stepDone();
+      if (!updated.from || !updated.to) {
+        return;
       }
+
+      if (!lianeId) {
+        stepDone();
+        return;
+      }
+
+      setNotice("loading");
+
+      const pendingMatch = await services.community.matches(lianeId, updated.from.id!, updated.to.id!);
+      if (!pendingMatch?.pickup || !pendingMatch.deposit) {
+        setNotice({ type: "error", message: "Votre trajet n'est pas compatible !" });
+        return;
+      }
+      setNotice({ type: "info", message: "Les trajets sont compatibles" });
+      stepDone();
     },
-    [stepDone, trip]
+    [lianeId, services.community, stepDone, trip]
   );
 
   return (
@@ -131,6 +157,7 @@ export const PublishScreen = () => {
         style={{ paddingHorizontal: 16 }}
         formStyle={styles.stepContainer}
         onRequestFocus={() => setStep(-1)}
+        notice={notice}
         editable={step === -1}
         liane={lianeId}
         trip={trip}
@@ -146,7 +173,13 @@ export const PublishScreen = () => {
           steps={[
             {
               title: AppLocalization.formatDaysOfTheWeek(lianeRequest.weekDays),
-              render: () => <DaysStepView value={lianeRequest.weekDays ?? "0000000"} onChange={weekDays => updateAndNext({ weekDays })} />
+              render: () => (
+                <DaysStepView
+                  value={lianeRequest.weekDays ?? "0000000"}
+                  requiredDays={route.params.liane?.weekDays}
+                  onChange={weekDays => updateAndNext({ weekDays })}
+                />
+              )
             },
             {
               title: `Arriver avant ${AppLocalization.formatTimeOnly(lianeRequest.arriveBefore)}`,
@@ -216,19 +249,33 @@ const StepForm = ({ title, children, disabled = false, onValidate }: StepFormPro
   );
 };
 
-const DaysStepView = ({ onChange, value }: StepProps<DayOfWeekFlag>) => {
+const DaysStepView = ({ onChange, value, requiredDays }: StepProps<DayOfWeekFlag> & { requiredDays?: DayOfWeekFlag }) => {
   const [daysOfTheWeek, setDaysOfTheWeek] = useState<DayOfWeekFlag>(value);
 
   const daysMessage = useMemo(() => AppLocalization.formatDaysOfTheWeek(daysOfTheWeek), [daysOfTheWeek]);
 
-  const cannotValidate = daysOfTheWeek === "0000000";
+  const isValid = daysOverlap(daysOfTheWeek, requiredDays) && daysOfTheWeek !== "0000000";
   return (
-    <StepForm title="Quels jours voyagez-vous ?" onValidate={() => onChange(daysOfTheWeek)} disabled={cannotValidate}>
-      <DayOfTheWeekPicker selectedDays={daysOfTheWeek} onChangeDays={setDaysOfTheWeek} borderBottomDisplayed={true} />
+    <StepForm title="Quels jours voyagez-vous ?" onValidate={() => onChange(daysOfTheWeek)} disabled={!isValid}>
+      <DayOfTheWeekPicker requiredDays={requiredDays} selectedDays={daysOfTheWeek} onChangeDays={setDaysOfTheWeek} borderBottomDisplayed={true} />
       <AppText style={{ fontSize: 16, alignSelf: "flex-start", marginVertical: 20 }}>{daysMessage ?? "Sélectionnez un jour"}</AppText>
     </StepForm>
   );
 };
+
+function daysOverlap(days: DayOfWeekFlag, requiredDays?: DayOfWeekFlag): boolean {
+  if (!requiredDays) {
+    return true;
+  }
+
+  for (let i = 0; i < days.length; i++) {
+    if (days[i] === "1" && requiredDays[i] === "1") {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 const TimeConstraintView = ({
   title,

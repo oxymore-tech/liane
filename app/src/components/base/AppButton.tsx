@@ -13,7 +13,6 @@ import { AppStyles } from "@/theme/styles.ts";
 import Animated, { FadeInRight, FadeOutRight } from "react-native-reanimated";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider.tsx";
 
-// @ts-ignore
 export type AppButtonProps = PressableProps & {
   color?: ColorValue;
   disabled?: boolean;

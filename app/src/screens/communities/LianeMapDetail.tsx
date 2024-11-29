@@ -11,7 +11,7 @@ import { AppContext } from "@/components/context/ContextProvider.tsx";
 import { DisplayWayPoints } from "@/components/communities/DisplayWayPoints";
 import { LianeMatchLianeRouteLayer } from "@/components/map/layers/LianeMatchRouteLayer.tsx";
 import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay.tsx";
-import { CoLiane, CoMatch, getBoundingBox, WayPoint } from "@liane/common";
+import { getLianeId, getBoundingBox, isLiane, WayPoint } from "@liane/common";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider.tsx";
 import { AppBottomSheet, AppBottomSheetHandleHeight } from "@/components/base/AppBottomSheet.tsx";
 import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
@@ -19,10 +19,6 @@ import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker.tsx";
 import { AppAvatars } from "@/components/UserPicture.tsx";
 import { AppButton } from "@/components/base/AppButton.tsx";
 import { ContextActions, PendingAction } from "@/components/communities/ContextActions.tsx";
-
-function isLiane(l: CoLiane | CoMatch): l is CoLiane {
-  return (l as any).wayPoints;
-}
 
 export const LianeMapDetailScreen = () => {
   const { navigation, route } = useAppNavigation<"LianeMapDetail">();
@@ -36,7 +32,7 @@ export const LianeMapDetailScreen = () => {
 
   const [pendingAction, setPendingAction] = useState<PendingAction>();
 
-  const lianeId = useMemo(() => (isLiane(matchOrLiane) ? matchOrLiane.id! : matchOrLiane.liane), [matchOrLiane]);
+  const lianeId = useMemo(() => getLianeId(matchOrLiane), [matchOrLiane]);
 
   const members = useMemo(() => {
     if (isLiane(matchOrLiane)) {
@@ -79,7 +75,7 @@ export const LianeMapDetailScreen = () => {
         setPendingAction(undefined);
       }
     } else {
-      navigation.navigate("Publish", { lianeId });
+      navigation.navigate("Publish", { liane: matchOrLiane });
     }
   }, [lianeId, lianeRequest, navigation, services.community]);
 

@@ -8,7 +8,7 @@ import { RallyingPoint } from "@liane/common";
 import { AppPressableIcon } from "@/components/base/AppPressable";
 import { ToOrFrom } from "@/components/trip/ItineraryFormHeader.tsx";
 
-export interface ItineraryFormProps {
+export type ItineraryFormProps = {
   editable?: boolean;
   field?: ToOrFrom;
   onChangeFrom?: (value: string) => void;
@@ -18,7 +18,8 @@ export interface ItineraryFormProps {
   from: RallyingPoint | undefined;
   onValuesSwitched: (oldFrom: RallyingPoint | undefined, oldTo: RallyingPoint | undefined) => void;
   style?: StyleProp<ViewStyle>;
-}
+};
+
 export const ItineraryForm = ({
   from,
   to,
