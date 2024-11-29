@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Liane.Api.Community;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
+using Liane.Api.Util.Ref;
 using Liane.Web.Internal.Auth;
 using Microsoft.AspNetCore.Mvc;
 using LianeMatch = Liane.Api.Community.LianeMatch;
@@ -48,12 +49,18 @@ public sealed class LianeController(ILianeService lianeService, ITripService tri
     return lianeService.Delete(id);
   }
 
+  [HttpGet("liane/{liane:guid}/match/{from}/{to}")]
+  public Task<PendingMatch?> Matches([FromRoute] Guid liane, [FromRoute] string from, [FromRoute] string to)
+  {
+    return lianeService.Matches(liane, from, to);
+  }
+
   [HttpGet("liane/{liane:guid}/trip")]
   public Task<ImmutableList<WayPoint>> GetTrip(Guid liane)
   {
     return lianeService.GetTrip(liane, null);
   }
-  
+
   [HttpGet("liane/{liane:guid}/trip/{lianeRequest:guid}")]
   public Task<ImmutableList<WayPoint>> GetTrip(Guid liane, Guid lianeRequest)
   {

@@ -76,3 +76,9 @@ public abstract record Match
     DateTime? PendingRequest
   ) : Match;
 }
+
+public sealed record PendingMatch(
+  RallyingPoint? Pickup,
+  RallyingPoint? Deposit,
+  bool IsReverseDirection
+);

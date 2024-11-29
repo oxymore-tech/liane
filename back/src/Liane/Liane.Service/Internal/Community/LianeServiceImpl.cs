@@ -219,15 +219,15 @@ public sealed class LianeServiceImpl(
 
     var idA = a.IdAsGuid();
     var idB = b.IdAsGuid();
-    
+
     if (idA == idB)
     {
       return null;
     }
-    
+
     var lianeA = await lianeFetcher.FetchLiane(connection, idA, tx);
     var lianeB = await lianeFetcher.FetchLiane(connection, idB, tx);
-    
+
     if (!lianeA.IsMember(userId) && !lianeB.IsMember(userId))
     {
       return null;
@@ -384,6 +384,40 @@ public sealed class LianeServiceImpl(
     var diff = computedTime - arriveBefore;
 
     return wayPoints.Select(w => w with { Eta = w.Eta - diff }).ToImmutableList();
+  }
+
+  public async Task<PendingMatch?> Matches(Guid liane, Ref<RallyingPoint> from, Ref<RallyingPoint> to)
+  {
+    using var connection = db.NewConnection();
+
+    var (_, route) = await GetRoute(ImmutableList.Create(from, to));
+
+    var rawMatch = (await connection.QueryAsync<PendingRawMatch>("""
+                                                                 SELECT
+                                                                     (match_routes(@route, intersection)).pickup,
+                                                                     (match_routes(@route, intersection)).deposit,
+                                                                     (match_routes(@route, intersection)).is_reverse_direction
+                                                                 FROM (
+                                                                          SELECT
+                                                                              st_intersection(b.geometry, @route) AS intersection
+                                                                          FROM liane_request lr
+                                                                           INNER JOIN route b on b.way_points = lr.way_points
+                                                                          WHERE lr.id = @liane
+                                                                      ) AS ii
+                                                                 LIMIT 1
+                                                                 """,
+      new { route, liane }
+    )).FirstOrDefault();
+
+    if (rawMatch?.Deposit is null || rawMatch.Pickup is null)
+    {
+      return null;
+    }
+
+    var snapedPoints = await rallyingPointService.Snap(ImmutableHashSet.Create(rawMatch.Pickup.Value, rawMatch.Deposit.Value));
+    var pickup = snapedPoints.GetValueOrDefault(rawMatch.Pickup.Value);
+    var deposit = snapedPoints.GetValueOrDefault(rawMatch.Deposit.Value);
+    return new PendingMatch(pickup, deposit, rawMatch.IsReverseDirection);
   }
 
   public async Task<bool> JoinTrip(JoinTripQuery query)
@@ -561,13 +595,20 @@ public sealed class LianeServiceImpl(
 
   private async Task<string[]> MergeRoute(ImmutableList<Ref<RallyingPoint>> wayPoints, IDbConnection connection, IDbTransaction tx)
   {
+    var (wayPointsArray, lineString) = await GetRoute(wayPoints);
+    await connection.MergeAsync(new RouteDb(wayPointsArray, lineString), tx);
+    return wayPointsArray;
+  }
+
+  private async Task<(string[] wayPointsArray, LineString lineString)> GetRoute(ImmutableList<Ref<RallyingPoint>> wayPoints)
+  {
     var wayPointsArray = wayPoints.Deref();
     var coordinates = (await wayPoints.SelectAsync(rallyingPointService.Get))
       .Select(w => w.Location)
       .ToImmutableList();
     var route = await routingService.GetRoute(coordinates);
-    await connection.MergeAsync(new RouteDb(wayPointsArray, route.Coordinates.ToLineString()), tx);
-    return wayPointsArray;
+    var lineString = route.Coordinates.ToLineString();
+    return (wayPointsArray, lineString);
   }
 
   private static void CheckWayPoints(LianeRequest request)
@@ -625,3 +666,9 @@ enum Direction
   Outbound,
   Inbound
 };
+
+public sealed record PendingRawMatch(
+  LatLng? Pickup,
+  LatLng? Deposit,
+  bool IsReverseDirection
+);

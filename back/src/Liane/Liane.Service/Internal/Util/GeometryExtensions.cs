@@ -15,7 +15,7 @@ public static class GeometryExtensions
 {
   public static LineString ToLineString(this IEnumerable<LngLatTuple> coordinates)
   {
-    return new LineString(coordinates.Select(c => new Coordinate(c.Item1, c.Item2)).ToArray());
+    return new LineString(coordinates.Select(c => new Coordinate(c.Item1, c.Item2)).ToArray()) { SRID = 4326 };
   }
 
   public static GeoJsonPoint<GeoJson2DGeographicCoordinates> ToGeoJson(this LatLng c)
