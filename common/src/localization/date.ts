@@ -4,7 +4,16 @@ import { TimeOnly } from "../services";
 
 export class Localization {
   constructor(private locale: string) {}
-  // Load date formatter
+
+  private readonly monthFormatter = new Intl.DateTimeFormat(this.locale, {
+    month: "long",
+    year: "numeric"
+  });
+
+  private readonly dayFormatter = new Intl.DateTimeFormat(this.locale, {
+    weekday: "long"
+  });
+
   private readonly monthDayFormatter = new Intl.DateTimeFormat(this.locale, {
     weekday: "long",
     month: "long",
@@ -63,6 +72,8 @@ export class Localization {
     numeric: "auto"
   });*/
 
+  formatDay = this.dayFormatter.format;
+  formatMonth = this.monthFormatter.format;
   formatMonthDay = this.monthDayFormatter.format;
   formatMonthYear = this.monthYearFormatter.format;
   formatShortMonthDay = this.shortMonthDayFormatter.format;

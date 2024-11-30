@@ -1,8 +1,7 @@
 import React, { useCallback, useContext, useMemo, useState } from "react";
 
-import { Pressable, RefreshControl, SectionBase, SectionList, SectionListData, SectionListRenderItemInfo, StyleSheet, View } from "react-native";
-import { capitalize, extractDatePart, getUserTrip, Liane, Ref, User, UTCDateTime } from "@liane/common";
-import { AppLocalization } from "@/api/i18n";
+import { FlatList, ListRenderItemInfo, Pressable, RefreshControl, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
+import { getUserTrip, Liane } from "@liane/common";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
 import { LianeStatusView } from "@/components/trip/LianeStatusView";
@@ -22,36 +21,28 @@ import { useQueryClient } from "react-query";
 import { AppButton } from "@/components/base/AppButton.tsx";
 import { AppModalNavigationContext } from "@/components/AppModalNavigationProvider.tsx";
 
-export interface TripSection extends SectionBase<Liane> {
-  date: string;
-}
-
 export interface TripListViewProps {
   data: Liane[];
+  style?: StyleProp<ViewStyle>;
   isFetching?: boolean;
   onRefresh?: () => void;
   reverseSort?: boolean;
   loadMore?: () => void;
 }
 
-export const TripListView = ({ data, isFetching, onRefresh, reverseSort, loadMore }: TripListViewProps) => {
-  const bottom = 32;
+export const TripListView = ({ data, style, isFetching, onRefresh, loadMore }: TripListViewProps) => {
   const { user } = useContext(AppContext);
   const userId = user!.id!;
-  const sections = useMemo(() => {
-    return convertToDateSections(data, userId, reverseSort);
-  }, [data, userId, reverseSort]);
   const isTripStarted = data.some(liane => liane.state === "Started");
 
   return (
-    <SectionList
-      style={{ flex: 1 }}
+    <FlatList
+      style={style}
       refreshControl={<RefreshControl refreshing={isFetching || false} onRefresh={onRefresh} />}
-      sections={sections}
+      data={data}
       showsVerticalScrollIndicator={false}
       renderItem={props => renderLianeItem({ ...props, isTripStarted })}
       keyExtractor={item => item.id!}
-      renderSectionHeader={renderSectionHeader}
       onEndReachedThreshold={0.2}
       onEndReached={loadMore}
       ListEmptyComponent={
@@ -59,37 +50,9 @@ export const TripListView = ({ data, isFetching, onRefresh, reverseSort, loadMor
           <AppText style={AppStyles.noData}>Aucun trajet prévu</AppText>
         </Center>
       }
-      renderSectionFooter={s => <View style={{ height: s.section === sections[sections.length - 1] ? bottom : 24 }} />}
     />
   );
 };
-
-const convertToDateSections = (data: Liane[], member: Ref<User>, reverseSort: boolean = false): TripSection[] =>
-  Object.entries(
-    data.reduce((tmp, item) => {
-      const departureTime = getUserTrip(item, member).departureTime;
-
-      // Use date for grouping
-      const group = extractDatePart(departureTime);
-
-      // Add item to this group (or create the group)
-      if (!tmp[group]) {
-        tmp[group] = [{ departureTime, item }];
-      } else {
-        tmp[group].unshift({ departureTime, item });
-      }
-      // add this item to its group
-      return tmp;
-    }, {} as { [key: UTCDateTime]: { departureTime: UTCDateTime; item: Liane }[] })
-  )
-    .map(
-      ([group, items]) =>
-        ({
-          date: group,
-          data: items.sort((a, b) => a.departureTime.localeCompare(b.departureTime)).map(i => i.item)
-        } as TripSection)
-    )
-    .sort((a, b) => (reverseSort ? -a.date.localeCompare(b.date) : a.date.localeCompare(b.date)));
 
 const LianeItem = ({ item, isTripStarted }: { item: Liane; isTripStarted: boolean }) => {
   const { user } = useContext(AppContext);
@@ -183,18 +146,12 @@ const StartButton = ({ item }: { item: Liane }) => {
 
   return <AppButton color={AppColors.primaryColor} loading={loading} onPress={handle} value="C'est parti ?" />;
 };
-const renderLianeItem = ({ item, index, section, isTripStarted }: SectionListRenderItemInfo<Liane, TripSection> & { isTripStarted: boolean }) => {
+const renderLianeItem = ({ item, index, isTripStarted }: ListRenderItemInfo<Liane> & { isTripStarted: boolean }) => {
   const { navigation } = useAppNavigation();
 
   return (
     <Pressable
-      style={[
-        styles.item,
-        styles.grayBorder,
-        item.members.length > 1 ? {} : styles.disabledItem,
-        index === section.data.length - 1 ? styles.itemLast : {},
-        index === 0 ? styles.itemFirst : {}
-      ]}
+      style={[styles.item, styles.grayBorder, item.members.length > 1 ? {} : styles.disabledItem, index === 0 ? styles.itemFirst : {}]}
       onPress={() => {
         navigation.navigate({ name: "LianeDetail", params: { liane: item } });
       }}>
@@ -204,12 +161,6 @@ const renderLianeItem = ({ item, index, section, isTripStarted }: SectionListRen
     </Pressable>
   );
 };
-
-const renderSectionHeader = ({ section: { date } }: { section: SectionListData<Liane, TripSection> }) => (
-  <View style={styles.header}>
-    <AppText style={styles.headerTitle}>{capitalize(AppLocalization.formatMonthDay(new Date(date)))}</AppText>
-  </View>
-);
 
 const styles = StyleSheet.create({
   container: {
