@@ -4,7 +4,7 @@ import { SimpleModal } from "@/components/modal/SimpleModal.tsx";
 import { AppColors } from "@/theme/colors.ts";
 import { Center, Column, Row } from "@/components/base/AppLayout.tsx";
 import { AppText } from "@/components/base/AppText.tsx";
-import { StyleSheet, Switch } from "react-native";
+import { StyleSheet, Switch, View } from "react-native";
 import { TimeView } from "@/components/TimeView.tsx";
 import { DateView } from "@/components/DateView.tsx";
 import { ItineraryForm } from "@/components/forms/ItineraryForm.tsx";
@@ -77,19 +77,18 @@ export const LaunchTripModal = ({ tripModalVisible, setTripModalVisible, launchT
             <TimeView value={arriveBefore} onChange={setArriveBefore} editable />
           </Row>
 
-          <Row spacing={8} style={{ alignItems: "center", justifyContent: "space-between" }}>
-            <Row>
-              <AppText style={[styles.modalText, { marginRight: 5 }, !roundTrip && { textDecorationLine: "line-through" }]}>
-                Retour depuis {to.city}
-              </AppText>
-              <Switch
-                trackColor={{ false: AppColors.grayBackground, true: AppColors.primaryColor }}
-                thumbColor={roundTrip ? AppColors.white : AppColors.grayBackground}
-                ios_backgroundColor={AppColors.grayBackground}
-                value={roundTrip}
-                onValueChange={setRoundTrip}
-              />
-            </Row>
+          <Row spacing={4} style={{ maxWidth: "100%", alignItems: "center", justifyContent: "space-between" }}>
+            <AppText style={[styles.modalText, !roundTrip && { textDecorationLine: "line-through" }]} ellipsizeMode="middle">
+              Retour depuis {to.city}
+            </AppText>
+            <Switch
+              trackColor={{ false: AppColors.grayBackground, true: AppColors.primaryColor }}
+              thumbColor={roundTrip ? AppColors.white : AppColors.grayBackground}
+              ios_backgroundColor={AppColors.grayBackground}
+              value={roundTrip}
+              onValueChange={setRoundTrip}
+            />
+            <View style={{ flex: 1 }} />
             <TimeView
               textStyle={!roundTrip && { textDecorationLine: "line-through" }}
               value={returnAfter}

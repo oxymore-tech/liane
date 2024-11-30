@@ -17,7 +17,7 @@ export const SimpleModal = ({ backgroundColor = AppColors.darkBlue, visible, set
   return (
     <Modal onBackButtonPress={hide} onBackdropPress={hide} isVisible={visible} onSwipeComplete={hide} style={styles.modal}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "position" : "height"}>
-        <View style={{ backgroundColor, padding: 16, margin: 16, borderRadius: 8 }}>
+        <View style={{ backgroundColor, padding: 16, borderRadius: 8 }}>
           <Row style={{ marginBottom: 8 }}>
             {!hideClose && (
               <AppPressable style={{ paddingBottom: 16 }} onPress={hide}>
@@ -33,7 +33,5 @@ export const SimpleModal = ({ backgroundColor = AppColors.darkBlue, visible, set
 };
 
 const styles = StyleSheet.create({
-  modal: {
-    margin: 0
-  }
+  modal: { margin: 8 }
 });
