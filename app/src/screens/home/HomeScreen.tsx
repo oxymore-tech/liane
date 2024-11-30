@@ -83,7 +83,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
             bottomSheetObservable={bottomSheetScroll}
             onMapMoved={computeLianeDisplay}
           />
-          <DefaultFloatingActions onPosition={setUserLocation} />
+          <DefaultFloatingActions onPosition={setUserLocation} position="top" />
           <HomeMapBottomSheetContainer
             lianes={lianes}
             isFetching={!!isFetching}

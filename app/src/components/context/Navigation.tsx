@@ -69,19 +69,19 @@ function Home() {
         { headerShown: false }
       )}
       {makeTab(
+        "Lianes",
+        ({ focused }) => {
+          return <BadgeTabIcon iconName="liane" focused={focused} size={iconSize} value={notifications} />;
+        },
+        CommunitiesScreen
+      )}
+      {makeTab(
         "Calendrier",
         ({ focused }) => {
           return <TabIcon iconName="calendar" focused={focused} size={iconSize} />;
         },
         MyTripsScreen,
         { headerShown: false }
-      )}
-      {makeTab(
-        "Lianes",
-        ({ focused }) => {
-          return <BadgeTabIcon iconName="liane" focused={focused} size={iconSize} value={notifications} />;
-        },
-        CommunitiesScreen
       )}
       {makeTab(
         "Vous",
