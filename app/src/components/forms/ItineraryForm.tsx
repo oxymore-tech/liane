@@ -63,6 +63,7 @@ export const ItineraryForm = ({
           onChangeFrom(v);
         }}
         value={from?.label || searchFrom || ""}
+        info={formatInfo(from)}
         onFocus={() => {
           onRequestFocus("from");
         }}
@@ -77,7 +78,8 @@ export const ItineraryForm = ({
           setSearchTo(v);
           onChangeTo(v);
         }}
-        value={to?.label || searchTo || ""}
+        value={to?.city || searchTo || ""}
+        info={formatInfo(to)}
         onFocus={() => {
           onRequestFocus("to");
         }}
@@ -115,3 +117,10 @@ export const ItineraryForm = ({
     </Column>
   );
 };
+
+function formatInfo(rallyingPoint?: RallyingPoint) {
+  if (!rallyingPoint) {
+    return;
+  }
+  return `${rallyingPoint.zipCode}, ${rallyingPoint.city}`;
+}

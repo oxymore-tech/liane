@@ -18,27 +18,21 @@ import { FloatingBackButton } from "@/components/FloatingBackButton";
 import { AppTabs } from "@/components/base/AppTabs";
 import { AppStatusBar } from "@/components/base/AppStatusBar";
 
+type RallyingPointFieldProps = {
+  onChange: (v: string) => void;
+  value: string;
+  editable?: boolean;
+  autoFocus?: boolean;
+  onFocus?: () => void;
+  showTrailing: boolean;
+  icon: React.ReactElement;
+  placeholder: string;
+  info?: string;
+};
+
 export const RallyingPointField = forwardRef(
   (
-    {
-      onChange,
-      value,
-      editable = true,
-      autoFocus = false,
-      onFocus = () => {},
-      showTrailing,
-      icon,
-      placeholder
-    }: {
-      onChange: (v: string) => void;
-      value: string;
-      editable?: boolean;
-      autoFocus?: boolean;
-      onFocus?: () => void;
-      showTrailing: boolean;
-      icon: React.ReactElement;
-      placeholder: string;
-    },
+    { onChange, value, editable = true, autoFocus = false, onFocus = () => {}, showTrailing, icon, placeholder, info }: RallyingPointFieldProps,
     ref
   ) => {
     const inputRef = useRef<TextInput>(null);
@@ -69,6 +63,7 @@ export const RallyingPointField = forwardRef(
           value={value}
           onChangeText={v => onChange(v)}
           onFocus={onFocus}
+          subText={info}
         />
       </View>
     );

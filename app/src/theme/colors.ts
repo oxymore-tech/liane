@@ -1,13 +1,10 @@
 import { ColorValue } from "react-native";
 
-export type AppColorSwatch = Readonly<{ [name in 500]: ColorValue }> &
-  Readonly<Partial<{ [name in 100 | 200 | 300 | 400 | 600 | 700 | 800 | 900]: ColorValue }>>;
-
 export enum AppColors {
   primaryColor = "#F25757",
   secondaryColor = "#3C88A6",
   backgroundColor = "#FFFFFF",
-  fontColor = "#000000",
+  fontColor = "#2E2E2E",
   grayBackground = "#E5E5E5",
   lightGrayBackground = "#EBE9E9",
   darkGray = "#2B2F35",
@@ -80,5 +77,3 @@ export const ContextualColors = {
     text: "#750000"
   }
 } as const;
-
-export const HouseColor: ColorValue[] = ["#C6E1FC", /* "#FFD7AA", */ "#FFBE76", "#FFAA4B", "#FF8459", "#FFADAF"];
