@@ -31,7 +31,7 @@ export function DayItem({ day, index, selected, required, disabled, onSelect, fo
         style={[
           styles.textContainer,
           selected ? styles.textSelectedContainer : null,
-          { fontSize: fontSize ?? 20, textDecorationLine: disabled ? "line-through" : undefined }
+          { fontSize: fontSize ?? 18, textDecorationLine: disabled ? "line-through" : undefined }
         ]}>
         {day.substring(0, 2)}
       </Text>

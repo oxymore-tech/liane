@@ -5,6 +5,7 @@ import { RallyingPoint, TimeOnly, TimeOnlyUtils, WayPoint } from "@liane/common"
 import { AppText } from "@/components/base/AppText";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppIcon, IconName } from "@/components/base/AppIcon.tsx";
+import { Row } from "@/components/base/AppLayout.tsx";
 
 type DisplayWayPointsProps = {
   wayPoints: WayPoint[];
@@ -35,19 +36,17 @@ type TripProps = { point: RallyingPoint; time?: TimeOnly; icon?: IconName; hideL
 
 const TripRow = ({ point, time, icon, hideLabel }: TripProps) => {
   return (
-    <View
+    <Row
       style={{
-        flexDirection: "row",
         justifyContent: "flex-start",
         alignItems: "center",
-        width: "100%"
+        flex: 1
       }}>
       {time ? (
         <AppText
           style={{
             fontWeight: "bold",
             fontSize: 17,
-            lineHeight: 27,
             color: AppColors.primaryColor,
             marginLeft: 20
           }}>
@@ -61,7 +60,7 @@ const TripRow = ({ point, time, icon, hideLabel }: TripProps) => {
           <View style={{ backgroundColor: AppColors.primaryColor, borderRadius: 16, margin: 5, padding: 4, marginHorizontal: 8 }} />
         </View>
       )}
-      <View style={{ flexDirection: "column", justifyContent: "center" }}>
+      <View style={{ flexDirection: "column", justifyContent: "center", flex: 1 }}>
         <AppText
           style={[
             {
@@ -74,18 +73,21 @@ const TripRow = ({ point, time, icon, hideLabel }: TripProps) => {
                   fontWeight: "normal"
                 }
               : { fontWeight: "bold" }
-          ]}>{`${point.city}`}</AppText>
+          ]}>{`${point.label}`}</AppText>
         {hideLabel ? null : (
           <AppText
+            ellipsizeMode="tail"
             style={{
               fontWeight: "normal",
               fontSize: 17,
               lineHeight: 25,
               color: AppColorPalettes.gray[600]
-            }}>{`${point.label}`}</AppText>
+            }}>
+            {point.city}
+          </AppText>
         )}
       </View>
-    </View>
+    </Row>
   );
 };
 

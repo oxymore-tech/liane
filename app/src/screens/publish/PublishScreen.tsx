@@ -257,7 +257,7 @@ const DaysStepView = ({ onChange, value, requiredDays }: StepProps<DayOfWeekFlag
   const isValid = daysOverlap(daysOfTheWeek, requiredDays) && daysOfTheWeek !== "0000000";
   return (
     <StepForm title="Quels jours voyagez-vous ?" onValidate={() => onChange(daysOfTheWeek)} disabled={!isValid}>
-      <DayOfTheWeekPicker requiredDays={requiredDays} selectedDays={daysOfTheWeek} onChangeDays={setDaysOfTheWeek} borderBottomDisplayed={true} />
+      <DayOfTheWeekPicker requiredDays={requiredDays} selectedDays={daysOfTheWeek} onChangeDays={setDaysOfTheWeek} />
       <AppText style={{ fontSize: 16, alignSelf: "flex-start", marginVertical: 20 }}>{daysMessage ?? "Sélectionnez un jour"}</AppText>
     </StepForm>
   );

@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
 
 import { DayOfWeekFlag } from "@liane/common";
 import { AppLocalization } from "@/api/i18n";
@@ -28,7 +28,6 @@ export const DayOfTheWeekPicker = ({
   daysSize,
   enabledDays,
   requiredDays,
-  borderBottomDisplayed = false,
   singleOptionMode = false,
   dualOptionMode = false
 }: DayOfTheWeekPickerProps) => {
@@ -68,24 +67,21 @@ export const DayOfTheWeekPicker = ({
   };
 
   return (
-    <View>
-      <Row style={styles.rowContainer} spacing={6}>
-        {AppLocalization.daysList.map((day: string, index: number) => (
-          <DayItem
-            key={day}
-            index={index}
-            day={day}
-            selected={selectedDaysString.charAt(index) === "1"}
-            disabled={enabledDays?.charAt(index) === "0"}
-            required={requiredDays?.charAt(index) === "1"}
-            size={size}
-            fontSize={fontSize}
-            onSelect={() => onChangeDays && selectDate(index)}
-          />
-        ))}
-      </Row>
-      {borderBottomDisplayed && <View style={styles.containerBorderStyle} />}
-    </View>
+    <Row style={styles.rowContainer} spacing={2}>
+      {AppLocalization.daysList.map((day: string, index: number) => (
+        <DayItem
+          key={day}
+          index={index}
+          day={day}
+          selected={selectedDaysString.charAt(index) === "1"}
+          disabled={enabledDays?.charAt(index) === "0"}
+          required={requiredDays?.charAt(index) === "1"}
+          size={size}
+          fontSize={fontSize}
+          onSelect={() => onChangeDays && selectDate(index)}
+        />
+      ))}
+    </Row>
   );
 };
 
@@ -95,6 +91,7 @@ const replaceSelectedDay = (selectedDay: string) => {
 
 const styles = StyleSheet.create({
   rowContainer: {
+    flex: 1,
     textAlign: "center",
     justifyContent: "center",
     flexWrap: "wrap"
