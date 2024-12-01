@@ -44,13 +44,7 @@ export function WeekHeader({ selectedDay, style, onSelect, list }: WeekHeaderPro
       <AppText style={styles.month}>{AppLocalization.formatMonth(selectedDay)}</AppText>
       <Row style={{ width: "100%", justifyContent: "space-between", marginVertical: 16 }}>
         {days.map((day, index) => (
-          <Day
-            key={index}
-            date={day}
-            selected={selectedDay.getDate() === day.getDate()}
-            onSelect={onSelect}
-            lianes={byDays.get(day.getDate()) ?? []}
-          />
+          <Day key={index} date={day} selected={selectedDay.getDate() === day.getDate()} onSelect={onSelect} lianes={byDays.get(day.getDate())} />
         ))}
       </Row>
     </Column>
@@ -61,15 +55,16 @@ type DayProps = {
   date: Date;
   selected?: boolean;
   onSelect: (date: Date) => void;
-  lianes: Liane[];
+  lianes?: Liane[];
 };
 
 function Day({ date, selected, onSelect, lianes }: DayProps) {
+  const hasLiane = useMemo(() => (lianes?.length ?? 0) > 0, [lianes]);
   return (
     <AppPressable style={{ flexDirection: "column", alignItems: "center" }} onPress={() => onSelect(date)}>
       <AppText style={styles.weekday}>{AppLocalization.formatDay(date).substring(0, 3)}</AppText>
       <AppText style={[styles.day, selected && { backgroundColor: AppColorPalettes.pink[500], color: AppColors.white }]}>{date.getDate()}</AppText>
-      {lianes?.length && <View style={[styles.dot, { backgroundColor: selected ? AppColors.white : AppColorPalettes.pink[500] }]} />}
+      {hasLiane && <View style={[styles.dot, { backgroundColor: selected ? AppColors.white : AppColorPalettes.pink[500] }]} />}
     </AppPressable>
   );
 }
