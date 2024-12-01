@@ -30,18 +30,24 @@ export interface TripListViewProps {
   loadMore?: () => void;
 }
 
-export const TripListView = ({ data, style, isFetching, onRefresh, loadMore }: TripListViewProps) => {
-  const { user } = useContext(AppContext);
-  const userId = user!.id!;
+export const TripListView = ({ data, style, isFetching = false, onRefresh, loadMore }: TripListViewProps) => {
+  const { navigation } = useAppNavigation();
   const isTripStarted = data.some(liane => liane.state === "Started");
+
+  const onSelect = useCallback(
+    (liane: Liane) => {
+      navigation.navigate({ name: "LianeDetail", params: { liane } });
+    },
+    [navigation]
+  );
 
   return (
     <FlatList
       style={style}
-      refreshControl={<RefreshControl refreshing={isFetching || false} onRefresh={onRefresh} />}
+      refreshControl={<RefreshControl refreshing={isFetching} onRefresh={onRefresh} />}
       data={data}
       showsVerticalScrollIndicator={false}
-      renderItem={props => renderLianeItem({ ...props, isTripStarted })}
+      renderItem={props => renderLianeItem({ ...props, isTripStarted, onSelect })}
       keyExtractor={item => item.id!}
       onEndReachedThreshold={0.2}
       onEndReached={loadMore}
@@ -144,16 +150,19 @@ const StartButton = ({ item }: { item: Liane }) => {
     }
   }, [item, queryClient, services.liane, shouldShow, showTutorial]);
 
-  return <AppButton color={AppColors.primaryColor} loading={loading} onPress={handle} value="C'est parti ?" />;
+  return <AppButton color={AppColorPalettes.pink[500]} loading={loading} onPress={handle} value="C'est parti ?" />;
 };
-const renderLianeItem = ({ item, index, isTripStarted }: ListRenderItemInfo<Liane> & { isTripStarted: boolean }) => {
-  const { navigation } = useAppNavigation();
 
+const renderLianeItem = ({
+  item,
+  isTripStarted,
+  onSelect
+}: ListRenderItemInfo<Liane> & { isTripStarted: boolean; onSelect: (item: Liane) => void }) => {
   return (
     <Pressable
-      style={[styles.item, styles.grayBorder, item.members.length > 1 ? {} : styles.disabledItem, index === 0 ? styles.itemFirst : {}]}
+      style={[styles.item, item.members.length > 1 ? {} : styles.disabledItem]}
       onPress={() => {
-        navigation.navigate({ name: "LianeDetail", params: { liane: item } });
+        onSelect(item);
       }}>
       <TripGeolocationProvider liane={item}>
         <LianeItem item={item} isTripStarted={isTripStarted} />
@@ -182,20 +191,11 @@ const styles = StyleSheet.create({
   disabledItem: { backgroundColor: WithAlpha(AppColors.white, 0.7) },
   item: {
     paddingVertical: 8,
+    marginVertical: 4,
     paddingHorizontal: 16,
     paddingBottom: 12,
     backgroundColor: AppColors.white,
-    borderBottomWidth: 1
-  },
-  itemFirst: {
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16
-  },
-  itemLast: {
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
-    paddingBottom: 0,
-    borderBottomWidth: 0
+    borderRadius: 16
   },
   driverContainer: {
     alignItems: "center",

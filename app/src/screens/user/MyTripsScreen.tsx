@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useQuery } from "react-query";
 import { Liane, Ref, UnauthorizedError } from "@liane/common";
@@ -26,6 +26,10 @@ const MyTripsScreen = () => {
 
   const [currentDate, setCurrentDate] = useState(new Date());
 
+  const list = useMemo(() => trip.data?.data ?? [], [trip.data]);
+
+  const currentList = useMemo(() => list.filter(liane => new Date(liane.departureTime).getDay() === currentDate.getDay()), [list, currentDate]);
+
   if (trip.error) {
     // Show content depending on the error or propagate it
     if (trip.error instanceof UnauthorizedError) {
@@ -45,14 +49,12 @@ const MyTripsScreen = () => {
     }
   }
 
-  const list = trip.data?.data ?? [];
-
   return (
     <Column style={[styles.container, { paddingTop: insets.top }]}>
-      <WeekHeader style={{ paddingHorizontal: 16 }} selectedDay={currentDate} onSelect={setCurrentDate} />
+      <WeekHeader style={{ paddingHorizontal: 16 }} selectedDay={currentDate} onSelect={setCurrentDate} list={list} />
       <TripListView
         style={{ flex: 1, backgroundColor: AppColors.lightGrayBackground, paddingHorizontal: 16 }}
-        data={list}
+        data={currentList}
         isFetching={trip.isFetching}
         onRefresh={() => trip.refetch()}
         reverseSort={false}

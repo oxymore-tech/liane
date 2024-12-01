@@ -2,17 +2,33 @@ import { Column, Row } from "@/components/base/AppLayout.tsx";
 import { AppText } from "@/components/base/AppText.tsx";
 import { AppLocalization } from "@/api/i18n.ts";
 import { useMemo } from "react";
-import { StyleProp, StyleSheet, ViewStyle } from "react-native";
+import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors.ts";
 import { AppPressable } from "@/components/base/AppPressable.tsx";
+import { Liane } from "@liane/common";
 
 type WeekHeaderProps = {
   selectedDay: Date;
   style?: StyleProp<ViewStyle>;
   onSelect: (date: Date) => void;
+  list: Liane[];
 };
 
-export function WeekHeader({ selectedDay, style, onSelect }: WeekHeaderProps) {
+export function WeekHeader({ selectedDay, style, onSelect, list }: WeekHeaderProps) {
+  const byDays = useMemo(() => {
+    const byDaysMap = new Map<number, Liane[]>();
+    list.forEach(liane => {
+      const date = new Date(liane.departureTime);
+      const day = date.getDate();
+      if (byDaysMap.has(day)) {
+        byDaysMap.get(day)!.push(liane);
+      } else {
+        byDaysMap.set(day, [liane]);
+      }
+    });
+    return byDaysMap;
+  }, [list]);
+
   const days = useMemo(() => {
     const now = new Date();
     const daysArray = [];
@@ -28,7 +44,7 @@ export function WeekHeader({ selectedDay, style, onSelect }: WeekHeaderProps) {
       <AppText style={styles.month}>{AppLocalization.formatMonth(selectedDay)}</AppText>
       <Row style={{ width: "100%", justifyContent: "space-between", marginVertical: 16 }}>
         {days.map((day, index) => (
-          <Day key={index} date={day} selected={selectedDay.getDate() === day.getDate()} onSelect={onSelect} />
+          <Day key={index} date={day} selected={selectedDay.getDate() === day.getDate()} onSelect={onSelect} lianes={byDays.get(day.getDate())} />
         ))}
       </Row>
     </Column>
@@ -39,13 +55,15 @@ type DayProps = {
   date: Date;
   selected?: boolean;
   onSelect: (date: Date) => void;
+  lianes: Liane[];
 };
 
-function Day({ date, selected, onSelect }: DayProps) {
+function Day({ date, selected, onSelect, lianes }: DayProps) {
   return (
     <AppPressable style={{ flexDirection: "column", alignItems: "center" }} onPress={() => onSelect(date)}>
       <AppText style={styles.weekday}>{AppLocalization.formatDay(date).substring(0, 3)}</AppText>
       <AppText style={[styles.day, selected && { backgroundColor: AppColorPalettes.pink[500], color: AppColors.white }]}>{date.getDate()}</AppText>
+      {lianes?.length && <View style={[styles.dot, { backgroundColor: selected ? AppColors.white : AppColorPalettes.pink[500] }]} />}
     </AppPressable>
   );
 }
@@ -69,5 +87,12 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     textAlign: "center"
+  },
+  dot: {
+    position: "absolute",
+    bottom: 0,
+    width: 5,
+    height: 5,
+    borderRadius: 5
   }
 });

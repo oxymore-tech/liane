@@ -141,10 +141,10 @@ const LianeDetailPage = ({ match }: { match: LianeMatch | undefined }) => {
           padding={{ top: 80 }}
           initialStop={1}
           style={{
-            backgroundColor: AppColors.gray100
+            backgroundColor: AppColorPalettes.gray[100]
           }}>
           {match && (
-            <ScrollView style={{ paddingHorizontal: 12, backgroundColor: AppColors.lightGrayBackground }}>
+            <ScrollView style={{ paddingHorizontal: 12, backgroundColor: AppColorPalettes.gray[100], paddingBottom: 100 }}>
               <LianeDetailView liane={match} />
             </ScrollView>
           )}
@@ -299,8 +299,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 24
   },
   bottomContainer: {
-    borderWidth: 2,
-    borderColor: AppColors.primaryColor,
     borderRadius: 20,
     marginTop: 12,
     padding: 8,
