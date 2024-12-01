@@ -84,7 +84,7 @@ function getPositionStyle(position: "bottom" | "middle" | "top"): StyleProp<View
     case "bottom":
       return { bottom: 20 };
     case "top":
-      return { top: 150 };
+      return { top: 60 };
     default:
       return { top: "40%" };
   }
