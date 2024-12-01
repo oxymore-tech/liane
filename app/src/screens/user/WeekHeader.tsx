@@ -44,7 +44,13 @@ export function WeekHeader({ selectedDay, style, onSelect, list }: WeekHeaderPro
       <AppText style={styles.month}>{AppLocalization.formatMonth(selectedDay)}</AppText>
       <Row style={{ width: "100%", justifyContent: "space-between", marginVertical: 16 }}>
         {days.map((day, index) => (
-          <Day key={index} date={day} selected={selectedDay.getDate() === day.getDate()} onSelect={onSelect} lianes={byDays.get(day.getDate())} />
+          <Day
+            key={index}
+            date={day}
+            selected={selectedDay.getDate() === day.getDate()}
+            onSelect={onSelect}
+            lianes={byDays.get(day.getDate()) ?? []}
+          />
         ))}
       </Row>
     </Column>
