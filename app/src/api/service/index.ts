@@ -3,8 +3,8 @@ import {
   AuthServiceClient,
   HttpClient,
   HubService,
-  LianeService,
-  LianeServiceClient,
+  TripService,
+  TripServiceClient,
   CommunityServiceClient,
   RallyingPointClient,
   RallyingPointService,
@@ -24,7 +24,7 @@ import { AppLogger as logger, ReactNativeLogger } from "@/api/logger";
 export type AppServices = {
   logger: ReactNativeLogger;
   auth: AuthService;
-  liane: LianeService;
+  trip: TripService;
   rallyingPoint: RallyingPointService;
   realTimeHub: HubService;
   location: LocationService;
@@ -37,7 +37,7 @@ const http = new HttpClient(RNAppEnv.baseUrl, logger as AppLogger, AppStorage);
 export const CreateAppServices = (): AppServices => ({
   logger,
   auth: new AuthServiceClient(http, AppStorage),
-  liane: new LianeServiceClient(http),
+  trip: new TripServiceClient(http),
   rallyingPoint: new RallyingPointClient(http),
   realTimeHub: new HubServiceClient(RNAppEnv.baseUrl, logger as AppLogger, AppStorage, http),
   location: new ReactNativeLocationService(RNAppEnv, AppStorage, http, DEFAULT_TLS),

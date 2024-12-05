@@ -86,7 +86,7 @@ export function NewRallyingPointRequestScreen() {
   const onError: SubmitErrorHandler<FormValues> = errors => {
     return AppLogger.debug("RALLYING_POINT", errors);
   };
-  const { bottom: paddingBottom, top: paddingTop } = useSafeAreaInsets();
+  const { bottom: paddingBottom } = useSafeAreaInsets();
   const [inputText, setInputText] = useState("");
 
   const [loading, setLoading] = useState(false);
@@ -118,7 +118,7 @@ export function NewRallyingPointRequestScreen() {
 
   if (showConfirmation) {
     return (
-      <Column style={{ flex: 1, paddingHorizontal: 24, alignItems: "center", paddingTop, paddingBottom }}>
+      <Column style={{ flex: 1, paddingHorizontal: 24, alignItems: "center", paddingBottom }}>
         <AppIcon name={"checkmark-circle-2"} color={AppColors.primaryColor} size={120} />
         <AppText style={{ fontSize: 24, fontWeight: "bold", textAlign: "center", marginVertical: 8 }}>Requête envoyée !</AppText>
 

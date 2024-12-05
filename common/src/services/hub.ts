@@ -1,4 +1,4 @@
-import { FullUser, Liane, PaginatedResponse, Ref, TrackingInfo } from "../api";
+import { FullUser, Trip, PaginatedResponse, Ref, TrackingInfo } from "../api";
 import { AppLogger } from "../logger";
 import { AppStorage } from "../storage";
 import { HttpClient } from "./http";
@@ -28,7 +28,7 @@ export interface HubService {
   subscribeToTrackingInfo(lianeId: string, callback: OnLocationCallback): Promise<{ closed: boolean; unsubscribe: () => Promise<void> }>;
 
   unreadNotifications: Observable<Record<Ref<CoLiane>, number>>;
-  tripUpdates: Observable<Liane>;
+  tripUpdates: Observable<Trip>;
   lianeUpdates: Observable<CoLiane>;
   userUpdates: Observable<FullUser>;
   hubState: Observable<HubState>;
@@ -42,7 +42,7 @@ export type OnLocationCallback = (l: TrackingInfo) => void;
 type UnreadOverview = Record<Ref<CoLiane>, number>;
 
 export abstract class AbstractHubService implements HubService {
-  tripUpdates = new Subject<Liane>();
+  tripUpdates = new Subject<Trip>();
   lianeUpdates = new Subject<CoLiane>();
   userUpdates = new Subject<FullUser>();
   unreadNotifications = new BehaviorSubject<Record<Ref<CoLiane>, number>>({});
@@ -87,7 +87,7 @@ export abstract class AbstractHubService implements HubService {
     }
   };
 
-  protected receiveTripUpdate = (trip: Liane) => {
+  protected receiveTripUpdate = (trip: Trip) => {
     this.tripUpdates.next(trip);
   };
 

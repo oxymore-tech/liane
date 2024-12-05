@@ -11,7 +11,7 @@ import {
   getTripCostContribution,
   getTripFromMatch,
   getUserTrip,
-  Liane,
+  Trip,
   LianeMatch
 } from "@liane/common";
 import { useTripStatus } from "@/components/trip/trip";
@@ -19,9 +19,8 @@ import { useAppNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
 import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery } from "react-query";
-import { TripDetailQueryKey } from "@/screens/user/MyTripsScreen";
+import { TripDetailQueryKey } from "@/screens/user/TripScheduleScreen";
 import { AppText } from "@/components/base/AppText";
 import { TripGeolocationProvider, useCarDelay, useTrackingInfo } from "@/screens/detail/TripGeolocationProvider";
 import { LianeMatchUserRouteLayer } from "@/components/map/layers/LianeMatchRouteLayer";
@@ -29,7 +28,7 @@ import { InfoItem } from "@/screens/detail/components/InfoItem";
 import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay";
 import { AppIcon } from "@/components/base/AppIcon";
 import { UserPicture } from "@/components/UserPicture";
-import { LianeStatusView } from "@/components/trip/LianeStatusView";
+import { TripStatusView } from "@/components/trip/TripStatusView.tsx";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { GeolocationSwitch } from "@/screens/detail/components/GeolocationSwitch";
@@ -38,31 +37,31 @@ import { WayPointsView } from "@/components/trip/WayPointsView";
 import { LianeProofDisplay } from "@/components/map/layers/LianeProofDisplay";
 import { LocationMarker } from "@/screens/detail/components/LocationMarker";
 
-export const LianeDetailScreen = () => {
+export const TripDetailScreen = () => {
   const { services, user } = useContext(AppContext);
-  const { route } = useAppNavigation<"LianeDetail">();
-  const lianeParam = route.params!.liane;
+  const { route } = useAppNavigation<"TripDetail">();
+  const tripParam = route.params.trip;
 
-  const { data: liane, refetch } = useQuery(TripDetailQueryKey(typeof lianeParam === "string" ? lianeParam : lianeParam.id!), () => {
-    if (typeof lianeParam === "string") {
-      return services.liane.get(lianeParam);
+  const { data: liane, refetch } = useQuery(TripDetailQueryKey(typeof tripParam === "string" ? tripParam : tripParam.id!), () => {
+    if (typeof tripParam === "string") {
+      return services.trip.get(tripParam);
     } else {
-      return lianeParam;
+      return tripParam;
     }
   });
 
   useEffect(() => {
     // Refresh page if object passed as param has changed
-    if (typeof lianeParam !== "string") {
+    if (typeof tripParam !== "string") {
       refetch();
     }
-  }, [refetch, lianeParam]);
+  }, [refetch, tripParam]);
 
   const match = useMemo(() => (liane ? toLianeMatch(liane, user!.id!) : undefined), [liane, user]);
   const lianeStatus = useTripStatus(liane ? liane : undefined);
   if (liane && ["Started", "StartingSoon"].includes(lianeStatus!)) {
     return (
-      <TripGeolocationProvider liane={liane}>
+      <TripGeolocationProvider trip={liane}>
         <LianeDetailPage match={match} />
       </TripGeolocationProvider>
     );
@@ -75,7 +74,6 @@ const LianeDetailPage = ({ match }: { match: LianeMatch | undefined }) => {
   const { navigation } = useAppNavigation();
 
   const ref = useRef<BottomSheetRefProps>(null);
-  const { top: insetsTop } = useSafeAreaInsets();
 
   const [bSheetTop, setBSheetTop] = useState<number>(0.7 * height);
 
@@ -87,12 +85,12 @@ const LianeDetailPage = ({ match }: { match: LianeMatch | undefined }) => {
     }
     const bSheetTopPixels = bSheetTop > 1 ? bSheetTop : height * bSheetTop;
     const bbox = getBoundingBox(tripMatch!.wayPoints.map(w => [w.rallyingPoint.location.lng, w.rallyingPoint.location.lat]));
-    bbox.paddingTop = bSheetTopPixels < height / 2 ? insetsTop + 96 : 24;
+    bbox.paddingTop = bSheetTopPixels < height / 2 ? 96 : 24;
     bbox.paddingLeft = 72;
     bbox.paddingRight = 72;
     bbox.paddingBottom = Math.min(bSheetTopPixels + 40, (height - bbox.paddingTop) / 2 + 24);
     return bbox;
-  }, [match, bSheetTop, height, tripMatch, insetsTop]);
+  }, [match, bSheetTop, height, tripMatch]);
 
   const driver = useMemo(() => match?.trip.members.find(m => m.user.id === match?.trip.driver.user)!.user, [match]);
   const trackingInfo = useTrackingInfo();
@@ -157,7 +155,7 @@ const LianeDetailPage = ({ match }: { match: LianeMatch | undefined }) => {
   );
 };
 
-const toLianeMatch = (trip: Liane, memberId: string): LianeMatch => {
+const toLianeMatch = (trip: Trip, memberId: string): LianeMatch => {
   const m = trip.members.find(u => u.user.id === memberId)!;
   return {
     trip,
@@ -170,13 +168,13 @@ const toLianeMatch = (trip: Liane, memberId: string): LianeMatch => {
   };
 };
 
-export const LianeWithDateView = (props: { liane: Liane }) => {
-  const date = capitalize(AppLocalization.formatMonthDay(new Date(props.liane.departureTime)));
+export const LianeWithDateView = (props: { trip: Trip }) => {
+  const date = capitalize(AppLocalization.formatMonthDay(new Date(props.trip.departureTime)));
   const { user } = useContext(AppContext);
-  const { wayPoints } = useMemo(() => getUserTrip(props.liane, user!.id!), [props.liane, user]);
+  const { wayPoints } = useMemo(() => getUserTrip(props.trip, user!.id!), [props.trip, user]);
   const passengers = useMemo(
-    () => props.liane.members.filter(m => m.user.id !== props.liane.driver.user && user?.id !== m.user.id),
-    [props.liane, user?.id]
+    () => props.trip.members.filter(m => m.user.id !== props.trip.driver.user && user?.id !== m.user.id),
+    [props.trip, user?.id]
   );
   const lastDriverLocUpdate = useCarDelay();
   return (
@@ -189,7 +187,7 @@ export const LianeWithDateView = (props: { liane: Liane }) => {
           {wayPoints.map(w => (
             <Row key={w.rallyingPoint.id} style={{ minHeight: 32, alignItems: "center" }}>
               {passengers
-                .filter(m => m.user.id !== props.liane.driver.user && m.from === w.rallyingPoint.id)
+                .filter(m => m.user.id !== props.trip.driver.user && m.from === w.rallyingPoint.id)
                 .map(m => (
                   <View key={m.user.id}>
                     <UserPicture url={m.user.pictureUrl} size={28} borderColor={AppColors.primaryColor} borderWidth={1} />
@@ -199,7 +197,7 @@ export const LianeWithDateView = (props: { liane: Liane }) => {
                   </View>
                 ))}
               {passengers
-                .filter(m => m.user.id !== props.liane.driver.user && m.to === w.rallyingPoint.id)
+                .filter(m => m.user.id !== props.trip.driver.user && m.to === w.rallyingPoint.id)
                 .map(m => (
                   <View key={m.user.id}>
                     <UserPicture url={m.user.pictureUrl} size={28} borderColor={AppColors.primaryColor} borderWidth={1} />
@@ -234,12 +232,12 @@ const LianeDetailView = ({ liane }: { liane: LianeMatch }) => {
             <AppText style={styles.driverText}>{driver.id === user!.id! ? "Moi" : driver.pseudo}</AppText>
           </Row>
         </Row>
-        <LianeWithDateView liane={liane.trip} />
+        <LianeWithDateView trip={liane.trip} />
       </View>
 
       {!["Finished", "Archived", "Canceled"].includes(liane.trip.state) && (
         <Row style={styles.statusLianeContainer}>
-          <LianeStatusView liane={liane.trip} />
+          <TripStatusView trip={liane.trip} user={user} />
           <GeolocationSwitch liane={liane.trip} />
         </Row>
       )}

@@ -10,6 +10,7 @@ import { AppIcon } from "@/components/base/AppIcon";
 export interface WayPointsViewProps {
   wayPoints: WayPoint[];
   carLocation?: Car;
+  dark?: boolean;
 }
 
 // TODO share state with detail view
@@ -29,12 +30,14 @@ export const WayPointView = ({
   wayPoint,
   type,
   isPast = false,
-  delay
+  delay,
+  dark
 }: {
   wayPoint: WayPoint;
   type: "pickup" | "deposit" | "step";
   isPast?: boolean;
   delay?: number | undefined;
+  dark?: boolean;
 }) => {
   return (
     <Row style={{ alignItems: "center" }} spacing={8}>
@@ -69,7 +72,9 @@ export const WayPointView = ({
         />
       )}
       <Column>
-        <AppText style={[styles.mainWayPointCity]}>{wayPoint.rallyingPoint.city}</AppText>
+        <AppText style={[styles.mainWayPointCity, { color: dark ? AppColorPalettes.gray[100] : AppColorPalettes.gray[800] }]}>
+          {wayPoint.rallyingPoint.city}
+        </AppText>
         <AppText style={[styles.mainWayPointLabel]}>{wayPoint.rallyingPoint.label}</AppText>
       </Column>
     </Row>
@@ -88,7 +93,7 @@ function computeDelay(carLocation: Car | undefined, wayPoints: WayPoint[]) {
   return (new Date(carLocation.at).getTime() + carLocation.delay - new Date(nextWayPoint.eta).getTime()) / 1000;
 }
 
-export const WayPointsView = ({ wayPoints, carLocation }: WayPointsViewProps) => {
+export const WayPointsView = ({ wayPoints, carLocation, dark }: WayPointsViewProps) => {
   const { to, from, steps } = useMemo(() => extractData(wayPoints), [wayPoints]);
   /* Open in map app
  () => showLocation({
@@ -108,11 +113,18 @@ export const WayPointsView = ({ wayPoints, carLocation }: WayPointsViewProps) =>
 
   return (
     <Column style={{ flexGrow: 1, flexShrink: 1 }}>
-      <WayPointView wayPoint={from} type={"pickup"} isPast={!!nextWayPointIndex && nextWayPointIndex > 0} delay={delay} />
+      <WayPointView wayPoint={from} type={"pickup"} isPast={!!nextWayPointIndex && nextWayPointIndex > 0} delay={delay} dark={dark} />
       {steps.map((s, i) => (
-        <WayPointView wayPoint={s} type={"step"} key={s.rallyingPoint.id} delay={delay} isPast={!!nextWayPointIndex && nextWayPointIndex > i + 1} />
+        <WayPointView
+          wayPoint={s}
+          type={"step"}
+          key={s.rallyingPoint.id}
+          delay={delay}
+          isPast={!!nextWayPointIndex && nextWayPointIndex > i + 1}
+          dark={dark}
+        />
       ))}
-      <WayPointView wayPoint={to} type={"deposit"} delay={delay} />
+      <WayPointView wayPoint={to} type={"deposit"} delay={delay} dark={dark} />
     </Column>
   );
 };

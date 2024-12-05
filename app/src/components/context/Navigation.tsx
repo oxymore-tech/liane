@@ -3,23 +3,21 @@ import { createNativeStackNavigator, NativeStackHeaderProps } from "@react-navig
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { NavigationScreenTitles } from "@/components/context/routing";
 import { AppText } from "@/components/base/AppText";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
-import { AppPressableIcon } from "@/components/base/AppPressable";
 import { useNavigation } from "@react-navigation/native";
 import { Row } from "@/components/base/AppLayout";
 import { AppContext } from "@/components/context/ContextProvider";
 import HomeScreen from "@/screens/home/HomeScreen";
-import MyTripsScreen from "@/screens/user/MyTripsScreen";
+import TripScheduleScreen from "@/screens/user/TripScheduleScreen";
 import { CommunitiesScreen } from "@/screens/communities/CommunitiesScreen";
 import { UserPicture } from "@/components/UserPicture";
 import { ProfileScreen } from "@/screens/user/ProfileScreen";
 import { ArchivedTripsScreen } from "@/screens/user/ArchivedTripsScreen";
 import { SettingsScreen } from "@/screens/user/SettingsScreen";
 import { PublishScreen } from "@/screens/publish/PublishScreen";
-import { LianeDetailScreen } from "@/screens/detail/LianeDetailScreen";
+import { TripDetailScreen } from "@/screens/detail/TripDetailScreen.tsx";
 import { LianeTripDetailScreen } from "@/screens/communities/LianeTripDetail.tsx";
 import { CommunitiesChatScreen } from "@/screens/communities/CommunitiesChatScreen";
 import { CommunitiesDetailScreen } from "@/screens/communities/CommunitiesDetailScreen";
@@ -65,8 +63,7 @@ function Home() {
         ({ focused }) => (
           <TabIcon iconName={"map-outline"} focused={focused} size={iconSize} />
         ),
-        HomeScreen,
-        { headerShown: false }
+        HomeScreen
       )}
       {makeTab(
         "Lianes",
@@ -80,8 +77,7 @@ function Home() {
         ({ focused }) => {
           return <TabIcon iconName="calendar" focused={focused} size={iconSize} />;
         },
-        MyTripsScreen,
-        { headerShown: false }
+        TripScheduleScreen
       )}
       {makeTab(
         "Vous",
@@ -107,27 +103,25 @@ function Navigation() {
 
   if (user) {
     return (
-      <Stack.Navigator
-        initialRouteName={"Home"}
-        screenOptions={{ header: PageHeader, contentStyle: { backgroundColor: AppColors.lightGrayBackground } }}>
-        <Stack.Screen name="Home" component={Home} options={{ headerShown: false }} />
+      <Stack.Navigator initialRouteName={"Home"} screenOptions={{ header: PageHeader }}>
+        <Stack.Screen name="Home" component={Home} />
         <Stack.Screen name="ArchivedTrips" component={ArchivedTripsScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
-        <Stack.Screen name="Publish" component={PublishScreen} options={{ headerShown: false, animation: "fade" }} />
-        <Stack.Screen name="LianeDetail" component={LianeDetailScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="CommunitiesChat" component={CommunitiesChatScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="LianeMapDetail" component={LianeMapDetailScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="LianeTripDetail" component={LianeTripDetailScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="CommunitiesDetails" component={CommunitiesDetailScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Publish" component={PublishScreen} options={{ headerBackVisible: true, animation: "fade" }} />
+        <Stack.Screen name="TripDetail" component={TripDetailScreen} />
+        <Stack.Screen name="CommunitiesChat" component={CommunitiesChatScreen} />
+        <Stack.Screen name="LianeMapDetail" component={LianeMapDetailScreen} />
+        <Stack.Screen name="LianeTripDetail" component={LianeTripDetailScreen} />
+        <Stack.Screen name="CommunitiesDetails" component={CommunitiesDetailScreen} />
+        <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} />
         <Stack.Screen
           name="TripGeolocationWizard"
           component={TripGeolocationWizard}
           options={{ headerShown: false, animation: "slide_from_bottom" }}
         />
-        <Stack.Screen name="Account" component={AccountScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="RallyingPointRequests" component={RallyingPointRequestsScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="MatchList" component={MatchListScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Account" component={AccountScreen} />
+        <Stack.Screen name="RallyingPointRequests" component={RallyingPointRequestsScreen} />
+        <Stack.Screen name="MatchList" component={MatchListScreen} />
       </Stack.Navigator>
     );
   }
@@ -189,29 +183,17 @@ const makeTab = (label: string, icon: (props: { focused: boolean }) => React.Rea
 
 export const PageHeader = (props: { title?: string | undefined; goBack?: () => void } & Partial<NativeStackHeaderProps>) => {
   const insets = useSafeAreaInsets();
-  // @ts-ignore
-  const defaultName = props.route?.name ? NavigationScreenTitles[props.route.name] || "" : "";
-  return (
-    <Row style={[styles.header, { paddingTop: insets.top + 16 }]} spacing={24}>
-      <AppPressableIcon
-        name={"arrow-ios-back-outline"}
-        color={AppColors.primaryColor}
-        size={32}
-        onPress={props.goBack || (() => props.navigation?.goBack())}
-      />
-      <AppText style={{ fontSize: 20, fontWeight: "bold", color: AppColors.primaryColor }}>{props.title || defaultName}</AppText>
-    </Row>
-  );
+  return <Row style={[styles.header, { paddingTop: insets.top }]} />;
 };
 
 const styles = StyleSheet.create({
   header: {
-    padding: 16,
+    paddingBottom: 8,
     backgroundColor: AppColors.white,
     alignItems: "center"
   },
   bottomBar: {
-    margin: 0,
+    paddingTop: 8,
     backgroundColor: AppColors.white,
     overflow: "hidden",
     alignItems: "stretch",
@@ -243,7 +225,7 @@ export const useBottomBarStyle = () => {
     styles.bottomBar,
     AppStyles.shadow,
     {
-      paddingBottom: insets.bottom,
+      paddingBottom: Math.min(insets.bottom, 16),
       minHeight: insets.bottom + 54
     }
   ];

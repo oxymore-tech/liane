@@ -1,4 +1,4 @@
-import { getUserTrip, Liane, MemberPing } from "@liane/common";
+import { getUserTrip, Trip, MemberPing } from "@liane/common";
 import { useTripGeolocation } from "@/screens/detail/TripGeolocationProvider";
 import { Row } from "@/components/base/AppLayout";
 import { ActivityIndicator, Alert, StyleSheet, Switch } from "react-native";
@@ -14,7 +14,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import GetLocation from "react-native-get-location";
 import { GeolocationPermission } from "../../../../native-modules/geolocation";
 
-export const startGeolocationService = async (liane: Liane, force: boolean = false) => {
+export const startGeolocationService = async (liane: Trip, force: boolean = false) => {
   const user = await AppStorage.getUser();
   const me = liane.members.find(l => l.user.id === user!.id)!;
   if (force || (me.geolocationLevel && me.geolocationLevel !== "None")) {
@@ -36,7 +36,7 @@ export const startGeolocationService = async (liane: Liane, force: boolean = fal
   }
 };
 
-export const GeolocationSwitch = ({ liane: match }: { liane: Liane }) => {
+export const GeolocationSwitch = ({ liane: match }: { liane: Trip }) => {
   const { user } = useContext(AppContext);
   const geoloc = useTripGeolocation();
   const { services } = useContext(AppContext);
@@ -98,13 +98,13 @@ export const GeolocationSwitch = ({ liane: match }: { liane: Liane }) => {
     }
 
     setTracked(undefined);
-    if (geoloc === undefined || geoloc.liane.id !== match.id || match.state !== "Started") {
-      services.liane
+    if (geoloc === undefined || geoloc.trip.id !== match.id || match.state !== "Started") {
+      services.trip
         .setTracked(match.id!, enabled ? "Shared" : "None")
         .then(() => setTracked(enabled))
         .catch(() => setTracked(oldValue));
     } else if (!geoloc.isActive) {
-      services.liane
+      services.trip
         .setTracked(match.id!, enabled ? "Shared" : "None")
         .then(() => {
           setTracked(enabled);
@@ -127,7 +127,7 @@ export const GeolocationSwitch = ({ liane: match }: { liane: Liane }) => {
           onPress: async () => {
             // Cancel ongoing geolocation
             await LianeGeolocation.stopSendingPings();
-            services.liane
+            services.trip
               .setTracked(match.id!, enabled ? "Shared" : "None")
               .then(() => setTracked(enabled))
               .catch(() => setTracked(oldValue));
@@ -141,7 +141,7 @@ export const GeolocationSwitch = ({ liane: match }: { liane: Liane }) => {
     return null;
   }
 
-  const isTrackedLive = isTracked && (!geoloc?.liane || geoloc.liane.id === match.id);
+  const isTrackedLive = isTracked && (!geoloc?.trip || geoloc.trip.id === match.id);
   return (
     <Row spacing={8}>
       {isTracked !== undefined && (

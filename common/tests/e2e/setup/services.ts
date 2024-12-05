@@ -7,7 +7,7 @@ import {
   EventServiceClient,
   HttpClient,
   HubServiceClient,
-  LianeServiceClient,
+  TripServiceClient,
   Ref,
   User
 } from "../../../src";
@@ -22,7 +22,7 @@ export const CreateServices = (storage?: AppStorage) => {
   const auth = new AuthServiceClient(http, storage);
   const hub = new HubServiceClient(`${TestEnv.API_URL}/api`, logger, storage, http);
   const signUpActor = new LoginActor(auth);
-  const liane = new LianeServiceClient(http);
+  const liane = new TripServiceClient(http);
   const community = new CommunityServiceClient(http);
   const event = new EventServiceClient(http);
   return { liane, community, storage, logger, http, auth, signUpActor, hub, event, retryStrategy };

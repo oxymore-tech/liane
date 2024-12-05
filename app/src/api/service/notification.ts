@@ -1,5 +1,5 @@
 import notifee, { Event, EventType } from "@notifee/react-native";
-import { FullUser, HttpClient, LianeServiceClient, Notification } from "@liane/common";
+import { FullUser, HttpClient, TripServiceClient, Notification } from "@liane/common";
 import messaging, { FirebaseMessagingTypes } from "@react-native-firebase/messaging";
 import { Linking, Platform } from "react-native";
 import { AppLogger } from "@/api/logger";
@@ -36,7 +36,7 @@ const pressActionMap = {
   loc: async (lianeId: string) => {
     const logger = AppLogger as any;
     const http = new HttpClient(RNAppEnv.baseUrl, logger, AppStorage);
-    const lianeService = new LianeServiceClient(http);
+    const lianeService = new TripServiceClient(http);
     const liane = await lianeService.get(lianeId);
     await lianeService.start(liane.id!).then(() => startGeolocationService(liane));
   }

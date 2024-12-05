@@ -1,25 +1,20 @@
-import React, { useCallback, useContext, useMemo, useState } from "react";
+import React, { useCallback, useContext, useState } from "react";
 
-import { FlatList, ListRenderItemInfo, Pressable, RefreshControl, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
-import { getUserTrip, IncomingTrip, Liane } from "@liane/common";
+import { FlatList, ListRenderItemInfo, Pressable, RefreshControl, StyleProp, StyleSheet, ViewStyle } from "react-native";
+import { IncomingTrip, Trip } from "@liane/common";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
-import { LianeStatusView } from "@/components/trip/LianeStatusView";
-import { Center, Row } from "@/components/base/AppLayout";
+import { Center } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
-import { UserPicture } from "@/components/UserPicture";
 import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
-import { WayPointsView } from "@/components/trip/WayPointsView";
-import { TripGeolocationProvider, useCarDelay } from "@/screens/detail/TripGeolocationProvider";
-import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { startGeolocationService } from "@/screens/detail/components/GeolocationSwitch";
-import { useTripStatus } from "@/components/trip/trip";
 import { AppLogger } from "@/api/logger";
 import { AppStyles } from "@/theme/styles.ts";
-import { TripQueryKey } from "@/screens/user/MyTripsScreen.tsx";
+import { TripQueryKey } from "@/screens/user/TripScheduleScreen";
 import { useQueryClient } from "react-query";
 import { AppButton } from "@/components/base/AppButton.tsx";
 import { AppModalNavigationContext } from "@/components/AppModalNavigationProvider.tsx";
+import { TripItem } from "@/screens/user/TripItem.tsx";
 
 export interface TripListViewProps {
   data: IncomingTrip[];
@@ -35,8 +30,8 @@ export const TripListView = ({ data, style, isFetching = false, onRefresh, loadM
   const isTripStarted = data.some(liane => liane.trip.state === "Started");
 
   const onSelect = useCallback(
-    (liane: Liane) => {
-      navigation.navigate({ name: "LianeDetail", params: { liane } });
+    (trip: Trip) => {
+      navigation.navigate({ name: "TripDetail", params: { trip } });
     },
     [navigation]
   );
@@ -47,7 +42,7 @@ export const TripListView = ({ data, style, isFetching = false, onRefresh, loadM
       refreshControl={<RefreshControl refreshing={isFetching} onRefresh={onRefresh} />}
       data={data}
       showsVerticalScrollIndicator={false}
-      renderItem={props => renderLianeItem({ ...props, isTripStarted, onSelect })}
+      renderItem={props => <TripItem {...props} />}
       keyExtractor={item => item.trip.id!}
       onEndReachedThreshold={0.2}
       onEndReached={loadMore}
@@ -59,76 +54,76 @@ export const TripListView = ({ data, style, isFetching = false, onRefresh, loadM
     />
   );
 };
+//
+// const LianeItem = ({ item, isTripStarted }: { item: IncomingTrip; isTripStarted: boolean }) => {
+//   const { user } = useContext(AppContext);
+//   const { navigation } = useAppNavigation();
+//
+//   const driver = useMemo(() => item.trip.members.find(l => l.user.id === item.trip.driver.user)!.user, [item]);
+//   const { wayPoints } = useMemo(() => getUserTrip(item.trip, user!.id!), [item, user]);
+//   const carLocation = useCarDelay();
+//   const status = useTripStatus(item.trip);
+//
+//   return (
+//     <View style={{ paddingBottom: 10 }}>
+//       <View>
+//         <Row style={styles.driverContainer}>
+//           <Row>
+//             <AppPressableOverlay
+//               style={{
+//                 borderRadius: 20,
+//                 borderWidth: 2,
+//                 borderColor: AppColors.lightGrayBackground
+//               }}
+//               onPress={e => {
+//                 navigation.navigate("CommunitiesChat", { lianeId: item.liane });
+//                 e.preventDefault();
+//               }}>
+//               <AppText style={{ color: AppColors.black, fontSize: 18, paddingVertical: 6, paddingHorizontal: 16 }}>Accéder au chat</AppText>
+//             </AppPressableOverlay>
+//           </Row>
+//           {status === "StartingSoon" && (isTripStarted ? <TripStatusView liane={item} /> : <StartButton item={item} />)}
+//           {status === "Started" && (
+//             <View
+//               style={{
+//                 backgroundColor: AppColors.primaryColor,
+//                 borderRadius: 20
+//               }}>
+//               <Row style={{ paddingVertical: 6, paddingHorizontal: 16 }} spacing={8}>
+//                 <AppText style={{ color: AppColors.white, fontSize: 18 }}>En cours</AppText>
+//               </Row>
+//             </View>
+//           )}
+//           {["Finished", "Archived", "Canceled"].includes(item.state) && <TripStatusView liane={item} />}
+//         </Row>
+//
+//         <View style={styles.lianeContainer}>
+//           <WayPointsView wayPoints={wayPoints} carLocation={carLocation} />
+//         </View>
+//       </View>
+//
+//       {!["Finished", "Archived", "Canceled"].includes(item.state) && item.members.length > 1 && (
+//         <Row style={styles.infoRowContainer} spacing={8}>
+//           <Row style={styles.statusRowContainer} spacing={8}>
+//             {["NotStarted", "Started"].includes(item.state) && (
+//               <Row style={{ position: "absolute", right: 42 }}>
+//                 {item.members.map((m, i) => (
+//                   <View
+//                     key={m.user.id}
+//                     style={{ position: "absolute", top: -16, right: 18 * (item.members.filter(u => u.user.id !== driver.id).length - (1 + i)) }}>
+//                     <UserPicture size={32} url={m.user.pictureUrl} id={m.user.id} />
+//                   </View>
+//                 ))}
+//               </Row>
+//             )}
+//           </Row>
+//         </Row>
+//       )}
+//     </View>
+//   );
+// };
 
-const LianeItem = ({ item, isTripStarted }: { item: IncomingTrip; isTripStarted: boolean }) => {
-  const { user } = useContext(AppContext);
-  const { navigation } = useAppNavigation();
-
-  const driver = useMemo(() => item.trip.members.find(l => l.user.id === item.trip.driver.user)!.user, [item]);
-  const { wayPoints } = useMemo(() => getUserTrip(item.trip, user!.id!), [item, user]);
-  const carLocation = useCarDelay();
-  const status = useTripStatus(item.trip);
-
-  return (
-    <View style={{ paddingBottom: 10 }}>
-      <View>
-        <Row style={styles.driverContainer}>
-          <Row>
-            <AppPressableOverlay
-              style={{
-                borderRadius: 20,
-                borderWidth: 2,
-                borderColor: AppColors.lightGrayBackground
-              }}
-              onPress={e => {
-                navigation.navigate("CommunitiesChat", { lianeId: item.liane });
-                e.preventDefault();
-              }}>
-              <AppText style={{ color: AppColors.black, fontSize: 18, paddingVertical: 6, paddingHorizontal: 16 }}>Accéder au chat</AppText>
-            </AppPressableOverlay>
-          </Row>
-          {status === "StartingSoon" && (isTripStarted ? <LianeStatusView liane={item} /> : <StartButton item={item} />)}
-          {status === "Started" && (
-            <View
-              style={{
-                backgroundColor: AppColors.primaryColor,
-                borderRadius: 20
-              }}>
-              <Row style={{ paddingVertical: 6, paddingHorizontal: 16 }} spacing={8}>
-                <AppText style={{ color: AppColors.white, fontSize: 18 }}>En cours</AppText>
-              </Row>
-            </View>
-          )}
-          {["Finished", "Archived", "Canceled"].includes(item.state) && <LianeStatusView liane={item} />}
-        </Row>
-
-        <View style={styles.lianeContainer}>
-          <WayPointsView wayPoints={wayPoints} carLocation={carLocation} />
-        </View>
-      </View>
-
-      {!["Finished", "Archived", "Canceled"].includes(item.state) && item.members.length > 1 && (
-        <Row style={styles.infoRowContainer} spacing={8}>
-          <Row style={styles.statusRowContainer} spacing={8}>
-            {["NotStarted", "Started"].includes(item.state) && (
-              <Row style={{ position: "absolute", right: 42 }}>
-                {item.members.map((m, i) => (
-                  <View
-                    key={m.user.id}
-                    style={{ position: "absolute", top: -16, right: 18 * (item.members.filter(u => u.user.id !== driver.id).length - (1 + i)) }}>
-                    <UserPicture size={32} url={m.user.pictureUrl} id={m.user.id} />
-                  </View>
-                ))}
-              </Row>
-            )}
-          </Row>
-        </Row>
-      )}
-    </View>
-  );
-};
-
-const StartButton = ({ item }: { item: Liane }) => {
+const StartButton = ({ item }: { item: Trip }) => {
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const { services } = useContext(AppContext);
@@ -140,7 +135,7 @@ const StartButton = ({ item }: { item: Liane }) => {
       if (shouldShow) {
         showTutorial("driver", item.id);
       }
-      await services.liane.start(item.id!);
+      await services.trip.start(item.id!);
       await queryClient.invalidateQueries(TripQueryKey);
       await startGeolocationService(item);
     } catch (e) {
@@ -148,7 +143,7 @@ const StartButton = ({ item }: { item: Liane }) => {
     } finally {
       setLoading(false);
     }
-  }, [item, queryClient, services.liane, shouldShow, showTutorial]);
+  }, [item, queryClient, services.trip, shouldShow, showTutorial]);
 
   return <AppButton color={AppColorPalettes.pink[500]} loading={loading} onPress={handle} value="C'est parti ?" />;
 };
@@ -157,17 +152,14 @@ const renderLianeItem = ({
   item,
   isTripStarted,
   onSelect
-}: ListRenderItemInfo<IncomingTrip> & { isTripStarted: boolean; onSelect: (item: Liane) => void }) => {
+}: ListRenderItemInfo<IncomingTrip> & { isTripStarted: boolean; onSelect: (item: Trip) => void }) => {
   return (
     <Pressable
       style={[styles.item, item.trip.members.length > 1 ? {} : styles.disabledItem]}
       onPress={() => {
         onSelect(item.trip);
-      }}>
-      <TripGeolocationProvider liane={item.trip}>
-        <LianeItem item={item} isTripStarted={isTripStarted} />
-      </TripGeolocationProvider>
-    </Pressable>
+      }}
+    />
   );
 };
 

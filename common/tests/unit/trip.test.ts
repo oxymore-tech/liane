@@ -1,4 +1,4 @@
-import { getTotalDistance, getTotalDuration, getTripCostContribution, getUserTrip, Liane, UserTrip } from "../../src";
+import { getTotalDistance, getTotalDuration, getTripCostContribution, getUserTrip, Trip, UserTrip } from "../../src";
 
 describe("trip", () => {
   test("should get user trip for augustin (the driver)", () => {
@@ -32,7 +32,7 @@ describe("trip", () => {
   });
 });
 
-const blajoux_mende: Liane = {
+const blajoux_mende: Trip = {
   id: "6675355f30087c234678a97c",
   createdBy: "63f73936d3436d499d1075f6",
   createdAt: "2024-06-21T08:10:07.027Z",
@@ -133,9 +133,7 @@ const blajoux_mende: Liane = {
       from: "48:blajoux_01",
       to: "48:mende_02",
       seatCount: 1,
-      geolocationLevel: "Shared",
-      departure: null,
-      cancellation: null
+      geolocationLevel: "Shared"
     },
     {
       user: {
@@ -154,17 +152,14 @@ const blajoux_mende: Liane = {
       from: "48:quezac_parking",
       to: "48:mende_01",
       seatCount: -1,
-      geolocationLevel: "Shared",
-      departure: null,
-      cancellation: null
+      geolocationLevel: "Shared"
     }
   ],
   driver: {
     user: "63f73936d3436d499d1075f6",
     canDrive: true
   },
-  state: "NotStarted",
-  conversation: "6675357930087c234678a97e"
+  state: "NotStarted"
 };
 
 const AugustinTrip: UserTrip = {

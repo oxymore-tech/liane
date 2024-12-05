@@ -1,20 +1,17 @@
 import { createNavigationContainerRef, LinkingOptions, RouteProp, useNavigation, useRoute } from "@react-navigation/native";
-import { CoLiane, CoLianeRequest, CoMatch, Liane, ResolvedLianeRequest, User } from "@liane/common";
+import { CoLiane, CoMatch, Ref, ResolvedLianeRequest, Trip, User } from "@liane/common";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack/src/types";
 import { checkInitialNotification } from "@/api/service/notification";
 
-export const HOME_TRIPS = "Calendrier";
 export type NavigationParamList = {
   Home: undefined;
-  [HOME_TRIPS]: undefined;
   Publish: { initialValue?: ResolvedLianeRequest; liane?: CoLiane | CoMatch };
   SignUp: undefined;
-  Chat: { conversationId: string; liane?: Liane };
   Lianes: undefined;
-  CommunitiesChat: { group?: CoMatch; liane?: CoLiane; request?: CoLianeRequest | ResolvedLianeRequest; lianeId?: string };
+  CommunitiesChat: { liane?: CoLiane | Ref<CoLiane> };
   LianeMapDetail: { liane: CoLiane | CoMatch; request?: CoLiane | ResolvedLianeRequest };
-  LianeTripDetail: { trip: Liane };
-  LianeDetail: { liane: Liane | string };
+  LianeTripDetail: { trip: Trip };
+  TripDetail: { trip: Ref<Trip> | Trip };
   Profile: { user: User } | undefined;
   ProfileEdit: undefined;
   Account: undefined;
@@ -40,7 +37,7 @@ export const AppLinking: LinkingOptions<NavigationParamList> = {
   config: {
     initialRouteName: "Home",
     screens: {
-      LianeDetail: {
+      TripDetail: {
         path: "trip/:liane"
       },
       MatchList: {

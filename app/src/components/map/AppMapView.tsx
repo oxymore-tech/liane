@@ -90,7 +90,6 @@ const AppMapView = forwardRef(
     const mapRef = useRef<MapLibreGL.MapView>();
     const cameraRef = useRef<MapLibreGL.Camera>();
     const [animated, setAnimated] = useState(false);
-    const insets = useSafeAreaInsets();
 
     const wd = useWindowDimensions();
     const scale = Platform.OS === "android" ? wd.scale : 1;
@@ -143,7 +142,7 @@ const AppMapView = forwardRef(
     }, [controller, userLocation]);
 
     return (
-      <View style={[styles.map, { paddingTop: insets.top }]}>
+      <View style={[styles.map]}>
         <MapLibreGL.MapView
           onLongPress={onLongPress ? e => onLongPress((e.geometry as Point).coordinates) : undefined}
           onPress={onPress ? e => onPress((e.geometry as Point).coordinates) : undefined}

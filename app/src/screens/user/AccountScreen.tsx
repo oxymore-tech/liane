@@ -1,6 +1,5 @@
 import React, { useContext } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppLocalization } from "@/api/i18n";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
@@ -16,14 +15,13 @@ import { ActionListItem } from "@/components/ActionItem";
 
 export const AccountScreen = () => {
   const { navigation } = useAppNavigation();
-  const { top: insetsTop } = useSafeAreaInsets();
   const { services, user, logout } = useContext(AppContext);
   return (
     <>
       <AppStatusBar style="light-content" />
       <ScrollView overScrollMode="never">
-        <Center style={[styles.infoContainer, { paddingTop: insetsTop + 24 }]}>
-          <Pressable style={[styles.backContainer, { top: insetsTop + 24 }]} onPress={navigation.goBack}>
+        <Center style={[styles.infoContainer, { paddingTop: 24 }]}>
+          <Pressable style={[styles.backContainer, { top: 24 }]} onPress={navigation.goBack}>
             <AppIcon name={"arrow-ios-back-outline"} color={AppColors.white} />
           </Pressable>
           <UserPicture size={180} url={user!.pictureUrl} id={user!.id} />

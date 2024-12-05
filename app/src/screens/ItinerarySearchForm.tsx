@@ -11,7 +11,7 @@ import {
   RallyingPoint,
   Ref,
   SearchedLocation,
-  Trip
+  Itinerary
 } from "@liane/common";
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
@@ -24,7 +24,7 @@ import { useDebounceValue } from "@/util/hooks/debounce";
 import { AppBackContextProvider } from "@/components/AppBackContextProvider.tsx";
 import { SelectOnMapView } from "@/screens/publish/SelectOnMapView.tsx";
 
-export const RecentTrip = ({ trip, style }: { trip: Trip; style?: StyleProp<ViewStyle> }) => {
+export const RecentTrip = ({ trip, style }: { trip: Itinerary; style?: StyleProp<ViewStyle> }) => {
   return (
     <Row style={style} spacing={12}>
       <Column style={{ justifyContent: "space-between", alignSelf: "stretch", paddingVertical: 8 }}>
@@ -47,8 +47,8 @@ export const RecentTrip = ({ trip, style }: { trip: Trip; style?: StyleProp<View
   );
 };
 
-export const CachedTripsView = (props: { onSelect: (trip: Trip) => void; filter?: string }) => {
-  const [recentTrips, setRecentTrips] = useState<Trip[]>([]);
+export const CachedTripsView = (props: { onSelect: (trip: Itinerary) => void; filter?: string }) => {
+  const [recentTrips, setRecentTrips] = useState<Itinerary[]>([]);
   const { services } = useContext(AppContext);
   useEffect(() => {
     services.location.getRecentTrips().then(r => {
@@ -388,9 +388,9 @@ export const PlaceSuggestions = (props: {
 export type Notice = { type: "info" | "error"; message: string } | "loading";
 
 export type ItinerarySearchFormProps = {
-  trip: Partial<Trip>;
+  trip: Partial<Itinerary>;
   liane?: Ref<CoLiane>;
-  updateTrip: (trip: Partial<Trip>) => void;
+  updateTrip: (trip: Partial<Itinerary>) => void;
   title?: string;
   style?: StyleProp<ViewStyle>;
   formWrapperStyle?: StyleProp<ViewStyle>;

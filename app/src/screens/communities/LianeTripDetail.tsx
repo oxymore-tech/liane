@@ -1,6 +1,5 @@
 import React, { useContext, useMemo } from "react";
 import { StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/base/AppText";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppPressableIcon } from "@/components/base/AppPressable";
@@ -12,19 +11,16 @@ import AppMapView from "@/components/map/AppMapView";
 
 import { DisplayWayPoints } from "@/components/communities/DisplayWayPoints";
 import { AppLocalization } from "@/api/i18n.ts";
-import { getBoundingBox, Liane } from "@liane/common";
+import { getBoundingBox, Trip } from "@liane/common";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider.tsx";
 import { LianeMatchLianeRouteLayer } from "@/components/map/layers/LianeMatchRouteLayer.tsx";
 import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay.tsx";
 
 export const LianeTripDetailScreen = () => {
   const { navigation, route } = useAppNavigation<"LianeTripDetail">();
-  const trip: Liane = route.params.trip;
+  const trip: Trip = route.params.trip;
   const { services } = useContext(AppContext);
-  const { top: insetsTop } = useSafeAreaInsets();
   const { height } = useAppWindowsDimensions();
-
-  const insets = useSafeAreaInsets();
 
   const joinTrip = async () => {
     if (trip && trip.id) {
@@ -46,17 +42,17 @@ export const LianeTripDetailScreen = () => {
     }
     const bSheetTopPixels = height * 0.4;
     const bbox = getBoundingBox(trip!.wayPoints.map(w => [w.rallyingPoint.location.lng, w.rallyingPoint.location.lat]));
-    bbox.paddingTop = bSheetTopPixels < height / 2 ? insetsTop + 96 : 24;
+    bbox.paddingTop = bSheetTopPixels < height / 2 ? 96 : 24;
     bbox.paddingLeft = 72;
     bbox.paddingRight = 72;
     bbox.paddingBottom = Math.min(bSheetTopPixels + 40, (height - bbox.paddingTop) / 2 + 24);
     return bbox;
-  }, [trip, height, insetsTop]);
+  }, [trip, height]);
 
   return (
     <View style={styles.mainContainer}>
-      <View style={{ paddingTop: insets.top, height: "100%", width: "100%" }}>
-        <View style={{ flexDirection: "row", position: "absolute", top: insets.top + 25, left: 15, zIndex: 40 }}>
+      <View style={{ height: "100%", width: "100%" }}>
+        <View style={{ flexDirection: "row", position: "absolute", top: 25, left: 15, zIndex: 40 }}>
           <View style={{ backgroundColor: AppColors.white, borderRadius: 90, marginRight: 5 }}>
             <AppPressableIcon onPress={() => navigation.goBack()} name={"arrow-ios-back-outline"} color={AppColors.primaryColor} size={32} />
           </View>

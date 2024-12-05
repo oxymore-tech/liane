@@ -7,7 +7,6 @@ import { APP_VERSION } from "@env";
 import { Center, Column } from "@/components/base/AppLayout";
 import { UserPicture } from "@/components/UserPicture";
 import { AppIcon } from "@/components/base/AppIcon";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ActionListItem } from "@/components/ActionItem";
 import { useAppNavigation } from "@/components/context/routing";
 import { capitalize, FullUser, User } from "@liane/common";
@@ -40,15 +39,14 @@ const ProfileView = ({ user }: { user: User }) => {
   const { user: loggedUser } = useContext(AppContext);
   const { navigation } = useAppNavigation<"Profile">();
 
-  const { top: insetsTop } = useSafeAreaInsets();
   const isMyPage = user!.id === loggedUser!.id;
   const displayedUser = isMyPage ? loggedUser! : user;
 
   return (
     <ScrollView overScrollMode="never">
-      <Center style={{ paddingHorizontal: 24, paddingTop: insetsTop + 24, paddingBottom: 12, backgroundColor: AppColors.secondaryColor }}>
+      <Center style={{ paddingHorizontal: 24, paddingTop: 24, paddingBottom: 12, backgroundColor: AppColors.secondaryColor }}>
         {!isMyPage && (
-          <Pressable style={{ position: "absolute", left: 24, top: insetsTop + 24 }} onPress={navigation.goBack}>
+          <Pressable style={{ position: "absolute", left: 24, top: 24 }} onPress={navigation.goBack}>
             <AppIcon name={"arrow-ios-back-outline"} color={AppColors.white} />
           </Pressable>
         )}

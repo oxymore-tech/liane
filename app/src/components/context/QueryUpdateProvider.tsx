@@ -1,8 +1,8 @@
 import React, { PropsWithChildren, useContext } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 import { useQueryClient } from "react-query";
-import { Liane, PaginatedResponse, TripStatus } from "@liane/common";
-import { TripDetailQueryKey, TripQueryKey } from "@/screens/user/MyTripsScreen";
+import { Trip, PaginatedResponse, TripStatus } from "@liane/common";
+import { TripDetailQueryKey, TripQueryKey } from "@/screens/user/TripScheduleScreen";
 import { useSubscription } from "@/util/hooks/subscription";
 import { LianeGeolocation } from "@/api/service/location";
 
@@ -15,7 +15,7 @@ const QueryUpdaterContext = React.createContext<IQueryUpdater>();
 
 export const FutureStates: TripStatus[] = ["NotStarted", "Started"];
 
-const updateLianeList = (old: PaginatedResponse<Liane>, liane: Liane) => {
+const updateLianeList = (old: PaginatedResponse<Trip>, liane: Trip) => {
   const found = old.data.findIndex(l => l.id === liane.id);
   if (FutureStates.includes(liane.state)) {
     if (found >= 0) {
@@ -37,16 +37,16 @@ export const QueryUpdateProvider = (props: PropsWithChildren) => {
 
   // Update liane local cache
 
-  useSubscription<Liane>(
+  useSubscription<Trip>(
     services.realTimeHub.tripUpdates,
     liane => {
-      queryClient.setQueryData<PaginatedResponse<Liane>>(TripQueryKey, old => {
+      queryClient.setQueryData<PaginatedResponse<Trip>>(TripQueryKey, old => {
         if (!old) {
           return { pageSize: 1, data: [liane] };
         }
         return updateLianeList(old, liane);
       });
-      queryClient.setQueryData<Liane>(TripDetailQueryKey(liane.id!), _ => liane);
+      queryClient.setQueryData<Trip>(TripDetailQueryKey(liane.id!), _ => liane);
 
       // Cancel pings if necessary
       LianeGeolocation.currentLiane().then(async current => {

@@ -17,8 +17,8 @@ import { AppBottomSheet, AppBottomSheetHandleHeight } from "@/components/base/Ap
 import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
 import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker.tsx";
 import { AppAvatars } from "@/components/UserPicture.tsx";
-import { AppButton } from "@/components/base/AppButton.tsx";
 import { ContextActions, PendingAction } from "@/components/communities/ContextActions.tsx";
+import { FloatingBackButton } from "@/components/FloatingBackButton.tsx";
 
 export const LianeMapDetailScreen = () => {
   const { navigation, route } = useAppNavigation<"LianeMapDetail">();
@@ -57,12 +57,12 @@ export const LianeMapDetailScreen = () => {
     const bSheetTopPixels = bSheetTop > 1 ? bSheetTop : bSheetTop * height;
     const coordinates = wayPoints.map(w => [w.rallyingPoint.location.lng, w.rallyingPoint.location.lat]);
     const bbox = getBoundingBox(coordinates);
-    bbox.paddingTop = insets.top;
+    bbox.paddingTop = 24;
     bbox.paddingLeft = 100;
     bbox.paddingRight = 100;
-    bbox.paddingBottom = bSheetTopPixels + 24;
+    bbox.paddingBottom = bSheetTopPixels;
     return bbox;
-  }, [bSheetTop, height, insets.top, wayPoints]);
+  }, [bSheetTop, height, wayPoints]);
 
   const handleJoin = useCallback(async () => {
     if (lianeRequest && lianeRequest.id) {
@@ -111,23 +111,7 @@ export const LianeMapDetailScreen = () => {
           <AppText style={{ color: ContextualColors.redAlert.text }}>{error.message}</AppText>
         </Center>
       )}
-      <View
-        style={{
-          flexDirection: "row",
-          position: "absolute",
-          top: insets.top + 25,
-          left: 15,
-          zIndex: 40,
-          shadowColor: AppColors.black,
-          elevation: 4
-        }}>
-        <AppButton
-          onPress={() => navigation.goBack()}
-          icon={"arrow-ios-back-outline"}
-          color={AppColors.white}
-          foregroundColor={AppColors.primaryColor}
-        />
-      </View>
+      <FloatingBackButton onPress={() => navigation.goBack()} />
       <AppMapView bounds={mapBounds}>
         {lianeId && <LianeMatchLianeRouteLayer wayPoints={wayPoints.map(w => w.rallyingPoint)} lianeId={lianeId} />}
         {wayPoints.map((w, i) => {

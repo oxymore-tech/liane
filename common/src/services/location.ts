@@ -38,8 +38,8 @@ export interface LocationService {
   getRecentLocations(): Promise<RallyingPoint[]>;
   cacheRecentPlaceLocation(rallyingPoint: SearchedLocation): Promise<SearchedLocation[]>;
   getRecentPlaceLocations(): Promise<SearchedLocation[]>;
-  cacheRecentTrip(trip: Trip): Promise<Trip[]>;
-  getRecentTrips(): Promise<Trip[]>;
+  cacheRecentTrip(trip: Itinerary): Promise<Itinerary[]>;
+  getRecentTrips(): Promise<Itinerary[]>;
   search(
     query: string,
     closeTo?: LatLng
@@ -54,12 +54,12 @@ export interface LocationService {
   postPing(ping: MemberPing, timestamp?: number): Promise<void>;
 }
 
-export type Trip = {
+export type Itinerary = {
   from: RallyingPoint;
   to: RallyingPoint;
 };
 
-export const getKeyForTrip = (trip: Trip) => {
+export const getKeyForTrip = (trip: Itinerary) => {
   return trip.from.id + "_" + trip.to.id;
 };
 
@@ -118,18 +118,18 @@ export abstract class AbstractLocationService implements LocationService {
     return (await this.storage.retrieveAsync<SearchedLocation[]>(recentPlacesKey)) ?? [];
   }
 
-  async cacheRecentTrip(trip: Trip): Promise<Trip[]> {
-    let cachedValues = (await this.storage.retrieveAsync<Trip[]>(tripsKey)) ?? [];
+  async cacheRecentTrip(trip: Itinerary): Promise<Itinerary[]> {
+    let cachedValues = (await this.storage.retrieveAsync<Itinerary[]>(tripsKey)) ?? [];
     cachedValues = cachedValues.filter(v => getKeyForTrip(v) !== getKeyForTrip(trip));
     cachedValues.unshift(trip);
     cachedValues = cachedValues.slice(0, cacheSize);
-    await this.storage.storeAsync<Trip[]>(tripsKey, cachedValues);
+    await this.storage.storeAsync<Itinerary[]>(tripsKey, cachedValues);
 
     return cachedValues;
   }
 
-  async getRecentTrips(): Promise<Trip[]> {
-    return (await this.storage.retrieveAsync<Trip[]>(tripsKey)) ?? [];
+  async getRecentTrips(): Promise<Itinerary[]> {
+    return (await this.storage.retrieveAsync<Itinerary[]>(tripsKey)) ?? [];
   }
 
   getLastKnownLocation(): LatLng {

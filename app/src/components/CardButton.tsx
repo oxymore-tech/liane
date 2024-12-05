@@ -80,7 +80,7 @@ const CardModal = ({ x, y, children, onClosed, color, useOkButton, onClose }: Ca
   const [closing, setClosing] = useState(false);
 
   const providedModalRect = useContext(ModalSizeContext);
-  const modalRect = providedModalRect || { left: 8, right: 8, top: 16 + insets.top, bottom: 16 + insets.bottom };
+  const modalRect = providedModalRect || { left: 8, right: 8, top: 16, bottom: 16 + insets.bottom };
 
   const closeModal = (validate: boolean) => {
     setClosing(true);

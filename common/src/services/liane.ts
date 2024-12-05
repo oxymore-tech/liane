@@ -1,7 +1,7 @@
 import {
   Feedback,
   GeolocationLevel,
-  Liane,
+  Trip,
   LianeMatchDisplay,
   LianeRequest,
   LianeSearchFilter,
@@ -13,13 +13,13 @@ import {
 import { FeatureCollection } from "geojson";
 import { HttpClient } from "./http";
 
-export interface LianeService {
-  get(lianeId: string): Promise<Liane>;
-  list(states: TripStatus[], pagination: PaginatedRequestParams): Promise<PaginatedResponse<Liane>>;
-  post(liane: LianeRequest): Promise<Liane>;
+export interface TripService {
+  get(lianeId: string): Promise<Trip>;
+  list(states: TripStatus[], pagination: PaginatedRequestParams): Promise<PaginatedResponse<Trip>>;
+  post(liane: LianeRequest): Promise<Trip>;
   match(filter: LianeSearchFilter): Promise<LianeMatchDisplay>;
   getContact(id: string, memberId: string): Promise<string>;
-  updateDepartureTime(id: string, departureTime: string): Promise<Liane>;
+  updateDepartureTime(id: string, departureTime: string): Promise<Trip>;
   updateFeedback(id: string, feedback: Feedback): Promise<void>;
   cancel(id: string): Promise<void>;
   start(lianeId: string): Promise<void>;
@@ -28,15 +28,16 @@ export interface LianeService {
   setTracked(id: string, level: GeolocationLevel): Promise<void>;
   getProof(id: string): Promise<FeatureCollection>;
 }
-export class LianeServiceClient implements LianeService {
+
+export class TripServiceClient implements TripService {
   constructor(protected http: HttpClient) {}
 
   async setTracked(id: string, level: GeolocationLevel): Promise<void> {
     await this.http.patch(`/trip/${id}/geolocation`, { body: level });
   }
 
-  async get(id: string): Promise<Liane> {
-    return await this.http.get<Liane>(`/trip/${id}`);
+  async get(id: string): Promise<Trip> {
+    return await this.http.get<Trip>(`/trip/${id}`);
   }
 
   async getProof(id: string): Promise<FeatureCollection> {
@@ -44,11 +45,11 @@ export class LianeServiceClient implements LianeService {
   }
 
   async list(states: TripStatus[] = ["NotStarted", "Started"], pagination?: PaginatedRequestParams) {
-    return await this.http.get<PaginatedResponse<Liane>>("/trip", { params: { ...(pagination ?? {}), state: states } });
+    return await this.http.get<PaginatedResponse<Trip>>("/trip", { params: { ...(pagination ?? {}), state: states } });
   }
 
-  async post(liane: LianeRequest): Promise<Liane> {
-    return await this.http.postAs<Liane>("/trip/", { body: liane });
+  async post(liane: LianeRequest): Promise<Trip> {
+    return await this.http.postAs<Trip>("/trip/", { body: liane });
   }
 
   async match(filter: LianeSearchFilter): Promise<LianeMatchDisplay> {
@@ -59,8 +60,8 @@ export class LianeServiceClient implements LianeService {
     return await this.http.get<string>(`/trip/${id}/members/${memberId}/contact`);
   }
 
-  updateDepartureTime(id: string, departureTime: string): Promise<Liane> {
-    return this.http.patchAs<Liane>(`/trip/${id}`, { body: <LianeUpdate>{ departureTime } });
+  updateDepartureTime(id: string, departureTime: string): Promise<Trip> {
+    return this.http.patchAs<Trip>(`/trip/${id}`, { body: <LianeUpdate>{ departureTime } });
   }
 
   async updateFeedback(id: string, feedback: Feedback): Promise<void> {

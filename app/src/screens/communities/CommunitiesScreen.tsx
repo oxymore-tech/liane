@@ -9,11 +9,9 @@ import { AppContext } from "@/components/context/ContextProvider";
 import { LianeListView } from "@/components/communities/LianeListView";
 import { AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DefaultFloatingActions } from "@/components/context/FloatingActions.tsx";
 
 export const CommunitiesScreen = () => {
-  const insets = useSafeAreaInsets();
   const { services } = useContext(AppContext);
 
   const lianeMatches = useQuery(CoLianeMatchQueryKey, () => services.community.match());
@@ -49,7 +47,7 @@ export const CommunitiesScreen = () => {
 
   const list = data ?? [];
   return (
-    <Column style={[styles.headerContainer, { paddingTop: insets.top }]}>
+    <Column style={styles.headerContainer}>
       <LianeListView data={list} isFetching={isFetching} onRefresh={() => lianeMatches.refetch()} />
       <DefaultFloatingActions actions={["add"]} />
     </Column>
@@ -58,13 +56,13 @@ export const CommunitiesScreen = () => {
 
 const styles = StyleSheet.create({
   headerContainer: {
-    padding: 16,
+    paddingHorizontal: 8,
     backgroundColor: AppColors.lightGrayBackground,
     zIndex: 3,
     flex: 1
   },
   container: {
-    marginHorizontal: 16,
+    marginHorizontal: 8,
     flex: 1
   }
 });

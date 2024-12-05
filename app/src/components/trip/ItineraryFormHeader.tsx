@@ -2,7 +2,7 @@ import Animated, { SlideInUp, SlideOutUp } from "react-native-reanimated";
 import { StyleProp, ViewStyle } from "react-native";
 import { ItineraryForm } from "@/components/forms/ItineraryForm";
 import React from "react";
-import { Trip } from "@liane/common";
+import { Itinerary } from "@liane/common";
 
 export type ToOrFrom = "to" | "from";
 
@@ -11,9 +11,9 @@ export type ItineraryFormHeaderProps = {
   field?: ToOrFrom;
   onChangeField?: (field: ToOrFrom, value: string) => void;
   onRequestFocus?: (field: ToOrFrom) => void;
-  trip: Partial<Trip>;
+  trip: Partial<Itinerary>;
   animateEntry?: boolean;
-  updateTrip: (trip: Partial<Trip>) => void;
+  updateTrip: (trip: Partial<Itinerary>) => void;
   title?: string;
   containerStyle?: StyleProp<ViewStyle>;
   style?: StyleProp<ViewStyle>;

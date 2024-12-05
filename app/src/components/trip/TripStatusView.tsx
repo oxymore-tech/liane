@@ -1,19 +1,19 @@
-import { LiveTripStatus, Liane } from "@liane/common";
+import { LiveTripStatus, Trip } from "@liane/common";
 import { useTripStatus } from "@/components/trip/trip";
 import { AppText } from "@/components/base/AppText";
 import React from "react";
 import { ColorValue, StyleProp, ViewStyle } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 
-export type LianeStatusViewProps = {
-  liane: Liane;
+type TripStatusViewProps = {
+  trip: Trip;
   style?: StyleProp<ViewStyle>;
 };
 
-export const LianeStatusView = ({ style, liane }: LianeStatusViewProps) => {
-  const lianeStatus = useTripStatus(liane);
-  const [statusText] = getLianeStatusStyle(lianeStatus!);
-  if (!statusText) {
+export function TripStatusView({ style, trip }: TripStatusViewProps) {
+  const status = useTripStatus(trip);
+  const [statusText] = getLianeStatusStyle(status!);
+  if (!status) {
     return null;
   }
   return (
@@ -34,7 +34,7 @@ export const LianeStatusView = ({ style, liane }: LianeStatusViewProps) => {
       {statusText}
     </AppText>
   );
-};
+}
 
 export const getLianeStatusStyle = (lianeStatus: LiveTripStatus): [string | undefined, ColorValue] => {
   let status;

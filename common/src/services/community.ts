@@ -3,7 +3,7 @@ import {
   DayOfWeekFlag,
   Entity,
   Identity,
-  Liane,
+  Trip,
   PaginatedRequestParams,
   PaginatedResponse,
   RallyingPoint,
@@ -102,7 +102,7 @@ export type CoLianeMember = {
 
 export type JoinTripQuery = {
   liane: Ref<CoLiane>;
-  trip: Ref<Liane>;
+  trip: Ref<Trip>;
   takeReturnTrip: boolean;
 };
 
@@ -114,14 +114,14 @@ export type LianeFilter = {
 
 export type Text = { type: "Text"; value: string };
 export type LianeRequestModified = { type: "LianeRequestModified"; value: string; lianeRequest: Ref<CoLianeRequest> };
-export type TripAdded = { type: "TripAdded"; value: string; trip: Ref<Liane> };
+export type TripAdded = { type: "TripAdded"; value: string; trip: Ref<Trip> };
 export type MemberRequested = { type: "MemberRequested"; value: string; user: Ref<User>; lianeRequest: Ref<CoLianeRequest> };
 export type MemberAdded = { type: "MemberAdded"; value: string; user: Ref<User>; lianeRequest: Ref<CoLianeRequest> };
 export type MemberRejected = { type: "MemberRejected"; value: string; user: Ref<User> };
 export type MemberLeft = { type: "MemberLeft"; value: string; user: Ref<User> };
-export type MemberJoinedTrip = { type: "MemberJoinedTrip"; value: string; user: Ref<User>; trip: Ref<Liane>; takeReturn: boolean };
-export type MemberLeftTrip = { type: "MemberLeftTrip"; value: string; user: Ref<User>; trip: Ref<Liane> };
-export type MemberHasStarted = { type: "MemberHasStarted"; value: string; user: Ref<User>; trip: Ref<Liane> };
+export type MemberJoinedTrip = { type: "MemberJoinedTrip"; value: string; user: Ref<User>; trip: Ref<Trip>; takeReturn: boolean };
+export type MemberLeftTrip = { type: "MemberLeftTrip"; value: string; user: Ref<User>; trip: Ref<Trip> };
+export type MemberHasStarted = { type: "MemberHasStarted"; value: string; user: Ref<User>; trip: Ref<Trip> };
 
 export type MessageContent =
   | Text
@@ -144,7 +144,7 @@ export type PendingMatch = {
 };
 
 export type IncomingTrip = {
-  trip: Liane;
+  trip: Trip;
   name: string;
   lianeRequest: Ref<CoLianeRequest>;
   booked: boolean;

@@ -5,7 +5,7 @@ import { AppIcon } from "@/components/base/AppIcon";
 import { Center, Row } from "@/components/base/AppLayout";
 
 import { AppColorPalettes } from "@/theme/colors";
-import { getUniqueColor, User } from "@liane/common";
+import { getUniqueColor, Ref, User } from "@liane/common";
 import { AppText } from "@/components/base/AppText.tsx";
 
 export type AvatarsProps = {
@@ -15,15 +15,16 @@ export type AvatarsProps = {
   borderWidth?: number;
   borderColor?: string;
   max?: number;
+  driver?: Ref<User>;
 };
 
-export const AppAvatars = ({ users, size = 28, style, max = 5 }: AvatarsProps) => {
+export const AppAvatars = ({ users, size = 28, style, max = 5, driver }: AvatarsProps) => {
   const rest = users.length - max;
   const filtered = rest === 1 ? users : users.filter((_, i) => i < max);
   return (
     <Row style={[style, { marginLeft: 10 }]}>
       {filtered.map(user => (
-        <AppAvatar key={user.id} size={size} user={user} style={{ marginLeft: -5 }} />
+        <AppAvatar key={user.id} size={size} user={user} style={{ marginLeft: -5 }} driver={user.id === driver} />
       ))}
       {rest > 1 && (
         <Center
@@ -48,9 +49,10 @@ export interface AppAvatarProps {
   borderWidth?: number;
   borderColor?: string;
   shadow?: boolean;
+  driver?: boolean;
 }
 
-export const AppAvatar = ({ user, size = 48, style, borderWidth = 0, borderColor = "transparent" }: AppAvatarProps) => {
+export const AppAvatar = ({ user, size = 48, style, borderWidth = 0, borderColor = "transparent", driver }: AppAvatarProps) => {
   const color = useMemo(() => {
     if (user.id) {
       const hue = (getUniqueColor(user.id) + 360) % 360;

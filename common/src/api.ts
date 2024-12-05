@@ -86,7 +86,38 @@ export type RallyingPointRequest = { point: Omit<Omit<RallyingPoint, "isActive">
 
 export type DayBoolean = "0" | "1";
 
-export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6; // First index is Sunday
+export enum DayOfWeek {
+  Monday = "Monday",
+  Tuesday = "Tuesday",
+  Wednesday = "Wednesday",
+  Thursday = "Thursday",
+  Friday = "Friday",
+  Saturday = "Saturday",
+  Sunday = "Sunday"
+}
+
+export class DayOfWeekUtils {
+  static from(day: number): DayOfWeek {
+    switch (day) {
+      case 0:
+        return DayOfWeek.Sunday;
+      case 1:
+        return DayOfWeek.Tuesday;
+      case 2:
+        return DayOfWeek.Wednesday;
+      case 3:
+        return DayOfWeek.Thursday;
+      case 4:
+        return DayOfWeek.Friday;
+      case 5:
+        return DayOfWeek.Saturday;
+      case 6:
+        return DayOfWeek.Monday;
+      default:
+        throw new Error("Invalid day of week");
+    }
+  }
+}
 
 export type DayOfWeekFlag = `${DayBoolean}${DayBoolean}${DayBoolean}${DayBoolean}${DayBoolean}${DayBoolean}${DayBoolean}`; // First index is Monday
 
@@ -99,10 +130,10 @@ export type LianeRequest = Identity & {
   to: Ref<RallyingPoint>;
 };
 
-export type Liane = Entity & {
+export type Trip = Entity & {
   liane: Ref<CoLiane>;
   departureTime: UTCDateTime;
-  return?: Ref<Liane>;
+  return?: Ref<Trip>;
   wayPoints: WayPoint[];
   members: LianeMember[];
   driver: { user: Ref<User>; canDrive: boolean };
@@ -188,7 +219,7 @@ export type Compatible = {
 export type Match = Exact | Compatible;
 
 export type LianeMatch = {
-  trip: Liane;
+  trip: Trip;
   match: Match;
   returnTime?: UTCDateTime;
   freeSeatsCount: number;
@@ -201,7 +232,7 @@ export const getPoint = (match: LianeMatch, type: "pickup" | "deposit"): Rallyin
 
 export type TrackedMemberLocation = {
   member: Ref<User>;
-  liane: Ref<Liane>;
+  liane: Ref<Trip>;
   at: UTCDateTime;
   nextPoint: Ref<RallyingPoint>;
   delay: TimeInMilliseconds;
@@ -218,7 +249,7 @@ export type Car = {
 };
 
 export type TrackingInfo = {
-  liane: Ref<Liane>;
+  liane: Ref<Trip>;
   car?: Car;
   otherMembers: { [id: string]: TrackedMemberLocation };
 };

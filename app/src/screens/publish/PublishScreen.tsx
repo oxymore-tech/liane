@@ -12,7 +12,7 @@ import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker";
 
 import { AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
-import { CoLianeRequest, DayOfWeekFlag, getLianeId, ResolvedLianeRequest, TimeOnly, Trip } from "@liane/common";
+import { CoLianeRequest, DayOfWeekFlag, getLianeId, ResolvedLianeRequest, TimeOnly, Itinerary } from "@liane/common";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppLocalization } from "@/api/i18n";
 import { AppTextInput } from "@/components/base/AppTextInput.tsx";
@@ -30,7 +30,7 @@ type StepProps<T> = {
 
 const MaxSteps = 5;
 
-function init(initialValue?: Partial<ResolvedLianeRequest>): { value: Partial<CoLianeRequest>; trip: Partial<Trip> } {
+function init(initialValue?: Partial<ResolvedLianeRequest>): { value: Partial<CoLianeRequest>; trip: Partial<Itinerary> } {
   if (!initialValue) {
     return {
       value: {
@@ -69,7 +69,7 @@ export const PublishScreen = () => {
   const lianeId = useMemo(() => (route.params.liane ? getLianeId(route.params.liane) : undefined), [route.params.liane]);
   const initValues = useMemo(() => init(route.params.initialValue), [route.params.initialValue]);
 
-  const [trip, setTrip] = useState<Partial<Trip>>(initValues.trip);
+  const [trip, setTrip] = useState<Partial<Itinerary>>(initValues.trip);
   const [lianeRequest, setLianeRequest] = useState<Partial<CoLianeRequest>>(initValues.value);
 
   const [step, setStep] = useState<number>(lianeId ? -1 : route.params.initialValue ? MaxSteps : -1);
@@ -125,7 +125,7 @@ export const PublishScreen = () => {
   );
 
   const handleUpdateTrip = useCallback(
-    async (t: Partial<Trip>) => {
+    async (t: Partial<Itinerary>) => {
       const updated = { ...trip, ...t };
       setTrip(updated);
       if (!updated.from || !updated.to) {

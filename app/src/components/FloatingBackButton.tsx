@@ -2,16 +2,14 @@ import { AppIcon } from "@/components/base/AppIcon";
 import { AppColors } from "@/theme/colors";
 import { ColorValue, Pressable, StyleSheet } from "react-native";
 import React from "react";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export const FloatingBackButton = (props: { onPress: () => void; color?: ColorValue; iconColor?: ColorValue; topOffset?: number }) => {
-  const insets = useSafeAreaInsets();
   return (
     <Pressable
       style={[
         styles.floatingBackButton,
         styles.actionButton,
-        { top: props.topOffset ?? -2, marginTop: 8 + insets.top },
+        { top: props.topOffset ?? -2, marginTop: 8 },
         props.color ? { backgroundColor: props.color } : {}
       ]}
       onPress={() => props.onPress()}>
@@ -25,8 +23,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginVertical: 8,
     position: "absolute",
-    backgroundColor: AppColors.backgroundColor,
-    zIndex: 200
+    backgroundColor: AppColors.backgroundColor
   },
   actionButton: {
     padding: 8,

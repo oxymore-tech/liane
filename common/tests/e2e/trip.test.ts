@@ -1,11 +1,11 @@
 import { CreateServices, UserContext } from "./setup/services";
 import { faker } from "@faker-js/faker";
-import { addSeconds, LatLng, Liane, sleep, TrackingInfo } from "../../src";
+import { addSeconds, LatLng, Trip, sleep, TrackingInfo } from "../../src";
 import fc from "fast-check";
 
 const users: UserContext[] = [];
 const userCount = 2;
-let trip: Liane | undefined;
+let trip: Trip | undefined;
 const pickup = "mairie:46185";
 const destination = "mairie:46309";
 beforeAll(async () => {

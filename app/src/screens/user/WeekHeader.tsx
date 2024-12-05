@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors.ts";
 import { AppPressable } from "@/components/base/AppPressable.tsx";
-import { DayOfWeek, IncomingTrip } from "@liane/common";
+import { DayOfWeek, DayOfWeekUtils, IncomingTrip } from "@liane/common";
 
 type WeekHeaderProps = {
   selectedDay: Date;
@@ -35,7 +35,7 @@ export function WeekHeader({ selectedDay, style, onSelect, incomingTrips }: Week
             date={day}
             selected={selectedDay.getDate() === day.getDate()}
             onSelect={onSelect}
-            incomingTrips={incomingTrips ? incomingTrips[day.getDay() as DayOfWeek] : undefined}
+            incomingTrips={incomingTrips ? incomingTrips[DayOfWeekUtils.from(day.getDay())] : undefined}
           />
         ))}
       </Row>
@@ -50,21 +50,27 @@ type DayProps = {
   incomingTrips?: IncomingTrip[];
 };
 
+type Status = "booked" | "available";
+
 function Day({ date, selected, onSelect, incomingTrips }: DayProps) {
-  const hasLiane = useMemo(() => (incomingTrips?.length ?? 0) > 0, [incomingTrips]);
-  const booked = useMemo(() => {
-    if (!incomingTrips) {
-      return false;
+  const indication = useMemo<Status | undefined>(() => {
+    if ((incomingTrips?.length ?? 0) === 0) {
+      return;
     }
-    return incomingTrips.some(trip => trip.booked);
+
+    return incomingTrips?.some(trip => trip.booked) ? "booked" : "available";
   }, [incomingTrips]);
+
   return (
     <AppPressable style={{ flexDirection: "column", alignItems: "center" }} onPress={() => onSelect(date)}>
       <AppText style={styles.weekday}>{AppLocalization.formatDay(date).substring(0, 3)}</AppText>
       <AppText style={[styles.day, selected && { backgroundColor: AppColorPalettes.pink[500], color: AppColors.white }]}>{date.getDate()}</AppText>
-      {hasLiane && (
+      {indication && (
         <View
-          style={[styles.dot, { backgroundColor: selected ? AppColors.white : booked ? AppColorPalettes.pink[500] : AppColorPalettes.gray[800] }]}
+          style={[
+            styles.dot,
+            { backgroundColor: selected ? AppColors.white : indication === "booked" ? AppColorPalettes.pink[500] : AppColorPalettes.gray[800] }
+          ]}
         />
       )}
     </AppPressable>
@@ -86,14 +92,14 @@ const styles = StyleSheet.create({
   day: {
     color: AppColorPalettes.gray[800],
     fontSize: 18,
-    borderRadius: 20,
-    width: 40,
-    height: 40,
+    borderRadius: 40,
+    width: 45,
+    height: 45,
     textAlign: "center"
   },
   dot: {
     position: "absolute",
-    bottom: 0,
+    bottom: 5,
     width: 5,
     height: 5,
     borderRadius: 5

@@ -1,6 +1,5 @@
 import React, { useContext, useMemo, useState } from "react";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Column } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { useAppNavigation } from "@/components/context/routing";
@@ -18,7 +17,6 @@ export const CommunitiesDetailScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesDetails">();
   const { services, user } = useContext(AppContext);
   const group = route.params.liane;
-  const insets = useSafeAreaInsets();
   const [myModalVisible, setMyModalVisible] = useState<boolean>(false);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
 
@@ -48,7 +46,7 @@ export const CommunitiesDetailScreen = () => {
 
   return (
     <View style={styles.mainContainer}>
-      <View style={[styles.header, { paddingTop: insets.top }]}>
+      <View style={styles.header}>
         <View style={styles.headerContent}>
           <View style={{ flexDirection: "row", width: "100%" }}>
             <AppPressableIcon onPress={() => navigation.goBack()} name={"arrow-ios-back-outline"} color={AppColors.white} size={32} />

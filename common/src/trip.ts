@@ -1,4 +1,4 @@
-import { addSeconds, Liane, LianeMatch, LianeMember, TripStatus, RallyingPoint, Ref, UnionUtils, User, UTCDateTime, WayPoint } from ".";
+import { addSeconds, Trip, LianeMatch, LianeMember, TripStatus, RallyingPoint, Ref, UnionUtils, User, UTCDateTime, WayPoint } from ".";
 
 export type UserTrip = {
   wayPoints: WayPoint[];
@@ -13,11 +13,11 @@ export function getTotalDistance(trip: WayPoint[]) {
   return trip.map(w => w.distance).reduce((d, acc) => d + acc, 0);
 }
 
-export function getMemberTrip(liane: Liane, member: LianeMember) {
+export function getMemberTrip(liane: Trip, member: LianeMember) {
   return getUserTrip(liane, member.user.id!);
 }
 
-export function getTripCostContribution(liane: Liane) {
+export function getTripCostContribution(liane: Trip) {
   const totalDistance = getTotalDistance(liane.wayPoints) / 1000;
   const baseKmPrice = 0.3;
   const cost = Math.trunc(totalDistance * baseKmPrice);
@@ -44,7 +44,7 @@ export function getTripCostContribution(liane: Liane) {
   return { cost: total_cost, total: Math.trunc(total), byMembers: byMembersWithDiscount };
 }
 
-export function getUserTrip(liane: Liane, user: Ref<User>) {
+export function getUserTrip(liane: Trip, user: Ref<User>) {
   const member = liane.members.find(m => m.user.id === user);
   return getTrip(liane.departureTime, liane.wayPoints, member?.to, member?.from);
 }
@@ -115,7 +115,7 @@ export function getTripMatch(to: RallyingPoint, from: RallyingPoint, originalTri
 
 export type LiveTripStatus = TripStatus | "StartingSoon";
 
-function getTimeForUser(liane: Liane, user: Ref<User>, type: "to" | "from"): [Date, number] {
+function getTimeForUser(liane: Trip, user: Ref<User>, type: "to" | "from"): [Date, number] {
   const pointId = liane.members.find(m => m.user.id === user)![type];
   const time = new Date(liane.wayPoints.find(w => w.rallyingPoint.id === pointId)!.eta);
   // @ts-ignore
@@ -123,7 +123,7 @@ function getTimeForUser(liane: Liane, user: Ref<User>, type: "to" | "from"): [Da
   return [time, delta];
 }
 
-export function getLiveTripStatus(liane: Liane, user: Ref<User>): { status: LiveTripStatus; nextUpdateMillis?: number } {
+export function getLiveTripStatus(liane: Trip, user: Ref<User>): { status: LiveTripStatus; nextUpdateMillis?: number } {
   if (liane.state === "NotStarted") {
     const [, delta] = getTimeForUser(liane, user, "from");
     if (delta <= 24 * 60 * 60 && delta > -1 * 2 * 60 * 60) {

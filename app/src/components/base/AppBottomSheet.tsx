@@ -4,7 +4,6 @@ import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { interpolate, interpolateColor, runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Observable, Subject } from "rxjs";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 import Handle from "@/components/base/Handle.tsx";
@@ -46,12 +45,11 @@ interface BottomSheetContext {
 const BottomSheetContext = createContext<BottomSheetContext>();
 
 export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
-  ({ onScrolled, children, style, canScroll, stops, margins, padding, initialStop = 0 }, ref) => {
+  ({ onScrolled, children, style, canScroll, stops, margins, initialStop = 0 }, ref) => {
     const marginBottom = margins?.bottom || 0;
-    const insets = useSafeAreaInsets();
-    const paddingTop = insets.top;
+    const paddingTop = 0;
     const { height, width } = useAppWindowsDimensions();
-    const fillLimit = padding?.top || 0;
+    const fillLimit = 0;
     const currentStop = useSharedValue<number>(initialStop);
 
     const getPixelValue = useCallback(

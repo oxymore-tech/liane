@@ -1,8 +1,8 @@
-import { LiveTripStatus, getLiveTripStatus, Liane } from "@liane/common";
+import { LiveTripStatus, getLiveTripStatus, Trip } from "@liane/common";
 import { useContext, useEffect, useState } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 
-export const useTripStatus = (liane?: Liane): LiveTripStatus | undefined => {
+export const useTripStatus = (liane?: Trip): LiveTripStatus | undefined => {
   const { user } = useContext(AppContext);
   const userId = user!.id!;
 

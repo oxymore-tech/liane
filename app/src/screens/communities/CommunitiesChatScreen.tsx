@@ -10,12 +10,12 @@ import { AppExpandingTextInput } from "@/components/base/AppExpandingTextInput";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppStyles } from "@/theme/styles";
 import { AppLogger } from "@/api/logger";
-import { MessageBubble } from "@/screens/communities/MessageBubble.tsx";
+import { MessageBubble } from "@/screens/communities/MessageBubble";
 import { useSubscription } from "@/util/hooks/subscription.ts";
-import { TripQueryKey } from "@/screens/user/MyTripsScreen.tsx";
+import { TripQueryKey } from "@/screens/user/TripScheduleScreen";
 import { useQueryClient } from "react-query";
-import { AppButton } from "@/components/base/AppButton.tsx";
-import { LaunchTripModal } from "@/screens/communities/LaunchTripModal.tsx";
+import { AppButton } from "@/components/base/AppButton";
+import { LaunchTripModal } from "@/screens/communities/LaunchTripModal";
 
 export const CommunitiesChatScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesChat">();
@@ -31,6 +31,7 @@ export const CommunitiesChatScreen = () => {
   const [liane, setLiane] = useState<CoLiane | undefined>(undefined);
 
   const [tripModalVisible, setTripModalVisible] = useState(false);
+  const [loading, setLoading] = useState(typeof route.params.liane === "string");
 
   useSubscription<CoLiane>(
     services.realTimeHub.lianeUpdates,
@@ -40,19 +41,6 @@ export const CommunitiesChatScreen = () => {
       }
     },
     [liane?.id]
-  );
-
-  const fetchLiane = useCallback(
-    async (id: string) => {
-      try {
-        const l: CoLiane = await services.community.get(id);
-        setLiane(l);
-        return l;
-      } catch (e) {
-        AppLogger.debug("COMMUNITIES", "Au moment de récupérer la liane, une erreur c'est produite", e);
-      }
-    },
-    [services.community]
   );
 
   const sendMessage = useCallback(async () => {
@@ -104,7 +92,7 @@ export const CommunitiesChatScreen = () => {
   const launchTrip = useCallback(
     async (arriveAt: Date, returnAt: Date | undefined, from: Ref<RallyingPoint>, to: Ref<RallyingPoint>) => {
       setLaunching(true);
-      await services.liane.post({
+      await services.trip.post({
         liane: liane!.id!,
         arriveAt: arriveAt.toISOString(),
         returnAt: returnAt?.toISOString(),
@@ -116,21 +104,21 @@ export const CommunitiesChatScreen = () => {
       setLaunching(false);
       setTripModalVisible(false);
     },
-    [liane, me, queryClient, services.liane]
+    [liane, me, queryClient, services.trip]
   );
 
   useEffect(() => {
     setLiane(undefined);
 
-    if (route.params.liane) {
-      // Lorsqu'on arrive directement par une liane
-      setLiane(route.params.liane);
+    if (typeof route.params.liane === "string") {
+      services.community
+        .get(route.params.liane)
+        .then(setLiane)
+        .finally(() => setLoading(false));
+      return;
     }
-    if (route.params.lianeId) {
-      // Lorsqu'on arrive par une notification
-      fetchLiane(route.params.lianeId).then();
-    }
-  }, [fetchLiane, route.params, services.community]);
+    setLiane(route.params.liane);
+  }, [route.params, services.community]);
 
   useEffect(() => {
     if (liane && liane.id) {
@@ -153,11 +141,13 @@ export const CommunitiesChatScreen = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [liane, services.realTimeHub]);
 
+  if (loading) {
+    return <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />;
+  }
+
   return (
     <View style={[styles.mainContainer, { paddingBottom: insets.bottom }]}>
-      <Row
-        style={{ paddingTop: insets.top, backgroundColor: AppColors.white, justifyContent: "space-between", alignItems: "center", padding: 16 }}
-        spacing={16}>
+      <Row style={{ backgroundColor: AppColors.white, justifyContent: "space-between", alignItems: "center", padding: 16 }} spacing={16}>
         <AppButton onPress={() => navigation.goBack()} icon={"arrow-ios-back-outline"} color={AppColors.primaryColor} />
         <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 16, lineHeight: 27, color: AppColors.primaryColor }}>{name}</AppText>
         <AppButton

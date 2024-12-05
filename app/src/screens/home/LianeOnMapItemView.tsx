@@ -21,12 +21,10 @@ export const LianeOnMapItem = ({ item, openLiane }: LianeOnMapItemProps) => {
         <View
           style={{
             backgroundColor: AppColors.backgroundColor,
-            paddingLeft: 10,
+            paddingLeft: 8,
             flex: 1,
             marginTop: 10,
-            borderRadius: 8,
-            borderWidth: 1,
-            borderColor: AppColors.grayBackground
+            borderRadius: 8
           }}>
           <View style={{ paddingTop: 10, flexDirection: "row", justifyContent: "flex-start", paddingRight: 32 }}>
             <AppText style={styles.city}>{from?.city}</AppText>

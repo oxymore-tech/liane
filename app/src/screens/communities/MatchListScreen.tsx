@@ -1,6 +1,5 @@
 import React, { useContext, useMemo } from "react";
 import { Pressable, SectionList, StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Center, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { useAppNavigation } from "@/components/context/routing";
@@ -23,8 +22,6 @@ export const MatchListScreen = () => {
   const lianeRequest = route.params.lianeRequest;
   const unread = useObservable(services.realTimeHub.unreadNotifications, {});
 
-  const insets = useSafeAreaInsets();
-
   const sections = useMemo(() => {
     return Object.entries(
       ArrayUtils.groupBy(matches, m => {
@@ -42,9 +39,7 @@ export const MatchListScreen = () => {
 
   return (
     <View style={styles.mainContainer}>
-      <Row
-        style={{ paddingTop: insets.top, backgroundColor: AppColors.white, justifyContent: "flex-start", alignItems: "center", padding: 16 }}
-        spacing={16}>
+      <Row style={{ backgroundColor: AppColors.white, justifyContent: "flex-start", alignItems: "center", padding: 16 }} spacing={16}>
         <AppButton onPress={() => navigation.goBack()} icon={"arrow-ios-back-outline"} color={AppColors.primaryColor} />
         <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 16, lineHeight: 27, color: AppColors.black }}>Propositions</AppText>
       </Row>
@@ -149,7 +144,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginTop: 10,
-    marginHorizontal: 16,
+    marginHorizontal: 8,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: AppColors.grayBackground,

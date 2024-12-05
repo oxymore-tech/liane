@@ -1,7 +1,7 @@
-import { LatLng, Liane, Ref } from "./api";
+import { LatLng, Trip, Ref } from "./api";
 
 export type MemberPing = {
-  trip: Ref<Liane>;
+  trip: Ref<Trip>;
   timestamp: number;
   coordinate?: LatLng;
 };

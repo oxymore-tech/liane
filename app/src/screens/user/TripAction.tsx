@@ -1,15 +1,15 @@
 import { Pressable } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors.ts";
 import { AppText } from "@/components/base/AppText.tsx";
-import { getLianeStatusStyle } from "@/components/trip/LianeStatusView.tsx";
+import { getLianeStatusStyle } from "@/components/trip/TripStatusView.tsx";
 import React from "react";
-import { Liane, User } from "@liane/common";
+import { Trip, User } from "@liane/common";
 
 type TripActionsProps = {
-  trip: Liane;
+  trip: Trip;
   user: User;
-  onQuit: (trip: Liane) => void;
-  onJoin: (trip: Liane) => void;
+  onQuit: (trip: Trip) => void;
+  onJoin: (trip: Trip) => void;
 };
 
 export function TripAction({ trip, onQuit, onJoin, user }: TripActionsProps) {
