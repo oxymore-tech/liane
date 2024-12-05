@@ -88,12 +88,14 @@ public sealed class TripServiceImpl(
 
   public async Task<ImmutableList<Api.Trip.Trip>> GetIncomingTrips(IEnumerable<Ref<Api.Community.Liane>> lianeFilter)
   {
-    var now = DateTime.UtcNow;
+    var today = DateOnly.FromDateTime(DateTime.UtcNow);
+    var start = new DateTime(today, new TimeOnly(), DateTimeKind.Utc);
+    var end = new DateTime(today.AddDays(6), new TimeOnly(23,59,59), DateTimeKind.Utc);
     return await Collection.Find(l =>
         lianeFilter.Contains(l.Liane)
         && (l.State == TripStatus.NotStarted || l.State == TripStatus.Started)
-        && l.DepartureTime > now
-        && l.DepartureTime < now.AddDays(8))
+        && l.DepartureTime > start
+        && l.DepartureTime <= end)
       .SortBy(l => l.DepartureTime)
       .SelectAsync(MapEntity);
   }
