@@ -23,7 +23,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginVertical: 8,
     position: "absolute",
-    backgroundColor: AppColors.backgroundColor
+    backgroundColor: AppColors.backgroundColor,
+    zIndex: 200
   },
   actionButton: {
     padding: 8,
