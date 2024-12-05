@@ -116,7 +116,11 @@ export function getTripMatch(to: RallyingPoint, from: RallyingPoint, originalTri
 export type LiveTripStatus = TripStatus | "StartingSoon";
 
 function getTimeForUser(liane: Trip, user: Ref<User>, type: "to" | "from"): [Date, number] {
-  const pointId = liane.members.find(m => m.user.id === user)![type];
+  const find = liane.members.find(m => m.user.id === user);
+  if (!find) {
+    return [new Date(), 0];
+  }
+  const pointId = find[type];
   const time = new Date(liane.wayPoints.find(w => w.rallyingPoint.id === pointId)!.eta);
   // @ts-ignore
   const delta = (time - new Date()) / 1000;
