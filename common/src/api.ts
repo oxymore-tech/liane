@@ -85,6 +85,9 @@ export type RallyingPoint = Identity & {
 export type RallyingPointRequest = { point: Omit<Omit<RallyingPoint, "isActive">, "id">; comment: string } & Entity;
 
 export type DayBoolean = "0" | "1";
+
+export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6; // First index is Sunday
+
 export type DayOfWeekFlag = `${DayBoolean}${DayBoolean}${DayBoolean}${DayBoolean}${DayBoolean}${DayBoolean}${DayBoolean}`; // First index is Monday
 
 export type LianeRequest = Identity & {

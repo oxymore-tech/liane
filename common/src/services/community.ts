@@ -1,4 +1,5 @@
 import {
+  DayOfWeek,
   DayOfWeekFlag,
   Entity,
   Identity,
@@ -142,6 +143,13 @@ export type PendingMatch = {
   isReverseDirection: boolean;
 };
 
+export type IncomingTrip = {
+  trip: Liane;
+  name: string;
+  lianeRequest: Ref<CoLianeRequest>;
+  booked: boolean;
+};
+
 export function isLiane(l: CoLiane | CoMatch): l is CoLiane {
   return (l as any).wayPoints;
 }
@@ -171,7 +179,7 @@ export interface CommunityService {
 
   reject(lianeRequest: string, liane: string): Promise<CoLiane>;
 
-  getIncomingTrips(liane: string): Promise<Liane[]>;
+  getIncomingTrips(): Promise<Record<DayOfWeek, IncomingTrip[]>>;
 
   joinTrip(query: JoinTripQuery): Promise<boolean>;
 
@@ -215,8 +223,8 @@ export class CommunityServiceClient implements CommunityService {
     return this.http.postAs<CoLiane>(`/community/liane/${liane}/reject/${lianeRequest}`);
   }
 
-  getIncomingTrips(liane: string) {
-    return this.http.get<Liane[]>(`/community/liane/${liane}/incoming_trip`);
+  getIncomingTrips() {
+    return this.http.get<Record<DayOfWeek, IncomingTrip[]>>(`/community/liane/incoming_trip`);
   }
 
   getTrip(liane: string, lianeRequest?: string): Promise<WayPoint[]> {

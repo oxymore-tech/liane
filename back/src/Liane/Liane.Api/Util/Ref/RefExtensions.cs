@@ -8,6 +8,12 @@ namespace Liane.Api.Util.Ref;
 
 public static class RefExtensions
 {
+  public static Ref<T> AsRef<T>(this Guid id)
+    where T : class, IIdentity<Guid>
+  {
+    return id;
+  }
+  
   public static Ref<T> AsRef<T>(this string id)
     where T : class, IIdentity<string>
   {

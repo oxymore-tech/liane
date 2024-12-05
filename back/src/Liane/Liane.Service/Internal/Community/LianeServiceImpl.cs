@@ -24,6 +24,8 @@ using Match = Liane.Api.Community.Match;
 
 namespace Liane.Service.Internal.Community;
 
+using IncomingTrips = ImmutableDictionary<DayOfWeek, ImmutableList<IncomingTrip>>;
+
 public sealed class LianeServiceImpl(
   PostgisDatabase db,
   ICurrentContext currentContext,
@@ -36,6 +38,46 @@ public sealed class LianeServiceImpl(
   ITripService tripService,
   EventDispatcher eventDispatcher) : ILianeService
 {
+  public async Task<IncomingTrips> GetIncomingTrips()
+  {
+    var userId = currentContext.CurrentUser().Id;
+    using var connection = db.NewConnection();
+
+    var links = (await connection.QueryAsync<(Guid, Guid)>("""
+                                                           SELECT liane_request_id, liane_id
+                                                           FROM liane_request lr, liane_member lm
+                                                           WHERE lr.created_by = @userId AND
+                                                                 lr.id = lm.liane_request_id AND
+                                                                 lm.joined_at IS NOT NULL
+                                                           """)).ToImmutableList();
+
+    var trips = await tripService.GetIncomingTrips(links.Select(l => l.Item2.AsRef<Api.Community.Liane>()));
+    var lianes = await lianeFetcher.List(links.Select(l => l.Item2));
+    var lianeRequests = await lianeRequestFetcher.List(links.Select(l => l.Item1));
+    return trips.FilterSelect(t =>
+      {
+        var liane = lianes.GetValueOrDefault(t.Liane.IdAsGuid());
+
+        var me = liane?.Members.FirstOrDefault(m => m.User.Id == userId);
+        if (me is null)
+        {
+          return null;
+        }
+
+        var lianeRequest = lianeRequests.GetValueOrDefault(me.LianeRequest.IdAsGuid());
+        return lianeRequest is null
+          ? null
+          : new IncomingTrip(me.LianeRequest, lianeRequest.Name, t.Members.Exists(m => m.User.Id == userId), t);
+      })
+      .GroupBy(i => i.Trip.DepartureTime.DayOfWeek)
+      .ToImmutableDictionary(g => g.Key, g => g
+        .OrderByDescending(t => t.Booked)
+        .ThenBy(t => t.Trip.DepartureTime)
+        .ToImmutableList()
+      );
+  }
+
+
   public async Task<LianeRequest> Create(LianeRequest request)
   {
     CheckWayPoints(request);

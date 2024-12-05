@@ -22,6 +22,13 @@ public sealed class LianeRequestFetcher(IRallyingPointService rallyingPointServi
     return await FetchLianeRequest(connection, lianeRequestId);
   }
 
+  public async Task<ImmutableDictionary<Guid, LianeRequest>> List(IEnumerable<Guid> lianeRequestIds)
+  {
+    using var connection = db.NewConnection();
+    return (await FetchLianeRequests(connection, lianeRequestIds))
+      .ToImmutableDictionary(l => l.Id!.Value);
+  }
+
   public async Task<LianeRequest> FetchLianeRequest(IDbConnection connection, Guid lianeRequestId, IDbTransaction? tx = null)
   {
     var lianeRequest = (await FetchLianeRequests(connection, ImmutableList.Create(lianeRequestId), tx)).FirstOrDefault();

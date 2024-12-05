@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,7 +14,7 @@ namespace Liane.Api.Trip;
 public interface ITripService : ICrudEntityService<TripRequest, Trip>
 {
   Task<PaginatedResponse<Trip>> List(TripFilter filter, Pagination pagination, CancellationToken cancellationToken = default);
-  Task<ImmutableList<Trip>> GetIncomingTrips(Guid liane, CancellationToken cancellationToken = default);
+  Task<ImmutableList<Trip>> GetIncomingTrips(IEnumerable<Ref<Community.Liane>> lianeFilter);
   Task<Trip> AddMember(Ref<Trip> trip, TripMember newMember);
   Task<Trip?> RemoveMember(Ref<Trip> trip, Ref<User> member);
   Task CancelAllTrips(Ref<User> member);

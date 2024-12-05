@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useMemo, useState } from "react";
 
 import { FlatList, ListRenderItemInfo, Pressable, RefreshControl, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
-import { getUserTrip, Liane } from "@liane/common";
+import { getUserTrip, IncomingTrip, Liane } from "@liane/common";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
 import { LianeStatusView } from "@/components/trip/LianeStatusView";
@@ -22,7 +22,7 @@ import { AppButton } from "@/components/base/AppButton.tsx";
 import { AppModalNavigationContext } from "@/components/AppModalNavigationProvider.tsx";
 
 export interface TripListViewProps {
-  data: Liane[];
+  data: IncomingTrip[];
   style?: StyleProp<ViewStyle>;
   isFetching?: boolean;
   onRefresh?: () => void;
@@ -32,7 +32,7 @@ export interface TripListViewProps {
 
 export const TripListView = ({ data, style, isFetching = false, onRefresh, loadMore }: TripListViewProps) => {
   const { navigation } = useAppNavigation();
-  const isTripStarted = data.some(liane => liane.state === "Started");
+  const isTripStarted = data.some(liane => liane.trip.state === "Started");
 
   const onSelect = useCallback(
     (liane: Liane) => {
@@ -48,7 +48,7 @@ export const TripListView = ({ data, style, isFetching = false, onRefresh, loadM
       data={data}
       showsVerticalScrollIndicator={false}
       renderItem={props => renderLianeItem({ ...props, isTripStarted, onSelect })}
-      keyExtractor={item => item.id!}
+      keyExtractor={item => item.trip.id!}
       onEndReachedThreshold={0.2}
       onEndReached={loadMore}
       ListEmptyComponent={
@@ -60,14 +60,14 @@ export const TripListView = ({ data, style, isFetching = false, onRefresh, loadM
   );
 };
 
-const LianeItem = ({ item, isTripStarted }: { item: Liane; isTripStarted: boolean }) => {
+const LianeItem = ({ item, isTripStarted }: { item: IncomingTrip; isTripStarted: boolean }) => {
   const { user } = useContext(AppContext);
   const { navigation } = useAppNavigation();
 
-  const driver = useMemo(() => item.members.find(l => l.user.id === item.driver.user)!.user, [item]);
-  const { wayPoints } = useMemo(() => getUserTrip(item, user!.id!), [item, user]);
+  const driver = useMemo(() => item.trip.members.find(l => l.user.id === item.trip.driver.user)!.user, [item]);
+  const { wayPoints } = useMemo(() => getUserTrip(item.trip, user!.id!), [item, user]);
   const carLocation = useCarDelay();
-  const status = useTripStatus(item);
+  const status = useTripStatus(item.trip);
 
   return (
     <View style={{ paddingBottom: 10 }}>
@@ -157,14 +157,14 @@ const renderLianeItem = ({
   item,
   isTripStarted,
   onSelect
-}: ListRenderItemInfo<Liane> & { isTripStarted: boolean; onSelect: (item: Liane) => void }) => {
+}: ListRenderItemInfo<IncomingTrip> & { isTripStarted: boolean; onSelect: (item: Liane) => void }) => {
   return (
     <Pressable
-      style={[styles.item, item.members.length > 1 ? {} : styles.disabledItem]}
+      style={[styles.item, item.trip.members.length > 1 ? {} : styles.disabledItem]}
       onPress={() => {
-        onSelect(item);
+        onSelect(item.trip);
       }}>
-      <TripGeolocationProvider liane={item}>
+      <TripGeolocationProvider liane={item.trip}>
         <LianeItem item={item} isTripStarted={isTripStarted} />
       </TripGeolocationProvider>
     </Pressable>

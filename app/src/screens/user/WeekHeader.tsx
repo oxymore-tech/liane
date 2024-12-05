@@ -5,30 +5,16 @@ import { useMemo } from "react";
 import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors.ts";
 import { AppPressable } from "@/components/base/AppPressable.tsx";
-import { Liane } from "@liane/common";
+import { DayOfWeek, IncomingTrip } from "@liane/common";
 
 type WeekHeaderProps = {
   selectedDay: Date;
   style?: StyleProp<ViewStyle>;
   onSelect: (date: Date) => void;
-  list: Liane[];
+  incomingTrips?: Record<DayOfWeek, IncomingTrip[]>;
 };
 
-export function WeekHeader({ selectedDay, style, onSelect, list }: WeekHeaderProps) {
-  const byDays = useMemo(() => {
-    const byDaysMap = new Map<number, Liane[]>();
-    list.forEach(liane => {
-      const date = new Date(liane.departureTime);
-      const day = date.getDate();
-      if (byDaysMap.has(day)) {
-        byDaysMap.get(day)!.push(liane);
-      } else {
-        byDaysMap.set(day, [liane]);
-      }
-    });
-    return byDaysMap;
-  }, [list]);
-
+export function WeekHeader({ selectedDay, style, onSelect, incomingTrips }: WeekHeaderProps) {
   const days = useMemo(() => {
     const now = new Date();
     const daysArray = [];
@@ -44,7 +30,13 @@ export function WeekHeader({ selectedDay, style, onSelect, list }: WeekHeaderPro
       <AppText style={styles.month}>{AppLocalization.formatMonth(selectedDay)}</AppText>
       <Row style={{ width: "100%", justifyContent: "space-between", marginVertical: 16 }}>
         {days.map((day, index) => (
-          <Day key={index} date={day} selected={selectedDay.getDate() === day.getDate()} onSelect={onSelect} lianes={byDays.get(day.getDate())} />
+          <Day
+            key={index}
+            date={day}
+            selected={selectedDay.getDate() === day.getDate()}
+            onSelect={onSelect}
+            incomingTrips={incomingTrips ? incomingTrips[day.getDay() as DayOfWeek] : undefined}
+          />
         ))}
       </Row>
     </Column>
@@ -55,16 +47,26 @@ type DayProps = {
   date: Date;
   selected?: boolean;
   onSelect: (date: Date) => void;
-  lianes?: Liane[];
+  incomingTrips?: IncomingTrip[];
 };
 
-function Day({ date, selected, onSelect, lianes }: DayProps) {
-  const hasLiane = useMemo(() => (lianes?.length ?? 0) > 0, [lianes]);
+function Day({ date, selected, onSelect, incomingTrips }: DayProps) {
+  const hasLiane = useMemo(() => (incomingTrips?.length ?? 0) > 0, [incomingTrips]);
+  const booked = useMemo(() => {
+    if (!incomingTrips) {
+      return false;
+    }
+    return incomingTrips.some(trip => trip.booked);
+  }, [incomingTrips]);
   return (
     <AppPressable style={{ flexDirection: "column", alignItems: "center" }} onPress={() => onSelect(date)}>
       <AppText style={styles.weekday}>{AppLocalization.formatDay(date).substring(0, 3)}</AppText>
       <AppText style={[styles.day, selected && { backgroundColor: AppColorPalettes.pink[500], color: AppColors.white }]}>{date.getDate()}</AppText>
-      {hasLiane && <View style={[styles.dot, { backgroundColor: selected ? AppColors.white : AppColorPalettes.pink[500] }]} />}
+      {hasLiane && (
+        <View
+          style={[styles.dot, { backgroundColor: selected ? AppColors.white : booked ? AppColorPalettes.pink[500] : AppColorPalettes.gray[800] }]}
+        />
+      )}
     </AppPressable>
   );
 }

@@ -24,6 +24,7 @@ using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using Direction = Liane.Api.Trip.Direction;
 using LianeMatch = Liane.Api.Trip.LianeMatch;
 using Match = Liane.Api.Trip.Match;
 
@@ -83,6 +84,18 @@ public sealed class TripServiceImpl(
     await eventDispatcher.Dispatch(trip.Liane, new MessageContent.TripAdded("", trip), createdAt);
 
     return trip;
+  }
+
+  public async Task<ImmutableList<Api.Trip.Trip>> GetIncomingTrips(IEnumerable<Ref<Api.Community.Liane>> lianeFilter)
+  {
+    var now = DateTime.UtcNow;
+    return await Collection.Find(l =>
+        lianeFilter.Contains(l.Liane)
+        && (l.State == TripStatus.NotStarted || l.State == TripStatus.Started)
+        && l.DepartureTime > now
+        && l.DepartureTime < now.AddDays(8))
+      .SortBy(l => l.DepartureTime)
+      .SelectAsync(MapEntity);
   }
 
   public async Task<Api.Trip.Trip> GetForCurrentUser(Ref<Api.Trip.Trip> l, Ref<Api.Auth.User>? user = null)
@@ -185,16 +198,6 @@ public sealed class TripServiceImpl(
     }
 
     return await paginatedLianes.SelectAsync(MapEntity) with { TotalCount = await Count(filter) };
-  }
-
-  public async Task<ImmutableList<Api.Trip.Trip>> GetIncomingTrips(Guid liane, CancellationToken cancellationToken = default)
-  {
-    return await Collection.Find(l =>
-        l.Liane == liane
-        && (l.State == TripStatus.NotStarted || l.State == TripStatus.Started)
-        && l.DepartureTime > DateTime.UtcNow)
-      .SortBy(l => l.DepartureTime)
-      .SelectAsync(MapEntity, cancellationToken: cancellationToken);
   }
 
   private FilterDefinition<LianeDb> BuildFilter(TripFilter tripFilter)

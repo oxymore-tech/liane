@@ -1,7 +1,7 @@
 import React, { useContext, useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useQuery } from "react-query";
-import { Liane, Ref, UnauthorizedError } from "@liane/common";
+import { DayOfWeek, Liane, Ref, UnauthorizedError } from "@liane/common";
 import { AppText } from "@/components/base/AppText";
 import { Column } from "@/components/base/AppLayout";
 import { AppButton } from "@/components/base/AppButton";
@@ -10,25 +10,37 @@ import { TripListView } from "@/screens/user/TripListView";
 import { AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FutureStates } from "@/components/context/QueryUpdateProvider";
 import { AppModalNavigationContext } from "@/components/AppModalNavigationProvider";
 import { WeekHeader } from "@/screens/user/WeekHeader.tsx";
+import { useSubscription } from "@/util/hooks/subscription.ts";
 
 const MyTripsScreen = () => {
   const insets = useSafeAreaInsets();
 
   const { services } = useContext(AppContext);
+
   const trip = useQuery(TripQueryKey, async () => {
-    return await services.liane.list(FutureStates, { cursor: undefined, limit: 25, asc: false });
+    return await services.community.getIncomingTrips();
   });
+
+  useSubscription<Liane>(
+    services.realTimeHub.tripUpdates,
+    () => {
+      trip.refetch().then();
+    },
+    []
+  );
 
   const { shouldShow, showTutorial } = useContext(AppModalNavigationContext);
 
   const [currentDate, setCurrentDate] = useState(new Date());
 
-  const list = useMemo(() => trip.data?.data ?? [], [trip.data]);
-
-  const currentList = useMemo(() => list.filter(liane => new Date(liane.departureTime).getDay() === currentDate.getDay()), [list, currentDate]);
+  const currentList = useMemo(() => {
+    if (!trip.data) {
+      return [];
+    }
+    return trip.data[currentDate.getDay() as DayOfWeek] ?? [];
+  }, [trip, currentDate]);
 
   if (trip.error) {
     // Show content depending on the error or propagate it
@@ -51,7 +63,7 @@ const MyTripsScreen = () => {
 
   return (
     <Column style={[styles.container, { paddingTop: insets.top }]}>
-      <WeekHeader style={{ paddingHorizontal: 16 }} selectedDay={currentDate} onSelect={setCurrentDate} list={list} />
+      <WeekHeader style={{ paddingHorizontal: 16 }} selectedDay={currentDate} onSelect={setCurrentDate} incomingTrips={trip.data} />
       <TripListView
         style={{ flex: 1, backgroundColor: AppColors.lightGrayBackground, paddingHorizontal: 16 }}
         data={currentList}

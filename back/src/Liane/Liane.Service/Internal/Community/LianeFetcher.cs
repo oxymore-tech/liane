@@ -21,6 +21,12 @@ public sealed class LianeFetcher(LianeRequestFetcher lianeRequestFetcher, IUserS
     using var connection = db.NewConnection();
     return await FetchLiane(connection, lianeRequestId);
   }
+  
+  public async Task<ImmutableDictionary<Guid, Api.Community.Liane>> List(IEnumerable<Guid> lianeRequestIds)
+  {
+    using var connection = db.NewConnection();
+    return await FetchLianes(connection, lianeRequestIds);
+  }
 
   public async Task<Api.Community.Liane?> TryFetchLiane(IDbConnection connection, Guid lianeId, IDbTransaction? tx = null)
   {
@@ -98,4 +104,5 @@ public sealed class LianeFetcher(LianeRequestFetcher lianeRequestFetcher, IUserS
     var user = await userService.Get(memberRequest.CreatedBy!);
     return new LianeMember(user, memberRequest, joinedAt, m.LastReadAt);
   }
+
 }

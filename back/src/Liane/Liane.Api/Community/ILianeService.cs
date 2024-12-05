@@ -7,6 +7,8 @@ using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Community;
 
+using IncomingTrips = ImmutableDictionary<DayOfWeek, ImmutableList<IncomingTrip>>;
+
 public interface ILianeService
 {
   Task<LianeRequest> Create(LianeRequest request);
@@ -23,4 +25,5 @@ public interface ILianeService
   Task<ImmutableList<WayPoint>> GetTrip(Guid liane, Guid? lianeRequest);
   Task<PendingMatch?> Matches(Guid liane, Ref<RallyingPoint> from, Ref<RallyingPoint> to);
   Task<bool> JoinTrip(JoinTripQuery query);
+  Task<IncomingTrips> GetIncomingTrips();
 }
