@@ -49,7 +49,7 @@ public sealed class LianeServiceImpl(
                                                            WHERE lr.created_by = @userId AND
                                                                  lr.id = lm.liane_request_id AND
                                                                  lm.joined_at IS NOT NULL
-                                                           """)).ToImmutableList();
+                                                           """, new { userId })).ToImmutableList();
 
     var trips = await tripService.GetIncomingTrips(links.Select(l => l.Item2.AsRef<Api.Community.Liane>()));
     var lianes = await lianeFetcher.List(links.Select(l => l.Item2));
