@@ -32,6 +32,7 @@ import { WithBadge } from "@/components/base/WithBadge";
 import { MatchListScreen } from "@/screens/communities/MatchListScreen.tsx";
 import { useObservable } from "@/util/hooks/subscription.ts";
 import { map } from "rxjs";
+import { AppPressableIcon } from "@/components/base/AppPressable.tsx";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -103,11 +104,11 @@ function Navigation() {
 
   if (user) {
     return (
-      <Stack.Navigator initialRouteName={"Home"} screenOptions={{ header: PageHeader }}>
+      <Stack.Navigator initialRouteName={"Home"} screenOptions={{ header: EmptyPageHeader }}>
         <Stack.Screen name="Home" component={Home} />
         <Stack.Screen name="ArchivedTrips" component={ArchivedTripsScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
-        <Stack.Screen name="Publish" component={PublishScreen} options={{ headerBackVisible: true, animation: "fade" }} />
+        <Stack.Screen name="Publish" component={PublishScreen} options={{ animation: "fade" }} />
         <Stack.Screen name="TripDetail" component={TripDetailScreen} />
         <Stack.Screen name="CommunitiesChat" component={CommunitiesChatScreen} />
         <Stack.Screen name="LianeMapDetail" component={LianeMapDetailScreen} />
@@ -181,9 +182,25 @@ const makeTab = (label: string, icon: (props: { focused: boolean }) => React.Rea
   );
 };
 
-export const PageHeader = (props: { title?: string | undefined; goBack?: () => void } & Partial<NativeStackHeaderProps>) => {
+export const EmptyPageHeader = (props: { title?: string | undefined; goBack?: () => void } & Partial<NativeStackHeaderProps>) => {
   const insets = useSafeAreaInsets();
   return <Row style={[styles.header, { paddingTop: insets.top }]} />;
+};
+
+export const PageHeader = (props: { title?: string | undefined; goBack?: () => void } & Partial<NativeStackHeaderProps>) => {
+  // @ts-ignore
+  const defaultName = props.route?.name ? NavigationScreenTitles[props.route.name] || "" : "";
+  return (
+    <Row style={[styles.header, { paddingTop: 16 }]} spacing={24}>
+      <AppPressableIcon
+        name={"arrow-ios-back-outline"}
+        color={AppColors.primaryColor}
+        size={32}
+        onPress={props.goBack || (() => props.navigation?.goBack())}
+      />
+      <AppText style={{ fontSize: 20, fontWeight: "bold", color: AppColors.primaryColor }}>{props.title || defaultName}</AppText>
+    </Row>
+  );
 };
 
 const styles = StyleSheet.create({
