@@ -108,7 +108,7 @@ export const CommunitiesChatScreen = () => {
   };
 
   const me = useMemo(() => liane?.members.find(m => m.user.id === user!.id), [liane?.members, user]);
-  const name = me && me.lianeRequest ? me?.lianeRequest.name : `${me?.lianeRequest.wayPoints[0].label}  ➔ ${me?.lianeRequest.wayPoints[1].label}`;
+  const name = me?.lianeRequest?.name ?? "";
   const [launching, setLaunching] = useState(false);
 
   const launchTrip = useCallback(
@@ -173,26 +173,24 @@ export const CommunitiesChatScreen = () => {
           color={AppColors.white}
         />
       </Row>
-      {liane && (
-        <FlatList
-          data={messages}
-          showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchMessages} />}
-          style={{ flex: 1, paddingHorizontal: 16 }}
-          keyExtractor={m => m.id!}
-          renderItem={({ item, index }) => (
-            <MessageBubble
-              coLiane={liane}
-              message={item}
-              isSender={item.createdBy === user?.id}
-              previousSender={index < messages.length - 1 ? messages[index + 1].createdBy : undefined}
-            />
-          )}
-          onEndReachedThreshold={0.2}
-          onEndReached={fetchNextPage}
-          inverted
-        />
-      )}
+      <FlatList
+        data={messages}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchMessages} />}
+        style={{ flex: 1, paddingHorizontal: 16 }}
+        keyExtractor={m => m.id!}
+        renderItem={({ item, index }) => (
+          <MessageBubble
+            liane={liane}
+            message={item}
+            isSender={item.createdBy === user?.id}
+            previousSender={index < messages.length - 1 ? messages[index + 1].createdBy : undefined}
+          />
+        )}
+        onEndReachedThreshold={0.2}
+        onEndReached={fetchNextPage}
+        inverted
+      />
       <KeyboardAvoidingView
         behavior={Platform.OS === "android" ? "height" : "padding"}
         style={{ paddingBottom: 8, paddingHorizontal: 8, backgroundColor: AppColorPalettes.gray[150] }}>

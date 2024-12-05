@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useMemo, useState } from "react";
 import { FlatList, RefreshControl, StyleSheet, View } from "react-native";
 import { useQuery } from "react-query";
-import { Trip, Ref, UnauthorizedError, DayOfWeekUtils, CoLiane } from "@liane/common";
+import { CoLiane, DayOfWeekUtils, Localization, Ref, Trip, UnauthorizedError } from "@liane/common";
 import { AppText } from "@/components/base/AppText";
 import { Center, Column } from "@/components/base/AppLayout";
 import { AppButton } from "@/components/base/AppButton";
@@ -12,6 +12,7 @@ import { WeekHeader } from "@/screens/user/WeekHeader.tsx";
 import { useSubscription } from "@/util/hooks/subscription.ts";
 import { TripItem } from "@/screens/user/TripItem.tsx";
 import { useAppNavigation } from "@/components/context/routing.ts";
+import { AppLocalization } from "@/api/i18n.ts";
 
 function nowAtNoon() {
   const date = new Date();
@@ -88,7 +89,7 @@ const TripScheduleScreen = () => {
         keyExtractor={item => item.trip.id!}
         ListEmptyComponent={
           <Center>
-            <AppText style={AppStyles.noData}>Aucun trajet prévu</AppText>
+            <AppText style={AppStyles.noData}>Aucun trajet {AppLocalization.formatDay(currentDate)}</AppText>
           </Center>
         }
       />

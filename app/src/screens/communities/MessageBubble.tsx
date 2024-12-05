@@ -12,20 +12,23 @@ import { AppButton } from "@/components/base/AppButton.tsx";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
 
 type MessageBubblePros = {
-  coLiane: CoLiane;
+  liane?: CoLiane;
   message: LianeMessage;
   isSender: boolean;
   previousSender?: Ref<User> | undefined;
 };
 
-export const MessageBubble = ({ coLiane, message, isSender, previousSender }: MessageBubblePros) => {
+export const MessageBubble = ({ liane, message, isSender, previousSender }: MessageBubblePros) => {
   const { services } = useContext(AppContext);
   const { navigation } = useAppNavigation();
   const [loading, setLoading] = useState(false);
 
   const allMembers = useMemo<Record<Ref<User>, CoLianeMember>>(() => {
-    return Object.fromEntries([...coLiane.members, ...coLiane.pendingMembers].map(m => [m.user.id, m]));
-  }, [coLiane.members, coLiane.pendingMembers]);
+    if (!liane) {
+      return {};
+    }
+    return Object.fromEntries([...liane.members, ...liane.pendingMembers].map(m => [m.user.id, m]));
+  }, [liane]);
 
   const sender = allMembers[message.createdBy!];
 
@@ -36,17 +39,20 @@ export const MessageBubble = ({ coLiane, message, isSender, previousSender }: Me
   const color = message.content.type !== "Text" ? AppColors.darkGray : isSender ? AppColors.white : AppColors.white;
 
   const handlePendingMember = useCallback(async () => {
+    if (!liane) {
+      return;
+    }
     if (message.content.type !== "MemberRequested") {
       return;
     }
     setLoading(true);
     try {
       const request = await services.community.get(message.content.lianeRequest);
-      navigation.push("LianeMapDetail", { liane: coLiane, request });
+      navigation.push("LianeMapDetail", { liane: liane, request });
     } finally {
       setLoading(false);
     }
-  }, [coLiane, message.content, navigation, services.community]);
+  }, [liane, message.content, navigation, services.community]);
 
   if (message.content.type !== "Text") {
     return (
@@ -61,9 +67,9 @@ export const MessageBubble = ({ coLiane, message, isSender, previousSender }: Me
           <Center style={{ flex: 1 }}>
             <AppText style={{ fontSize: 12, color: AppColorPalettes.gray[400] }}>{message.content.value}</AppText>
           </Center>
-          {message.content.type === "TripAdded" && <AppIcon name="liane" color={AppColors.white} size={24} />}
+          {message.content.type === "TripAdded" && <AppIcon name="car" color={AppColors.white} size={24} />}
         </Row>
-        {message.content.type === "MemberRequested" && coLiane.pendingMembers.find(u => u.user.id === message.createdBy) && (
+        {message.content.type === "MemberRequested" && liane && liane.pendingMembers.find(u => u.user.id === message.createdBy) && (
           <Center>
             <AppButton onPress={handlePendingMember} color={AppColors.secondaryColor} value="Voir la demande" loading={loading} />
           </Center>

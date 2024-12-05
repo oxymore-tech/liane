@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
   day: {
     color: AppColorPalettes.gray[800],
     fontSize: 18,
-    borderRadius: 40,
+    borderRadius: 45,
     width: 45,
     height: 45,
     textAlign: "center"
