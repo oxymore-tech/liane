@@ -1,6 +1,6 @@
-import { Chat, CoLiane, LianeMessage, PaginatedResponse, RallyingPoint, Ref } from "@liane/common";
+import { Chat, CoLiane, LianeMessage, RallyingPoint, Ref } from "@liane/common";
 import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
+import { FlatList, KeyboardAvoidingView, Platform, StyleSheet } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Row } from "@/components/base/AppLayout";
@@ -8,7 +8,6 @@ import { AppText } from "@/components/base/AppText";
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppExpandingTextInput } from "@/components/base/AppExpandingTextInput";
 import { useAppNavigation } from "@/components/context/routing";
-import { AppStyles } from "@/theme/styles";
 import { AppLogger } from "@/api/logger";
 import { MessageBubble } from "@/screens/communities/MessageBubble";
 import { useSubscription } from "@/util/hooks/subscription.ts";
@@ -16,6 +15,7 @@ import { TripQueryKey } from "@/screens/user/TripScheduleScreen";
 import { useQueryClient } from "react-query";
 import { AppButton } from "@/components/base/AppButton";
 import { LaunchTripModal } from "@/screens/communities/LaunchTripModal";
+import { GestureHandlerRootView, RefreshControl } from "react-native-gesture-handler";
 
 export const CommunitiesChatScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesChat">();
@@ -28,7 +28,7 @@ export const CommunitiesChatScreen = () => {
   const [chat, setChat] = useState<Chat<"Liane">>();
   const [inputValue, setInputValue] = useState<string>("");
   const [isSending, setIsSending] = useState(false);
-  const [liane, setLiane] = useState<CoLiane | undefined>(undefined);
+  const [liane, setLiane] = useState<CoLiane | undefined>(typeof route.params.liane === "string" ? undefined : route.params.liane);
 
   const [tripModalVisible, setTripModalVisible] = useState(false);
   const [loading, setLoading] = useState(typeof route.params.liane === "string");
@@ -44,36 +44,58 @@ export const CommunitiesChatScreen = () => {
   );
 
   const sendMessage = useCallback(async () => {
-    const lianeTemp = liane;
+    if (!liane) {
+      return;
+    }
+    if (!inputValue) {
+      return;
+    }
+    if (inputValue.trim().length === 0) {
+      return;
+    }
     setIsSending(true);
 
-    if (lianeTemp && lianeTemp.id && inputValue && inputValue.length > 0) {
-      try {
-        await chat?.send({
-          type: "Text",
-          value: inputValue
-        });
-        setInputValue("");
-      } catch (e) {
-        AppLogger.debug("COMMUNITIES", "Une erreur est survenu lors de l'entrée dans une nouvelle liane", e);
-        setIsSending(false);
-      }
+    try {
+      await services.realTimeHub.send(liane.id!, {
+        type: "Text",
+        value: inputValue
+      });
+      setInputValue("");
+    } finally {
+      setIsSending(false);
     }
 
     setIsSending(false);
-  }, [chat, inputValue, liane]);
+  }, [inputValue, liane, services.realTimeHub]);
 
-  const appendMessage = (m: LianeMessage) => {
-    setMessages(oldList => [m, ...oldList]);
-    if (liane?.id && chat) {
-      chat.readConversation(liane.id, new Date().toISOString()).catch(e => console.warn(e));
+  const appendMessage = async (lianeId: Ref<CoLiane>, m: LianeMessage) => {
+    if (!liane) {
+      return;
     }
+    if (liane?.id !== lianeId) {
+      return;
+    }
+    setMessages(oldList => [m, ...oldList]);
+    await services.realTimeHub.markAsRead(liane?.id, new Date().toISOString());
   };
 
-  const onReceiveLatestMessages = (m: PaginatedResponse<LianeMessage>) => {
-    setMessages(m.data);
-    setPaginationCursor(m.next);
-  };
+  const fetchMessages = useCallback(async () => {
+    if (!liane) {
+      return;
+    }
+    try {
+      setLoading(true);
+      const r = await services.community.getMessages(liane.id!, { limit: 15, asc: false });
+      setMessages(r.data);
+      setPaginationCursor(r.next);
+    } finally {
+      setLoading(false);
+    }
+  }, [liane, services.community]);
+
+  useEffect(() => {
+    fetchMessages().then();
+  }, [fetchMessages]);
 
   const fetchNextPage = async () => {
     if (paginationCursor && liane && liane.id) {
@@ -109,7 +131,6 @@ export const CommunitiesChatScreen = () => {
 
   useEffect(() => {
     setLiane(undefined);
-
     if (typeof route.params.liane === "string") {
       services.community
         .get(route.params.liane)
@@ -123,7 +144,7 @@ export const CommunitiesChatScreen = () => {
   useEffect(() => {
     if (liane && liane.id) {
       services.realTimeHub
-        .connectToLianeChat(liane.id, onReceiveLatestMessages, appendMessage)
+        .connectToLianeChat(appendMessage)
         .then(conv => {
           setChat(conv);
         })
@@ -141,12 +162,8 @@ export const CommunitiesChatScreen = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [liane, services.realTimeHub]);
 
-  if (loading) {
-    return <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />;
-  }
-
   return (
-    <View style={[styles.mainContainer, { paddingBottom: insets.bottom }]}>
+    <GestureHandlerRootView style={[styles.mainContainer, { paddingBottom: insets.bottom }]}>
       <Row style={{ backgroundColor: AppColors.white, justifyContent: "space-between", alignItems: "center", padding: 16 }} spacing={16}>
         <AppButton onPress={() => navigation.goBack()} icon={"arrow-ios-back-outline"} color={AppColors.primaryColor} />
         <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 16, lineHeight: 27, color: AppColors.primaryColor }}>{name}</AppText>
@@ -156,9 +173,11 @@ export const CommunitiesChatScreen = () => {
           color={AppColors.white}
         />
       </Row>
-      {chat && liane && (
+      {liane && (
         <FlatList
           data={messages}
+          showsVerticalScrollIndicator={false}
+          refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchMessages} />}
           style={{ flex: 1, paddingHorizontal: 16 }}
           keyExtractor={m => m.id!}
           renderItem={({ item, index }) => (
@@ -174,7 +193,6 @@ export const CommunitiesChatScreen = () => {
           inverted
         />
       )}
-      {!chat && liane && <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />}
       <KeyboardAvoidingView
         behavior={Platform.OS === "android" ? "height" : "padding"}
         style={{ paddingBottom: 8, paddingHorizontal: 8, backgroundColor: AppColorPalettes.gray[150] }}>
@@ -215,7 +233,7 @@ export const CommunitiesChatScreen = () => {
           />
         )}
       </KeyboardAvoidingView>
-    </View>
+    </GestureHandlerRootView>
   );
 };
 

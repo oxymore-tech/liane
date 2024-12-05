@@ -18,31 +18,15 @@ namespace Liane.Web.Hubs;
 public sealed class ChatHub(
   ILogger<ChatHub> logger,
   ILianeMessageService lianeMessageService,
-  ILianeService lianeService,
   ICurrentContext currentContext,
   IUserService userService,
   IHubService hubService,
   ILianeUpdatePushService lianeUpdatePushService)
   : Hub<IHubClient>
 {
-  public async Task SendToLiane(MessageContent lianeMessage, string lianeId)
+  public async Task SendToLiane(string lianeId, MessageContent lianeMessage)
   {
     await lianeMessageService.SendMessage(lianeId, lianeMessage);
-  }
-
-  public async Task<Api.Community.Liane> JoinLianeChat(string lianeId)
-  {
-    var userId = currentContext.CurrentUser().Id;
-    var liane = await lianeService.Get(lianeId);
-    logger.LogInformation("User '{userId}' joined liane chat '{lianeId}'", userId, lianeId);
-    var caller = Clients.Caller;
-    _ = Task.Run(async () =>
-    {
-      var latestMessages = await lianeMessageService.GetMessages(lianeId);
-      logger.LogInformation("Sending {count} liane messages", latestMessages.Data.Count);
-      await caller.ReceiveLatestLianeMessages(latestMessages);
-    });
-    return liane;
   }
 
   public async Task ReadLiane(string lianeId, DateTime timestamp)
@@ -84,5 +68,4 @@ public sealed class ChatHub(
   {
     return await lianeUpdatePushService.GetLastTrackingInfo(lianeId);
   }
-
 }

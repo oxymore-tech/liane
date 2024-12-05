@@ -1,19 +1,19 @@
-import React, {useContext, useState} from "react";
-import {ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, View} from "react-native";
-import {ImagePickerResponse, launchImageLibrary} from "react-native-image-picker";
-import {AppLocalization} from "@/api/i18n";
-import {useAppNavigation} from "@/components/context/routing";
-import {AppContext} from "@/components/context/ContextProvider";
-import {AppIcon} from "@/components/base/AppIcon";
-import {AppStatusBar} from "@/components/base/AppStatusBar";
-import {AppText} from "@/components/base/AppText";
-import {AppTextInput} from "@/components/base/AppTextInput";
-import {Center, Column, Row} from "@/components/base/AppLayout";
-import {UserPicture} from "@/components/UserPicture";
-import {AppColors} from "@/theme/colors";
-import {AppStyles} from "@/theme/styles";
-import {capitalize} from "@liane/common";
-import Animated, {FadeIn, FadeOut} from "react-native-reanimated";
+import React, { useContext, useState } from "react";
+import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { ImagePickerResponse, launchImageLibrary } from "react-native-image-picker";
+import { AppLocalization } from "@/api/i18n";
+import { useAppNavigation } from "@/components/context/routing";
+import { AppContext } from "@/components/context/ContextProvider";
+import { AppIcon } from "@/components/base/AppIcon";
+import { AppStatusBar } from "@/components/base/AppStatusBar";
+import { AppText } from "@/components/base/AppText";
+import { AppTextInput } from "@/components/base/AppTextInput";
+import { Center, Column, Row } from "@/components/base/AppLayout";
+import { UserPicture } from "@/components/UserPicture";
+import { AppColors } from "@/theme/colors";
+import { AppStyles } from "@/theme/styles";
+import { capitalize } from "@liane/common";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 export const ProfileEditScreen = () => {
   return (

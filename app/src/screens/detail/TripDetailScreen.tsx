@@ -237,7 +237,7 @@ const LianeDetailView = ({ liane }: { liane: LianeMatch }) => {
 
       {!["Finished", "Archived", "Canceled"].includes(liane.trip.state) && (
         <Row style={styles.statusLianeContainer}>
-          <TripStatusView trip={liane.trip} user={user} />
+          <TripStatusView trip={liane.trip} />
           <GeolocationSwitch liane={liane.trip} />
         </Row>
       )}

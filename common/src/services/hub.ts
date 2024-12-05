@@ -1,12 +1,12 @@
-import { FullUser, Trip, PaginatedResponse, Ref, TrackingInfo } from "../api";
+import { FullUser, Ref, TrackingInfo, Trip, UTCDateTime } from "../api";
 import { AppLogger } from "../logger";
 import { AppStorage } from "../storage";
 import { HttpClient } from "./http";
 import { HubConnection, HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { NetworkUnavailable, UnauthorizedError } from "../exception";
-import { CoLiane, LianeMessage } from "./community";
-import { AbstractChat, Chat, ChatType, GroupTypeOf, MessageTypeOf } from "./chat";
+import { CoLiane, LianeMessage, MessageContent } from "./community";
+import { AbstractChat, Chat, ChatType, MessageTypeOf } from "./chat";
 
 export type HubState = "online" | "reconnecting" | "offline";
 
@@ -15,17 +15,17 @@ export interface HubService {
 
   start(): Promise<void>;
 
-  connectToLianeChat(
-    conversation: Ref<CoLiane>,
-    onReceiveLatestMessages: OnLatestMessagesCallback<LianeMessage>,
-    onReceiveMessage: ConsumeMessage<LianeMessage>
-  ): Promise<Chat<"Liane">>;
+  connectToLianeChat(onReceiveMessage: ConsumeMessage<LianeMessage>): Promise<Chat<"Liane">>;
 
   disconnectFromChat(): Promise<void>;
 
   updateActiveState(active: boolean): void;
 
   subscribeToTrackingInfo(lianeId: string, callback: OnLocationCallback): Promise<{ closed: boolean; unsubscribe: () => Promise<void> }>;
+
+  markAsRead(conversation: Ref<CoLiane>, timestamp: UTCDateTime): Promise<void>;
+
+  send(liane: Ref<CoLiane>, message: MessageContent): Promise<void>;
 
   unreadNotifications: Observable<Record<Ref<CoLiane>, number>>;
   tripUpdates: Observable<Trip>;
@@ -34,9 +34,8 @@ export interface HubService {
   hubState: Observable<HubState>;
 }
 
-export type ConsumeMessage<TMessage> = (res: TMessage) => void;
+export type ConsumeMessage<TMessage> = (lianeId: Ref<CoLiane>, res: TMessage) => void;
 
-export type OnLatestMessagesCallback<TMessage> = (res: PaginatedResponse<TMessage>) => void;
 export type OnLocationCallback = (l: TrackingInfo) => void;
 
 type UnreadOverview = Record<Ref<CoLiane>, number>;
@@ -60,16 +59,16 @@ export abstract class AbstractHubService implements HubService {
 
   abstract stop(): Promise<void>;
 
+  abstract markAsRead(conversation: Ref<CoLiane>, timestamp: UTCDateTime): Promise<void>;
+
+  abstract send(liane: Ref<CoLiane>, message: MessageContent): Promise<void>;
+
   updateActiveState(active: boolean) {
     this.appStateActive = active;
   }
 
-  connectToLianeChat(
-    conversationRef: Ref<CoLiane>,
-    onReceiveLatestMessages: OnLatestMessagesCallback<LianeMessage>,
-    onReceiveMessage: ConsumeMessage<LianeMessage>
-  ) {
-    return this.connectToChat("Liane", conversationRef, onReceiveLatestMessages, onReceiveMessage);
+  connectToLianeChat(onReceiveMessage: ConsumeMessage<LianeMessage>) {
+    return this.connectToChat("Liane", onReceiveMessage);
   }
 
   async disconnectFromChat() {
@@ -101,8 +100,6 @@ export abstract class AbstractHubService implements HubService {
 
   protected abstract connectToChat<TChatType extends ChatType>(
     name: TChatType,
-    conversationRef: Ref<GroupTypeOf<TChatType>>,
-    onReceiveLatestMessages: OnLatestMessagesCallback<MessageTypeOf<TChatType>>,
     onReceiveMessage: ConsumeMessage<MessageTypeOf<TChatType>>
   ): Promise<Chat<TChatType>>;
 
@@ -151,7 +148,6 @@ export class HubServiceClient extends AbstractHubService {
       this.hubState.next("online");
     });
 
-    this.hub.on("ReceiveLatestLianeMessages", async (m: PaginatedResponse<LianeMessage>) => this.receiveLatestMessages("Liane", m));
     this.hub.on("ReceiveLianeMessage", async (c: string, m: LianeMessage) => this.receiveMessage("Liane", c, m));
 
     this.hub.on("ReceiveUnreadOverview", this.receiveUnreadOverview);
@@ -171,15 +167,6 @@ export class HubServiceClient extends AbstractHubService {
         this.logger.debug("HUB", "Connection closed without error");
       }
     });
-  }
-
-  private async receiveLatestMessages<TChatType extends ChatType>(chatType: TChatType, m: PaginatedResponse<MessageTypeOf<TChatType>>) {
-    if (!this.currentChat) {
-      return;
-    }
-    if (this.currentChat.name === chatType) {
-      await this.currentChat.receiveLatestMessages(m as any);
-    }
   }
 
   private receiveMessage<TChatType extends ChatType>(chatType: TChatType, conversationId: string, message: MessageTypeOf<TChatType>) {
@@ -234,18 +221,28 @@ export class HubServiceClient extends AbstractHubService {
     };
   }
 
+  async markAsRead(conversation: Ref<CoLiane>, timestamp: UTCDateTime) {
+    await this.hub.invoke("ReadLiane", conversation, timestamp);
+  }
+
+  async send(liane: Ref<CoLiane>, message: MessageContent): Promise<void> {
+    try {
+      await this.hub.invoke("SendToLiane", message, liane);
+    } catch (e) {
+      this.logger.warn("CHAT", `Could not send message to liane ${liane}`, e);
+    }
+  }
+
   protected async connectToChat<TChatType extends ChatType>(
     name: TChatType,
-    conversationRef: Ref<GroupTypeOf<TChatType>>,
-    onReceiveLatestMessages: OnLatestMessagesCallback<MessageTypeOf<TChatType>>,
     onReceiveMessage: ConsumeMessage<MessageTypeOf<TChatType>>
   ): Promise<Chat<TChatType>> {
     await this.start();
     if (this.currentChat) {
       await this.currentChat.disconnect();
     }
-    const currentChat = new Chat<TChatType>(this.hub, name, this.logger);
-    await currentChat.connect(conversationRef, onReceiveLatestMessages, onReceiveMessage);
+    const currentChat = new Chat<TChatType>(name, this.logger);
+    await currentChat.connect(onReceiveMessage);
     this.currentChat = currentChat as AbstractChat;
 
     return currentChat;

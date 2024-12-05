@@ -1,88 +1,39 @@
-import { ConsumeMessage, OnLatestMessagesCallback } from "./hub";
-import { HubConnection } from "@microsoft/signalr";
-import { PaginatedResponse, Ref, UTCDateTime } from "../api";
+import { ConsumeMessage } from "./hub";
 import { AppLogger } from "../logger";
-import { CoLiane, LianeMessage, MessageContent } from "./community";
+import { LianeMessage } from "./community";
 
 export type ChatType = "Liane";
 
 export type AbstractChat = Chat<"Liane">;
 
-export type GroupTypeOf<TChat extends ChatType> = TChat extends "Liane" ? CoLiane : never;
-export type MessageContentTypeOf<TChat extends ChatType> = TChat extends "Liane" ? MessageContent : never;
 export type MessageTypeOf<TChat extends ChatType> = TChat extends "Liane" ? LianeMessage : never;
 
 export class Chat<TChatType extends ChatType> {
   constructor(
-    private hub: HubConnection,
     public name: TChatType,
     private logger: AppLogger
   ) {}
 
-  currentGroup?: GroupTypeOf<TChatType>;
-
-  protected onReceiveLatestMessagesCallback: OnLatestMessagesCallback<MessageTypeOf<TChatType>> | null = null;
   // Sets a callback to receive messages after joining a conversation.
   // This callback will be automatically disposed of when closing conversation.
   protected onReceiveMessageCallback: ConsumeMessage<MessageTypeOf<TChatType>> | null = null;
 
-  async connect(
-    conversationRef: Ref<GroupTypeOf<TChatType>>,
-    onReceiveLatestMessages: OnLatestMessagesCallback<MessageTypeOf<TChatType>>,
-    onReceiveMessage: ConsumeMessage<MessageTypeOf<TChatType>>
-  ) {
-    this.onReceiveLatestMessagesCallback = onReceiveLatestMessages;
+  async connect(onReceiveMessage: ConsumeMessage<MessageTypeOf<TChatType>>) {
     this.onReceiveMessageCallback = onReceiveMessage;
-    this.currentGroup = await this.joinGroupChat(conversationRef);
-    this.logger.info("CHAT", "joined " + this.currentGroup.id);
+    this.logger.info("CHAT", "joined chat");
   }
 
   async disconnect() {
-    if (!this.currentGroup) {
-      this.logger.info("CHAT", "Tried to leave an undefined conversation.");
-      return;
-    }
-    this.onReceiveLatestMessagesCallback = null;
     this.onReceiveMessageCallback = null;
-    this.logger.info("CHAT", "left " + this.currentGroup.id);
-    this.currentGroup = undefined;
-  }
-
-  async send(message: MessageContentTypeOf<TChatType>): Promise<void> {
-    if (!this.currentGroup) {
-      throw new Error("Could not send message to undefined conversation");
-    }
-    try {
-      await this.hub.invoke(`SendTo${this.name}`, message, this.currentGroup.id);
-    } catch (e) {
-      this.logger.warn("CHAT", `Could not send message to group ${this.currentGroup}`, e);
-    }
-  }
-
-  async readConversation(conversation: Ref<GroupTypeOf<TChatType>>, timestamp: UTCDateTime) {
-    await this.hub.invoke(`Read${this.name}`, conversation, timestamp);
-  }
-
-  async joinGroupChat(conversationId: Ref<GroupTypeOf<TChatType>>) {
-    return this.hub.invoke<GroupTypeOf<TChatType>>(`Join${this.name}Chat`, conversationId);
+    this.logger.info("CHAT", "left");
   }
 
   async receiveMessage(convId: string, message: MessageTypeOf<TChatType>) {
-    // Called when receiving a message inside current conversation
-    this.logger.info("CHAT", "received : msg", convId, message, this.currentGroup?.id);
-
-    if (this.currentGroup?.id === convId && this.onReceiveMessageCallback) {
-      this.onReceiveMessageCallback(message);
-      return true;
+    this.logger.info("CHAT", "received : msg");
+    if (!this.onReceiveMessageCallback) {
+      return false;
     }
-
-    return false;
-  }
-
-  async receiveLatestMessages(messages: PaginatedResponse<MessageTypeOf<TChatType>>) {
-    // Called after joining a conversation
-    if (this.onReceiveLatestMessagesCallback) {
-      this.onReceiveLatestMessagesCallback(messages);
-    }
+    this.onReceiveMessageCallback(convId, message);
+    return true;
   }
 }
