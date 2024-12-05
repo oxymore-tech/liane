@@ -55,7 +55,7 @@ const TripScheduleScreen = () => {
       return [];
     }
     return trip.data[DayOfWeekUtils.from(currentDate.getDay())] ?? [];
-  }, [trip, currentDate]);
+  }, [trip.data, currentDate]);
 
   if (trip.error) {
     // Show content depending on the error or propagate it

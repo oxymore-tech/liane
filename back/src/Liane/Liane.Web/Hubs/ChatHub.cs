@@ -24,7 +24,7 @@ public sealed class ChatHub(
   ILianeUpdatePushService lianeUpdatePushService)
   : Hub<IHubClient>
 {
-  public async Task SendToLiane(string lianeId, MessageContent lianeMessage)
+  public async Task SendToLiane(MessageContent lianeMessage, string lianeId)
   {
     await lianeMessageService.SendMessage(lianeId, lianeMessage);
   }

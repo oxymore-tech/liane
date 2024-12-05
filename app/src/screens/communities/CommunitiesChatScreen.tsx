@@ -47,14 +47,16 @@ export const CommunitiesChatScreen = () => {
     if (!liane) {
       return;
     }
+
     if (!inputValue) {
       return;
     }
+
     if (inputValue.trim().length === 0) {
       return;
     }
-    setIsSending(true);
 
+    setIsSending(true);
     try {
       await services.realTimeHub.send(liane.id!, {
         type: "Text",
@@ -64,8 +66,6 @@ export const CommunitiesChatScreen = () => {
     } finally {
       setIsSending(false);
     }
-
-    setIsSending(false);
   }, [inputValue, liane, services.realTimeHub]);
 
   const appendMessage = async (lianeId: Ref<CoLiane>, m: LianeMessage) => {

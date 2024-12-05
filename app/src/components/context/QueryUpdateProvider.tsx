@@ -1,8 +1,8 @@
 import React, { PropsWithChildren, useContext } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 import { useQueryClient } from "react-query";
-import { Trip, PaginatedResponse, TripStatus } from "@liane/common";
-import { TripDetailQueryKey, TripQueryKey } from "@/screens/user/TripScheduleScreen";
+import { Trip } from "@liane/common";
+import { TripQueryKey } from "@/screens/user/TripScheduleScreen";
 import { useSubscription } from "@/util/hooks/subscription";
 import { LianeGeolocation } from "@/api/service/location";
 
@@ -13,24 +13,6 @@ export type IQueryUpdater = {};
 // @ts-ignore
 const QueryUpdaterContext = React.createContext<IQueryUpdater>();
 
-export const FutureStates: TripStatus[] = ["NotStarted", "Started"];
-
-const updateLianeList = (old: PaginatedResponse<Trip>, liane: Trip) => {
-  const found = old.data.findIndex(l => l.id === liane.id);
-  if (FutureStates.includes(liane.state)) {
-    if (found >= 0) {
-      old.data[found] = liane;
-      return old;
-    } else {
-      old.data.unshift(liane);
-      return { ...old, pageSize: old.pageSize + 1 };
-    }
-  } else if (found >= 0) {
-    return { ...old, pageSize: old.pageSize - 1, data: old.data.filter(l => l.id !== liane.id) };
-  }
-  return old;
-};
-
 export const QueryUpdateProvider = (props: PropsWithChildren) => {
   const { services } = useContext(AppContext);
   const queryClient = useQueryClient();
@@ -40,13 +22,7 @@ export const QueryUpdateProvider = (props: PropsWithChildren) => {
   useSubscription<Trip>(
     services.realTimeHub.tripUpdates,
     liane => {
-      queryClient.setQueryData<PaginatedResponse<Trip>>(TripQueryKey, old => {
-        if (!old) {
-          return { pageSize: 1, data: [liane] };
-        }
-        return updateLianeList(old, liane);
-      });
-      queryClient.setQueryData<Trip>(TripDetailQueryKey(liane.id!), _ => liane);
+      queryClient.invalidateQueries(TripQueryKey).then();
 
       // Cancel pings if necessary
       LianeGeolocation.currentLiane().then(async current => {
