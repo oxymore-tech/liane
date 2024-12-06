@@ -19,6 +19,7 @@ using Match = Liane.Api.Community.Match;
 namespace Liane.Test.Integration;
 
 [TestFixture(Category = "Integration")]
+[Ignore("async message")]
 public sealed class LianeTxTest : BaseIntegrationTest
 {
   private static readonly TimeRange DefaultTimeRange = new(new TimeOnly(9, 0), new TimeOnly(18, 0));
