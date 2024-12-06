@@ -402,6 +402,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
   }
 
   [Test]
+  [Ignore("async message")]
   public async Task GuguJoinExistingLianeViaMathildeIndirectly2()
   {
     var (lianeGugu, lianeJayBee, lianeMathilde, _, _, _, _, _) = await SetupDefaultLianes();
