@@ -24,14 +24,16 @@ public sealed class ChatHub(
   ILianeUpdatePushService lianeUpdatePushService)
   : Hub<IHubClient>
 {
-  public async Task SendToLiane(MessageContent lianeMessage, string lianeId)
+  public Task SendToLiane(MessageContent lianeMessage, string lianeId)
   {
-    await lianeMessageService.SendMessage(lianeId, lianeMessage);
+    _ = Task.Run(() => lianeMessageService.SendMessage(lianeId, lianeMessage));
+    return Task.CompletedTask;
   }
 
-  public async Task ReadLiane(string lianeId, DateTime timestamp)
+  public Task ReadLiane(string lianeId, DateTime timestamp)
   {
-    await lianeMessageService.MarkAsRead(lianeId, timestamp);
+    _ = Task.Run(() => lianeMessageService.MarkAsRead(lianeId, timestamp));
+    return Task.CompletedTask;
   }
 
   public override async Task OnConnectedAsync()

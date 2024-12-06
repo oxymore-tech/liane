@@ -19,7 +19,6 @@ using Match = Liane.Api.Community.Match;
 namespace Liane.Test.Integration;
 
 [TestFixture(Category = "Integration")]
-[Ignore("async message")]
 public sealed class LianeTxTest : BaseIntegrationTest
 {
   private static readonly TimeRange DefaultTimeRange = new(new TimeOnly(9, 0), new TimeOnly(18, 0));
@@ -72,6 +71,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
   }
 
   [Test]
+  [Ignore("async message")]
   public async Task GuguShouldJoinRequestJayBee()
   {
     var (lianeGugu, lianeJayBee, lianeMathilde, lianeSiloe, _, _, _, _) = await SetupDefaultLianes();
@@ -270,6 +270,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
   }
 
   [Test]
+  [Ignore("async message")]
   public async Task GuguJoinExistingLianeViaJaybeeDirectly()
   {
     var (lianeGugu, lianeJayBee, lianeMathilde, _, _, _, _, _) = await SetupDefaultLianes();

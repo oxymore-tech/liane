@@ -76,7 +76,7 @@ export const CommunitiesChatScreen = () => {
       return;
     }
     setMessages(oldList => [m, ...oldList]);
-    await services.realTimeHub.markAsRead(liane?.id, new Date().toISOString());
+    services.realTimeHub.markAsRead(liane?.id, new Date().toISOString()).then();
   };
 
   const fetchMessages = useCallback(async () => {
