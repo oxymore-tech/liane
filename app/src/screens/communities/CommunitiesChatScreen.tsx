@@ -1,6 +1,6 @@
 import { Chat, CoLiane, LianeMessage, RallyingPoint, Ref } from "@liane/common";
 import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { FlatList, KeyboardAvoidingView, Platform, StyleSheet } from "react-native";
+import { FlatList, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Row } from "@/components/base/AppLayout";
@@ -142,28 +142,25 @@ export const CommunitiesChatScreen = () => {
   }, [route.params, services.community]);
 
   useEffect(() => {
-    if (liane && liane.id) {
-      services.realTimeHub
-        .connectToLianeChat(appendMessage)
-        .then(conv => {
-          setChat(conv);
-        })
-        .catch(e => {
-          AppLogger.error("CHAT", "Unable to connect to chat", e);
-        });
-    }
+    services.realTimeHub
+      .connectToLianeChat(appendMessage)
+      .then(conv => {
+        console.log("Connected to chat", conv);
+        setChat(conv);
+      })
+      .catch(e => {
+        AppLogger.error("CHAT", "Unable to connect to chat", e);
+      });
     return () => {
-      if (liane && liane.id) {
-        services.realTimeHub.disconnectFromChat().catch(e => {
-          AppLogger.warn("CHAT", "Error while disconnecting from chat", e);
-        });
-      }
+      services.realTimeHub.disconnectFromChat().catch(e => {
+        AppLogger.warn("CHAT", "Error while disconnecting from chat", e);
+      });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [liane, services.realTimeHub]);
 
   return (
-    <GestureHandlerRootView style={[styles.mainContainer, { paddingBottom: insets.bottom }]}>
+    <View style={[styles.mainContainer, { paddingBottom: insets.bottom }]}>
       <Row style={{ backgroundColor: AppColors.white, justifyContent: "space-between", alignItems: "center", padding: 16 }} spacing={16}>
         <AppButton onPress={() => navigation.goBack()} icon={"arrow-ios-back-outline"} color={AppColors.primaryColor} />
         <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 16, lineHeight: 27, color: AppColors.primaryColor }}>{name}</AppText>
@@ -173,24 +170,26 @@ export const CommunitiesChatScreen = () => {
           color={AppColors.white}
         />
       </Row>
-      <FlatList
-        data={messages}
-        showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchMessages} />}
-        style={{ flex: 1, paddingHorizontal: 16 }}
-        keyExtractor={m => m.id!}
-        renderItem={({ item, index }) => (
-          <MessageBubble
-            liane={liane}
-            message={item}
-            isSender={item.createdBy === user?.id}
-            previousSender={index < messages.length - 1 ? messages[index + 1].createdBy : undefined}
-          />
-        )}
-        onEndReachedThreshold={0.2}
-        onEndReached={fetchNextPage}
-        inverted
-      />
+      <GestureHandlerRootView>
+        <FlatList
+          data={messages}
+          showsVerticalScrollIndicator={false}
+          refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchMessages} />}
+          style={{ flex: 1, paddingHorizontal: 16 }}
+          keyExtractor={m => m.id!}
+          renderItem={({ item, index }) => (
+            <MessageBubble
+              liane={liane}
+              message={item}
+              isSender={item.createdBy === user?.id}
+              previousSender={index < messages.length - 1 ? messages[index + 1].createdBy : undefined}
+            />
+          )}
+          onEndReachedThreshold={0.2}
+          onEndReached={fetchNextPage}
+          inverted
+        />
+      </GestureHandlerRootView>
       <KeyboardAvoidingView
         behavior={Platform.OS === "android" ? "height" : "padding"}
         style={{ paddingBottom: 8, paddingHorizontal: 8, backgroundColor: AppColorPalettes.gray[150] }}>
@@ -231,7 +230,7 @@ export const CommunitiesChatScreen = () => {
           />
         )}
       </KeyboardAvoidingView>
-    </GestureHandlerRootView>
+    </View>
   );
 };
 

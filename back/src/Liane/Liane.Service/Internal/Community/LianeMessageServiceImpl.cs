@@ -152,7 +152,7 @@ public sealed class LianeMessageServiceImpl(
     var lianeMessage = new LianeMessage(id, userId, now, content);
 
     tx.Commit();
-    await pushService.PushMessage(lianeId, lianeMessage);
+    _ = Task.Run(() => pushService.PushMessage(lianeId, lianeMessage));
     return lianeMessage;
   }
 
