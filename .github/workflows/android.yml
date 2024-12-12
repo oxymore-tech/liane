@@ -68,6 +68,11 @@ jobs:
           cache: 'yarn'
           cache-dependency-path: ./app/yarn.lock
 
+      - name: Enable Corepack
+        working-directory: ./app
+        shell: bash
+        run: corepack enable
+
       - uses: c-hive/gha-yarn-cache@v2
         with:
           directory: ./app
