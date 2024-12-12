@@ -4,11 +4,16 @@ runs:
   using: 'composite'
   steps:
     - name: Setup Node
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: 20
         cache: 'yarn'
         cache-dependency-path: ./common/yarn.lock
+
+    - name: Enable Corepack
+      working-directory: ./common
+      shell: bash
+      run: corepack enable
 
     - uses: c-hive/gha-yarn-cache@v2
       with:
