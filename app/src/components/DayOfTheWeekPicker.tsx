@@ -5,8 +5,6 @@ import { DayOfWeekFlag } from "@liane/common";
 import { AppLocalization } from "@/api/i18n";
 
 import { Row } from "@/components/base/AppLayout";
-
-import { AppColors } from "@/theme/colors";
 import { DayItem } from "@/components/DayItem.tsx";
 
 type DayOfTheWeekPickerProps = {
@@ -44,12 +42,12 @@ export const DayOfTheWeekPicker = ({
         index === dayIndex
           ? replaceSelectedDay(currentSelectedDays.charAt(index))
           : singleOptionMode
-          ? "0"
-          : dualOptionMode
-          ? countAvailableDays(currentSelectedDays) > 1
             ? "0"
-            : currentSelectedDays.charAt(index)
-          : currentSelectedDays.charAt(index);
+            : dualOptionMode
+              ? countAvailableDays(currentSelectedDays) > 1
+                ? "0"
+                : currentSelectedDays.charAt(index)
+              : currentSelectedDays.charAt(index);
     });
 
     onChangeDays && onChangeDays(newSelectedDays as DayOfWeekFlag);
@@ -95,10 +93,5 @@ const styles = StyleSheet.create({
     textAlign: "center",
     justifyContent: "center",
     flexWrap: "wrap"
-  },
-  containerBorderStyle: {
-    borderBottomWidth: 1,
-    borderBottomColor: AppColors.lightGrayBackground,
-    marginTop: 4
   }
 });

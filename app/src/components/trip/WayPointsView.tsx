@@ -150,43 +150,5 @@ const styles = StyleSheet.create({
     paddingBottom: 6,
     color: AppColors.primaryColor,
     flexShrink: 0
-  },
-  intermediateWayPointLabel: {
-    fontSize: 15,
-    fontWeight: "bold",
-    color: AppColorPalettes.gray[700]
-  },
-  intermediateFromWayPointLabelColor: {
-    color: AppColors.primaryColor
-  },
-  iconTravel: {
-    paddingTop: 10,
-    paddingBottom: 6,
-    marginHorizontal: 10
-  },
-  alignCenter: {
-    alignSelf: "center",
-    textAlignVertical: "center"
-  },
-  shrink: {
-    flexShrink: 1
-  },
-  column: {
-    justifyContent: "space-between"
-  },
-  waypointLine: {
-    borderLeftColor: AppColorPalettes.gray[400],
-    borderLeftWidth: 1,
-    minHeight: 12,
-    alignSelf: "center",
-    position: "relative",
-    top: -2
-  },
-  horizontalLine: {
-    marginVertical: 4,
-    borderLeftColor: AppColorPalettes.gray[200],
-    borderLeftWidth: 1,
-    minHeight: 18,
-    alignSelf: "center"
   }
 });

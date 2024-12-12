@@ -140,23 +140,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     lineHeight: 24
-  },
-  buttonChoice: {
-    fontSize: 16,
-    fontWeight: "bold",
-    lineHeight: 24,
-    flexDirection: "row",
-    marginLeft: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 15,
-    borderWidth: 1
-  },
-  choiceSelected: {
-    borderColor: AppColors.primaryColor,
-    backgroundColor: AppColors.primaryColor
-  },
-  choiceNotSelected: {
-    borderColor: AppColors.lightGrayBackground
   }
 });

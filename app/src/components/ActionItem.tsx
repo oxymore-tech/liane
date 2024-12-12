@@ -89,9 +89,5 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     textAlign: "center"
   },
-  rowActionContainer: {
-    backgroundColor: AppColorPalettes.gray[100],
-    borderRadius: 8
-  },
   section: { paddingVertical: 16, marginHorizontal: 24 }
 });

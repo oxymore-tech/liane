@@ -1,11 +1,23 @@
 import { AppEnv, DayOfWeekFlag, RallyingPoint } from "@liane/common";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import MapLibreGL, { OnPressEvent } from "@maplibre/maplibre-react-native";
+import MapLibreGL from "@maplibre/maplibre-react-native";
 import { Feature, Point } from "geojson";
 import { AppColors } from "@/theme/colors";
 import { useAppMapViewController } from "@/components/map/AppMapView";
 import { AppLogger } from "@/api/logger";
 import { RNAppEnv } from "@/api/env";
+
+interface OnPressEvent {
+  features: GeoJSON.Feature[];
+  coordinates: {
+    latitude: number;
+    longitude: number;
+  };
+  point: {
+    x: number;
+    y: number;
+  };
+}
 
 export type LianeDisplayLayerProps = {
   weekDays?: DayOfWeekFlag;

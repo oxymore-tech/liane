@@ -292,10 +292,6 @@ const styles = StyleSheet.create({
     height: "100%",
     width: "100%"
   },
-  section: {
-    paddingVertical: 16,
-    marginHorizontal: 24
-  },
   bottomContainer: {
     borderRadius: 20,
     marginTop: 12,
@@ -312,14 +308,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     alignSelf: "center"
   },
-
-  statusContainer: {
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-    borderRadius: 4,
-    alignItems: "center",
-    backgroundColor: AppColorPalettes.gray[100]
-  },
   statusLianeContainer: {
     paddingVertical: 8,
     justifyContent: "space-between"
@@ -327,70 +315,10 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1
   },
-  chatButton: {
-    alignItems: "flex-end",
-    position: "absolute",
-    padding: 4,
-    top: -8,
-    right: -4
-  },
-  chatBadge: {
-    backgroundColor: AppColors.primaryColor,
-    borderRadius: 16,
-    padding: 6,
-    top: 4,
-    right: 4,
-    position: "absolute"
-  },
-  statusRowContainer: {
-    flex: 1,
-    alignItems: "center",
-    marginTop: 8
-  },
-  infoRowContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 8
-  },
-  validationContainer: {
-    alignItems: "center",
-    borderRadius: 16,
-    backgroundColor: AppColors.primaryColor,
-    padding: 4,
-    paddingHorizontal: 12,
-    marginHorizontal: 6
-  },
-  validationText: {
-    fontWeight: "bold",
-    color: AppColors.white
-  },
-  infoContainer: {
-    paddingHorizontal: 4
-  },
   infoTravel: {
     fontSize: 14,
     marginLeft: 6,
     color: AppColorPalettes.gray[500]
-  },
-  infoText: {
-    fontSize: 14,
-    color: AppColorPalettes.gray[600]
-  },
-  infoIcon: {
-    marginTop: 2
-  },
-  mapOverlay: {
-    backgroundColor: AppColors.white,
-    margin: 16,
-    position: "relative",
-    top: 0,
-    right: "-40%",
-    alignSelf: "center",
-    padding: 6,
-    borderRadius: 25,
-    width: 50,
-    height: 50
   },
   resumeContainer: {
     alignItems: "center",

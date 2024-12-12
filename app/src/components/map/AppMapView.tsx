@@ -12,7 +12,7 @@ import React, {
   useState
 } from "react";
 import { Platform, StyleSheet, useWindowDimensions, View } from "react-native";
-import MapLibreGL, { Expression, Logger, MarkerViewProps, RegionPayload } from "@maplibre/maplibre-react-native";
+import MapLibreGL, {CameraRef, Logger, MapViewRef, RegionPayload} from "@maplibre/maplibre-react-native";
 import { contains, DEFAULT_TLS, DisplayBoundingBox, FR_BBOX, fromBoundingBox, getMapStyleUrl, LatLng } from "@liane/common";
 import { AppColorPalettes } from "@/theme/colors";
 import { FeatureCollection, Point, Position } from "geojson";
@@ -25,7 +25,6 @@ import { RNAppEnv } from "@/api/env";
 import { useSubject } from "@/util/hooks/subscription";
 import Images = MapLibreGL.Images;
 import UserLocation = MapLibreGL.UserLocation;
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const rp_icon = require("../../../assets/icons/rp_gray.png");
 const rp_deposit_icon = require("../../../assets/icons/rp_pink.png");
@@ -49,7 +48,7 @@ export interface AppMapViewController {
   fitBounds: (bbox: DisplayBoundingBox, duration?: number) => void;
   getZoom: () => Promise<number> | undefined;
   getCenter: () => Promise<Position> | undefined;
-  queryFeatures: (coordinate?: Position, filter?: Expression, layersId?: string[]) => Promise<FeatureCollection | undefined> | undefined;
+  //queryFeatures: (coordinate?: Position, filter?: Expression, layersId?: string[]) => Promise<FeatureCollection | undefined> | undefined;
   subscribeToRegionChanges: (callback: (payload: RegionPayload) => void) => SubscriptionLike;
 }
 // @ts-ignore
@@ -87,8 +86,8 @@ const AppMapView = forwardRef(
     ref: ForwardedRef<AppMapViewController>
   ) => {
     const { services } = useContext(AppContext);
-    const mapRef = useRef<MapLibreGL.MapView>();
-    const cameraRef = useRef<MapLibreGL.Camera>();
+    const mapRef = useRef<MapViewRef>();
+    const cameraRef = useRef<CameraRef>();
     const [animated, setAnimated] = useState(false);
 
     const wd = useWindowDimensions();
@@ -109,19 +108,19 @@ const AppMapView = forwardRef(
             return new Promise<void>(resolve => setTimeout(resolve, duration));
           }
         },
-        queryFeatures: async (coordinates?: Position, filter?: Expression, layersId?: string[]) => {
-          if (coordinates) {
-            // query at point
-            const pointInView = await mapRef.current?.getPointInView(coordinates)!;
-            return mapRef.current?.queryRenderedFeaturesAtPoint(pointInView, filter, layersId);
-          } else {
-            // query visible viewport
-            const b = await mapRef.current?.getVisibleBounds()!;
-            const ne = await mapRef.current?.getPointInView(b[0])!;
-            const sw = await mapRef.current?.getPointInView(b[1])!;
-            return mapRef.current?.queryRenderedFeaturesInRect([sw[1] * scale, ne[0] * scale, 0, 0], filter, layersId);
-          }
-        },
+        // queryFeatures: async (coordinates?: Position, filter?: Expression, layersId?: string[]) => {
+        //   if (coordinates) {
+        //     // query at point
+        //     const pointInView = await mapRef.current?.getPointInView(coordinates)!;
+        //     return mapRef.current?.queryRenderedFeaturesAtPoint(pointInView, filter, layersId);
+        //   } else {
+        //     // query visible viewport
+        //     const b = await mapRef.current?.getVisibleBounds()!;
+        //     const ne = await mapRef.current?.getPointInView(b[0])!;
+        //     const sw = await mapRef.current?.getPointInView(b[1])!;
+        //     return mapRef.current?.queryRenderedFeaturesInRect([sw[1] * scale, ne[0] * scale, 0, 0], filter, layersId);
+        //   }
+        // },
         getVisibleBounds: () => mapRef.current?.getVisibleBounds(),
         getZoom: () => mapRef.current?.getZoom(),
         fitBounds: (bbox: DisplayBoundingBox, duration?: number) =>
@@ -271,7 +270,7 @@ const AppMapView = forwardRef(
 );
 
 export default AppMapView;
-export const MarkerView: ComponentType<MarkerViewProps & PropsWithChildren> = MapLibreGL.MarkerView;
+export const MarkerView = MapLibreGL.MarkerView;
 
 const styles = StyleSheet.create({
   map: {

@@ -16,7 +16,6 @@ import { DefaultFloatingActions } from "@/components/context/FloatingActions.tsx
 
 const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureCollection, Set<Ref<Trip>> | undefined]> }) => {
   const [lianes, setLianes] = useState<CoLiane[]>();
-  const [currentBoundbox, setCurrentBoundbox] = useState<BoundingBox>();
   const [isFetching, setFetching] = useState<boolean>();
   const mapFeatureSubject = useBehaviorSubject<GeoJSON.Feature[] | undefined>(undefined);
   const appMapRef = useRef<AppMapViewController>(null);
@@ -30,7 +29,6 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
   const fetchLianeOnMap = async (bound: BoundingBox) => {
     try {
       setFetching(true);
-      setCurrentBoundbox(bound);
       const lianesTemp: CoLiane[] = await services.community.list({
         forCurrentUser: false,
         bbox: bound
@@ -54,7 +52,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
         onMapMoved={computeLianeDisplay}
       />
       <DefaultFloatingActions onPosition={setUserLocation} position="top" />
-      <HomeMapBottomSheetContainer lianes={lianes} isFetching={!!isFetching} currentBoundbox={currentBoundbox} fetchLianeOnMap={fetchLianeOnMap} />
+      <HomeMapBottomSheetContainer lianes={lianes} />
       <OfflineWarning />
     </View>
   );
@@ -73,9 +71,6 @@ const HomeScreen = () => {
 export default HomeScreen;
 
 const styles = StyleSheet.create({
-  page: {
-    flex: 1
-  },
   container: {
     height: "100%",
     width: "100%",

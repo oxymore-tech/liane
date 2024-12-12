@@ -103,13 +103,5 @@ const styles = StyleSheet.create({
     color: AppColors.primaryColor,
     marginRight: 20,
     marginLeft: 20
-  },
-  separateNoIcon: {
-    fontWeight: "400",
-    fontSize: 20,
-    lineHeight: 27,
-    color: AppColors.primaryColor,
-    marginRight: 20,
-    marginLeft: 80
   }
 });

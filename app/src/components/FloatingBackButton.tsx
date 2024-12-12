@@ -29,6 +29,5 @@ const styles = StyleSheet.create({
   actionButton: {
     padding: 8,
     borderRadius: 18
-  },
-  section: { paddingVertical: 16, marginHorizontal: 24 } //TODO app global style
+  }
 });

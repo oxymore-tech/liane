@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && yarn upgrade @liane/common --cwd ../app --check-files",
     "lint": "eslint ./src/ --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "prepublishOnly": "yarn test unit && vite build",
@@ -29,8 +29,7 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^8.3.1",
-    "@mapbox/vt2geojson": "^1.1.5",
-    "@types/geojson": "^7946.0.13",
+    "@types/base-64": "^1.0.2",
     "@typescript-eslint/eslint-plugin": "^6.11.0",
     "@typescript-eslint/parser": "^6.11.0",
     "eslint": "^8",
@@ -45,5 +44,5 @@
     "vite-plugin-dts": "^3.6.0",
     "vitest": "^0.34.6"
   },
-  "packageManager": "yarn@4.5.3"
+  "packageManager": "yarn@1.22.22"
 }

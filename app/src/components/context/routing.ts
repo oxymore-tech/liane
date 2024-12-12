@@ -1,7 +1,7 @@
 import { createNavigationContainerRef, LinkingOptions, RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { CoLiane, CoMatch, Ref, ResolvedLianeRequest, Trip, User } from "@liane/common";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack/src/types";
 import { checkInitialNotification } from "@/api/service/notification";
+import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 
 export type NavigationParamList = {
   Home: undefined;

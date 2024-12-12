@@ -209,12 +209,6 @@ const styles = StyleSheet.create({
   tabLabel: {
     marginBottom: 0,
     fontSize: 14
-  },
-  headerContainer: {
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginLeft: 8,
-    marginRight: 16
   }
 });
 

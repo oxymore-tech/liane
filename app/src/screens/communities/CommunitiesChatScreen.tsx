@@ -239,8 +239,5 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.grayBackground,
     justifyContent: "flex-start",
     flex: 1
-  },
-  chatContainer: {
-    flex: 1
   }
 });

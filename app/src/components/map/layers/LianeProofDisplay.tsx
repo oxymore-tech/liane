@@ -3,8 +3,7 @@ import React, { useContext } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 import { useQuery } from "react-query";
 import { AppColors } from "@/theme/colors";
-import MapLibreGL from "@maplibre/maplibre-react-native";
-import ShapeSource = MapLibreGL.Animated.ShapeSource;
+import MapLibreGL, { ShapeSource } from "@maplibre/maplibre-react-native";
 
 import CircleLayer = MapLibreGL.CircleLayer;
 
@@ -15,13 +14,7 @@ export const LianeProofDisplay = ({ id }: { id: Ref<Trip> }) => {
   });
   return data ? (
     <ShapeSource id={"proof_display"} shape={data}>
-      <CircleLayer
-        id={"proof_display"}
-        style={{
-          circleColor: AppColors.blue,
-          circleRadius: 3
-        }}
-      />
+      <CircleLayer id={"proof_display"} style={{ circleColor: AppColors.blue, circleRadius: 3 }} />
     </ShapeSource>
   ) : null;
 };

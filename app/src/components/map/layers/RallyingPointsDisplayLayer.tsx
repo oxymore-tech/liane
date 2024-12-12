@@ -1,10 +1,22 @@
 import { RallyingPoint, Ref } from "@liane/common";
 import React, { useCallback } from "react";
 import { AppColors } from "@/theme/colors";
-import MapLibreGL, { OnPressEvent } from "@maplibre/maplibre-react-native";
+import MapLibreGL from "@maplibre/maplibre-react-native";
 import { Feature, Point } from "geojson";
 import { useAppMapViewController } from "@/components/map/AppMapView";
 import { RNAppEnv } from "@/api/env";
+
+interface OnPressEvent {
+  features: GeoJSON.Feature[];
+  coordinates: {
+    latitude: number;
+    longitude: number;
+  };
+  point: {
+    x: number;
+    y: number;
+  };
+}
 
 export type RallyingPointsDisplayLayerProps = {
   dispayCluster?: boolean;
@@ -81,29 +93,26 @@ export const RallyingPointsDisplayLayer = ({ dispayCluster = false, selected, on
           iconSize: ["step", ["zoom"], 0.32, 12, 0.4]
         }}
       />
-
-      {dispayCluster && (
-        <MapLibreGL.SymbolLayer
-          id="rp_clusters"
-          sourceLayerID={"rallying_point_display"}
-          filter={["has", "point_count"]}
-          style={{
-            textFont: ["Open Sans Regular", "Noto Sans Regular"],
-            textSize: 18,
-            textColor: AppColors.white,
-            textHaloWidth: 0.2,
-            textField: ["get", "point_count"],
-            textAllowOverlap: false,
-            iconAllowOverlap: true,
-            textMaxWidth: 5.4,
-            textOptional: true,
-            visibility: "visible",
-            iconImage: "deposit_cluster",
-            iconAnchor: "center",
-            iconSize: ["step", ["zoom"], 0.5, 12, 0.4]
-          }}
-        />
-      )}
+      <MapLibreGL.SymbolLayer
+        id="rp_clusters"
+        sourceLayerID={"rallying_point_display"}
+        filter={["has", "point_count"]}
+        style={{
+          textFont: ["Open Sans Regular", "Noto Sans Regular"],
+          textSize: 18,
+          textColor: AppColors.white,
+          textHaloWidth: 0.2,
+          textField: ["get", "point_count"],
+          textAllowOverlap: false,
+          iconAllowOverlap: true,
+          textMaxWidth: 5.4,
+          textOptional: true,
+          visibility: dispayCluster ? "visible" : false,
+          iconImage: "deposit_cluster",
+          iconAnchor: "center",
+          iconSize: ["step", ["zoom"], 0.5, 12, 0.4]
+        }}
+      />
     </MapLibreGL.VectorSource>
   );
 };

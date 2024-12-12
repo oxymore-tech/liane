@@ -105,10 +105,6 @@ const Actions = () => {
 };
 
 const styles = StyleSheet.create({
-  page: {
-    flex: 1,
-    padding: 16
-  },
   name: {
     color: "white",
     fontWeight: "bold",

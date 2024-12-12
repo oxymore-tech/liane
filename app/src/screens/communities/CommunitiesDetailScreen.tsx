@@ -6,7 +6,7 @@ import { useAppNavigation } from "@/components/context/routing";
 import { AppPressableIcon } from "@/components/base/AppPressable";
 import { AppIcon } from "@/components/base/AppIcon";
 import { UserPicture } from "@/components/UserPicture";
-import { AppColors, ContextualColors } from "@/theme/colors";
+import { AppColors } from "@/theme/colors";
 import { SimpleModal } from "@/components/modal/SimpleModal";
 import { AppLogger } from "@/api/logger";
 import { CoLianeMember, FullUser } from "@liane/common";
@@ -147,9 +147,6 @@ const styles = StyleSheet.create({
     flex: 1,
     height: "100%"
   },
-  errorText: {
-    color: ContextualColors.redAlert.text
-  },
   header: {
     backgroundColor: AppColors.primaryColor,
     position: "absolute",
@@ -163,14 +160,6 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     alignItems: "center",
     width: "100%"
-  },
-  groupName: {
-    fontSize: 24,
-    fontWeight: "bold",
-    flexShrink: 1,
-    lineHeight: 27,
-    textAlign: "center",
-    color: AppColors.white
   },
   statsContainer: {
     flexDirection: "row",

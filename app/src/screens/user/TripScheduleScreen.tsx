@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useMemo, useState } from "react";
 import { FlatList, RefreshControl, StyleSheet, View } from "react-native";
 import { useQuery } from "react-query";
-import { CoLiane, DayOfWeekUtils, Localization, Ref, Trip, UnauthorizedError } from "@liane/common";
+import { CoLiane, DayOfWeekUtils, Ref, Trip, UnauthorizedError } from "@liane/common";
 import { AppText } from "@/components/base/AppText";
 import { Center, Column } from "@/components/base/AppLayout";
 import { AppButton } from "@/components/base/AppButton";

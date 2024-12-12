@@ -3,48 +3,46 @@ import { TimeInMilliseconds } from "../util";
 import { TimeOnly } from "../services";
 
 export class Localization {
-  constructor(private locale: string) {}
-
-  private readonly monthFormatter = new Intl.DateTimeFormat(this.locale, {
+  private readonly monthFormatter = new Intl.DateTimeFormat("fr", {
     month: "long",
     year: "numeric"
   });
 
-  private readonly dayFormatter = new Intl.DateTimeFormat(this.locale, {
+  private readonly dayFormatter = new Intl.DateTimeFormat("fr", {
     weekday: "long"
   });
 
-  private readonly monthDayFormatter = new Intl.DateTimeFormat(this.locale, {
+  private readonly monthDayFormatter = new Intl.DateTimeFormat("fr", {
     weekday: "long",
     month: "long",
     day: "2-digit"
   });
 
-  private readonly shortMonthDayFormatter = new Intl.DateTimeFormat(this.locale, {
+  private readonly shortMonthDayFormatter = new Intl.DateTimeFormat("fr", {
     weekday: "short",
     month: "short",
     day: "2-digit"
   });
 
-  private readonly dateFormatter = new Intl.DateTimeFormat(this.locale, {
+  private readonly dateFormatter = new Intl.DateTimeFormat("fr", {
     month: "2-digit",
     day: "2-digit",
     year: "2-digit"
   });
 
   // Load time formatter
-  private readonly timeFormatter = new Intl.DateTimeFormat(this.locale, {
+  private readonly timeFormatter = new Intl.DateTimeFormat("fr", {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false
   });
 
-  private readonly monthYearFormatter = new Intl.DateTimeFormat(this.locale, {
+  private readonly monthYearFormatter = new Intl.DateTimeFormat("fr", {
     month: "long",
     year: "numeric"
   });
 
-  private readonly time24hFormatter = new Intl.DateTimeFormat(this.locale, {
+  private readonly time24hFormatter = new Intl.DateTimeFormat("fr", {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false

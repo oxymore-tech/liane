@@ -27,4 +27,4 @@ export const scopedTranslate =
   (key: string, options: any = {}) =>
     translate(scope, key, options);
 
-export const AppLocalization = new Localization(locale);
+export const AppLocalization = new Localization();

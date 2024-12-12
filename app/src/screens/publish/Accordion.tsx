@@ -93,9 +93,6 @@ const styles = StyleSheet.create({
   stepContainer: {
     marginTop: 4
   },
-  headerContainer: {
-    borderRadius: 18
-  },
   summaryContainer: {
     paddingHorizontal: 16,
     backgroundColor: AppColors.primaryColor,

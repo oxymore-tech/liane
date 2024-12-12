@@ -123,12 +123,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center"
   },
-  subRowsContainer: {
-    marginLeft: 28,
-    marginRight: 10,
-    alignItems: "flex-end",
-    display: "flex"
-  },
   cityFont: {
     fontSize: 15,
     fontWeight: "normal",
