@@ -9,7 +9,7 @@
     "start": "react-native start",
     "build": "cd android && ./gradlew bundleRelease",
     "test": "jest",
-    "update:common": "cd ../common; yarn prepublishOnly; cd ../app; yarn up @liane/common",
+    "update:common": "cd ../common; yarn prepublishOnly; cd ../app; yarn",
     "post-install": "cd ios && pod install --repo-update; cd .."
   },
   "repository": {
@@ -20,7 +20,7 @@
     "@datadog/mobile-react-native": "^2.4.4",
     "@datadog/mobile-react-navigation": "^2.4.4",
     "@liane/common": "file:../common",
-    "@maplibre/maplibre-react-native": "^9.1.0",
+    "@maplibre/maplibre-react-native": "^10.0.0-beta.8",
     "@notifee/react-native": "^9.1.2",
     "@react-native-async-storage/async-storage": "^2.0.0",
     "@react-native-community/datetimepicker": "^8.2.0",
@@ -93,5 +93,5 @@
   "engines": {
     "node": ">=18"
   },
-  "packageManager": "yarn@4.5.1"
+  "packageManager": "yarn@4.5.3"
 }
