@@ -40,7 +40,7 @@ export function Pagination({ className, page, perPage, total, onPageChange, with
 
   const clickableClasses =
     "text-gray-700 bg-white font-medium hover:bg-gray-100 dark:hover:bg-gray-600 dark:bg-gray-800 dark:text-gray-300 cursor-pointer";
-  const selectedClasses = "bg-gray-300 font-bold dark:bg-gray-900 dark:text-white cursor-default";
+  const selectedClasses = "bg-gray-300 font-bold dark:bg-gray-800 dark:text-white cursor-default";
   const indicationClasses = "text-gray-700 bg-white font-medium dark:bg-gray-800 dark:text-gray-300 cursor-default";
   const disabledClasses = "text-gray-400 bg-white font-medium dark:bg-gray-700 dark:text-gray-400 cursor-default";
   return (

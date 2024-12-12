@@ -61,7 +61,7 @@ export default function TripRecordsPage() {
                       {WebLocalization.formatDate(date)}, {WebLocalization.formatTime24h(date)}
                     </Table.Cell>
                     <Table.Cell>{liane.members.map(m => m.user.pseudo).join(", ")}</Table.Cell>
-                    <Table.Cell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
+                    <Table.Cell className="whitespace-nowrap font-medium text-gray-800 dark:text-white">
                       {liane.wayPoints.map(w => w.rallyingPoint.city).join(" → ")}
                     </Table.Cell>
                   </Table.Row>

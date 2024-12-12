@@ -65,7 +65,7 @@ export const TimelineChart = <T,>({
             <li
               key={i}
               style={{ gridRow: (i + 2).toString(), maxHeight: lineHeight, textOverflow: "ellipsis" }}
-              className="flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white leading-none">
+              className="flex items-center space-x-1 hover:text-gray-800 dark:hover:text-white leading-none">
               <span className="w-4 h-4 rounded border dark:border-white border-gray-800" style={{ backgroundColor: d.color }} />
               {renderTooltip && (
                 <Tooltip placement="right" content={renderTooltip(d.data)}>

@@ -251,7 +251,7 @@ const DepartmentView = ({
       </FormProvider>
       {showBottomPane && (
         <div className="px-2 py-2 absolute z-[100] bottom-0 top-0 left-0 w-[600px] pointer-events-auto ">
-          <Card className="bg-white dark:bg-gray-900 h-full">
+          <Card className="bg-white dark:bg-gray-800 h-full">
             <div className="grow grid" style={{ gridTemplateRows: "auto minmax(0, 1fr) auto" }}>
               <div className="flex gap-4 justify-start items-center mx-1 mb-4">
                 <IconButton
@@ -426,7 +426,7 @@ const LegendView = () => {
   return (
     <div className="px-4 py-2 absolute z-[5] bottom-0 pointer-events-auto max-w-[600px]">
       <Card>
-        <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Filtres</h5>
+        <h5 className="text-2xl font-bold tracking-tight text-gray-800 dark:text-white">Filtres</h5>
         <div className="gap-4 flex items-center">
           <ItemLegend name="active_rp" label="Points actifs" />
           <ItemLegend name="inactive_rp" label="Points inactifs" />

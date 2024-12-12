@@ -48,7 +48,7 @@ const TripView = ({ record, children }: { record: TripRecord } & PropsWithChildr
         <div className="grid gap-4" style={{ gridTemplateColumns: "auto 1fx", gridTemplateRows: "auto 1fx" }}>
           <IconButton className={"row-start-1 col-start-1"} aria-label="Close" icon="close" onClick={() => router.back()} />
 
-          <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white row-start-1 col-start-2">{trip}</h5>
+          <h5 className="text-2xl font-bold tracking-tight text-gray-800 dark:text-white row-start-1 col-start-2">{trip}</h5>
           <div className="font-normal text-gray-700 dark:text-gray-400 col-start-2 row-start-2">
             <p className="font-normal text-gray-700 dark:text-gray-400">{WebLocalization.formatDate(new Date(record.startedAt))}</p>
             <p className="font-normal text-gray-700 dark:text-gray-400 ">
@@ -165,7 +165,7 @@ export default function TripRecordItemPage({ params }: { params: { itemId: strin
       {!!record && (
         <div className="px-4 py-6 absolute bottom-0 z-[5] w-full">
           <Card>
-            <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Membres</h5>
+            <h5 className="text-2xl font-bold tracking-tight text-gray-800 dark:text-white">Membres</h5>
             {car && (
               <TimelineChart
                 data={car}

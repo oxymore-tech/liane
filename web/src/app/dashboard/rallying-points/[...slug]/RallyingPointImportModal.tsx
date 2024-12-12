@@ -40,7 +40,7 @@ export function RallyingPointImportModal({ onClose, importingPoints }: Props) {
       <Modal.Header />
       <Modal.Body>
         <div className="space-y-6">
-          <h3 className="text-xl font-medium text-gray-900 dark:text-white">Importer des points de ralliement</h3>
+          <h3 className="text-xl font-medium text-gray-800 dark:text-white">Importer des points de ralliement</h3>
           <p>Veuillez choisir un fichier au format CSV.</p>
           <form
             onSubmit={e => {
