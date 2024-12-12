@@ -1,25 +1,20 @@
-import { BoundingBox, CoLiane } from "@liane/common";
-import { AppColorPalettes } from "@/theme/colors.ts";
-import { FlatList, RefreshControl } from "react-native-gesture-handler";
-import { LianeOnMapItem } from "@/screens/home/LianeOnMapItemView.tsx";
-import React, { useCallback, useContext, useRef } from "react";
-import { useAppNavigation } from "@/components/context/routing.ts";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppBottomSheet, BottomSheetRefProps } from "@/components/base/AppBottomSheet.tsx";
-import { AppText } from "@/components/base/AppText.tsx";
-import { AppContext } from "@/components/context/ContextProvider.tsx";
-import { Column } from "@/components/base/AppLayout.tsx";
+import {CoLiane} from "@liane/common";
+import {AppColorPalettes} from "@/theme/colors.ts";
+import {FlatList} from "react-native-gesture-handler";
+import {LianeOnMapItem} from "@/screens/home/LianeOnMapItemView.tsx";
+import React, {useCallback, useContext, useRef} from "react";
+import {useAppNavigation} from "@/components/context/routing.ts";
+import {AppBottomSheet, BottomSheetRefProps} from "@/components/base/AppBottomSheet.tsx";
+import {AppText} from "@/components/base/AppText.tsx";
+import {AppContext} from "@/components/context/ContextProvider.tsx";
+import {Column} from "@/components/base/AppLayout.tsx";
 
 type HomeMapBottomSheetProps = {
   lianes?: CoLiane[];
-  isFetching: boolean;
-  currentBoundbox?: BoundingBox;
-  fetchLianeOnMap: (bound: BoundingBox) => void;
 };
 
-export const HomeMapBottomSheetContainer = ({ lianes = [], isFetching, currentBoundbox, fetchLianeOnMap }: HomeMapBottomSheetProps) => {
+export const HomeMapBottomSheetContainer = ({ lianes = [] }: HomeMapBottomSheetProps) => {
   const refBottomSheet = useRef<BottomSheetRefProps>(null);
-  const insets = useSafeAreaInsets();
   const { navigation } = useAppNavigation<"Home">();
   const { user } = useContext(AppContext);
 
@@ -38,8 +33,8 @@ export const HomeMapBottomSheetContainer = ({ lianes = [], isFetching, currentBo
   return (
     <AppBottomSheet
       ref={refBottomSheet}
-      stops={[insets.bottom, 0.45, 1]}
-      initialStop={1}
+      stops={[0.5, 1]}
+      initialStop={0}
       style={{
         backgroundColor: AppColorPalettes.gray[700]
       }}>
@@ -57,11 +52,9 @@ export const HomeMapBottomSheetContainer = ({ lianes = [], isFetching, currentBo
         <FlatList
           style={{ marginHorizontal: 8 }}
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={isFetching} onRefresh={() => currentBoundbox && fetchLianeOnMap(currentBoundbox)} />}
           data={lianes}
           renderItem={props => <LianeOnMapItem {...props} openLiane={openLiane} />}
           keyExtractor={item => item.id!}
-          onEndReachedThreshold={0.2}
           contentContainerStyle={{ marginBottom: 100, paddingBottom: 250 }}
         />
       </Column>

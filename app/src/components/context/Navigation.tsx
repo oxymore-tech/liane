@@ -57,7 +57,8 @@ function Home() {
       screenOptions={{
         tabBarStyle: useBottomBarStyle(),
         tabBarShowLabel: true,
-        tabBarHideOnKeyboard: true
+        tabBarHideOnKeyboard: true,
+        animation: "fade",
       }}>
       {makeTab(
         "Explorer",
@@ -141,7 +142,7 @@ interface TabIconProps {
 }
 const TabIcon = ({ iconName, focused, size }: TabIconProps) => {
   return (
-    <View style={{ paddingHorizontal: 8 }}>
+    <View >
       {typeof iconName === "string" ? (
         <AppIcon size={size} name={iconName} color={focused ? AppColors.secondaryColor : AppColorPalettes.gray[400]} />
       ) : (
@@ -162,9 +163,7 @@ const makeTab = (label: string, icon: (props: { focused: boolean }) => React.Rea
       name={label}
       component={screen}
       options={() => ({
-        headerShown,
-        /*  @ts-ignore */
-        header: () => <View style={{ height: 0 }} />,
+        headerShown: false,
         tabBarLabel: ({ focused }) => (
           <AppText
             style={[
@@ -174,9 +173,7 @@ const makeTab = (label: string, icon: (props: { focused: boolean }) => React.Rea
             {label}
           </AppText>
         ),
-        tabBarIcon: icon,
-        // tabBarActiveBackgroundColor: AppColors.secondaryColor,
-        tabBarItemStyle: { paddingHorizontal: 2, alignSelf: "center", alignItems: "center", rowGap: 2, paddingVertical: 4 }
+        tabBarIcon: icon
       })}
     />
   );
@@ -209,41 +206,26 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.white,
     alignItems: "center"
   },
-  bottomBar: {
-    paddingTop: 8,
-    backgroundColor: AppColors.white,
-    overflow: "hidden",
-    alignItems: "stretch",
-    paddingBottom: 0 // ios layout
-  },
   tabLabel: {
-    fontSize: 12,
-    position: "relative",
-    bottom: 2
+    marginBottom: 0,
+    fontSize: 14
   },
   headerContainer: {
     alignItems: "center",
     justifyContent: "space-between",
     marginLeft: 8,
     marginRight: 16
-  },
-  filterContainer: {
-    height: 50,
-    backgroundColor: AppColors.primaryColor,
-    borderRadius: 18,
-    paddingVertical: 4,
-    paddingLeft: 4
   }
 });
 
 export const useBottomBarStyle = () => {
   const insets = useSafeAreaInsets();
   return [
-    styles.bottomBar,
     AppStyles.shadow,
     {
+      paddingTop: 8,
       paddingBottom: Math.min(insets.bottom, 16),
-      minHeight: insets.bottom + 54
+      minHeight: insets.bottom + 70
     }
   ];
 };

@@ -8,21 +8,13 @@ First you need to check that you have built the common part.
 
 ```bash
 cd ../common
-
-# using npm
-npm run build
-
-# OR using Yarn
+yarn install
 yarn build
 ```
 
 You must then install the pods
 
 ```bash
-# using npm
-npm run post-install
-
-# OR using Yarn
 yarn post-install
 ```
 
@@ -33,12 +25,11 @@ First, you will need to start **Metro**, the JavaScript _bundler_ that ships _wi
 To start Metro, run the following command from the _root_ of your React Native project:
 
 ```bash
-# using npm
-npm start
-
-# OR using Yarn
+yarn install
 yarn start
 ```
+
+Hit `a` key to launch android (see instructions for more commands).
 
 # Connect android device in WIFI
 

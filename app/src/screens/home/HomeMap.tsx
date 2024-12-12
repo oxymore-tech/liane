@@ -15,7 +15,6 @@ export type HomeMapProps = {
   featureSubject?: Subject<GeoJSON.Feature[] | undefined>;
   onZoomChanged?: (z: number) => void;
   onMapMoved?: (visibleBounds: Position[]) => void;
-  ref: React.Ref<AppMapViewController>;
 };
 
 export const HomeMap = React.forwardRef<AppMapViewController, HomeMapProps>(
