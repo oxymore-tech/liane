@@ -8,7 +8,7 @@ const LocalizationContext = createContext<Localization>();
 export const LocalizationProvider = ({ children }: PropsWithChildren) => {
   const [localization, setLocalization] = useState<Localization | undefined>();
   useEffect(() => {
-    setLocalization(new Localization(navigator.language));
+    setLocalization(new Localization());
   }, []);
   if (!localization) return null;
   return <LocalizationContext.Provider value={localization}>{children}</LocalizationContext.Provider>;
