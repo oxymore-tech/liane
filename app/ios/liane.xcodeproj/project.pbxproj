@@ -86,7 +86,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				63335D0B29CCA8990085E911 /* MapLibre in Frameworks */,
-				63A6DD432984A1DE00D8DFE1 /* MapLibre in Frameworks */,
 				0E0BF490946DF94B00DA4931 /* libPods-liane-lianeTests.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -96,7 +95,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				63335D0A29CCA8990085E911 /* MapLibre in Frameworks */,
-				63A6DD422984A1DE00D8DFE1 /* MapLibre in Frameworks */,
 				558B1FFA83122B946BEFE84E /* libPods-liane.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -238,8 +236,7 @@
 			);
 			name = lianeTests;
 			packageProductDependencies = (
-				F594B7E04E04E3B268D735DF /* MapLibre */,
-				B182FD48B8B247A4E023B90C /* MapLibre */,
+				7553E0B7B3CA65096C16C1D2 /* MapLibre */,
 			);
 			productName = lianeTests;
 			productReference = 00E356EE1AD99517003FC87E /* lianeTests.xctest */;
