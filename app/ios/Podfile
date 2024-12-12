@@ -28,6 +28,9 @@ target 'liane' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
+  # default version
+  pod 'maplibre-react-native', :path => '../../../', :inhibit_warnings => false
+  
   target 'lianeTests' do
     inherit! :complete
     # Pods for testing

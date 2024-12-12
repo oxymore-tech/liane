@@ -15,11 +15,8 @@
 		32FE5308134C4924AF6F6A8E /* SourceSans3-ExtraLight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D3A4DE792B5343AAA3C4383B /* SourceSans3-ExtraLight.ttf */; };
 		558B1FFA83122B946BEFE84E /* libPods-liane.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BBD753819A9162E0D7CEC3E6 /* libPods-liane.a */; };
 		630A2E072982781900527AC3 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 630A2E062982781900527AC3 /* GoogleService-Info.plist */; };
-		63335D0A29CCA8990085E911 /* Mapbox in Frameworks */ = {isa = PBXBuildFile; productRef = 7553E0B7B3CA65096C16C1D2 /* Mapbox */; };
-		63335D0B29CCA8990085E911 /* Mapbox in Frameworks */ = {isa = PBXBuildFile; productRef = B182FD48B8B247A4E023B90C /* Mapbox */; };
+		63335D0A29CCA8990085E911 /* MapLibre in Frameworks */ = {isa = PBXBuildFile; productRef = 7553E0B7B3CA65096C16C1D2 /*   # default versionMapLibre */; };
 		63335D0E29CCA9D70085E911 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 63335D1029CCA9D70085E911 /* InfoPlist.strings */; };
-		63A6DD422984A1DE00D8DFE1 /* Mapbox in Frameworks */ = {isa = PBXBuildFile; productRef = BD6E43814983760D8BBC865C /* Mapbox */; };
-		63A6DD432984A1DE00D8DFE1 /* Mapbox in Frameworks */ = {isa = PBXBuildFile; productRef = F594B7E04E04E3B268D735DF /* Mapbox */; };
 		63B3F0FE2AEE731D008B90B8 /* RNLianeGeolocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63B3F0F92AEE731D008B90B8 /* RNLianeGeolocation.swift */; };
 		63B3F0FF2AEE731E008B90B8 /* RNLianeGeolocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63B3F0F92AEE731D008B90B8 /* RNLianeGeolocation.swift */; };
 		63B3F1002AEE731E008B90B8 /* LocationOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63B3F0FA2AEE731D008B90B8 /* LocationOptions.swift */; };
@@ -88,8 +85,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				63335D0B29CCA8990085E911 /* Mapbox in Frameworks */,
-				63A6DD432984A1DE00D8DFE1 /* Mapbox in Frameworks */,
+				63335D0B29CCA8990085E911 /* MapLibre in Frameworks */,
+				63A6DD432984A1DE00D8DFE1 /* MapLibre in Frameworks */,
 				0E0BF490946DF94B00DA4931 /* libPods-liane-lianeTests.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -98,8 +95,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				63335D0A29CCA8990085E911 /* Mapbox in Frameworks */,
-				63A6DD422984A1DE00D8DFE1 /* Mapbox in Frameworks */,
+				63335D0A29CCA8990085E911 /* MapLibre in Frameworks */,
+				63A6DD422984A1DE00D8DFE1 /* MapLibre in Frameworks */,
 				558B1FFA83122B946BEFE84E /* libPods-liane.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -241,8 +238,8 @@
 			);
 			name = lianeTests;
 			packageProductDependencies = (
-				F594B7E04E04E3B268D735DF /* Mapbox */,
-				B182FD48B8B247A4E023B90C /* Mapbox */,
+				F594B7E04E04E3B268D735DF /* MapLibre */,
+				B182FD48B8B247A4E023B90C /* MapLibre */,
 			);
 			productName = lianeTests;
 			productReference = 00E356EE1AD99517003FC87E /* lianeTests.xctest */;
@@ -261,7 +258,6 @@
 				7CD125B320F5BC1B8773D59B /* [CP] Embed Pods Frameworks */,
 				CDEBE03CCAD631BEE2A82D6E /* [CP] Copy Pods Resources */,
 				C863AF7EA2538922B9B1EBB8 /* [CP-User] [RNFB] Core Configuration */,
-				A863AF7EA2538922B9B1EBB9 /* Fix xcode 15 bug for mapbox signature */,
 			);
 			buildRules = (
 			);
@@ -269,8 +265,7 @@
 			);
 			name = liane;
 			packageProductDependencies = (
-				BD6E43814983760D8BBC865C /* Mapbox */,
-				7553E0B7B3CA65096C16C1D2 /* Mapbox */,
+				7553E0B7B3CA65096C16C1D2 /* MapLibre */,
 			);
 			productName = liane;
 			productReference = 13B07F961A680F5B00A75B9A /* liane.app */;
@@ -432,18 +427,6 @@
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-liane/Pods-liane-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
-		};
-		A863AF7EA2538922B9B1EBB9 /* Fix xcode 15 bug for mapbox signature */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 8;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Fix xcode 15 bug for mapbox signature";
-			runOnlyForDeploymentPostprocessing = 1;
-			shellPath = /bin/sh;
-			shellScript = "if [ \"$XCODE_VERSION_MAJOR\" = \"1500\" ]; then\n  echo \"Remove signature files (Xcode 15 workaround)\"\n\n  rm -f \"$BUILD_DIR/Release-iphoneos/maplibre-react-native/Mapbox.xcframework-ios.signature\"\nfi\n";
 		};
 		C863AF7EA2538922B9B1EBB8 /* [CP-User] [RNFB] Core Configuration */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -889,23 +872,10 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		7553E0B7B3CA65096C16C1D2 /* Mapbox */ = {
+		7553E0B7B3CA65096C16C1D2 /* MapLibre */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = C05048909091E9DDA8C2360A /* XCRemoteSwiftPackageReference "maplibre-gl-native-distribution" */;
-			productName = Mapbox;
-		};
-		B182FD48B8B247A4E023B90C /* Mapbox */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = C05048909091E9DDA8C2360A /* XCRemoteSwiftPackageReference "maplibre-gl-native-distribution" */;
-			productName = Mapbox;
-		};
-		BD6E43814983760D8BBC865C /* Mapbox */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = Mapbox;
-		};
-		F594B7E04E04E3B268D735DF /* Mapbox */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = Mapbox;
+			productName = MapLibre;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
