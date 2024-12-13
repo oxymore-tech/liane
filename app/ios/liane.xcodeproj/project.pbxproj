@@ -15,7 +15,6 @@
 		32FE5308134C4924AF6F6A8E /* SourceSans3-ExtraLight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D3A4DE792B5343AAA3C4383B /* SourceSans3-ExtraLight.ttf */; };
 		558B1FFA83122B946BEFE84E /* libPods-liane.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BBD753819A9162E0D7CEC3E6 /* libPods-liane.a */; };
 		630A2E072982781900527AC3 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 630A2E062982781900527AC3 /* GoogleService-Info.plist */; };
-		63335D0A29CCA8990085E911 /* MapLibre in Frameworks */ = {isa = PBXBuildFile; productRef = 7553E0B7B3CA65096C16C1D2 /*   # default versionMapLibre */; };
 		63335D0E29CCA9D70085E911 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 63335D1029CCA9D70085E911 /* InfoPlist.strings */; };
 		63B3F0FE2AEE731D008B90B8 /* RNLianeGeolocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63B3F0F92AEE731D008B90B8 /* RNLianeGeolocation.swift */; };
 		63B3F0FF2AEE731E008B90B8 /* RNLianeGeolocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63B3F0F92AEE731D008B90B8 /* RNLianeGeolocation.swift */; };
@@ -29,6 +28,7 @@
 		63B3F1072AEE731E008B90B8 /* LocationUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63B3F0FD2AEE731D008B90B8 /* LocationUtils.swift */; };
 		81857608003348378A738698 /* SourceSans3-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 97DEFB4864B245C69B834314 /* SourceSans3-SemiBold.ttf */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		8B11CBEFC5266F2BE70C839C /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 		D02F6E33B2D44CE3A3C3F71B /* SourceSans3-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 62F3939E764A4059AF2E3BB5 /* SourceSans3-Regular.ttf */; };
 		E2A8BDC1218A4D828F3DCDA4 /* SourceSans3-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A4E056353EAC491E8ADB0980 /* SourceSans3-Bold.ttf */; };
 		E33F0B549EDD4F298C7FE756 /* SourceSans3-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 28FD28F2E04E407C883866EF /* SourceSans3-Medium.ttf */; };
@@ -54,7 +54,7 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = liane/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = liane/Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = liane/main.m; sourceTree = "<group>"; };
-		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = RnDiffApp/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = liane/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		14CD1BF472180C7975EA29A3 /* Pods-liane-lianeTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-liane-lianeTests.debug.xcconfig"; path = "Target Support Files/Pods-liane-lianeTests/Pods-liane-lianeTests.debug.xcconfig"; sourceTree = "<group>"; };
 		28FD28F2E04E407C883866EF /* SourceSans3-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "SourceSans3-Medium.ttf"; path = "../assets/fonts/SourceSans3-Medium.ttf"; sourceTree = "<group>"; };
 		61FD6F939BE9CCA034401A36 /* libPods-liane-lianeTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-liane-lianeTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -85,7 +85,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				63335D0A29CCA8990085E911 /* MapLibre in Frameworks */,
 				0E0BF490946DF94B00DA4931 /* libPods-liane-lianeTests.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -94,7 +93,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				63335D0A29CCA8990085E911 /* MapLibre in Frameworks */,
 				558B1FFA83122B946BEFE84E /* libPods-liane.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -236,7 +234,7 @@
 			);
 			name = lianeTests;
 			packageProductDependencies = (
-				7553E0B7B3CA65096C16C1D2 /* MapLibre */,
+				0BFA4BC34C589C0E6E8755A1 /* MapLibre */,
 			);
 			productName = lianeTests;
 			productReference = 00E356EE1AD99517003FC87E /* lianeTests.xctest */;
@@ -255,6 +253,7 @@
 				7CD125B320F5BC1B8773D59B /* [CP] Embed Pods Frameworks */,
 				CDEBE03CCAD631BEE2A82D6E /* [CP] Copy Pods Resources */,
 				C863AF7EA2538922B9B1EBB8 /* [CP-User] [RNFB] Core Configuration */,
+				A863AF7EA2538922B9B1EBB9 /* Fix xcode 15 bug for mapbox signature */,
 			);
 			buildRules = (
 			);
@@ -262,7 +261,7 @@
 			);
 			name = liane;
 			packageProductDependencies = (
-				7553E0B7B3CA65096C16C1D2 /* MapLibre */,
+				783EF7B73F49D9AF53858819 /* MapLibre */,
 			);
 			productName = liane;
 			productReference = 13B07F961A680F5B00A75B9A /* liane.app */;
@@ -297,7 +296,7 @@
 			);
 			mainGroup = 83CBB9F61A601CBA00E9B192;
 			packageReferences = (
-				C05048909091E9DDA8C2360A /* XCRemoteSwiftPackageReference "maplibre-gl-native-distribution" */,
+				660017992E5482EA98A5EBDA /* XCRemoteSwiftPackageReference "maplibre-gl-native-distribution" */,
 			);
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
 			projectDirPath = "";
@@ -330,6 +329,7 @@
 				D02F6E33B2D44CE3A3C3F71B /* SourceSans3-Regular.ttf in Resources */,
 				63335D0E29CCA9D70085E911 /* InfoPlist.strings in Resources */,
 				81857608003348378A738698 /* SourceSans3-SemiBold.ttf in Resources */,
+				8B11CBEFC5266F2BE70C839C /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -424,6 +424,18 @@
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-liane/Pods-liane-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
+		};
+		A863AF7EA2538922B9B1EBB9 /* Fix xcode 15 bug for mapbox signature */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 8;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Fix xcode 15 bug for mapbox signature";
+			runOnlyForDeploymentPostprocessing = 1;
+			shellPath = /bin/sh;
+			shellScript = "if [ \"$XCODE_VERSION_MAJOR\" = \"1500\" ]; then\n  echo \"Remove signature files (Xcode 15 workaround)\"\n\n  rm -f \"$BUILD_DIR/Release-iphoneos/maplibre-react-native/Mapbox.xcframework-ios.signature\"\nfi\n";
 		};
 		C863AF7EA2538922B9B1EBB8 /* [CP-User] [RNFB] Core Configuration */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -735,8 +747,8 @@
 					"-DFOLLY_NO_CONFIG",
 					"-DFOLLY_MOBILE=1",
 					"-DFOLLY_USE_LIBCPP=1",
-          "-DFOLLY_CFG_NO_COROUTINES=1",
-          "-DFOLLY_HAVE_CLOCK_GETTIME=1",
+					"-DFOLLY_CFG_NO_COROUTINES=1",
+					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
@@ -744,6 +756,7 @@
 				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
 				USE_HERMES = true;
 			};
 			name = Debug;
@@ -858,7 +871,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		C05048909091E9DDA8C2360A /* XCRemoteSwiftPackageReference "maplibre-gl-native-distribution" */ = {
+		660017992E5482EA98A5EBDA /* XCRemoteSwiftPackageReference "maplibre-gl-native-distribution" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/maplibre/maplibre-gl-native-distribution";
 			requirement = {
@@ -869,9 +882,14 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		7553E0B7B3CA65096C16C1D2 /* MapLibre */ = {
+		0BFA4BC34C589C0E6E8755A1 /* MapLibre */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = C05048909091E9DDA8C2360A /* XCRemoteSwiftPackageReference "maplibre-gl-native-distribution" */;
+			package = 660017992E5482EA98A5EBDA /* XCRemoteSwiftPackageReference "maplibre-gl-native-distribution" */;
+			productName = MapLibre;
+		};
+		783EF7B73F49D9AF53858819 /* MapLibre */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 660017992E5482EA98A5EBDA /* XCRemoteSwiftPackageReference "maplibre-gl-native-distribution" */;
 			productName = MapLibre;
 		};
 /* End XCSwiftPackageProductDependency section */
