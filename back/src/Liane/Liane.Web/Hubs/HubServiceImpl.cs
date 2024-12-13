@@ -33,21 +33,12 @@ public sealed class HubServiceImpl(
 
   public async Task<bool> Push(Ref<User> recipient, Notification notification)
   {
-    try
+    if (notification.CreatedBy is not null)
     {
-      var connectionId = GetConnectionId(recipient);
-      if (connectionId is not null)
-      {
-        var unreadNotificationsIds = await lianeMessageService.GetUnreadLianes();
-        await hubContext.Clients.Client(connectionId).ReceiveUnreadOverview(unreadNotificationsIds);
-        return false;
-      }
+      await SendUnreadOverview(notification.CreatedBy);
     }
-    catch (Exception e)
-    {
-      // TODO handle retry 
-      logger.LogWarning(e, "Could not send notification to user {receiver} : {error}", recipient, e.Message);
-    }
+
+    await SendUnreadOverview(recipient);
 
     return false;
   }
@@ -131,6 +122,24 @@ public sealed class HubServiceImpl(
     {
       logger.LogInformation("Pushing trip update to {user} : {update}", recipient, trip);
       await hubContext.Clients.Client(connectionId).ReceiveTripUpdate(trip);
+    }
+  }
+
+  private async Task SendUnreadOverview(Ref<User> recipient)
+  {
+    try
+    {
+      var connectionId = GetConnectionId(recipient);
+      if (connectionId is not null)
+      {
+        var unreadNotificationsIds = await lianeMessageService.GetUnreadLianes();
+        await hubContext.Clients.Client(connectionId).ReceiveUnreadOverview(unreadNotificationsIds);
+      }
+    }
+    catch (Exception e)
+    {
+      // TODO handle retry 
+      logger.LogWarning(e, "Could not send notification to user {receiver} : {error}", recipient, e.Message);
     }
   }
 }
