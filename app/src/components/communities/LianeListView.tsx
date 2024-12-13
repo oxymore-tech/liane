@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useLayoutEffect } from "react";
 
 import { FlatList, RefreshControl } from "react-native";
 import { CoLianeMatch } from "@liane/common";
@@ -20,6 +20,10 @@ export const LianeListView = ({ data, isFetching, onRefresh, loadMore }: LianeLi
   const { services } = useContext(AppContext);
 
   const unreadLianes = useObservable(services.realTimeHub.unreadNotifications, {});
+
+  useLayoutEffect(() => {
+    services.realTimeHub.askForOverview().then();
+  }, [services.realTimeHub]);
 
   return (
     <FlatList

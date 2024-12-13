@@ -15,6 +15,8 @@ export interface HubService {
 
   start(): Promise<void>;
 
+  askForOverview(): Promise<void>;
+
   connectToLianeChat(onReceiveMessage: ConsumeMessage<LianeMessage>): Promise<Chat<"Liane">>;
 
   disconnectFromChat(): Promise<void>;
@@ -56,6 +58,8 @@ export abstract class AbstractHubService implements HubService {
   ) {}
 
   abstract start(): Promise<void>;
+
+  abstract askForOverview(): Promise<void>;
 
   abstract stop(): Promise<void>;
 
@@ -205,6 +209,10 @@ export class HubServiceClient extends AbstractHubService {
     this.logger.debug("HUB", "stop");
     await this.hub.stop().catch(err => this.logger.warn("HUB", err));
     this.isStarted = false;
+  }
+
+  async askForOverview(): Promise<void> {
+    await this.hub.invoke("AskForOverview");
   }
 
   async subscribeToTrackingInfo(lianeId: string, callback: OnLocationCallback): Promise<{ closed: boolean; unsubscribe: () => Promise<void> }> {

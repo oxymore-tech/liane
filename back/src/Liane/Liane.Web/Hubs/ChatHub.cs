@@ -70,4 +70,10 @@ public sealed class ChatHub(
   {
     return await lianeUpdatePushService.GetLastTrackingInfo(lianeId);
   }
+  
+  public async Task AskForOverview()
+  {
+    var unreadNotificationsIds = await lianeMessageService.GetUnreadLianes();
+    await Clients.Caller.ReceiveUnreadOverview(unreadNotificationsIds);
+  }
 }
