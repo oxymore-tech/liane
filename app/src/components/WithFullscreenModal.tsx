@@ -29,5 +29,5 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16
   },
-  title: { fontSize: 22, fontWeight: "500", color: AppColorPalettes.gray[800], paddingHorizontal: 8, marginBottom: 16 }
+  title: { fontSize: 22, fontWeight: "bold", color: AppColorPalettes.gray[800], paddingHorizontal: 8, marginBottom: 16 }
 });

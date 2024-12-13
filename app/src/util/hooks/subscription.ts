@@ -1,29 +1,31 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { DependencyList } from "react";
 import { BehaviorSubject, Observable, Subject, Subscribable, SubscriptionLike } from "rxjs";
 
-export const useSubscription = <T>(observable: Subscribable<T>, callback: (v: T) => void) => {
-  useEffect(() => {
+export const useSubscription = <T>(observable: Subscribable<T>, callback: (v: T) => void, deps: DependencyList) => {
+  React.useEffect(() => {
     const sub = observable.subscribe({ next: callback });
     return () => {
       sub.unsubscribe();
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
 };
 
-export const useSubscriptionValue = <T>(subscribe: (callback: (v: T) => void) => SubscriptionLike) => {
-  const [value, setValue] = useState<T>();
-  useEffect(() => {
+export const useSubscriptionValue = <T>(subscribe: (callback: (v: T) => void) => SubscriptionLike, deps: DependencyList) => {
+  const [value, setValue] = React.useState<T>();
+  React.useEffect(() => {
     const sub = subscribe(v => setValue(v));
     return () => {
       sub.unsubscribe();
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
   return value;
 };
 
 export const useObservable = <T>(observable: Observable<T>, defaultValue: T) => {
-  const [value, setValue] = useState<T>(defaultValue);
-  useEffect(() => {
+  const [value, setValue] = React.useState<T>(defaultValue);
+  React.useEffect(() => {
     const sub = observable.subscribe(v => {
       //  console.debug("rec observed value ->", v);
       setValue(v);
@@ -31,18 +33,20 @@ export const useObservable = <T>(observable: Observable<T>, defaultValue: T) => 
     return () => {
       sub.unsubscribe();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return value;
 };
 
 export const useSubject = <T>() => {
-  return useMemo(() => {
+  return React.useMemo(() => {
     return new Subject<T>();
   }, []);
 };
 
 export const useBehaviorSubject = <T>(initialValue: T) => {
-  return useMemo(() => {
+  return React.useMemo(() => {
     return new BehaviorSubject<T>(initialValue);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 };

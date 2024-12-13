@@ -1,7 +1,5 @@
-using System.Collections.Immutable;
-using System.Linq;
 using System.Threading.Tasks;
-using Liane.Api.Chat;
+using Liane.Api.Community;
 using Liane.Api.Event;
 using Liane.Api.Util.Ref;
 
@@ -16,18 +14,12 @@ public enum Priority
 public interface IPushMiddleware
 {
   Priority Priority { get; }
-
-  Task<bool> SendNotification(Ref<Api.User.User> receiver, Notification notification);
-
-  Task<bool> SendChatMessage(Ref<Api.User.User> receiver, Ref<ConversationGroup> conversation, ChatMessage message);
+  Task<bool> Push(Ref<Api.Auth.User> receiver, Notification notification);
+  Task<bool> PushMessage(Api.Auth.User sender, Ref<Api.Auth.User> receiver, Ref<Api.Community.Liane> liane, LianeMessage message);
 }
 
 public interface IPushService
 {
-  Task<bool> SendNotification(Ref<Api.User.User> receiver, Notification notification);
-
-  Task<bool> SendChatMessage(Ref<Api.User.User> receiver, Ref<ConversationGroup> conversation, ChatMessage message);
-
-  Task SendChatMessage(ImmutableList<Ref<Api.User.User>> receiver, Ref<ConversationGroup> conversation, ChatMessage message) =>
-    Task.WhenAll(receiver.Select(r => SendChatMessage(r, conversation, message)));
+  Task<bool> Push(Ref<Api.Auth.User> receiver, Notification notification);
+  Task PushMessage(Ref<Api.Community.Liane> liane, LianeMessage message);
 }

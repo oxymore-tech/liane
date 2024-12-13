@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS compiler
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS compiler
 
 WORKDIR /app
 
@@ -9,7 +9,7 @@ RUN dotnet restore
 
 RUN dotnet publish -c Release
 
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS test
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS test
 
 WORKDIR /app
 
@@ -20,7 +20,7 @@ RUN dotnet restore
 
 ENTRYPOINT [ "dotnet", "test", "--logger", "trx;LogFileName=/app/results/test-results.trx" ]
 
-FROM mcr.microsoft.com/dotnet/aspnet:7.0
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
 EXPOSE 5000
 
 RUN apt-get update \
@@ -29,7 +29,7 @@ RUN apt-get update \
 
 WORKDIR /app
 
-COPY --from=compiler /app/src/Liane/Liane.Web/bin/Release/net7.0/publish .
+COPY --from=compiler /app/src/Liane/Liane.Web/bin/Release/net8.0/publish .
 
 HEALTHCHECK --interval=5s --timeout=3s --retries=3 CMD curl --silent --fail http://localhost:5000/health || exit 1
 

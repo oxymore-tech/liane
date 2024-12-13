@@ -1,160 +1,85 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect } from "react";
 import { createNativeStackNavigator, NativeStackHeaderProps } from "@react-navigation/native-stack";
-import { BottomTabBarProps, createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppContext } from "@/components/context/ContextProvider";
-import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
-import { WithBadge } from "@/components/base/WithBadge";
-import { ArchivedTripsScreen } from "@/screens/user/ArchivedTripsScreen";
-import { OpenValidateTripScreen } from "@/screens/modals/OpenValidateTripScreen";
-import { SettingsScreen } from "@/screens/user/SettingsScreen";
-import { AccountScreen } from "@/screens/user/AccountScreen";
-import { PublishScreen } from "@/screens/publish/PublishScreen";
-import { LianeDetailScreen, LianeJoinRequestDetailScreen } from "@/screens/detail/LianeDetailScreen";
-import { OpenJoinRequestScreen } from "@/screens/modals/OpenJoinRequestScreen";
-import { RequestJoinScreen } from "@/screens/search/RequestJoinScreen";
-import { ProfileScreen } from "@/screens/user/ProfileScreen";
-import { ProfileEditScreen } from "@/screens/user/ProfileEditScreen";
-import { ChatScreen } from "@/screens/ChatScreen";
-import HomeScreen from "@/screens/home/HomeScreen";
-import MyTripsScreen from "@/screens/user/MyTripsScreen";
-import SignUpScreen from "@/screens/signUp/SignUpScreen";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
-import { useObservable } from "@/util/hooks/subscription";
 import { AppStyles } from "@/theme/styles";
+import { useNavigation } from "@react-navigation/native";
 import { Row } from "@/components/base/AppLayout";
-import { NavigationScreenTitles, useAppNavigation } from "@/api/navigation";
-import { AppPressableIcon, AppPressableOverlay } from "@/components/base/AppPressable";
+import { AppContext } from "@/components/context/ContextProvider";
+import HomeScreen from "@/screens/home/HomeScreen";
+import TripScheduleScreen from "@/screens/user/TripScheduleScreen";
 import { CommunitiesScreen } from "@/screens/communities/CommunitiesScreen";
-import NotificationScreen from "@/screens/notifications/NotificationScreen";
-import { TripGeolocationWizard } from "@/screens/home/TripGeolocationWizard";
 import { UserPicture } from "@/components/UserPicture";
-import { NavigationState, ParamListBase, PartialState, Route } from "@react-navigation/native";
-import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
-import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
+import { ProfileScreen } from "@/screens/user/ProfileScreen";
+import { ArchivedTripsScreen } from "@/screens/user/ArchivedTripsScreen";
+import { SettingsScreen } from "@/screens/user/SettingsScreen";
+import { PublishScreen } from "@/screens/publish/PublishScreen";
+import { TripDetailScreen } from "@/screens/detail/TripDetailScreen.tsx";
+import { LianeTripDetailScreen } from "@/screens/communities/LianeTripDetail.tsx";
+import { CommunitiesChatScreen } from "@/screens/communities/CommunitiesChatScreen";
+import { CommunitiesDetailScreen } from "@/screens/communities/CommunitiesDetailScreen";
+import { LianeMapDetailScreen } from "@/screens/communities/LianeMapDetail.tsx";
+import { TripGeolocationWizard } from "@/screens/home/TripGeolocationWizard";
+import { ProfileEditScreen } from "@/screens/user/ProfileEditScreen";
+import { AccountScreen } from "@/screens/user/AccountScreen";
+import { RallyingPointRequestsScreen } from "@/screens/user/RallyingPointRequestsScreen";
+import SignUpScreen from "@/screens/signUp/SignUpScreen";
+import { AppIcon, IconName } from "@/components/base/AppIcon";
+import { WithBadge } from "@/components/base/WithBadge";
+import { MatchListScreen } from "@/screens/communities/MatchListScreen.tsx";
+import { useObservable } from "@/util/hooks/subscription.ts";
+import { map } from "rxjs";
+import { AppPressableIcon } from "@/components/base/AppPressable.tsx";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-const Button = () => {
-  const [showButtonLabel, setShowButtonLabel] = useState(false);
-  const { width } = useAppWindowsDimensions();
-  const { navigation } = useAppNavigation();
-  return (
-    <View style={{ position: "relative", top: -8 }}>
-      {showButtonLabel && (
-        <Animated.View entering={FadeInDown} exiting={FadeOutDown} style={{ position: "absolute", top: -40, left: -width / 2 + 28, width }}>
-          <View
-            style={[
-              {
-                paddingVertical: 2,
-                paddingHorizontal: 8,
-                backgroundColor: AppColors.primaryColor,
-                borderRadius: 4,
-                flexShrink: 1,
-                alignSelf: "center"
-              },
-              AppStyles.shadow
-            ]}>
-            <AppText style={{ color: AppColors.white, fontWeight: "bold", fontSize: 16 }}>Créer une Liane</AppText>
-          </View>
-        </Animated.View>
-      )}
-      <AppPressableIcon
-        onTouchStart={() => setShowButtonLabel(true)}
-        onTouchEnd={() => setShowButtonLabel(false)}
-        onTouchCancel={() => setShowButtonLabel(false)}
-        size={32}
-        color={AppColors.white}
-        onPress={() => navigation.navigate("Publish", {})}
-        name={"plus-outline"}
-        style={{ padding: 12 }}
-        backgroundStyle={{ borderRadius: 24, backgroundColor: AppColors.primaryColor }}
-      />
-    </View>
-  );
-};
-const ButtonTabBar = ({ state, descriptors, navigation, insets }: BottomTabBarProps) => {
-  const buildItem = (
-    r: Route<Extract<string, string>, ParamListBase[string]> & { state?: NavigationState | PartialState<NavigationState> },
-    i: number
-  ) => {
-    const { options } = descriptors[r.key];
-    const Icon = options.tabBarIcon;
-    const Label = options.tabBarLabel;
-    const focused = state.index === i;
-
-    const onPress = () => {
-      const event = navigation.emit({
-        type: "tabPress",
-        target: r.key,
-        canPreventDefault: true
-      });
-
-      if (!focused && !event.defaultPrevented) {
-        navigation.navigate(r.name);
-      }
-    };
-
-    return (
-      <View style={{ flex: 1 }}>
-        <AppPressableOverlay
-          backgroundStyle={{ borderRadius: 4 }}
-          style={[{ backgroundColor: focused ? options.tabBarActiveBackgroundColor : undefined }, options.tabBarItemStyle]}
-          onPress={onPress}>
-          {/*@ts-ignore*/}
-          {Icon && <Icon focused={focused} />}
-          {/*@ts-ignore*/}
-          {Label && !(Label instanceof String) && <Label focused={focused} />}
-        </AppPressableOverlay>
-      </View>
-    );
-  };
-
-  return (
-    <Row style={[{ paddingBottom: insets.bottom, justifyContent: "space-evenly", backgroundColor: AppColors.white }, AppStyles.shadow]}>
-      {state.routes.slice(0, 2).map((r, i) => buildItem(r, i))}
-      <Button />
-      {state.routes.slice(2, 4).map((r, i) => buildItem(r, i + 2))}
-    </Row>
-  );
-};
 function Home() {
-  const { services, user } = useContext(AppContext);
-  const notificationCount = useObservable<number>(services.notification.unreadNotificationCount, 0);
+  const { services, user, refreshUser } = useContext(AppContext);
+  const notifications = useObservable<number>(services.realTimeHub.unreadNotifications.pipe(map(n => Object.entries(n).length)), 0);
+
   const iconSize = 24;
+
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    return navigation.addListener("state", _ => {
+      //Security to ensure that we always have a token
+      return refreshUser();
+    });
+  }, [navigation, refreshUser]);
+
   return (
     <Tab.Navigator
-      tabBar={ButtonTabBar}
       screenOptions={{
         tabBarStyle: useBottomBarStyle(),
         tabBarShowLabel: true,
-        tabBarHideOnKeyboard: true
+        tabBarHideOnKeyboard: true,
+        animation: "fade",
       }}>
       {makeTab(
         "Explorer",
         ({ focused }) => (
           <TabIcon iconName={"map-outline"} focused={focused} size={iconSize} />
         ),
-        HomeScreen,
-        { headerShown: false }
+        HomeScreen
       )}
       {makeTab(
-        "Mes trajets",
+        "Lianes",
         ({ focused }) => {
-          return <BadgeTabIcon iconName={"calendar"} focused={focused} size={iconSize} value={notificationCount} />;
-        },
-        MyTripsScreen,
-        { headerShown: false } //TODO generic header ?
-      )}
-      {makeTab(
-        "Communauté",
-        ({ focused }) => {
-          return <TabIcon iconName={"people-outline"} focused={focused} size={iconSize} />;
+          return <BadgeTabIcon iconName="liane" focused={focused} size={iconSize} value={notifications} />;
         },
         CommunitiesScreen
+      )}
+      {makeTab(
+        "Calendrier",
+        ({ focused }) => {
+          return <TabIcon iconName="calendar" focused={focused} size={iconSize} />;
+        },
+        TripScheduleScreen
       )}
       {makeTab(
         "Vous",
@@ -180,28 +105,25 @@ function Navigation() {
 
   if (user) {
     return (
-      <Stack.Navigator
-        initialRouteName={"Home"}
-        screenOptions={{ header: PageHeader, contentStyle: { backgroundColor: AppColors.lightGrayBackground } }}>
-        <Stack.Screen name="Home" component={Home} options={{ headerShown: false }} />
+      <Stack.Navigator initialRouteName={"Home"} screenOptions={{ header: EmptyPageHeader }}>
+        <Stack.Screen name="Home" component={Home} />
         <Stack.Screen name="ArchivedTrips" component={ArchivedTripsScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
-        <Stack.Screen name="Publish" component={PublishScreen} options={{ headerShown: false, animation: "fade" }} />
-        <Stack.Screen name="LianeDetail" component={LianeDetailScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Chat" component={ChatScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="RequestJoin" component={RequestJoinScreen} options={{ headerShown: false, presentation: "modal" }} />
-        <Stack.Screen name="OpenJoinLianeRequest" component={OpenJoinRequestScreen} options={{ headerShown: false, presentation: "modal" }} />
-        <Stack.Screen name="OpenValidateTrip" component={OpenValidateTripScreen} options={{ headerShown: false, presentation: "modal" }} />
+        <Stack.Screen name="Publish" component={PublishScreen} options={{ animation: "fade" }} />
+        <Stack.Screen name="TripDetail" component={TripDetailScreen} />
+        <Stack.Screen name="CommunitiesChat" component={CommunitiesChatScreen} />
+        <Stack.Screen name="LianeMapDetail" component={LianeMapDetailScreen} />
+        <Stack.Screen name="LianeTripDetail" component={LianeTripDetailScreen} />
+        <Stack.Screen name="CommunitiesDetails" component={CommunitiesDetailScreen} />
+        <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} />
         <Stack.Screen
           name="TripGeolocationWizard"
           component={TripGeolocationWizard}
           options={{ headerShown: false, animation: "slide_from_bottom" }}
         />
-        <Stack.Screen name="LianeJoinRequestDetail" component={LianeJoinRequestDetailScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Account" component={AccountScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Notifications" component={NotificationScreen} />
+        <Stack.Screen name="Account" component={AccountScreen} />
+        <Stack.Screen name="RallyingPointRequests" component={RallyingPointRequestsScreen} />
+        <Stack.Screen name="MatchList" component={MatchListScreen} />
       </Stack.Navigator>
     );
   }
@@ -220,7 +142,7 @@ interface TabIconProps {
 }
 const TabIcon = ({ iconName, focused, size }: TabIconProps) => {
   return (
-    <View style={{ paddingHorizontal: 8 }}>
+    <View >
       {typeof iconName === "string" ? (
         <AppIcon size={size} name={iconName} color={focused ? AppColors.secondaryColor : AppColorPalettes.gray[400]} />
       ) : (
@@ -241,9 +163,7 @@ const makeTab = (label: string, icon: (props: { focused: boolean }) => React.Rea
       name={label}
       component={screen}
       options={() => ({
-        headerShown,
-        /*  @ts-ignore */
-        header: () => <View style={{ height: 0 }} />,
+        headerShown: false,
         tabBarLabel: ({ focused }) => (
           <AppText
             style={[
@@ -253,20 +173,22 @@ const makeTab = (label: string, icon: (props: { focused: boolean }) => React.Rea
             {label}
           </AppText>
         ),
-        tabBarIcon: icon,
-        // tabBarActiveBackgroundColor: AppColors.secondaryColor,
-        tabBarItemStyle: { paddingHorizontal: 2, alignSelf: "center", alignItems: "center", rowGap: 2, paddingVertical: 4 }
+        tabBarIcon: icon
       })}
     />
   );
 };
 
-export const PageHeader = (props: { title?: string | undefined; goBack?: () => void } & Partial<NativeStackHeaderProps>) => {
+export const EmptyPageHeader = (props: { title?: string | undefined; goBack?: () => void } & Partial<NativeStackHeaderProps>) => {
   const insets = useSafeAreaInsets();
+  return <Row style={[styles.header, { paddingTop: insets.top }]} />;
+};
+
+export const PageHeader = (props: { title?: string | undefined; goBack?: () => void } & Partial<NativeStackHeaderProps>) => {
   // @ts-ignore
   const defaultName = props.route?.name ? NavigationScreenTitles[props.route.name] || "" : "";
   return (
-    <Row style={{ paddingTop: insets.top + 16, padding: 16, backgroundColor: AppColors.white }} spacing={24}>
+    <Row style={[styles.header, { paddingTop: 16 }]} spacing={24}>
       <AppPressableIcon
         name={"arrow-ios-back-outline"}
         color={AppColors.primaryColor}
@@ -279,42 +201,25 @@ export const PageHeader = (props: { title?: string | undefined; goBack?: () => v
 };
 
 const styles = StyleSheet.create({
-  bottomBar: {
-    itemSpacing: 16,
-    margin: 0,
+  header: {
+    paddingBottom: 8,
     backgroundColor: AppColors.white,
-    overflow: "hidden",
-    alignItems: "stretch",
-    paddingBottom: 0 // ios layout
+    alignItems: "center"
   },
   tabLabel: {
-    fontSize: 12,
-    position: "relative",
-    bottom: 2
-  },
-  headerContainer: {
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginLeft: 8,
-    marginRight: 16
-  },
-  filterContainer: {
-    height: 50,
-    backgroundColor: AppColors.primaryColor,
-    borderRadius: 18,
-    paddingVertical: 4,
-    paddingLeft: 4
+    marginBottom: 0,
+    fontSize: 14
   }
 });
 
 export const useBottomBarStyle = () => {
   const insets = useSafeAreaInsets();
   return [
-    styles.bottomBar,
     AppStyles.shadow,
     {
-      paddingBottom: insets.bottom,
-      minHeight: insets.bottom + 54
+      paddingTop: 8,
+      paddingBottom: Math.min(insets.bottom, 16),
+      minHeight: insets.bottom + 70
     }
   ];
 };

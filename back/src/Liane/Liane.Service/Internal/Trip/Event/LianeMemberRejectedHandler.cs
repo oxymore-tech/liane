@@ -1,31 +1,25 @@
 using System.Threading.Tasks;
+using Liane.Api.Community;
 using Liane.Api.Event;
-using Liane.Api.Trip;
-using Liane.Api.Util.Ref;
-using Liane.Service.Internal.Util;
+using Liane.Service.Internal.Event;
+using UuidExtensions;
 
 namespace Liane.Service.Internal.Trip.Event;
 
-public sealed class LianeMemberRejectedHandler : IEventListener<LianeEvent.MemberRejected>
+// ReSharper disable once UnusedType.Global
+// Autodiscovered by DI
+public sealed class LianeMemberRejectedHandler(IPushService pushService)
+  : IEventListener<MessageContent.MemberRejected>
 {
-  private readonly INotificationService notificationService;
-  private readonly ICurrentContext currentContext;
-  private readonly IRallyingPointService rallyingPointService;
-
-  public LianeMemberRejectedHandler(INotificationService notificationService, ICurrentContext currentContext, IRallyingPointService rallyingPointService)
+  public async Task OnEvent(LianeEvent<MessageContent.MemberRejected> e)
   {
-    this.notificationService = notificationService;
-    this.currentContext = currentContext;
-    this.rallyingPointService = rallyingPointService;
-  }
-
-  public async Task OnEvent(LianeEvent.MemberRejected e, Ref<Api.User.User>? sender = null)
-  {
-    var destination = await rallyingPointService.Get(e.To);
-    await notificationService.SendEvent("Demande déclinée",
-      $"Votre demande de trajet à destination de {destination.Label} n'a pas été acceptée.", 
-      sender ?? currentContext.CurrentUser().Id,
-      e.Member, 
-      e);
+    await pushService.Push(e.Content.User, new Notification(
+      Uuid7.Guid(),
+      e.Sender,
+      e.At,
+      "Demande déclinée",
+      "Vous n'avez pas été accepté dans la liane",
+      "liane://liane"
+    ));
   }
 }

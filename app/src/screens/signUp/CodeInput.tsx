@@ -6,16 +6,18 @@ import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { AppText } from "@/components/base/AppText";
-import { sleep } from "@/util/datetime";
+import { sleep } from "@liane/common";
 
 type CodeInputProps = {
-  onValidate: () => Promise<void>;
+  submitting?: boolean;
+  submit: () => void;
   retry: () => void;
+  canSubmit?: boolean;
   code: string;
   onChange: (code: string) => void;
 };
 
-const resendDelay = 30;
+const resendDelay = 60;
 const Retry = (props: { retry: () => void }) => {
   const [allowRetryCountdown, setAllowRetryCountdown] = useState(resendDelay);
 
@@ -51,15 +53,9 @@ const Retry = (props: { retry: () => void }) => {
   );
 };
 
-export const CodeInput = ({ code, onChange, onValidate, retry }: CodeInputProps) => {
-  const [validating, setValidating] = useState(false);
-  const disabled = code.length < 6 || validating;
+export const CodeInput = ({ canSubmit, onChange, submitting, submit, retry, code }: CodeInputProps) => {
   const buttonColor = {
-    backgroundColor: disabled ? AppColorPalettes.gray[400] : AppColorPalettes.blue[500]
-  };
-  const validate = () => {
-    setValidating(true);
-    onValidate().finally(() => setValidating(false));
+    backgroundColor: canSubmit ? AppColorPalettes.blue[500] : AppColorPalettes.gray[400]
   };
 
   return (
@@ -67,26 +63,20 @@ export const CodeInput = ({ code, onChange, onValidate, retry }: CodeInputProps)
       <View style={styles.inputContainer}>
         <Column style={{ flex: 1 }}>
           <AppTextInput
-            style={[styles.input]}
-            placeholder=""
+            value={code}
+            style={styles.input}
+            placeholder="123456"
             autoFocus={true}
-            returnKeyLabel={"next"}
+            returnKeyLabel="next"
             onChangeText={onChange}
-            keyboardType={"numeric"}
-            onSubmitEditing={validate}
+            keyboardType="numeric"
+            onSubmitEditing={submit}
             maxLength={6}
           />
-          <Row style={{ position: "absolute", bottom: 8 }} spacing={4}>
-            {Array.from({ ...code.split(""), length: 6 }).map((c, index) => (
-              <View key={index} style={{ borderColor: AppColorPalettes.gray[500], borderBottomWidth: 1 }}>
-                <AppText style={[{ fontSize: 24, color: "transparent" }]}>{c || "0"}</AppText>
-              </View>
-            ))}
-          </Row>
         </Column>
-        <Pressable style={[styles.button, buttonColor]} disabled={disabled} onPress={validate}>
-          {!validating && <AppIcon name="arrow-circle-right-outline" color={AppColors.white} />}
-          {validating && <ActivityIndicator color={AppColors.white} size={"small"} />}
+        <Pressable style={[styles.button, buttonColor]} disabled={!canSubmit} onPress={submit}>
+          {!submitting && <AppIcon name="arrow-circle-right-outline" color={AppColors.white} />}
+          {submitting && <ActivityIndicator color={AppColors.white} size={"small"} />}
         </Pressable>
       </View>
       <Retry retry={retry} />
@@ -102,8 +92,7 @@ const styles = StyleSheet.create({
   inputContainer: {
     marginVertical: 16,
     height: 52,
-    width: "75%",
-    minWidth: 250,
+    width: 200,
     backgroundColor: AppColors.white,
     display: "flex",
     flexDirection: "row",

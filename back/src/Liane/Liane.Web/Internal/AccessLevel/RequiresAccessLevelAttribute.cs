@@ -10,7 +10,7 @@ public sealed class RequiresAccessLevelAttribute : TypeFilterAttribute
   public RequiresAccessLevelAttribute(ResourceAccessLevel accessLevel, Type resourceType, string resourceIdentifier = "id")
     : base(typeof(RequiresAccessLevelFilter))
   {
-    Arguments = new object[] { accessLevel, resourceType, resourceIdentifier };
+    Arguments = [accessLevel, resourceType, resourceIdentifier];
   }
   
 

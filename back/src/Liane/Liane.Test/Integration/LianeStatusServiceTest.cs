@@ -1,10 +1,9 @@
 using System;
 using System.Threading.Tasks;
-using Liane.Api.Event;
 using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
-using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Trip;
+using Liane.Service.Internal.Trip.Geolocation;
 using Liane.Service.Internal.User;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
@@ -15,16 +14,16 @@ namespace Liane.Test.Integration;
 [TestFixture(Category = "Integration")]
 public sealed class LianeStatusServiceTest : BaseIntegrationTest
 {
-  private LianeServiceImpl lianeService = null!;
+  private TripServiceImpl tripService = null!;
+  private ILianeTrackerService trackerService = null!;
   private MockCurrentContext currentContext = null!;
-  private EventDispatcher eventDispatcher = null!;
   private LianeStatusUpdate lianeStatusUpdate = null!;
 
   protected override void Setup(IMongoDatabase db)
   {
-    lianeService = ServiceProvider.GetRequiredService<LianeServiceImpl>();
+    tripService = ServiceProvider.GetRequiredService<TripServiceImpl>();
+    trackerService = ServiceProvider.GetRequiredService<ILianeTrackerService>();
     lianeStatusUpdate = ServiceProvider.GetRequiredService<LianeStatusUpdate>();
-    eventDispatcher = ServiceProvider.GetRequiredService<EventDispatcher>();
     currentContext = ServiceProvider.GetRequiredService<MockCurrentContext>();
   }
 
@@ -39,18 +38,18 @@ public sealed class LianeStatusServiceTest : BaseIntegrationTest
     var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddHours(-2));
     var liane2 = await InsertLiane("6408a644437b60cfd3b15872", userB, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddHours(-2));
     var liane3 = await InsertLiane("6408a644437b60cfd3b15875", userB, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddMinutes(-55));
-    await lianeService.AddMember(liane1, new LianeMember(userB.Id, LabeledPositions.Cocures, LabeledPositions.Mende));
-    await lianeService.AddMember(liane2, new LianeMember(userA.Id, LabeledPositions.Cocures, LabeledPositions.Mende));
-    await lianeService.UpdateState(liane2, LianeState.Started);
+    await tripService.AddMember(liane1, new TripMember(userB.Id, LabeledPositions.Cocures, LabeledPositions.Mende));
+    await tripService.AddMember(liane2, new TripMember(userA.Id, LabeledPositions.Cocures, LabeledPositions.Mende));
+    await tripService.UpdateState(liane2, TripStatus.Started);
     await lianeStatusUpdate.Update(now);
 
-    liane1 = await lianeService.Get(liane1.Id);
-    liane2 = await lianeService.Get(liane2.Id);
-    liane3 = await lianeService.Get(liane3.Id);
+    liane1 = await tripService.Get(liane1.Id);
+    liane2 = await tripService.Get(liane2.Id);
+    liane3 = await tripService.Get(liane3.Id);
 
-    Assert.AreEqual(LianeState.Finished, liane1.State);
-    Assert.AreEqual(LianeState.Finished, liane2.State);
-    Assert.AreEqual(LianeState.Canceled, liane3.State);
+    Assert.AreEqual(TripStatus.Finished, liane1.State);
+    Assert.AreEqual(TripStatus.Finished, liane2.State);
+    Assert.AreEqual(TripStatus.Canceled, liane3.State);
   }
 
   [Test]
@@ -63,21 +62,21 @@ public sealed class LianeStatusServiceTest : BaseIntegrationTest
     var now = DateTime.UtcNow;
 
     var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddMinutes(-2));
-    var liane2 = await InsertLiane("6408a644437b60cfd3b15875", userA, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddMinutes(-2));
+    var liane2 = await InsertLiane("6408a644437b60cfd3b15875", userA, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddHours(-2));
     var liane3 = await InsertLiane("6408a644437b60cfd3b15876", userA, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddMinutes(10));
     var liane4 = await InsertLiane("6408a644437b60cfd3b15876", userA, LabeledPositions.Cocures, LabeledPositions.Mende, now.AddMinutes(2));
-    await lianeService.AddMember(liane1.Id, new LianeMember(userB.Id, LabeledPositions.QuezacParking, LabeledPositions.Mende));
-    await lianeService.AddMember(liane4.Id, new LianeMember(userB.Id, LabeledPositions.QuezacParking, LabeledPositions.Mende));
-    
+    await tripService.AddMember(liane1.Id, new TripMember(userB.Id, LabeledPositions.QuezacParking, LabeledPositions.Mende));
+    await tripService.AddMember(liane4.Id, new TripMember(userB.Id, LabeledPositions.QuezacParking, LabeledPositions.Mende));
+
     await lianeStatusUpdate.Update(now);
-    liane1 = await lianeService.Get(liane1.Id);
-    liane2 = await lianeService.Get(liane2.Id);
-    liane3 = await lianeService.Get(liane3.Id);
-    liane4 = await lianeService.Get(liane4.Id);
+    liane1 = await tripService.Get(liane1.Id);
+    liane2 = await tripService.Get(liane2.Id);
+    liane3 = await tripService.Get(liane3.Id);
+    liane4 = await tripService.Get(liane4.Id);
 
     // Assert.AreEqual(LianeState.Started, liane1.State);
-     Assert.AreEqual(LianeState.Canceled, liane2.State);
-     Assert.AreEqual(LianeState.NotStarted, liane3.State);
+    Assert.AreEqual(TripStatus.Canceled, liane2.State);
+    Assert.AreEqual(TripStatus.NotStarted, liane3.State);
     // Assert.AreEqual(LianeState.Started, liane4.State);
   }
 
@@ -91,12 +90,12 @@ public sealed class LianeStatusServiceTest : BaseIntegrationTest
     var departureTime = DateTime.UtcNow.AddMinutes(5);
 
     var liane1 = await InsertLiane("6408a644437b60cfd3b15874", userA, LabeledPositions.Cocures, LabeledPositions.Mende, departureTime);
-    await lianeService.AddMember(liane1.Id, new LianeMember(userB.Id, LabeledPositions.QuezacParking, LabeledPositions.Mende));
+    await tripService.AddMember(liane1.Id, new TripMember(userB.Id, LabeledPositions.QuezacParking, LabeledPositions.Mende));
 
     currentContext.SetCurrentUser(userA);
-    await eventDispatcher.Dispatch(new LianeEvent.MemberPing(liane1.Id,  ((DateTimeOffset)DateTime.Now).ToUnixTimeMilliseconds(), TimeSpan.FromMinutes(5), null));
+    await trackerService.SendPing(new MemberPing(liane1.Id, ((DateTimeOffset)DateTime.Now).ToUnixTimeMilliseconds(), null));
 
-    var actual = await lianeService.Get(liane1.Id);
+    var actual = await tripService.Get(liane1.Id);
 
     // Assert.AreEqual(LianeState.Started, actual.State);
     // CollectionAssert.AreEquivalent(ImmutableHashSet.Create((Ref<User>)userA.Id), actual.Carpoolers);
@@ -105,9 +104,9 @@ public sealed class LianeStatusServiceTest : BaseIntegrationTest
     // AssertExtensions.AreMongoEquals(departureTime, actual.NextEta.Eta);
   }
 
-  private async Task<Api.Trip.Liane> InsertLiane(string id, DbUser userA, Ref<RallyingPoint> from, Ref<RallyingPoint> to, DateTime departureTime)
+  private async Task<Api.Trip.Trip> InsertLiane(string id, DbUser userA, Ref<RallyingPoint> from, Ref<RallyingPoint> to, DateTime departureTime)
   {
     currentContext.SetCurrentUser(userA);
-    return await lianeService.Create(new LianeRequest(id, departureTime, null, 4, from, to), userA.Id);
+    return await tripService.Create(new TripRequest(id, null!, departureTime, null, 4, from, to), userA.Id);
   }
 }

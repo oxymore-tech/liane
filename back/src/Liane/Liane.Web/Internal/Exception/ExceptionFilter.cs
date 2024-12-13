@@ -20,7 +20,6 @@ public sealed class ExceptionFilter : IAsyncExceptionFilter, IOrderedFilter
     var objectResult = HttpExceptionMapping.Map(context.Exception, context.ModelState, logger);
     if (objectResult == null)
     {
-      context.Result = new ObjectResult(context.Exception) { StatusCode = 500 };
       return Task.CompletedTask;
     }
 

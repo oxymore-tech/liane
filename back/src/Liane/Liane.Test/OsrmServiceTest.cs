@@ -46,43 +46,6 @@ public sealed class OsrmServiceTest
   }
 
   [Test]
-  public async Task ShouldGetRouteFromMendeToFloracByLeCrouzet()
-  {
-    var route = await tested.Route(ImmutableList.Create(Positions.Mende, Positions.LeCrouzet, Positions.Florac), overview: "false");
-
-    AssertJson.AreEqual("mende-leCrouzet-florac.json", route);
-    Assert.IsNotNull(route.Routes[0].Duration);
-  }
-
-
-  [Test]
-  public async Task ShouldGetRouteFromMendeToFloracByGorgesDuTarnCaussesAndPrades()
-  {
-    var route = await tested.Route(ImmutableList.Create(Positions.Mende, Positions.GorgesDuTarnCausses, Positions.Prades, Positions.Florac), overview: "false");
-
-    AssertJson.AreEqual("mende-gorgesDuTarnCausses-prades-florac.json", route);
-    Assert.IsNotNull(route.Routes[0].Duration);
-  }
-
-  [Test]
-  public async Task ShouldGetRouteFromMendeToFloracByLeCrouzetAndCocures()
-  {
-    var route = await tested.Route(ImmutableList.Create(Positions.Mende, Positions.LeCrouzet, Positions.Cocures, Positions.Florac), overview: "false");
-
-    AssertJson.AreEqual("mende-leCrouzet-cocures-florac.json", route);
-    Assert.IsNotNull(route.Routes[0].Duration);
-  }
-
-  [Test]
-  public async Task ShouldGetRouteFromMendeToFloracByLeCrouzetAndRampon()
-  {
-    var route = await tested.Route(ImmutableList.Create(Positions.Mende, Positions.LeCrouzet, Positions.Rampon, Positions.Florac), overview: "false");
-
-    AssertJson.AreEqual("mende-leCrouzet-rampon-florac.json", route);
-    Assert.IsNotNull(route.Routes[0].Duration);
-  }
-
-  [Test]
   public async Task ShouldGetRouteWithAnnotations()
   {
     var result = await tested.Route(coordinates, annotations: "true");

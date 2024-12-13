@@ -1,7 +1,7 @@
 using System;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Liane.Api.User;
+using Liane.Api.Auth;
 using Liane.Api.Util.Exception;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
@@ -9,19 +9,15 @@ using MongoDB.Driver;
 
 namespace Liane.Service.Internal.User;
 
-public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User>, IUserService
+public sealed class UserServiceImpl(IMongoDatabase mongo) : BaseMongoCrudService<DbUser, Api.Auth.User>(mongo), IUserService
 {
-  public UserServiceImpl(IMongoDatabase mongo) : base(mongo)
-  {
-  }
-
-  public override async Task<Api.User.User> Get(Ref<Api.User.User> reference)
+  public override async Task<Api.Auth.User> Get(Ref<Api.Auth.User> reference)
   {
     try
     {
       return await base.Get(reference);
     }
-    catch (ResourceNotFoundException _)
+    catch (ResourceNotFoundException)
     {
       return FullUser.Unknown(reference);
     }
@@ -45,35 +41,38 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
   public async Task<FullUser> UpdateInfo(string id, UserInfo info)
   {
     const int minLength = 2;
-    if (info.FirstName.Length < minLength) throw new ValidationException(nameof(UserInfo.FirstName), ValidationMessage.TooShort(minLength));
-    if (info.LastName.Length < minLength) throw new ValidationException(nameof(UserInfo.LastName), ValidationMessage.TooShort(minLength));
+    var firstName = info.FirstName.Trim();
+    var lastName = info.LastName.Trim();
+
+    if (firstName.Length < minLength)
+    {
+      throw new ValidationException(nameof(UserInfo.FirstName), ValidationMessage.TooShort(minLength));
+    }
+
+    if (lastName.Length < minLength)
+    {
+      throw new ValidationException(nameof(UserInfo.LastName), ValidationMessage.TooShort(minLength));
+    }
 
     await Mongo.GetCollection<DbUser>()
       .UpdateOneAsync(
         u => u.Id == id,
-        Builders<DbUser>.Update.Set(i => i.UserInfo!.FirstName, info.FirstName)
-          .Set(i => i.UserInfo!.LastName, info.LastName)
+        Builders<DbUser>.Update.Set(i => i.UserInfo!.FirstName, firstName)
+          .Set(i => i.UserInfo!.LastName, lastName)
           .Set(i => i.UserInfo!.Gender, info.Gender)
       );
     return await GetFullUser(id);
   }
 
-  public async Task<FullUser> GetByPhone(string phone)
+  public async Task<bool> IsSignedUp(string phone)
   {
     var phoneNumber = phone.ToPhoneNumber();
 
-    var number = phoneNumber.ToString();
-
     var dbUser = await Mongo.GetCollection<DbUser>()
-      .Find(u => u.Phone == number)
+      .Find(u => u.Phone == phoneNumber)
       .FirstOrDefaultAsync();
 
-    if (dbUser is null)
-    {
-      throw new ResourceNotFoundException($"User ${phoneNumber}");
-    }
-
-    return MapUser(dbUser);
+    return dbUser?.UserInfo is not null;
   }
 
   public async Task<FullUser> GetFullUser(string userId)
@@ -82,6 +81,12 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
     return userDb is null
       ? FullUser.Unknown(userId)
       : MapUser(userDb);
+  }
+
+  public async Task<FullUser?> TryGetFullUser(string userId)
+  {
+    var userDb = await Mongo.Get<DbUser>(userId);
+    return userDb is not null ? MapUser(userDb) : null;
   }
 
   public Task Delete(string id)
@@ -93,13 +98,12 @@ public sealed class UserServiceImpl : BaseMongoCrudService<DbUser, Api.User.User
   private static FullUser MapUser(DbUser dbUser)
   {
     var info = dbUser.UserInfo ?? new UserInfo("Utilisateur Inconnu", "", null, Gender.Unspecified);
-    return new FullUser(dbUser.Id, dbUser.Phone, dbUser.CreatedAt, info.FirstName, info.LastName, info.Gender, dbUser.Stats,info.PictureUrl, dbUser.PushToken);
+    return new FullUser(dbUser.Id, dbUser.Phone, dbUser.CreatedAt, info.FirstName, info.LastName, info.Gender, dbUser.Stats, info.PictureUrl, dbUser.PushToken);
   }
 
-  protected override Task<Api.User.User> MapEntity(DbUser dbUser)
+  protected override Task<Api.Auth.User> MapEntity(DbUser dbUser)
   {
-    return Task.FromResult(new Api.User.User(dbUser.Id, dbUser.CreatedAt, FullUser.GetPseudo(dbUser.UserInfo?.FirstName, dbUser.UserInfo?.LastName), dbUser.UserInfo?.Gender ?? Gender.Unspecified,
-      dbUser.UserInfo?.PictureUrl, dbUser.Stats));
+    return Task.FromResult(dbUser.MapToUser());
   }
 
   private async Task UpdateField<T>(string userId, Expression<Func<DbUser, T>> field, T value)

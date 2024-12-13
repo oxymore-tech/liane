@@ -1,0 +1,4504 @@
+{
+  "_id": {
+    "$oid": "65121f00692ede38a5f41f45"
+  },
+  "createdBy": {
+    "$oid": "6410edc1e02078e7108a5897"
+  },
+  "createdAt": {
+    "$date": {
+      "$numberLong": "1695686400141"
+    }
+  },
+  "departureTime": {
+    "$date": {
+      "$numberLong": "1696348800000"
+    }
+  },
+  "return": null,
+  "members": [
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "from": "custom:001",
+      "to": "mairie:31427",
+      "seatCount": 3,
+      "feedback": {
+        "canceled": false,
+        "comment": null
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "from": "custom:001",
+      "to": "mairie:31324",
+      "seatCount": -1,
+      "feedback": null
+    }
+  ],
+  "driver": {
+    "user": {
+      "$oid": "6410edc1e02078e7108a5897"
+    },
+    "canDrive": true
+  },
+  "state": "Finished",
+  "wayPoints": [
+    {
+      "rallyingPoint": "custom:001",
+      "duration": 0,
+      "distance": 0,
+      "eta": {
+        "$date": {
+          "$numberLong": "1696348800000"
+        }
+      }
+    },
+    {
+      "rallyingPoint": "mairie:31324",
+      "duration": 2431,
+      "distance": 57548,
+      "eta": {
+        "$date": {
+          "$numberLong": "1696351231000"
+        }
+      }
+    },
+    {
+      "rallyingPoint": "mairie:31427",
+      "duration": 1375,
+      "distance": 26073,
+      "eta": {
+        "$date": {
+          "$numberLong": "1696352606000"
+        }
+      }
+    }
+  ],
+  "pings": [
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348610904"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3910957,
+          43.5680169
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348629373"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3910751,
+          43.5679612
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348650979"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3912123,
+          43.5678562
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348670945"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3914206,
+          43.5678041
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348691060"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3916505,
+          43.5678683
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348711019"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3914968,
+          43.5680385
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348731093"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3913153,
+          43.5680954
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348751106"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3912522,
+          43.5680821
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348771081"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3912766,
+          43.5680764
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348779143"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3909866683462384,
+          43.56790842167671
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348784204"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3909866683462384,
+          43.56790842167671
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348791202"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3913999,
+          43.5681586
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348793500"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3913025128183707,
+          43.5681360183799
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348795500"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3912331433808396,
+          43.56821397473648
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348796500"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3911675807690167,
+          43.56808503819056
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348799500"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3912931485119695,
+          43.56807845807132
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348803995"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3910094369215806,
+          43.56806386731897
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348811249"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3914194,
+          43.5680258
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348811996"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3910094369215809,
+          43.56806386731921
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348831402"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3915377,
+          43.5680407
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348851326"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3914102,
+          43.568058
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348871302"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3912531,
+          43.5679698
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348891394"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3910995,
+          43.5679431
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348911399"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3914461,
+          43.567969
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348931403"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3914483,
+          43.5680176
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348951401"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3913716,
+          43.5680366
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348957997"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3914322303170823,
+          43.56788879894619
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348961998"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3915702529440324,
+          43.56784847462137
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348971402"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3913675,
+          43.567996
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696348991402"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3913678,
+          43.5679527
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349011402"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.391476,
+          43.5679866
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349031400"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3914317,
+          43.56796
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349051402"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3913791,
+          43.5679361
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349071400"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3914641,
+          43.5678835
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349091401"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3913588,
+          43.5679277
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349111399"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3912447,
+          43.567943
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349131401"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3914062,
+          43.5679466
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349151402"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3913861,
+          43.5679462
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349171403"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3913974,
+          43.5679941
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349191399"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3911884,
+          43.5679583
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349211819"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.390894,
+          43.5679467
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349231802"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3910906,
+          43.568053
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349251820"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.391088,
+          43.5680375
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349271865"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3910867,
+          43.5680676
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349292345"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3911041,
+          43.567955
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349311400"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3912969,
+          43.5679084
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349331400"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3914361,
+          43.5679997
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349351400"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3912974,
+          43.5680067
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349371400"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3911742,
+          43.5679733
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349391400"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3912405,
+          43.5679695
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349412108"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3912313,
+          43.5679659
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349432402"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.391145,
+          43.5680351
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349452413"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3912197,
+          43.5679844
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349472401"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3913531,
+          43.567994
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349492398"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3910988,
+          43.5679852
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349512399"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3910597,
+          43.5680402
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349532398"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3910063,
+          43.5681254
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349552401"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3910899,
+          43.5680435
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349572398"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3911402,
+          43.5679714
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349592397"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3911558,
+          43.5680002
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349612398"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3911877,
+          43.568078
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349632396"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3912249,
+          43.5680104
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349652382"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3912516,
+          43.5680321
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349672390"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3912466,
+          43.5679671
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349692417"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3913236,
+          43.5679331
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349712400"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3911826,
+          43.567892
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349732389"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3910503,
+          43.5678509
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349752405"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3910982,
+          43.5679483
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349772399"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3911715,
+          43.5679373
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349792397"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3911737,
+          43.567922
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349812410"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.39118,
+          43.5678483
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349832398"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3911259,
+          43.5677095
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349852401"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3911008,
+          43.5677207
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349872385"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3910471,
+          43.5678399
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349892393"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3911085,
+          43.5678365
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349912380"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3911727,
+          43.5678719
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349932390"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3910358,
+          43.5678152
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349952399"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3910287,
+          43.5677345
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349972395"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3910723,
+          43.5679211
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696349992399"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3911428,
+          43.5680128
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350012395"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.391142,
+          43.5679736
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350032387"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3910754,
+          43.5678196
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350052397"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3910726,
+          43.5678385
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350073989"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3911586,
+          43.5678776
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350092401"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3911461,
+          43.5679472
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350112397"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3912826,
+          43.5678821
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350133924"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3912436,
+          43.5677659
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350154093"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3910845,
+          43.5677646
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350174000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.391223,
+          43.5678947
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350193930"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.391126,
+          43.5680212
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350212400"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3911633,
+          43.5679723
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350233959"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3911648,
+          43.5679728
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350252413"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3911854,
+          43.5680484
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350272513"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3911898,
+          43.5679873
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350292398"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3910915,
+          43.5681106
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350313939"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3910915,
+          43.5681158
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350334255"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.39081,
+          43.5680183
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350352401"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3908037,
+          43.5680137
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350372409"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3911598,
+          43.5681395
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350392407"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3912483,
+          43.5679919
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350412401"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3913426,
+          43.5679689
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350432410"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.391329,
+          43.5679421
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350453893"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3913312,
+          43.5679408
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350473400"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3913883,
+          43.5679354
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350493398"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3913309,
+          43.5679732
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350513909"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3913256,
+          43.5679739
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350534306"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3908687,
+          43.5681096
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350554136"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3903514,
+          43.5678876
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350574147"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3897605,
+          43.5664064
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350592392"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3890941,
+          43.5653493
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350614209"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3871398,
+          43.5639236
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350634331"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3871617,
+          43.5639083
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350654273"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3871274,
+          43.5639133
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350672405"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3883685,
+          43.5628671
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350691000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3910047002794614,
+          43.56163067757688
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350692000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3911725524848806,
+          43.56156793565284
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350693000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3913474507345527,
+          43.56150582934614
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350694000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3915014944384476,
+          43.56142964964594
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350692402"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3911348,
+          43.5615594
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350695000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3916663327118464,
+          43.56138532334888
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350696000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3917935236524692,
+          43.56131891767942
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350697000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3919118951898366,
+          43.561274041141594
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350699000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3920924237884407,
+          43.56120691304363
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350701000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3922381355636697,
+          43.56117138033944
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350703000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.392358389737183,
+          43.56111612951541
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350705000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.39246683751279,
+          43.561066584867184
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350709000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3925777950340876,
+          43.56101662709219
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350712404"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3925941,
+          43.5609802
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350730000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3927017951555813,
+          43.56092647448504
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350732000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3928448850742594,
+          43.56085945583505
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350734000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3930227085639366,
+          43.56077682577251
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350734397"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3929632,
+          43.5608332
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350736000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3931811711310709,
+          43.560703306950494
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350738000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3933038832415812,
+          43.56064657280833
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350741000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.39341590479727,
+          43.560603247341334
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350754383"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3935484,
+          43.5605517
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350774407"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3935483,
+          43.5605517
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350789000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3935327492297733,
+          43.560541733698116
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350792000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.393689897459386,
+          43.560484287758406
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350794000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3938004808524238,
+          43.560426973499325
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350794397"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3937701,
+          43.5604597
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350796000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3939467231299647,
+          43.560362426622085
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350798000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3940975182329194,
+          43.56029775798892
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350800000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3942524102374785,
+          43.56021851367387
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350802000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3944022336995252,
+          43.56015258367968
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350804000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3945576423176926,
+          43.56008302096243
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350806000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3947131362418612,
+          43.560009017197686
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350808000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3948701101883292,
+          43.559938461523394
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350811000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3949899210589285,
+          43.5598841646571
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350814396"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3950957,
+          43.5598526
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350815000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3950964208143917,
+          43.5598357089458
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350818000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.395249945493736,
+          43.55978833377425
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350821000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.39539373579851,
+          43.55971919217032
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350823000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.395517973888132,
+          43.559675026673425
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350825000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.395648263687411,
+          43.5596301373448
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350827000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3957705126815547,
+          43.559597423138776
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350834396"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3961927,
+          43.5595109
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350854385"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3970161,
+          43.5593232
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350874398"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3980818,
+          43.5590799
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350894396"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3980817,
+          43.55908
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350914399"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3989036,
+          43.5588609
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350934396"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3998252,
+          43.5586626
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350922576"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3985517870411837,
+          43.5588383356462
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350950941"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3981943569289077,
+          43.55761613043854
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350913576"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3985517870411837,
+          43.5588383356462
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350951388"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.401065743953265,
+          43.56072720928638
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350954397"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3998183,
+          43.5586633
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350974395"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.4000713,
+          43.5585941
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696350994396"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.4011949,
+          43.5583107
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696351014393"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.4011967,
+          43.5583083
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696351034400"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.4011967,
+          43.5583083
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696351054396"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.4024734,
+          43.5579697
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696351071000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.4050220084707574,
+          43.55723043790059
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696351074397"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.4053676,
+          43.5570987
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696351094405"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.4058513,
+          43.5568473
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696351114397"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.40592,
+          43.556815
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696351134399"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.4061831,
+          43.5565409
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696351154396"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.40897,
+          43.5551312
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696351154966"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.4090389,
+          43.555089
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696351168000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.4087608927120787,
+          43.55360174151701
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696351216000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.4055353124029362,
+          43.549698568066724
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696351246208"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.4022269,
+          43.5452377
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696351247999"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.4019431831532947,
+          43.54597829152355
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696351325999"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3906985921819173,
+          43.534701044605214
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696351336135"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.4022133,
+          43.5461183
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696351354219"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3851233,
+          43.5289117
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696351425039"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3763172,
+          43.5207395
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696351444695"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3627489,
+          43.509178
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696351537587"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.33954,
+          43.4986933
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696351594669"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3265879,
+          43.4873496
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696351629053"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.319515,
+          43.474625
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696351721996"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3060783,
+          43.4492867
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696351778094"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.3060783,
+          43.4492867
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696351812699"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.2979824,
+          43.4371212
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696351925093"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.2885967,
+          43.3973983
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696352016526"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.2760317,
+          43.3717367
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696352036921"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.2750471,
+          43.3666258
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696352127045"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.2540124,
+          43.3416776
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696352157489"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.2461817,
+          43.3364
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696352216140"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.2461817,
+          43.3364
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696352246000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.2180098675478226,
+          43.32028903041551
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696352247976"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.2461817,
+          43.3364
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696352263000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.2129527604672592,
+          43.317345003701625
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696352267993"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.2170883,
+          43.319685
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696352279000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.2078364160947184,
+          43.314389528056566
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696352295000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.2027109483426806,
+          43.311398287014924
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696352310000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.1978847806993782,
+          43.30858884356232
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696352358208"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.1699481,
+          43.2958832
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696352371000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.1782552175438679,
+          43.297150116703776
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "63f7a5c90f65806b1adb3081"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696352387000"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.173148188802232,
+          43.29413281263572
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696352393256"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.171475,
+          43.2931133
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696352448440"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.171475,
+          43.2931133
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696352509866"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.134895,
+          43.2718917
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696352602287"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.106655,
+          43.2555267
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696352658918"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.106655,
+          43.2555267
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696352693731"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0778667,
+          43.2388967
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696352785266"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0522467,
+          43.2237683
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696352875730"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0522467,
+          43.2237683
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696352968848"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0218417,
+          43.2091683
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696352979274"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0221149,
+          43.2092379
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696352999305"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.022151,
+          43.2093608
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353019396"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.022165,
+          43.2093467
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353039380"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0222332,
+          43.2094299
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353059398"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0222333,
+          43.20943
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353079397"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0221708,
+          43.2094288
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353099397"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0221717,
+          43.2094267
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353119395"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0221717,
+          43.2094267
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353139396"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0221717,
+          43.2094267
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353159396"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0221717,
+          43.2094267
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353179394"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0221717,
+          43.2094267
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353199393"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0221717,
+          43.2094267
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353219402"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0221717,
+          43.2094267
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353239405"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0221717,
+          43.2094267
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353259394"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0221717,
+          43.2094267
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353279396"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0221717,
+          43.2094267
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353299392"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0221717,
+          43.2094267
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353319405"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0221717,
+          43.2094267
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353339396"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0221717,
+          43.2094267
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353359401"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0221717,
+          43.2094267
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353379401"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0221717,
+          43.2094267
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353399443"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0221717,
+          43.2094267
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353419399"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0221717,
+          43.2094267
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353439446"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0221717,
+          43.2094267
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353459403"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0221717,
+          43.2094267
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353479399"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0222002,
+          43.2094836
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353501409"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0228339,
+          43.2098479
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353521394"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0232857,
+          43.2096629
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353539392"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0251241,
+          43.2085149
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353559389"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0198716,
+          43.2073365
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353579393"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0132366,
+          43.2049488
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353599393"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          1.0066185,
+          43.2018208
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353619392"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          0.9999949,
+          43.1987106
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353639392"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          0.9933554,
+          43.1955803
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353663388"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          0.9855449,
+          43.1917048
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353753433"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          0.9855467,
+          43.1917033
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353851308"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          0.95864,
+          43.141575
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353911366"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          0.95864,
+          43.141575
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696353942397"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          0.95864,
+          43.141575
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696354036296"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          0.8977417,
+          43.119365
+        ]
+      }
+    },
+    {
+      "user": {
+        "$oid": "6410edc1e02078e7108a5897"
+      },
+      "at": {
+        "$date": {
+          "$numberLong": "1696354092317"
+        }
+      },
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [
+          0.8977417,
+          43.119365
+        ]
+      }
+    }
+  ],
+  "totalSeatCount": 2
+}

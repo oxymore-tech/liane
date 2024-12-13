@@ -11,7 +11,7 @@ public enum MatchResultMode
   Detour
 }
 public sealed record LianeMatchCandidate(
-    Ref<Api.Trip.Liane> Liane,
+    Ref<Api.Trip.Trip> Liane,
     LatLng Pickup,
     LatLng Deposit,
     double StartFraction,

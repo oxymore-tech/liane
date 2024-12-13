@@ -9,7 +9,7 @@ using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util;
 using Liane.Service.Internal.Address;
-using Liane.Service.Internal.Chat;
+using Liane.Service.Internal.Community;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Osrm;
@@ -17,6 +17,7 @@ using Liane.Service.Internal.Postgis;
 using Liane.Service.Internal.Postgis.Db;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
+using Liane.Service.Internal.Trip.Geolocation;
 using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
 using Liane.Test.Mock;
@@ -91,23 +92,27 @@ public abstract class BaseIntegrationTest
 
     services.AddService<MockCurrentContext>();
     services.AddService(JsonSerializerSettings.TestJsonOptions());
-    services.AddService<NotificationServiceImpl>();
     services.AddService(new FirebaseSettings(null));
     services.AddService<MockPushServiceImpl>();
     services.AddService(Moq.Mock.Of<IHubService>());
-    services.AddService(Moq.Mock.Of<ILianeUpdateObserver>());
-    services.AddService(Moq.Mock.Of<ILianeMemberTracker>());
+    services.AddService(Moq.Mock.Of<ILianeUpdatePushService>());
     services.AddService(Moq.Mock.Of<IImageService>());
-    services.AddService<LianeServiceImpl>();
+    services.AddService<TripServiceImpl>();
+    services.AddService<RallyingPointRequestServiceImpl>();
     services.AddService<UserServiceImpl>();
     services.AddService<UserStatServiceImpl>();
     services.AddService<PushServiceImpl>();
-    services.AddService<ChatServiceImpl>();
     services.AddService<LianeStatusUpdate>();
-    services.AddService<LianeRecurrenceServiceImpl>();
-    services.AddService<MockAutomaticAnswerService>();
-    services.AddService<DeleteAccountServiceImpl>();    
-    services.AddSingleton<ILianeTrackerCache>(new LianeTrackerCacheImpl());
+    services.AddService<LianeTrackerServiceImpl>();
+    services.AddService<DeleteAccountServiceImpl>();
+    services.AddService<LianeTrackerCache>();
+    services.AddService<LianeMessageServiceImpl>();
+
+    services.AddService<LianeRequestFetcher>();
+    services.AddService<LianeFetcher>();
+    services.AddService<LianeMatcher>();
+    services.AddService<LianeServiceImpl>();
+
     services.AddEventListeners();
 
     var databaseSettings = GetDatabaseSettings();
@@ -127,7 +132,6 @@ public abstract class BaseIntegrationTest
     MongoFactory.InitSchema(mongo);
     var postgisDatabase = ServiceProvider.GetRequiredService<PostgisDatabase>();
     await PostgisFactory.UpdateSchema(postgisDatabase, true);
-
     mongo.Drop();
     // Init services in child class 
     Setup(mongo);

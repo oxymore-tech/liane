@@ -4,24 +4,25 @@ import { ColorValue, StyleSheet, Text, TouchableOpacity, View } from "react-nati
 import { AppColors } from "@/theme/colors";
 
 export interface AppOptionToggleProps<T> {
-  options: T[];
+  options: T[] | readonly T[];
   onSelectValue?: (option: T) => void;
   selectionColor?: ColorValue;
   defaultSelectedValue?: T;
+  useFirstValueAsDefault?: boolean;
 }
 
 export const CreateAppOptionToggle =
   <T extends unknown>(formatter: (option: T) => string) =>
-  ({ options, onSelectValue, defaultSelectedValue, selectionColor = AppColors.blue }: AppOptionToggleProps<T>) => {
+  ({ options, onSelectValue, defaultSelectedValue, selectionColor = AppColors.blue, useFirstValueAsDefault = true }: AppOptionToggleProps<T>) => {
     if (options.length < 2) {
       throw new Error("AppOptionToggle requires at least two options.");
     }
 
-    if (defaultSelectedValue === undefined) {
+    if (useFirstValueAsDefault && defaultSelectedValue === undefined) {
       defaultSelectedValue = options[0];
     }
 
-    const [selectedValue, setSelectedValue] = useState(defaultSelectedValue);
+    const [selectedValue, setSelectedValue] = useState<T | undefined>(defaultSelectedValue);
 
     return (
       <View>

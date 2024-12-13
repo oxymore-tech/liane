@@ -1,12 +1,13 @@
-import React from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import React, { useCallback } from "react";
+import { ActivityIndicator, FlatList, RefreshControl, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { WithFetchPaginatedResponse } from "@/components/base/WithFetchPaginatedResponse";
 import { Center } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
-import { TripListView } from "@/screens/user/TripListView";
-import { Liane } from "@/api";
+import { Trip } from "@liane/common";
 import { AppStyles } from "@/theme/styles";
 import { AppColors } from "@/theme/colors";
+import { useAppNavigation } from "@/components/context/routing.ts";
+import { AppPressable } from "@/components/base/AppPressable.tsx";
 
 export const ArchivedTripsScreen = () => {
   return (
@@ -23,13 +24,13 @@ const NoHistoryView = () => {
     </Center>
   );
 };
-export const LianeHistoryQueryKey = "getLianeHistory";
+export const TripHistoryQueryKey = "getLianeHistory";
 
-const ArchivedTripsView = WithFetchPaginatedResponse<Liane>(
+const ArchivedTripsView = WithFetchPaginatedResponse<Trip>(
   ({ data, refresh, refreshing, fetchNextPage, isFetchingNextPage }) => {
     return (
       <>
-        <TripListView data={data} isFetching={refreshing} onRefresh={refresh} loadMore={fetchNextPage} reverseSort={true} />
+        <ArchivedTripListView data={data} isFetching={refreshing} onRefresh={refresh} loadMore={fetchNextPage} />
         {isFetchingNextPage && (
           <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, alignItems: "center" }}>
             <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />
@@ -38,10 +39,62 @@ const ArchivedTripsView = WithFetchPaginatedResponse<Liane>(
       </>
     );
   },
-  (repository, params, cursor) => repository.liane.list(["Archived", "Canceled"], cursor, 15, false),
-  LianeHistoryQueryKey,
+  (repository, params, cursor) => repository.trip.list(["Archived", "Canceled"], { cursor, limit: 10, asc: false }),
+  TripHistoryQueryKey,
   NoHistoryView
 );
+
+export interface ArchivedTripListViewProps {
+  data: Trip[];
+  style?: StyleProp<ViewStyle>;
+  isFetching?: boolean;
+  onRefresh?: () => void;
+  loadMore?: () => void;
+}
+
+export const ArchivedTripListView = ({ data, style, isFetching = false, onRefresh, loadMore }: ArchivedTripListViewProps) => {
+  const { navigation } = useAppNavigation();
+
+  const onSelect = useCallback(
+    (trip: Trip) => {
+      navigation.navigate({ name: "TripDetail", params: { trip } });
+    },
+    [navigation]
+  );
+
+  return (
+    <FlatList
+      style={style}
+      refreshControl={<RefreshControl refreshing={isFetching} onRefresh={onRefresh} />}
+      data={data}
+      showsVerticalScrollIndicator={false}
+      renderItem={props => <ArchivedTripItem {...props} onSelect={onSelect} />}
+      keyExtractor={item => item.id!}
+      onEndReachedThreshold={0.2}
+      onEndReached={loadMore}
+      ListEmptyComponent={
+        <Center>
+          <AppText style={AppStyles.noData}>Aucun trajet prévu</AppText>
+        </Center>
+      }
+    />
+  );
+};
+
+type ArchivedTripItemProps = {
+  item: Trip;
+  onSelect: (trip: Trip) => void;
+};
+
+function ArchivedTripItem({ item, onSelect }: ArchivedTripItemProps) {
+  return (
+    <AppPressable onPress={() => onSelect(item)} style={{ backgroundColor: AppColors.white }}>
+      <AppText>{item.id}</AppText>
+      <AppText>{item.departureTime}</AppText>
+      <AppText>TODO...</AppText>
+    </AppPressable>
+  );
+}
 
 const styles = StyleSheet.create({
   container: {

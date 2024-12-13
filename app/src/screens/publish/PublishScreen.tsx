@@ -1,587 +1,372 @@
-import React, { useContext, useState } from "react";
-import { ActivityIndicator, Platform, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
-import Animated, {
-  Easing,
-  FadeIn,
-  FadeInDown,
-  FadeOutLeft,
-  FadeOutRight,
-  SlideInDown,
-  SlideInLeft,
-  SlideInRight,
-  SlideOutLeft,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming
-} from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import React, { useCallback, useContext, useMemo, useState } from "react";
+import { Pressable, StyleSheet, View } from "react-native";
+import Animated, { FadeIn, FadeOut, FadeOutRight, SlideInLeft, SlideOutLeft } from "react-native-reanimated";
 import { useQueryClient } from "react-query";
-import { useActor, useInterpret } from "@xstate/react";
-
-import { DayOfTheWeekFlag } from "@/api";
-import { HOME_TRIPS, useAppNavigation } from "@/api/navigation";
-import { formatDaysOfTheWeek, formatShortMonthDay, formatTime, toRelativeTimeString } from "@/api/i18n";
 
 import { AppContext } from "@/components/context/ContextProvider";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppText } from "@/components/base/AppText";
-import { DatePagerSelector } from "@/components/DatePagerSelector";
-import { AppToggle } from "@/components/base/AppOptionToggle";
-import { AppPressableOverlay } from "@/components/base/AppPressable";
-import { SeatsForm } from "@/components/forms/SeatsForm";
-import { AppBackContextProvider } from "@/components/AppBackContextProvider";
-import { AppStatusBar } from "@/components/base/AppStatusBar";
+import { AppPressableIcon } from "@/components/base/AppPressable";
 import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker";
 
-import { CreatePublishLianeMachine, PublishLianeContext } from "@/screens/publish/StateMachine";
-import { ItinerarySearchForm } from "@/screens/ItinerarySearchForm";
-import { SelectOnMapView } from "@/screens/publish/SelectOnMapView";
-import { LianeQueryKey } from "@/screens/user/MyTripsScreen";
-
-import { AppColorPalettes, AppColors } from "@/theme/colors";
+import { AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
-import { getFirstFutureDate } from "@/util/datetime";
-import { TimeWheelPicker } from "@/components/TimeWheelPicker";
-import { PageHeader } from "@/components/context/Navigation";
-import { AppModalNavigationContext } from "@/components/AppModalNavigationProvider";
-import { getSetting } from "@/api/storage";
+import { CoLianeRequest, DayOfWeekFlag, getLianeId, ResolvedLianeRequest, TimeOnly, Itinerary } from "@liane/common";
+import { useAppNavigation } from "@/components/context/routing";
+import { AppLocalization } from "@/api/i18n";
+import { AppTextInput } from "@/components/base/AppTextInput.tsx";
+import { TimeView } from "@/components/TimeView.tsx";
+import { Accordion } from "@/screens/publish/Accordion.tsx";
+import { PageHeader } from "@/components/context/Navigation.tsx";
+import { ItinerarySearchForm, Notice } from "@/screens/ItinerarySearchForm.tsx";
+import { AppButton } from "@/components/base/AppButton.tsx";
+import { CoLianeMatchQueryKey } from "@/screens/communities/CommunitiesScreen.tsx";
 
-interface StepProps<T> {
-  editable: boolean;
+type StepProps<T> = {
   onChange: (v: T) => void;
-  initialValue: T | undefined;
-  onRequestEdit: () => void;
-  animationType: "firstEntrance" | "ease";
+  value: T;
+};
+
+const MaxSteps = 5;
+
+function init(initialValue?: Partial<ResolvedLianeRequest>): { value: Partial<CoLianeRequest>; trip: Partial<Itinerary> } {
+  if (!initialValue) {
+    return {
+      value: {
+        name: "",
+        roundTrip: true,
+        arriveBefore: { hour: 9 },
+        returnAfter: { hour: 18 },
+        canDrive: true,
+        weekDays: "0000000",
+        isEnabled: true
+      },
+      trip: {}
+    };
+  }
+
+  const { wayPoints, ...value } = initialValue;
+  if (!wayPoints) {
+    return {
+      value: value as any,
+      trip: {}
+    };
+  }
+  return {
+    value: value as any,
+    trip: {
+      to: wayPoints[wayPoints.length - 1],
+      from: wayPoints[0]
+    }
+  };
 }
 
 export const PublishScreen = () => {
   const { services } = useContext(AppContext);
   const queryClient = useQueryClient();
   const { navigation, route } = useAppNavigation<"Publish">();
-  const { showTutorial, shouldShow } = useContext(AppModalNavigationContext);
+  const lianeId = useMemo(() => (route.params.liane ? getLianeId(route.params.liane) : undefined), [route.params.liane]);
+  const initValues = useMemo(() => init(route.params.initialValue), [route.params.initialValue]);
 
-  const [m] = useState(() =>
-    CreatePublishLianeMachine(async ctx => {
-      const geolocationLevel = await getSetting("geolocation");
-      const liane = await services.liane.post({
-        to: ctx.request.to!.id!,
-        from: ctx.request.from!.id!,
-        departureTime: ctx.request.departureTime!.toISOString(),
-        availableSeats: ctx.request.availableSeats!,
-        returnTime: ctx.request.returnTime?.toISOString(),
-        recurrence: ctx.request.recurrence || null,
-        geolocationLevel: geolocationLevel || "None"
-      });
+  const [trip, setTrip] = useState<Partial<Itinerary>>(initValues.trip);
+  const [lianeRequest, setLianeRequest] = useState<Partial<CoLianeRequest>>(initValues.value);
 
-      await queryClient.invalidateQueries(LianeQueryKey);
-      await services.location.cacheRecentTrip({ to: ctx.request.to!, from: ctx.request.from! });
-      return liane;
-    }, route.params?.initialValue)
+  const [step, setStep] = useState<number>(lianeId ? -1 : route.params.initialValue ? MaxSteps : -1);
+  const [previousStep, setPreviousStep] = useState<number>(-1);
+  const [pending, setPending] = useState(false);
+
+  const [notice, setNotice] = useState<Notice | undefined>(
+    lianeId ? { type: "info", message: "Veuillez sélectionner des points compatibles" } : undefined
   );
-  const machine = useInterpret(m);
-  const [state] = useActor(machine);
-  machine.onDone(() => {
-    // Fixes a xstate bug where onDone is called as many times as there are states in the machine
-    if (!state.done) {
-      return;
+
+  const handleDone = useCallback(async () => {
+    setPending(true);
+    try {
+      const newLianeRequest = {
+        ...lianeRequest,
+        wayPoints: [trip.from!.id!, trip.to!.id!]
+      } as CoLianeRequest;
+      if (route.params.initialValue && lianeRequest.id) {
+        await services.community.update(lianeRequest.id, newLianeRequest);
+        await queryClient.invalidateQueries(CoLianeMatchQueryKey);
+        navigation.navigate("Lianes");
+      } else {
+        const created = await services.community.create(newLianeRequest);
+        await queryClient.invalidateQueries(CoLianeMatchQueryKey);
+
+        if (lianeId) {
+          await services.community.joinRequest(created.id!, lianeId);
+        }
+
+        navigation.popToTop();
+        navigation.navigate("Lianes");
+      }
+    } finally {
+      setPending(false);
     }
-    navigation.popToTop();
-    if (shouldShow) {
-      showTutorial("driver", state.context.created!.id);
+  }, [route.params.initialValue, lianeId, lianeRequest, navigation, queryClient, services.community, trip.from, trip.to]);
+
+  const stepDone = useCallback(() => {
+    if (step < previousStep) {
+      setStep(previousStep);
     } else {
-      navigation.navigate(HOME_TRIPS);
+      setStep(step + 1);
+      setPreviousStep(step + 1);
     }
-  });
+  }, [step, previousStep]);
+
+  const updateAndNext = useCallback(
+    (data: Partial<CoLianeRequest>) => {
+      setLianeRequest({ ...lianeRequest, ...data });
+      stepDone();
+    },
+    [stepDone, lianeRequest]
+  );
+
+  const handleUpdateTrip = useCallback(
+    async (t: Partial<Itinerary>) => {
+      const updated = { ...trip, ...t };
+      setTrip(updated);
+      if (!updated.from || !updated.to) {
+        return;
+      }
+
+      if (!lianeId) {
+        stepDone();
+        return;
+      }
+
+      setNotice("loading");
+
+      const pendingMatch = await services.community.matches(lianeId, updated.from.id!, updated.to.id!);
+      if (!pendingMatch?.pickup || !pendingMatch.deposit) {
+        setNotice({ type: "error", message: "Votre trajet n'est pas compatible !" });
+        return;
+      }
+      setNotice({ type: "info", message: "Les trajets sont compatibles" });
+      stepDone();
+    },
+    [lianeId, services.community, stepDone, trip]
+  );
 
   return (
-    /*  @ts-ignore */
-    <PublishLianeContext.Provider value={machine}>
-      <PublishScreenView />
-      <AppStatusBar style="dark-content" />
-    </PublishLianeContext.Provider>
+    <View style={{ flex: 1, backgroundColor: "white" }}>
+      <PageHeader title={lianeId ? "Rejoindre une liane" : "Créer une annonce"} navigation={navigation} />
+      <ItinerarySearchForm
+        style={{ paddingHorizontal: 16 }}
+        formStyle={styles.stepContainer}
+        onRequestFocus={() => setStep(-1)}
+        notice={notice}
+        editable={step === -1}
+        liane={lianeId}
+        trip={trip}
+        updateTrip={handleUpdateTrip}
+      />
+      {step >= 0 && (
+        <Accordion
+          title={lianeId ? "Rejoindre une liane" : "Créer une annonce"}
+          step={step}
+          onChangeStep={setStep}
+          style={styles.accordion}
+          stepStyle={styles.stepContainer}
+          steps={[
+            {
+              title: AppLocalization.formatDaysOfTheWeek(lianeRequest.weekDays),
+              render: () => (
+                <DaysStepView
+                  value={lianeRequest.weekDays ?? "0000000"}
+                  requiredDays={route.params.liane?.weekDays}
+                  onChange={weekDays => updateAndNext({ weekDays })}
+                />
+              )
+            },
+            {
+              title: `Arriver avant ${AppLocalization.formatTimeOnly(lianeRequest.arriveBefore)}`,
+              render: () => (
+                <TimeStepView
+                  title={`Je souhaite arriver à ${trip.to?.city ?? ""} avant ?`}
+                  value={lianeRequest.arriveBefore ?? { hour: 10 }}
+                  onChange={arriveBefore => updateAndNext({ arriveBefore })}
+                />
+              )
+            },
+            {
+              title: `Retour après ${AppLocalization.formatTimeOnly(lianeRequest.returnAfter)}`,
+              render: () => (
+                <TimeStepView
+                  title={`Je souhaite repartir de ${trip.to?.city ?? ""} après ?`}
+                  value={lianeRequest.returnAfter ?? { hour: 18 }}
+                  onChange={returnAfter => updateAndNext({ returnAfter })}
+                />
+              )
+            },
+            {
+              title: lianeRequest.canDrive ? "Je peux conduire" : "Uniquement passager",
+              render: () => <VehicleStepView value={lianeRequest.canDrive ?? true} onChange={canDrive => updateAndNext({ canDrive })} />
+            },
+            {
+              title: lianeRequest.name ?? "Libéllé",
+              render: () => <NameStepView value={lianeRequest.name} onChange={v => updateAndNext({ name: v })} />
+            }
+          ]}
+        />
+      )}
+      {step >= MaxSteps && (
+        <View style={[styles.accordion, styles.bottom]}>
+          <AppButton value="Envoyer" icon="arrow-circle-right-outline" onPress={handleDone} loading={pending} />
+        </View>
+      )}
+    </View>
   );
 };
 
-export const PublishScreenView = () => {
-  const { navigation } = useAppNavigation();
-  const insets = useSafeAreaInsets();
-  const machine = useContext(PublishLianeContext);
-  const [state] = useActor(machine);
+type StepFormProps = {
+  title: string;
+  children: React.ReactElement | React.ReactElement[];
+  disabled?: boolean;
+  onValidate?: () => void;
+};
 
-  const isTripStep = state.matches("trip");
-  const isDateStep = state.matches("date");
-  const isVehicleStep = state.matches("vehicle");
-  const isReturnStep = state.matches("return");
-  const isOverviewStep = state.matches("overview");
-  const isSubmittingStep = state.matches("submitting");
-
-  //console.log("[PublishScreen] State Value:", state.value);
-  //console.log("[PublishScreen] State Request:", state.context.request);
-
-  const step = useSharedValue(0);
-  const { width } = useWindowDimensions();
-  const stepperIndicatorStyle = useAnimatedStyle(() => {
-    return {
-      width: withTiming((step.value * width) / 3, { duration: 300, easing: Easing.bezier(0.25, 0.1, 0.25, 1) })
-    };
-  }, []);
-
-  const nextStep = (target: number) => {
-    step.value = Math.min(3, Math.max(target, step.value));
-  };
-
-  const offsetsTop = {
-    dateStep: insets.top + 172 - 24,
-    vehicleStep: insets.top + 172 - 24 * 2 + 80,
-    returnStep: insets.top + 172 - 24 * 3 + 80 * 2
-  };
-
-  if (state.matches("map")) {
-    const isFrom = state.toStrings()[1].endsWith(".from");
-    return (
-      <AppBackContextProvider
-        backHandler={() => {
-          machine.send("BACK");
-          return true;
-        }}>
-        <SelectOnMapView
-          onSelect={p => machine.send("UPDATE", { data: { [isFrom ? "from" : "to"]: p } })}
-          title={"Choisissez un point " + (isFrom ? "de départ" : "d'arrivée")}
-        />
-      </AppBackContextProvider>
-    );
-  }
-
+const StepForm = ({ title, children, disabled = false, onValidate }: StepFormProps) => {
   return (
-    <Column style={{ flex: 1, backgroundColor: AppColors.white, paddingBottom: insets.bottom }}>
-      <PageHeader title={"Créer une Liane"} navigation={navigation} />
+    <Column spacing={8} style={{ padding: 12 }}>
+      <Animated.View exiting={SlideOutLeft.duration(300)} entering={SlideInLeft.delay(600).duration(300).springify().damping(15)}>
+        <Center>
+          <AppText style={AppStyles.title}>{title}</AppText>
+        </Center>
+      </Animated.View>
 
-      {(isOverviewStep || isSubmittingStep || isReturnStep) && (
-        <Animated.View
-          exiting={SlideOutLeft.duration(20)}
-          entering={SlideInLeft.delay(50).duration(300).springify().damping(20)}
-          style={[
-            styles.footerContainer,
-            { marginTop: isReturnStep ? offsetsTop.returnStep + 62 : offsetsTop.returnStep + 48 },
-            !isReturnStep ? styles.compactedStepStyle : null,
-            !isReturnStep ? AppStyles.shadow : null
-          ]}>
-          <ReturnStepView
-            after={state.context.request.departureTime!}
-            editable={isReturnStep}
-            animationType={state.context.request.returnTime === undefined ? "firstEntrance" : "ease"}
-            onRequestEdit={() => machine.send("RETURN", { data: { returnTime: null } })}
-            onChange={v => machine.send("UPDATE", { data: { returnTime: v } })}
-            initialValue={state.context.request.returnTime}
-          />
-        </Animated.View>
-      )}
+      <Animated.View
+        style={{ alignItems: "center" }}
+        exiting={FadeOutRight.delay(40).duration(150)}
+        entering={FadeIn.delay(550).duration(150).springify().damping(20)}>
+        {children}
+      </Animated.View>
 
-      {!isTripStep && !isDateStep && (
-        <Animated.View
-          exiting={SlideOutLeft.duration(20)}
-          entering={SlideInLeft.delay(50).duration(300).springify().damping(20)}
-          style={[
-            styles.footerContainer,
-            { marginTop: isVehicleStep ? offsetsTop.vehicleStep + 62 : offsetsTop.vehicleStep + 48 },
-            !isVehicleStep ? styles.compactedStepStyle : null,
-            !isVehicleStep ? AppStyles.shadow : null
-          ]}>
-          <VehicleStepView
-            animationType={step.value < 3 ? "firstEntrance" : "ease"}
-            editable={isVehicleStep}
-            initialValue={state.context.request.availableSeats}
-            onRequestEdit={() => machine.send("EDIT", { data: "vehicle" })}
-            onChange={d => {
-              machine.send("NEXT", { data: { availableSeats: d } });
-              nextStep(3);
-            }}
-          />
-        </Animated.View>
-      )}
-
-      {!isTripStep && (
-        <Animated.View
-          exiting={SlideOutLeft.duration(20)}
-          entering={SlideInLeft.duration(300).springify().damping(20)}
-          style={[
-            styles.footerContainer,
-            { marginTop: isDateStep ? offsetsTop.dateStep + 62 : offsetsTop.dateStep + 48 },
-            !isDateStep ? styles.compactedStepStyle : null,
-            !isDateStep ? AppStyles.shadow : null
-          ]}>
-          <DateStepView
-            animationType={step.value < 3 ? "firstEntrance" : "ease"}
-            editable={isDateStep}
-            initialValue={{ date: state.context.request.departureTime, recurrence: state.context.request.recurrence }}
-            onRequestEdit={() => machine.send("EDIT", { data: "date" })}
-            onChange={data => {
-              machine.send("NEXT", { data: { departureTime: data.date, recurrence: data.recurrence } });
-              nextStep(2);
-            }}
-          />
-        </Animated.View>
-      )}
-
-      <ItinerarySearchForm
-        editable={isTripStep}
-        animateEntry={Platform.OS === "ios"} // TODO : investigate android issue where animation does not start
-        trip={state.context.request}
-        onSelectTrip={t => {
-          machine.send("NEXT", { data: t });
-          nextStep(1);
-        }}
-        updateTrip={t => {
-          if (isTripStep) {
-            machine.send("UPDATE", { data: t });
-          } else {
-            machine.send([
-              { type: "EDIT", data: "trip" },
-              { type: "UPDATE", data: t }
-            ]);
-          }
-        }}
-        openMap={data => machine.send("MAP", { data })}
-      />
-      <Animated.View style={[styles.stepperIndicatorBaseStyle, stepperIndicatorStyle]} />
-
-      {(isOverviewStep || isSubmittingStep) && (
-        <Animated.View entering={SlideInDown.springify().damping(20)} style={styles.overviewStepContainer}>
-          <AppPressableOverlay
-            disabled={!state.matches({ submitting: "failure" }) && !isOverviewStep}
-            onPress={() => {
-              machine.send(isOverviewStep ? "PUBLISH" : "RETRY");
-            }}
-            style={styles.overviewStep}
-            backgroundStyle={styles.overviewStepBackground}>
-            <Row spacing={8} style={{ alignItems: "center" }}>
-              <AppText style={styles.overviewStepText}>
-                {isOverviewStep ? "Envoyer" : state.matches({ submitting: "failure" }) ? "Rééssayer" : "Publication"}
-              </AppText>
-              {isOverviewStep && <AppIcon name={"arrow-circle-right-outline"} color={AppColors.white} />}
-              {isSubmittingStep && state.matches({ submitting: "pending" }) && (
-                <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.white} size="large" />
-              )}
-              {isSubmittingStep && state.matches({ submitting: "failure" }) && <AppIcon name={"refresh-outline"} color={AppColors.white} />}
-            </Row>
-          </AppPressableOverlay>
-        </Animated.View>
-      )}
+      {onValidate && <AppButton value="Suivant" onPress={onValidate} disabled={disabled} />}
     </Column>
   );
 };
 
-const DateStepView = ({
-  editable,
-  onChange,
-  initialValue,
-  onRequestEdit
-}: StepProps<{ date: Date | undefined; recurrence: DayOfTheWeekFlag | null | undefined }>) => {
-  const optionsRecurrentLiane = ["Date unique", "Trajet régulier"];
-  const initialMinDate = new Date(new Date().getTime() + 4 * 60000);
+const DaysStepView = ({ onChange, value, requiredDays }: StepProps<DayOfWeekFlag> & { requiredDays?: DayOfWeekFlag }) => {
+  const [daysOfTheWeek, setDaysOfTheWeek] = useState<DayOfWeekFlag>(value);
 
-  const [date, setDate] = useState(initialMinDate);
-  const [isRecurrent, setIsRecurrent] = useState(!!initialValue?.recurrence);
-  const [daysOfTheWeek, setDaysOfTheWeek] = useState<DayOfTheWeekFlag>(initialValue?.recurrence ?? "0000000");
+  const daysMessage = useMemo(() => AppLocalization.formatDaysOfTheWeek(daysOfTheWeek), [daysOfTheWeek]);
 
-  const cannotValidate = isRecurrent && daysOfTheWeek === "0000000";
+  const isValid = daysOverlap(daysOfTheWeek, requiredDays) && daysOfTheWeek !== "0000000";
   return (
-    <Pressable disabled={editable} onPress={onRequestEdit}>
-      {!editable && (
-        <Animated.View exiting={FadeOutRight.duration(300)} entering={FadeIn.duration(300).springify().damping(15)}>
-          <Row style={styles.stepResumeContainer} spacing={8}>
-            {isRecurrent ? (
-              <Row style={{ flexShrink: 1, flexGrow: 1 }}>
-                <AppText style={[styles.stepResume, { flexShrink: 1, paddingRight: 0 }]}>
-                  Les {formatDaysOfTheWeek(daysOfTheWeek || "0000000")}
-                </AppText>
-                <AppText style={[styles.stepResume, { flexShrink: 0, paddingLeft: 8 }]}>à {formatTime(date)}</AppText>
-              </Row>
-            ) : (
-              <AppText style={styles.stepResume}>Départ {toRelativeTimeString(date, formatShortMonthDay)}</AppText>
-            )}
-            <AppIcon name={"edit-2"} color={AppColors.white} />
-          </Row>
+    <StepForm title="Quels jours voyagez-vous ?" onValidate={() => onChange(daysOfTheWeek)} disabled={!isValid}>
+      <DayOfTheWeekPicker requiredDays={requiredDays} selectedDays={daysOfTheWeek} onChangeDays={setDaysOfTheWeek} />
+      <AppText style={{ fontSize: 16, alignSelf: "flex-start", marginVertical: 20 }}>{daysMessage ?? "Sélectionnez un jour"}</AppText>
+    </StepForm>
+  );
+};
+
+function daysOverlap(days: DayOfWeekFlag, requiredDays?: DayOfWeekFlag): boolean {
+  if (!requiredDays) {
+    return true;
+  }
+
+  for (let i = 0; i < days.length; i++) {
+    if (days[i] === "1" && requiredDays[i] === "1") {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+const TimeConstraintView = ({
+  title,
+  onChange,
+  defaultValue,
+  value
+}: {
+  title?: string;
+  defaultValue?: TimeOnly;
+  value: TimeOnly;
+  onChange: (v: TimeOnly) => void;
+}) => {
+  return (
+    <View>
+      <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
+        {title && <AppText style={{ fontWeight: "bold", paddingVertical: 4 }}>{title}</AppText>}
+        {!!value && defaultValue && <AppPressableIcon name={"trash-2-outline"} onPress={() => onChange(defaultValue)} />}
+      </Row>
+      {!value && defaultValue ? (
+        <Pressable onPress={() => onChange(defaultValue)}>
+          <Center style={{ paddingVertical: 32 }}>
+            <AppIcon name={"plus-circle-outline"} size={32} />
+          </Center>
+        </Pressable>
+      ) : (
+        <Animated.View exiting={FadeOut.duration(150)} entering={FadeIn.duration(150).springify().damping(20)}>
+          <TimeView value={value} onChange={onChange} editable />
         </Animated.View>
       )}
-
-      <Column spacing={8}>
-        {editable && (
-          <Center style={{ marginTop: 12 }}>
-            <AppToggle
-              defaultSelectedValue={optionsRecurrentLiane[isRecurrent ? 1 : 0]}
-              options={optionsRecurrentLiane}
-              selectionColor={AppColors.primaryColor}
-              onSelectValue={(option: string) => {
-                setIsRecurrent(option !== optionsRecurrentLiane[0]);
-              }}
-            />
-          </Center>
-        )}
-
-        {editable && !isRecurrent && (
-          <Animated.View
-            style={{ paddingTop: 10 }}
-            exiting={FadeOutLeft.delay(40).duration(150)}
-            entering={SlideInLeft.delay(550).duration(300).springify().damping(20)}>
-            <DatePagerSelector color={AppColors.fontColor} date={date} onSelectDate={setDate} borderBottomDisplayed={true} />
-          </Animated.View>
-        )}
-
-        {editable && isRecurrent && (
-          <Animated.View
-            style={{ alignItems: "center" }}
-            exiting={FadeOutRight.delay(40).duration(150)}
-            entering={SlideInRight.delay(550).duration(300).springify().damping(20)}>
-            <DayOfTheWeekPicker selectedDays={daysOfTheWeek} onChangeDays={setDaysOfTheWeek} borderBottomDisplayed={true} />
-          </Animated.View>
-        )}
-
-        {editable && (
-          <Animated.View exiting={FadeOutLeft.delay(50).duration(150)} entering={SlideInLeft.delay(650).duration(300).springify().damping(20)}>
-            <TimeWheelPicker date={date} minuteStep={5} onChange={setDate} minDate={!isRecurrent ? initialMinDate : undefined} />
-          </Animated.View>
-        )}
-
-        {editable && (
-          <Row spacing={8} style={styles.validateContainer}>
-            <AppPressableOverlay
-              backgroundStyle={[
-                styles.validateButtonBackground,
-                { backgroundColor: cannotValidate ? AppColorPalettes.gray[300] : AppColors.primaryColor }
-              ]}
-              style={styles.validateButton}
-              disabled={cannotValidate}
-              onPress={() => {
-                const departureTime = isRecurrent ? getFirstFutureDate(date, daysOfTheWeek) : date;
-                onChange({ date: departureTime!, recurrence: isRecurrent ? daysOfTheWeek : null });
-              }}>
-              <Center>
-                <Row spacing={4}>
-                  <AppText style={styles.validateText}>Suivant</AppText>
-                </Row>
-              </Center>
-            </AppPressableOverlay>
-          </Row>
-        )}
-      </Column>
-    </Pressable>
+    </View>
   );
 };
 
-const VehicleStepView = ({ editable, onChange, initialValue, onRequestEdit }: StepProps<number>) => {
-  const [seats, setSeats] = useState(initialValue || 1);
+type TimeStepProps = StepProps<TimeOnly> & {
+  title: string;
+};
+
+const TimeStepView = ({ title, onChange, value }: TimeStepProps) => {
+  const [internalValue, setInternalValue] = useState(value);
+
   return (
-    <Pressable disabled={editable} onPress={onRequestEdit}>
-      <Column spacing={2}>
-        {editable && (
-          <Animated.View exiting={SlideOutLeft.duration(300)} entering={SlideInLeft.delay(600).duration(300).springify().damping(15)}>
-            <Center>
-              <AppText style={[AppStyles.title, styles.stepTitle]}>Combien de places proposez-vous ?</AppText>
-            </Center>
-          </Animated.View>
-        )}
-
-        {!editable && (
-          <Animated.View exiting={FadeOutRight.duration(300)} entering={FadeIn.duration(300).springify().damping(15)}>
-            <Row style={styles.stepResumeContainer} spacing={8}>
-              <AppText style={[styles.stepResume]}>{seats} places disponibles</AppText>
-              <AppIcon name={"edit-2"} color={AppColors.white} />
-            </Row>
-          </Animated.View>
-        )}
-
-        {editable && (
-          <Animated.View entering={FadeInDown.delay(1100)}>
-            <Column style={styles.flexStretch}>
-              <View style={styles.vehicleStepSeatsContainer}>
-                <SeatsForm seats={seats} setSeats={setSeats} />
-              </View>
-            </Column>
-          </Animated.View>
-        )}
-
-        {editable && (
-          <Row spacing={8} style={styles.validateContainer}>
-            <AppPressableOverlay backgroundStyle={styles.validateButtonBackground} style={styles.validateButton} onPress={() => onChange(seats)}>
-              <Center>
-                <Row spacing={4}>
-                  <AppText style={styles.validateText}>Suivant</AppText>
-                </Row>
-              </Center>
-            </AppPressableOverlay>
-          </Row>
-        )}
-      </Column>
-    </Pressable>
+    <StepForm title={title} onValidate={() => onChange(internalValue)}>
+      <TimeConstraintView value={internalValue} onChange={setInternalValue} />
+    </StepForm>
   );
 };
 
-const ReturnStepView = ({ editable, onChange, initialValue: initialDate, onRequestEdit, after }: StepProps<Date | null> & { after: Date }) => {
-  const [date, setDate] = useState(initialDate);
-  const initialMinDate = new Date(after.getTime() + 60000);
+const VehicleStepView = ({ onChange, value }: StepProps<boolean>) => {
   return (
-    <Pressable disabled={editable} onPress={onRequestEdit}>
-      <Column spacing={8}>
-        {editable && (
-          <Animated.View exiting={SlideOutLeft.duration(300)} entering={SlideInLeft.delay(280).duration(300).springify().damping(15)}>
-            <Center>
-              <AppText style={[AppStyles.title, styles.stepTitle]}>Quand repartez-vous ?</AppText>
-            </Center>
-          </Animated.View>
-        )}
+    <StepForm title="Je peux conduire ?">
+      <Row spacing={40}>
+        <AppButton
+          value="Non"
+          color={!value ? AppColors.primaryColor : AppColors.grayBackground}
+          onPress={() => onChange(false)}
+          style={{ width: 80 }}
+        />
+        <AppButton
+          value="Oui"
+          color={value ? AppColors.primaryColor : AppColors.grayBackground}
+          onPress={() => onChange(true)}
+          style={{ width: 80 }}
+        />
+      </Row>
+    </StepForm>
+  );
+};
 
-        {!editable && (
-          <Animated.View exiting={FadeOutRight.duration(300)} entering={FadeIn.duration(300).springify().damping(15)}>
-            <Row style={styles.stepResumeContainer} spacing={8}>
-              <AppText style={styles.stepResume}>{date ? "Retour à " + formatTime(date) : "Pas de retour"}</AppText>
-              <AppIcon name={"edit-2"} color={AppColors.white} />
-            </Row>
-          </Animated.View>
-        )}
-
-        {editable && (
-          <Animated.View exiting={FadeOutLeft.delay(50).duration(150)} entering={SlideInLeft.delay(650).duration(300).springify().damping(20)}>
-            <TimeWheelPicker date={date || after} minuteStep={5} onChange={setDate} minDate={initialMinDate} />
-          </Animated.View>
-        )}
-
-        {editable && (
-          <Row spacing={8} style={styles.validateContainer}>
-            <AppPressableOverlay backgroundStyle={styles.cancelButtonBackground} style={styles.validateButton} onPress={() => onChange(date || null)}>
-              <Center>
-                <Row spacing={4}>
-                  <AppText style={styles.cancelText}>Annuler</AppText>
-                </Row>
-              </Center>
-            </AppPressableOverlay>
-            <AppPressableOverlay
-              backgroundStyle={styles.validateButtonBackground}
-              style={styles.validateButton}
-              onPress={() => onChange(date || null)}>
-              <Center>
-                <Row spacing={4}>
-                  <AppText style={styles.validateText}>Suivant</AppText>
-                </Row>
-              </Center>
-            </AppPressableOverlay>
-          </Row>
-        )}
-      </Column>
-    </Pressable>
+const NameStepView = ({ onChange, value }: StepProps<string | undefined>) => {
+  const [name, setName] = useState(value);
+  const cannotValidate = !name || name.trim().length === 0;
+  return (
+    <StepForm title="Nommer ce trajet ?" onValidate={() => onChange(name)} disabled={cannotValidate}>
+      <AppTextInput value={name} onChangeText={setName} autoFocus={true} placeholder="Choisissez un libéllé pour vous" />
+    </StepForm>
   );
 };
 
 const styles = StyleSheet.create({
-  flexStretch: {
-    alignSelf: "stretch"
+  accordion: {
+    paddingHorizontal: 16
   },
-  stepperIndicatorBaseStyle: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    height: 4,
-    borderTopRightRadius: 16,
-    backgroundColor: AppColors.primaryColor
+  bottom: {
+    height: 48,
+    marginBottom: 32
   },
-  compactedStepStyle: {
-    backgroundColor: AppColors.primaryColor,
-    top: -15,
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0
-  },
-  stepTitle: {
-    marginTop: 12
-  },
-  stepResumeContainer: {
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    paddingTop: 28
-  },
-  stepResume: {
-    color: AppColors.white,
-    fontSize: 16,
-    fontWeight: "bold",
-    paddingHorizontal: 12,
-    alignSelf: "center",
-    textAlignVertical: "center"
-  },
-  validateContainer: {
-    paddingHorizontal: 8,
-    marginTop: 20
-  },
-  validateButtonBackground: {
-    flex: 1,
-    backgroundColor: AppColors.primaryColor,
-    borderRadius: 20
-  },
-  cancelButtonBackground: {
-    flex: 1,
-    borderColor: AppColors.primaryColor,
-    borderWidth: 1,
-    borderRadius: 20
-  },
-  validateButton: {
-    paddingVertical: 12
-  },
-  validateText: {
-    fontSize: 18,
-    color: AppColors.white
-  },
-  cancelText: {
-    fontSize: 18,
-    color: AppColors.primaryColor
-  },
-  overviewStepContainer: {
-    position: "absolute",
-    bottom: 10,
-    padding: 16,
-    width: "100%"
-  },
-  overviewStep: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 16
-  },
-  overviewStepBackground: {
-    borderRadius: 20,
-    backgroundColor: AppColors.primaryColor
-  },
-  overviewStepText: {
-    fontSize: 18,
-    color: AppColors.white
-  },
-  footerContainer: {
+  stepContainer: {
+    backgroundColor: AppColors.white,
     borderWidth: 2,
     borderColor: AppColors.lightGrayBackground,
-    margin: 16,
-    marginTop: 4,
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    flexShrink: 1,
-    paddingBottom: 8,
-    alignSelf: "center",
-    borderRadius: 18
-  },
-  inputContainer: {
-    backgroundColor: AppColorPalettes.gray[100],
-    borderRadius: 8,
-    flex: 1,
-    marginHorizontal: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8
-  },
-  monkeySmilingVectorContainer: {
-    position: "relative",
-    top: 10,
-    left: 32,
-    alignItems: "stretch"
-  },
-  vehicleStepSeatsContainer: {
-    marginHorizontal: 16
+    borderRadius: 18,
+    paddingVertical: 6
   }
 });

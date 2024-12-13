@@ -1,6 +1,6 @@
 using System.Linq;
 using System.Security.Claims;
-using Liane.Api.User;
+using Liane.Api.Auth;
 using Liane.Api.Util.Exception;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Ref;

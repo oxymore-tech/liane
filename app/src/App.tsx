@@ -6,9 +6,10 @@ import MapLibreGL from "@maplibre/maplibre-react-native";
 import { AppWindowsSizeProvider } from "@/components/base/AppWindowsSizeProvider";
 import { AppBackContextProvider } from "@/components/AppBackContextProvider";
 import Navigation from "@/components/context/Navigation";
-import { AppLinking, RootNavigation } from "@/api/navigation";
+import { AppLinking, RootNavigation } from "@/components/context/routing";
 import { NavigationContainer } from "@react-navigation/native";
 import { AppModalNavigationProvider } from "@/components/AppModalNavigationProvider";
+import { DdRumReactNavigationTracking } from "@datadog/mobile-react-navigation";
 
 MapLibreGL.setAccessToken(null);
 
@@ -22,12 +23,9 @@ const App = () => (
             <NavigationContainer
               linking={AppLinking}
               ref={RootNavigation}
-              // onReady={() => {
-              //   DdRumReactNavigationTracking.startTrackingViews(
-              //     RootNavigation.current
-              //   );
-              // }}
-            >
+              onReady={() => {
+                DdRumReactNavigationTracking.startTrackingViews(RootNavigation.current);
+              }}>
               <Navigation />
             </NavigationContainer>
           </AppModalNavigationProvider>

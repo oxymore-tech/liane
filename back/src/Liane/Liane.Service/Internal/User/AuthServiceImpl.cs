@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Liane.Api.User;
+using Liane.Api.Auth;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Microsoft.Extensions.Caching.Memory;
@@ -14,9 +14,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Twilio;
-using Twilio.Rest.Api.V2010.Account;
-using Twilio.Types;
 
 namespace Liane.Service.Internal.User;
 
@@ -30,17 +27,17 @@ public sealed class AuthServiceImpl : IAuthService
 
   private static readonly JwtSecurityTokenHandler JwtTokenHandler = new();
   private readonly ILogger<AuthServiceImpl> logger;
-  private readonly TwilioSettings twilioSettings;
   private readonly AuthSettings authSettings;
   private readonly SymmetricSecurityKey signinKey;
   private readonly MemoryCache smsCodeCache = new(new MemoryCacheOptions());
   private readonly IMongoDatabase mongo;
+  private readonly SmsSender smsSender;
 
-  public AuthServiceImpl(ILogger<AuthServiceImpl> logger, TwilioSettings twilioSettings, AuthSettings authSettings, IMongoDatabase mongo)
+  public AuthServiceImpl(ILogger<AuthServiceImpl> logger, AuthSettings authSettings, IMongoDatabase mongo, SmsSender smsSender)
   {
     this.mongo = mongo;
+    this.smsSender = smsSender;
     this.logger = logger;
-    this.twilioSettings = twilioSettings;
     this.authSettings = authSettings;
     var keyByteArray = Encoding.ASCII.GetBytes(authSettings.SecretKey);
     signinKey = new SymmetricSecurityKey(keyByteArray);
@@ -66,24 +63,22 @@ public sealed class AuthServiceImpl : IAuthService
       throw new UnauthorizedAccessException("Too many requests");
     }
 
-    smsCodeCache.Set($"attempt:{phoneNumber}", true, TimeSpan.FromSeconds(5));
-
-    if (twilioSettings is { Account: not null, Token: not null })
+    if (authSettings.Cooldown > 0)
     {
-      TwilioClient.Init(twilioSettings.Account, twilioSettings.Token);
-      var generator = new Random();
-      var code = generator.Next(0, 1000000).ToString("D6");
-
-      smsCodeCache.Set(phoneNumber.ToString(), code, TimeSpan.FromMinutes(2));
-
-      var message = await MessageResource.CreateAsync(
-        body: $"{code} est votre code liane",
-        from: new PhoneNumber(twilioSettings.From),
-        to: phoneNumber
-      );
-
-      logger.LogInformation("SMS sent {message} to {phoneNumber} with code {code}", message, phoneNumber, code);
+      smsCodeCache.Set($"attempt:{phoneNumber}", true, TimeSpan.FromSeconds(authSettings.Cooldown));
     }
+
+    if (authSettings.Disabled)
+    {
+      return;
+    }
+
+    var generator = new Random();
+    var code = generator.Next(0, 1000000).ToString("D6");
+
+    smsCodeCache.Set(phoneNumber, code, TimeSpan.FromMinutes(2));
+
+    await smsSender.Send(phoneNumber, $"{code} est votre code liane");
   }
 
   public async Task<AuthResponse> Login(AuthRequest request)
@@ -97,28 +92,32 @@ public sealed class AuthServiceImpl : IAuthService
 
     var (refreshToken, encryptedToken, salt) = GenerateRefreshToken();
 
-    var userId = dbUser?.Id ?? ObjectId.GenerateNewId().ToString();
+    var userId = dbUser?.Id ?? ObjectId.GenerateNewId().ToString()!;
 
     var createdAt = DateTime.UtcNow;
     var update = Builders<DbUser>.Update
       .SetOnInsert(p => p.Phone, number)
       .SetOnInsert(p => p.IsAdmin, isAdmin)
       .SetOnInsert(p => p.CreatedAt, createdAt)
-      .Set(p => p.RefreshToken, encryptedToken)
-      .Set(p => p.Salt, salt)
       .Set(p => p.PushToken, request.PushToken);
+
+    if (request.WithRefresh)
+    {
+      update = update.Set(p => p.RefreshToken, encryptedToken).Set(p => p.Salt, salt);
+    }
+
     await collection.UpdateOneAsync(u => u.Id == userId, update, new UpdateOptions { IsUpsert = true });
 
     var authUser = new AuthUser(userId, dbUser?.IsAdmin ?? isAdmin, dbUser?.UserInfo is not null);
-    return GenerateAuthResponse(authUser, refreshToken);
+    return GenerateAuthResponse(authUser, request.WithRefresh ? refreshToken : null);
   }
 
   private (string, bool) Authenticate(AuthRequest request)
   {
-    var phoneNumber = request.Phone.ToPhoneNumber().ToString();
-    var testAccountPhoneNumber = authSettings.TestAccount?.ToPhoneNumber().ToString();
+    var phoneNumber = request.Phone.ToPhoneNumber();
+    var testAccountPhoneNumber = authSettings.TestAccount?.ToPhoneNumber();
 
-    if (phoneNumber == testAccountPhoneNumber && request.Code.Equals(authSettings.TestCode))
+    if ((authSettings.Disabled && request.Code.Equals(authSettings.TestCode)) || (phoneNumber == testAccountPhoneNumber && request.Code.Equals(authSettings.TestCode)))
     {
       return (phoneNumber, true);
     }
@@ -144,13 +143,13 @@ public sealed class AuthServiceImpl : IAuthService
 
     if (dbUser?.RefreshToken is null)
     {
-      throw new UnauthorizedAccessException();
+      throw new UnauthorizedAccessException("Invalid refresh token");
     }
 
     if (dbUser.RefreshToken != HashString(request.RefreshToken, Convert.FromBase64String(dbUser.Salt!)))
     {
       await RevokeRefreshToken(request.UserId);
-      throw new UnauthorizedAccessException();
+      throw new UnauthorizedAccessException("Invalid refresh token");
     }
 
     var (newRefreshToken, encryptedToken, salt) = GenerateRefreshToken();
@@ -191,7 +190,7 @@ public sealed class AuthServiceImpl : IAuthService
         .Unset(u => u.RefreshToken));
   }
 
-  public async Task Logout(Ref<Api.User.User> user)
+  public async Task Logout(Ref<Api.Auth.User> user)
   {
     await RevokeRefreshToken(user.Id);
   }

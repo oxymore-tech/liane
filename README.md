@@ -31,9 +31,7 @@ Installer liane CLI (outils pour le dev) :
 Créer le fichier `.env.local` dans le répertoire `back` avec le contenu suivant :
 
 ```bash
-LIANE_TWILIO__ACCOUNT=
-LIANE_TWILIO__FROM=
-LIANE_TWILIO__TOKEN=
+LIANE_SMS__APIKEY=
 LIANE_AUTH__TESTACCOUNT=
 LIANE_AUTH__TESTCODE=
 ```
@@ -61,6 +59,12 @@ Usage: liane (token|init|start|stop|dump_on_local)
 
 Ensuite lancez les 3 modules de lianes :
 
-- [Backend](back/README.md)
-- [Application mobile](app/README.md)
-- [Application web](web/README.md)
+- [back : backend API](back/README.md)
+- [common : common js layer, e2e tests](common/README.md)
+- [app : mobile app](app/README.md)
+- [web : web app](web/README.md)
+
+# Troubleshooting :scream:
+
+Manage IOS certificates and provisioning profiles :
+[doc/ios_certificate.md](doc/ios_certificate.md)

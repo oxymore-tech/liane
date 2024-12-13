@@ -1,0 +1,42 @@
+{
+  "liane": "657d86412c4206f8c66fca93",
+  "car": {
+    "at": "2023-12-16T11:21:59.287Z",
+    "nextPoint": "bnlc:48016-C-002",
+    "delay": 302900,
+    "position": {
+      "lat": 44.485822,
+      "lng": 3.45858
+    },
+    "members": [
+      "6578c34d5030769a55e888d7"
+    ],
+    "isMoving": true
+  },
+  "otherMembers": {
+    "63f73936d3436d499d1075f6": {
+      "member": "63f73936d3436d499d1075f6",
+      "liane": "657d86412c4206f8c66fca93",
+      "at": "2023-12-16T11:21:26.481Z",
+      "nextPoint": "bnlc:48016-C-002",
+      "delay": -173581,
+      "location": {
+        "lat": 44.4954919,
+        "lng": 3.4628557
+      },
+      "isMoving": true
+    },
+    "654e2de81435035edcef9b7f": {
+      "member": "654e2de81435035edcef9b7f",
+      "liane": "657d86412c4206f8c66fca93",
+      "at": "2023-12-16T11:21:50.151Z",
+      "nextPoint": "bnlc:48016-C-002",
+      "delay": -509851,
+      "location": {
+        "lat": 44.52407421539175,
+        "lng": 3.4827509096396865
+      },
+      "isMoving": true
+    }
+  }
+}

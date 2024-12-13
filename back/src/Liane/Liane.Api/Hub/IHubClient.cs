@@ -1,26 +1,23 @@
+using System.Collections.Immutable;
 using System.Threading.Tasks;
-using Liane.Api.Chat;
-using Liane.Api.Event;
+using Liane.Api.Auth;
+using Liane.Api.Community;
 using Liane.Api.Trip;
-using Liane.Api.User;
-using Liane.Api.Util.Pagination;
+using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Hub;
 
 public interface IHubClient
 {
-  Task ReceiveUnreadOverview(UnreadOverview unreadOverview);
+  Task ReceiveUnreadOverview(ImmutableDictionary<Ref<Community.Liane>, int> unreadOverview);
 
-  Task<bool> ReceiveNotification(Notification notification);
-
-  Task<bool> ReceiveMessage(string conversationId, ChatMessage message);
-
-  Task ReceiveLatestMessages(PaginatedResponse<ChatMessage> messages);
+  Task<bool> ReceiveLianeMessage(string conversationId, LianeMessage message);
 
   Task Me(FullUser user);
-  
-  Task ReceiveLianeMemberLocationUpdate(TrackedMemberLocation update);
-  
-  Task ReceiveLianeUpdate(Trip.Liane liane);
 
+  Task ReceiveTrackingInfo(TrackingInfo update);
+
+  Task ReceiveTripUpdate(Trip.Trip trip);
+
+  Task ReceiveLianeUpdate(Community.Liane liane);
 }

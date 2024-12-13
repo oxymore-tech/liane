@@ -1,15 +1,14 @@
 import { ColorValue } from "react-native";
 
-export type AppColorSwatch = Readonly<{ [name in 500]: ColorValue }> &
-  Readonly<Partial<{ [name in 100 | 200 | 300 | 400 | 600 | 700 | 800 | 900]: ColorValue }>>;
-
 export enum AppColors {
   primaryColor = "#F25757",
   secondaryColor = "#3C88A6",
   backgroundColor = "#FFFFFF",
-  fontColor = "#000000",
+  fontColor = "#2E2E2E",
   grayBackground = "#E5E5E5",
   lightGrayBackground = "#EBE9E9",
+  darkGray = "#2B2F35",
+  gray100 = "#F3F4F6",
 
   white = "#FFFFFF",
   black = "#000000",
@@ -21,6 +20,7 @@ export enum AppColors {
 export const AppColorPalettes = {
   gray: {
     100: "#F3F4F6",
+    150: "#EBE9E9",
     200: "#D0D0D0",
     300: "#b2b2b2",
     400: "#9CA3AF",
@@ -30,7 +30,7 @@ export const AppColorPalettes = {
     700: "#374151",
     800: "#2E2E2E"
   },
-  blue: { 500: AppColors.blue, 400: "#75B5F7", 300: "#9FCEFF", 100: "#CEE4FE", 700: AppColors.darkBlue, 900: "#030636" },
+  blue: { 500: AppColors.blue, 400: "#75B5F7", 300: "#9FCEFF", 100: "#CEE4FE", 700: AppColors.darkBlue, 800: "#134558", 900: "#030636" },
   pink: {
     500: "#ff8c8c",
     400: "#F49496",
@@ -44,7 +44,7 @@ export const AppColorPalettes = {
     200: "#FFD19E",
     100: "#FFE4C7"
   },
-  orange: { 500: AppColors.primaryColor, 600: "#E34526", 400: "#EF6E55", 100: "#ff6a3f", 700: "#AA2900" }
+  orange: { 500: AppColors.primaryColor, 600: "#E34526", 400: "#EF6E55", 100: "#ffedd5", 700: "#AA2900" }
 } as const;
 
 export const WithAlpha = (color: AppColors.white | AppColors.black, alpha: number) => {
@@ -68,7 +68,8 @@ export const ContextualColors = {
     light: "#FFBC8B"
   },
   greenValid: {
-    light: "#B9E7C3"
+    light: "#B9E7C3",
+    accent: "#00ce2d"
   },
   redAlert: {
     light: "#ffd7d0",
@@ -76,5 +77,3 @@ export const ContextualColors = {
     text: "#750000"
   }
 } as const;
-
-export const HouseColor: ColorValue[] = ["#C6E1FC", /* "#FFD7AA", */ "#FFBE76", "#FFAA4B", "#FF8459", "#FFADAF"];

@@ -23,10 +23,10 @@ export const PasswordInput = ({ code, onChange, onValidate }: PasswordInputProps
       <View style={styles.inputContainer}>
         <Column style={{ flex: 1 }}>
           <AppTextInput
-            style={[styles.input]}
+            style={styles.input}
             placeholder=""
             autoFocus={true}
-            returnKeyLabel={"next"}
+            returnKeyLabel="next"
             onChangeText={onChange}
             secureTextEntry={true}
             onSubmitEditing={onValidate}
@@ -48,8 +48,7 @@ const styles = StyleSheet.create({
   inputContainer: {
     marginVertical: 16,
     height: 52,
-    width: "75%",
-    minWidth: 250,
+    width: 270,
     backgroundColor: AppColors.white,
     display: "flex",
     flexDirection: "row",

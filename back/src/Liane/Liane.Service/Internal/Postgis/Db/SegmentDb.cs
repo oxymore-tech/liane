@@ -1,4 +1,4 @@
-using GeoJSON.Text.Geometry;
+using NetTopologySuite.Geometries;
 
 namespace Liane.Service.Internal.Postgis.Db;
 

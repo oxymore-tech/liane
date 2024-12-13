@@ -12,18 +12,18 @@ using NUnit.Framework;
 namespace Liane.Test.Integration;
 
 [TestFixture(Category = "Integration")]
-public class LianeStorageTest: BaseIntegrationTest
+public class LianeStorageTest : BaseIntegrationTest
 {
-  private ILianeService lianeService = null!;
+  private ITripService tripService = null!;
   private IPostgisService postgisService = null!;
 
   protected override void Setup(IMongoDatabase db)
   {
-    lianeService = ServiceProvider.GetRequiredService<ILianeService>();
+    tripService = ServiceProvider.GetRequiredService<ITripService>();
     postgisService = ServiceProvider.GetRequiredService<IPostgisService>();
   }
-  
-  private async Task<ImmutableList<Api.Trip.Liane>> CreateLianes(string creatorId)
+
+  private async Task<ImmutableList<Api.Trip.Trip>> CreateLianes(string creatorId)
   {
     var tomorrow = DateTime.Now.AddDays(1);
     // Create fake Liane in database
@@ -34,17 +34,17 @@ public class LianeStorageTest: BaseIntegrationTest
       (LabeledPositions.LavalDuTarnEglise, LabeledPositions.Mende),
       (LabeledPositions.VillefortParkingGare, LabeledPositions.Mende),
     };
-    var requests = new LianeRequest[baseLianes.Length];
+    var requests = new TripRequest[baseLianes.Length];
     for (var i = 0; i < baseLianes.Length; i++)
     {
-      var lianeRequest = Fakers.LianeRequestFaker.Generate() with { From = baseLianes[i].From, To = baseLianes[i].To, DepartureTime = tomorrow, AvailableSeats = 2 };
+      var lianeRequest = Fakers.LianeRequestFaker.Generate() with { From = baseLianes[i].From, To = baseLianes[i].To, ArriveAt = tomorrow, AvailableSeats = 2 };
       requests[i] = lianeRequest;
     }
 
-    var createdLianes = new List<Api.Trip.Liane>();
+    var createdLianes = new List<Api.Trip.Trip>();
     foreach (var t in requests)
     {
-      createdLianes.Add(await lianeService.Create(t, creatorId));
+      createdLianes.Add(await tripService.Create(t, creatorId));
     }
 
     return createdLianes.ToImmutableList();
@@ -55,16 +55,15 @@ public class LianeStorageTest: BaseIntegrationTest
   {
     var userA = Fakers.FakeDbUsers[0].Id;
     var createdLianes = await CreateLianes(userA);
-  
+
     var searchable = await postgisService.ListSearchableLianes();
-    
+
     Assert.AreEqual(createdLianes.Count, searchable.Count);
 
-    await lianeService.ForceSyncDatabase();
+    await tripService.ForceSyncDatabase();
 
     var updatedSearchable = await postgisService.ListSearchableLianes();
-    
-    CollectionAssert.AreEquivalent(searchable, updatedSearchable);
 
+    CollectionAssert.AreEquivalent(searchable, updatedSearchable);
   }
 }

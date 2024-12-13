@@ -4,7 +4,7 @@ import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 
 export const AppExpandingTextInput = ({ style, backgroundStyle, ...props }: AppTextInputProps & { backgroundStyle?: StyleProp<ViewStyle> }) => {
-  const [contentHeight, setContentHeight] = useState(40);
+  const [contentHeight, setContentHeight] = useState(52);
   const { height } = useAppWindowsDimensions();
   const padding = useMemo(() => {
     if (backgroundStyle) {
@@ -22,7 +22,7 @@ export const AppExpandingTextInput = ({ style, backgroundStyle, ...props }: AppT
         paddingBottom: obj.paddingBottom || obj.paddingVertical || obj.padding || 0
       };
     }
-    return {};
+    return { paddingTop: 0, paddingBottom: 0 };
   }, [backgroundStyle]);
   return (
     <View
@@ -36,11 +36,10 @@ export const AppExpandingTextInput = ({ style, backgroundStyle, ...props }: AppT
       ]}>
       <AppTextInput
         {...props}
-        multiline={true}
         onContentSizeChange={event => {
           setContentHeight(event.nativeEvent.contentSize.height);
         }}
-        style={[style, { height: contentHeight, alignSelf: "flex-end", maxHeight: height / 3 }]}
+        style={[style, { height: contentHeight, maxHeight: height / 3 }]}
       />
     </View>
   );

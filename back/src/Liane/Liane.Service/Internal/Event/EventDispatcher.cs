@@ -1,35 +1,37 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
+using Liane.Api.Community;
 using Liane.Api.Event;
 using Liane.Api.Util.Ref;
+using Liane.Service.Internal.Util;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Liane.Service.Internal.Event;
 
-public sealed class EventDispatcher
+public sealed class EventDispatcher(
+  IServiceProvider serviceProvider,
+  ICurrentContext currentContext,
+  ILogger<EventDispatcher> logger)
 {
-  private readonly IServiceProvider serviceProvider;
+  public Task Dispatch(Ref<Api.Community.Liane> liane, MessageContent content, DateTime? at = null) => Dispatch(liane, content, currentContext.CurrentUser().Id, at ?? DateTime.UtcNow);
 
-  public EventDispatcher(IServiceProvider serviceProvider)
+  private async Task Dispatch(Ref<Api.Community.Liane> liane, MessageContent content, Ref<Api.Auth.User> sender, DateTime at)
   {
-    this.serviceProvider = serviceProvider;
-  }
-
-  public async Task Dispatch(LianeEvent e, Ref<Api.User.User>? sender = null)
-  {
-    var eventListeners = serviceProvider.GetServices<IEventListener>();
-    foreach (var eventListener in eventListeners)
+    // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+    if (liane is null)
     {
-      await eventListener.OnEvent(e, sender);
+      logger.LogWarning("Event is not dispatched because liane is null : {Message}", content);
+      return;
     }
-  }
 
-  public async Task DispatchAnswer(Notification.Event e, Answer answer, Ref<Api.User.User>? sender = null)
-  {
-    var eventListeners = serviceProvider.GetServices<IEventListener>();
+    var lianeEvent = new LianeEvent<MessageContent>(liane, content, at, sender);
+    var eventListeners = serviceProvider.GetServices<IEventListener>()
+      .Distinct();
     foreach (var eventListener in eventListeners)
     {
-      await eventListener.OnAnswer(e, answer, sender);
+      await eventListener.OnEvent(lianeEvent);
     }
   }
 }

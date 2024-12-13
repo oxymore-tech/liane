@@ -1,5 +1,7 @@
 using System;
-using System.Linq.Expressions;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Liane.Api.Util.Ref;
 
@@ -11,17 +13,26 @@ public abstract record Cursor
   {
   }
 
-  public static Cursor From<TCursor, T>(T e, Expression<Func<T, object?>> paginationField) where T : IIdentity where TCursor : Cursor
+  public static Cursor From<TCursor>(IEnumerable<object?> values) where TCursor : Cursor
   {
     switch (typeof(TCursor))
     {
       case { } t when t == typeof(Natural):
-        return new Natural(e.Id!);
+      {
+        var arg1 = values.First();
+        if (arg1 is string id) return new Natural(id);
+        break;
+      }
       case { } t when t == typeof(Time):
-        return new Time((DateTime?)paginationField.Compile()(e) ?? DateTime.UtcNow, e.Id!);
-      default:
-        throw new ArgumentException("Bad cursor type : " + typeof(TCursor).Name);
+      {
+        var arg1 = values.First();
+        var arg2 = values.Skip(1).First();
+        if (arg1 is DateTime time && arg2 is string id) return new Time(time, id);
+        break;
+      }
     }
+
+    throw new ArgumentException($"Bad cursor type :{typeof(TCursor).Name} with arguments [{string.Join(',', values.Select(v => v?.ToString()))}]");
   }
 
   private static readonly Regex TimestampPattern = new(@"\d+");
@@ -53,47 +64,35 @@ public abstract record Cursor
     return new Natural(items[0]);
   }
 
-  public static implicit operator string(Cursor cursor) => cursor.ToString()!;
-
   public static implicit operator Cursor(string raw) => Parse(raw);
 
-  public abstract Expression<Func<T, bool>> ToFilter<T>(bool sortAsc, Expression<Func<T, object?>> paginationField) where T : IIdentity;
+  public abstract ImmutableList<object?> GetFilterFields();
 
   public sealed record Natural(string Id) : Cursor
   {
-    public override Expression<Func<T, bool>> ToFilter<T>(bool sortAsc, Expression<Func<T, object?>> paginationField)
-    {
-      var paramExpr = Expression.Parameter(typeof(T), "e");
-      var memberExpression = ExpressionHelper.GetMemberExpression(paramExpr, (T e) => e.Id);
-      var constantExpression = ExpressionHelper.GetValueExpression(Id, memberExpression.Type);
-      var body = (Expression)Expression.MakeBinary(
-        sortAsc ? ExpressionType.GreaterThan : ExpressionType.LessThan,
-        memberExpression,
-        constantExpression);
-      return Expression.Lambda<Func<T, bool>>(body, paramExpr);
-    }
-
     public override string ToString() => Id;
+
+    public override ImmutableList<object?> GetFilterFields()
+    {
+      return ImmutableList.Create<object?>(Id);
+    }
   }
 
   public sealed record Time(DateTime Timestamp, string? Id) : Cursor
   {
-    public override Expression<Func<T, bool>> ToFilter<T>(bool sortAsc, Expression<Func<T, object?>> paginationField)
-    {
-      var paramExpr = Expression.Parameter(typeof(T), "e");
-      var memberExpression = ExpressionHelper.GetMemberExpression(paramExpr, paginationField);
-      var constantExpression = ExpressionHelper.GetValueExpression(Timestamp, memberExpression.Type);
-      var body = (Expression)Expression.MakeBinary(
-        sortAsc ? ExpressionType.GreaterThan : ExpressionType.LessThan,
-        memberExpression,
-        constantExpression);
-      // TODO compare id when id defined in the cursor and date are equals
-      return Expression.Lambda<Func<T, bool>>(body, paramExpr);
-    }
-
     public override string ToString()
     {
       return ((DateTimeOffset)Timestamp.ToUniversalTime()).ToUnixTimeMilliseconds() + (Id != null ? "_" + Id : "");
     }
+
+    public override ImmutableList<object?> GetFilterFields()
+    {
+      return new object?[] { Timestamp, Id }.ToImmutableList();
+    }
   }
+}
+
+public static class CursorExtensions
+{
+  public static Cursor ToCursor<T>(this T next) where T : IEntity => new Cursor.Time(next.CreatedAt!.Value, next.Id!.ToString()!);
 }

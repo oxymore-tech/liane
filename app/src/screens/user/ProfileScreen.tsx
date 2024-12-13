@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, StyleSheet } from "react-native";
+import { Linking, Pressable, ScrollView, StyleSheet } from "react-native";
 import React, { useContext } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppColors, ContextualColors } from "@/theme/colors";
@@ -7,16 +7,15 @@ import { APP_VERSION } from "@env";
 import { Center, Column } from "@/components/base/AppLayout";
 import { UserPicture } from "@/components/UserPicture";
 import { AppIcon } from "@/components/base/AppIcon";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ActionListItem } from "@/components/ActionItem";
-import { useAppNavigation } from "@/api/navigation";
-import { User } from "@/api";
+import { useAppNavigation } from "@/components/context/routing";
+import { capitalize, FullUser, User } from "@liane/common";
 import { WithFetchResource } from "@/components/base/WithFetchResource";
-import { formatMonthYear } from "@/api/i18n";
-import { capitalize } from "@/util/strings";
+import { AppLocalization } from "@/api/i18n";
 import { DebugIdView } from "@/components/base/DebugIdView";
 import { AppStatusBar } from "@/components/base/AppStatusBar";
 import { LineSeparator } from "@/components/Separator";
+import { RNAppEnv } from "@/api/env";
 
 export const ProfileScreen = () => {
   const { route } = useAppNavigation<"Profile">();
@@ -40,15 +39,14 @@ const ProfileView = ({ user }: { user: User }) => {
   const { user: loggedUser } = useContext(AppContext);
   const { navigation } = useAppNavigation<"Profile">();
 
-  const { top: insetsTop } = useSafeAreaInsets();
   const isMyPage = user!.id === loggedUser!.id;
   const displayedUser = isMyPage ? loggedUser! : user;
 
   return (
     <ScrollView overScrollMode="never">
-      <Center style={{ paddingHorizontal: 24, paddingTop: insetsTop + 24, paddingBottom: 12, backgroundColor: AppColors.secondaryColor }}>
+      <Center style={{ paddingHorizontal: 24, paddingTop: 24, paddingBottom: 12, backgroundColor: AppColors.secondaryColor }}>
         {!isMyPage && (
-          <Pressable style={{ position: "absolute", left: 24, top: insetsTop + 24 }} onPress={navigation.goBack}>
+          <Pressable style={{ position: "absolute", left: 24, top: 24 }} onPress={navigation.goBack}>
             <AppIcon name={"arrow-ios-back-outline"} color={AppColors.white} />
           </Pressable>
         )}
@@ -59,8 +57,8 @@ const ProfileView = ({ user }: { user: User }) => {
       </Center>
       <Column spacing={4} style={{ marginVertical: 24, marginHorizontal: 24 }}>
         {/*<AppText style={styles.data}>4 trajets effectués</AppText>*/}
-        <AppText style={styles.data}>Membre depuis {capitalize(formatMonthYear(new Date(displayedUser.createdAt!)))}</AppText>
-        {isMyPage && <AppText style={styles.data}>{displayedUser.phone}</AppText>}
+        <AppText style={styles.data}>Membre depuis {capitalize(AppLocalization.formatMonthYear(new Date(displayedUser.createdAt!)))}</AppText>
+        {(displayedUser as FullUser).phone && <AppText style={styles.data}>{(displayedUser as FullUser).phone}</AppText>}
         <DebugIdView object={user} />
       </Column>
       {isMyPage && <Actions />}
@@ -73,16 +71,24 @@ const Actions = () => {
   const { navigation } = useAppNavigation();
   return (
     <Column>
-      <ActionListItem onPress={() => navigation.navigate("ProfileEdit")} iconName={"edit-outline"} text={"Mes informations"} />
-      <ActionListItem onPress={() => {}} iconName={"bell-outline"} text={"Notifications"} />
+      {/*<ActionListItem onPress={() => {}} iconName={"bell-outline"} text={"Notifications"} />*/}
       <ActionListItem onPress={() => navigation.navigate("ArchivedTrips")} iconName={"history"} text={"Historique des trajets"} />
       <ActionListItem onPress={() => navigation.navigate("Settings")} iconName={"settings-outline"} text={"Paramètres"} />
-      {/*<LineSeparator />
-      <ActionListItem onPress={() => {}} text={"Conditions générales"} iconName={"book-open-outline"} />
-      <ActionListItem onPress={() => {}} text={"A propos"} iconName={"book-open-outline"} />
-*/}
+      <ActionListItem
+        onPress={() => navigation.navigate("RallyingPointRequests")}
+        iconName={"pin-outline"}
+        text={"Proposer un point de ralliement"}
+      />
+
       <LineSeparator />
       <ActionListItem onPress={() => navigation.navigate("Account")} iconName={"person-outline"} text={"Compte"} />
+      <ActionListItem
+        onPress={() => {
+          Linking.openURL(`https://${RNAppEnv.host}/privacy-policy`);
+        }}
+        text={"Politique de confidentialité"}
+        iconName={"book-open-outline"}
+      />
       <ActionListItem
         onPress={async () => {
           await services.auth.logout();
@@ -99,10 +105,6 @@ const Actions = () => {
 };
 
 const styles = StyleSheet.create({
-  page: {
-    flex: 1,
-    padding: 16
-  },
   name: {
     color: "white",
     fontWeight: "bold",

@@ -1,218 +1,103 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Threading;
 using System.Threading.Tasks;
-using GeoJSON.Text.Feature;
-using Liane.Api.Event;
+using Liane.Api.Community;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
-using Liane.Api.Util.Http;
-using Liane.Api.Util.Pagination;
-using Liane.Mock;
-using Liane.Service.Internal.Event;
-using Liane.Service.Internal.Util;
-using Liane.Web.Internal.AccessLevel;
 using Liane.Web.Internal.Auth;
-using Liane.Web.Internal.Debug;
 using Microsoft.AspNetCore.Mvc;
+using LianeMatch = Liane.Api.Community.LianeMatch;
+using LianeRequest = Liane.Api.Community.LianeRequest;
 
 namespace Liane.Web.Controllers;
 
-[Route("api/liane")]
+[Route("api/community")]
 [ApiController]
 [RequiresAuth]
-public sealed class LianeController : ControllerBase
+public sealed class LianeController(ILianeService lianeService)
+  : ControllerBase
 {
-  private readonly ILianeService lianeService;
-  private readonly ICurrentContext currentContext;
-  private readonly IMockService mockService;
-  private readonly EventDispatcher eventDispatcher;
-  private readonly ILianeRecurrenceService lianeRecurrenceService;
-  private readonly ILianeRequestService lianeRequestService;
-
-  public LianeController(ILianeService lianeService, ICurrentContext currentContext, IMockService mockService, EventDispatcher eventDispatcher, ILianeRecurrenceService lianeRecurrenceService, ILianeRequestService lianeRequestService)
+  [HttpGet("match")]
+  public Task<ImmutableList<LianeMatch>> Match()
   {
-    this.lianeService = lianeService;
-    this.currentContext = currentContext;
-    this.mockService = mockService;
-    this.eventDispatcher = eventDispatcher;
-    this.lianeRecurrenceService = lianeRecurrenceService;
-    this.lianeRequestService = lianeRequestService;
+    return lianeService.Match();
   }
 
-  [HttpGet("{id}")]
-  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
-  public async Task<Api.Trip.Liane> Get([FromRoute] string id)
+  [HttpPut("liane")]
+  public Task<ImmutableList<Api.Community.Liane>> List([FromBody] LianeFilter filter)
   {
-    var current = currentContext.CurrentResource<Api.Trip.Liane>();
-    return await lianeService.GetForCurrentUser(current is not null? current : id);
+    return lianeService.List(filter);
   }
 
-  [HttpDelete("{id}")]
-  [RequiresAccessLevel(ResourceAccessLevel.Owner, typeof(Api.Trip.Liane))]
-  public async Task Delete([FromRoute] string id)
+  [HttpPost("liane")]
+  public async Task<LianeRequest> Create([FromBody] LianeRequest request)
   {
-    await lianeService.Delete(id);
+    return await lianeService.Create(request);
   }
 
-  [HttpPatch("{id}")]
-  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
-  public Task<Api.Trip.Liane> Update([FromRoute] string id, [FromBody] LianeUpdate update)
+  [HttpPost("liane/request/{id:guid}")]
+  public Task UpdateRequest(Guid id, [FromBody] LianeRequest request)
   {
-    return lianeService.UpdateDepartureTime(id, update.DepartureTime);
-  }
-  
-  [HttpPost("{id}/cancel")]
-  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
-  public async Task<IActionResult> CancelLiane([FromRoute] string id)
-  {
-    await lianeService.CancelLiane(id);
-    await eventDispatcher.Dispatch(new LianeEvent.MemberHasCanceled(id, currentContext.CurrentUser().Id));
-    return NoContent();
-  }
-  
-  [HttpPost("{id}/start")]
-  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
-  public async Task<IActionResult> StartLiane([FromRoute] string id)
-  {
-    await lianeService.StartLiane(id);
-    await eventDispatcher.Dispatch(new LianeEvent.MemberHasStarted(id, currentContext.CurrentUser().Id));
-    return NoContent();
+    return lianeService.Update(id, request);
   }
 
-   
-  [HttpPost("{id}/leave")]
-  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
-  public async Task<IActionResult> LeaveLiane([FromRoute] string id)
+  [HttpDelete("liane/request/{id:guid}")]
+  public Task DeleteRequest(Guid id)
   {
-    var memberId = currentContext.CurrentUser().Id;
-    await lianeService.RemoveMember(id, memberId);
-    await eventDispatcher.Dispatch(new LianeEvent.MemberHasLeft(id, memberId));
-    return NoContent();
-  }
-  
-  [HttpGet("{id}/members/{memberId}/contact")]
-  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
-  public Task<string> GetContact([FromRoute] string id, [FromRoute] string memberId)
-  {
-    return lianeService.GetContact(id, currentContext.CurrentUser().Id, memberId);
+    return lianeService.Delete(id);
   }
 
-  [HttpPost("{id}/feedback")]
-  [RequiresAccessLevel(ResourceAccessLevel.Member, typeof(Api.Trip.Liane))]
-  public async Task<IActionResult> SendFeedback([FromRoute] string id, [FromBody] Feedback feedback)
+  [HttpGet("liane/{liane:guid}/match/{from}/{to}")]
+  public Task<PendingMatch?> Matches([FromRoute] Guid liane, [FromRoute] string from, [FromRoute] string to)
   {
-    await lianeService.UpdateFeedback(id, feedback);
-    return NoContent();
+    return lianeService.Matches(liane, from, to);
   }
 
-  
-  [HttpGet("{id}/geolocation")]
-  public Task<FeatureCollection> GetGeolocationPings([FromRoute] string id)
+  [HttpGet("liane/{liane:guid}/trip")]
+  public Task<ImmutableList<WayPoint>> GetTrip(Guid liane)
   {
-    return currentContext.CurrentUser().IsAdmin ? lianeService.GetGeolocationPings(id) : lianeService.GetGeolocationPingsForCurrentUser(id);
-  }
-  
-  [HttpPatch("{id}/geolocation")]
-  public async Task<IActionResult> UpdateGeolocationSetting([FromRoute] string id, [FromBody] GeolocationLevel level)
-  {
-    await lianeService.UpdateGeolocationSetting(id, level);
-    return NoContent();
-  }
-  
-  [HttpPost("sync")]
-  [RequiresAdminAuth]
-  public Task ForceSyncDatabase()
-  {
-    return lianeService.ForceSyncDatabase();
+    return lianeService.GetTrip(liane, null);
   }
 
-
-  [HttpPost("match")]
-  [DebugRequest]
-  public Task<PaginatedResponse<LianeMatch>> Match([FromBody] Filter filter, [FromQuery] Pagination pagination, CancellationToken cancellationToken)
+  [HttpGet("liane/{liane:guid}/trip/{lianeRequest:guid}")]
+  public Task<ImmutableList<WayPoint>> GetTrip(Guid liane, Guid lianeRequest)
   {
-    return lianeService.Match(filter, pagination, cancellationToken);
+    return lianeService.GetTrip(liane, lianeRequest);
   }
 
-  [HttpPost("match/geojson")]
-  [DebugRequest]
-  public Task<LianeMatchDisplay> MatchWithDisplay([FromBody] Filter filter, [FromQuery] Pagination pagination, CancellationToken cancellationToken)
+  [HttpPost("liane/{liane:guid}/join/{id:guid}")]
+  public Task<Api.Community.Liane?> JoinRequest(Guid id, Guid liane)
   {
-    return lianeService.MatchWithDisplay(filter, pagination, cancellationToken);
+    return lianeService.JoinRequest(id, liane);
   }
 
-  [HttpGet("")]
-  public Task<PaginatedResponse<Api.Trip.Liane>> List([FromQuery] Pagination pagination, [FromQuery(Name = "state")] LianeState[] stateFilter, CancellationToken cancellationToken)
+  [HttpPost("liane/{liane:guid}/reject/{id:guid}")]
+  public Task<bool> Reject(Guid id, Guid liane)
   {
-    return lianeService.List(new LianeFilter { ForCurrentUser = true, States = stateFilter }, pagination, cancellationToken);
+    return lianeService.Reject(id, liane);
   }
 
-  [HttpPost("")]
-  public Task<Api.Trip.Liane> Create(LianeRequest lianeRequest)
+  [HttpPost("liane/join_trip")]
+  public Task<bool> JoinTrip([FromBody] JoinTripQuery query)
   {
-    return lianeService.Create(lianeRequest);
+    return lianeService.JoinTrip(query);
   }
 
-  [HttpGet("all")]
-  [RequiresAdminAuth]
-  public Task<PaginatedResponse<Api.Trip.Liane>> ListAll([FromQuery] Pagination pagination, CancellationToken cancellationToken)
+  [HttpGet("liane/{id:guid}")]
+  public Task<Api.Community.Liane> GetLiane(Guid id)
   {
-    return lianeService.List(new LianeFilter(), pagination, cancellationToken);
+    return lianeService.Get(id);
   }
 
-  [HttpPost("generate")]
-  [RequiresAdminAuth]
-  public async Task<ImmutableList<Api.Trip.Liane>> Generate([FromQuery] int count, [FromQuery] double lat, [FromQuery] double lng, [FromQuery] double? lat2, [FromQuery] double? lng2,
-    [FromQuery] int? radius)
+  [HttpGet("liane/incoming_trip")]
+  public Task<ImmutableDictionary<DayOfWeek, ImmutableList<IncomingTrip>>> GetIncomingTrips()
   {
-    var from = new LatLng(lat, lng);
-    LatLng? to = null;
-    if (lat2 != null && lng2 != null)
-    {
-      to = new LatLng((double)lat2, (double)lng2);
-    }
-
-    return await mockService.GenerateLianes(count, from, to, radius);
-  }
-  
-      
-  [HttpGet("recurrence")]
-  public Task<ImmutableList<LianeRecurrence>> ListRecurrences()
-  {
-    return lianeRecurrenceService.ListForCurrentUser();
-  }
-  
-  [HttpGet("recurrence/{id}")]
-  public Task<LianeRecurrence> GetRecurrence([FromRoute] string id)
-  {
-    return lianeRecurrenceService.GetWithResolvedRefs(id);
+    return lianeService.GetIncomingTrips();
   }
 
-    
-  [HttpDelete("recurrence/{id}")]
-  [RequiresAccessLevel(ResourceAccessLevel.Owner, typeof(LianeRecurrence))]
-  public async Task RemoveRecurrence([FromRoute] string id)
+  [HttpPost("liane/{id:guid}/leave")]
+  public Task<bool> Leave(Guid id)
   {
-      await lianeRecurrenceService.Delete(id);
-      await lianeService.RemoveRecurrence(id);
+    return lianeService.Leave(id);
   }
-  
-      
-  [HttpPatch("recurrence/{id}")]
-  [RequiresAccessLevel(ResourceAccessLevel.Owner, typeof(LianeRecurrence))]
-  public async Task UpdateRecurrence([FromRoute] string id, [FromBody] DayOfTheWeekFlag days)
-  {
-    // Deactivate recurrence while cleaning up old lianes
-    await lianeRecurrenceService.Update(id, DayOfTheWeekFlag.Create(new HashSet<DayOfWeek>()));
-    await lianeService.RemoveRecurrence(id);
-    // If flag is all 0, we stop here, else reactivate recurrence and create lianes
-    if (!days.IsNever)
-    {
-      await lianeRecurrenceService.Update(id, days);
-      await lianeService.CreateFromRecurrence(id);
-    }
-  }
-
 }

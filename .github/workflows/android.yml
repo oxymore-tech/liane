@@ -7,6 +7,11 @@ on:
       - develop
     paths:
       - app/**
+      - '!app/ios/**'
+      - common/src/**
+concurrency:
+  group: "${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}"
+  cancel-in-progress: true
 
 jobs:
   android-build:
@@ -15,18 +20,22 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-        
+
+      - name: Build common
+        id: common
+        uses: ./.github/actions/common
+
       - name: Find Version
         id: version
         uses: jimschubert/query-tag-action@v2
-        
+
       - name: Find Exact Version
         id: exact-version
         uses: jimschubert/query-tag-action@v2
         with:
           abbrev: 1
           skip-unshallow: true
-          
+
       - name: Set variables
         run: |
           if [[ "${{ github.base_ref }}" == "main" || "${{github.ref}}" == "refs/heads/main" ]]; then
@@ -36,10 +45,10 @@ jobs:
             echo "app_env=dev" >> $GITHUB_ENV
             echo "upload_track=beta" >> $GITHUB_ENV
           fi
-        
+
       - name: Version number
         run: 'echo VersionCode = ${{ github.run_number }} VersionName = ${{steps.version.outputs.tag}} Version = ${{steps.exact-version.outputs.tag}} AppEnv=${{env.app_env}}'
-    
+
       - uses: iamsauravsharma/create-dotenv@v1.2.2
         with:
           env-prefix: 'ENV_'
@@ -55,9 +64,14 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
           cache: 'yarn'
           cache-dependency-path: ./app/yarn.lock
+
+      - name: Enable Corepack
+        working-directory: ./app
+        shell: bash
+        run: corepack enable
 
       - uses: c-hive/gha-yarn-cache@v2
         with:
@@ -65,12 +79,16 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./app
-        run: yarn
-        
+        run: yarn install
+
+      - name: Check tslint and eslint
+        working-directory: ./app
+        run: yarn lint
+
       - name: Set up our JDK environment
         uses: actions/setup-java@v1.4.3
         with:
-          java-version: 11
+          java-version: 17
 
       - name: Restore gradle cache
         uses: actions/cache@v3
@@ -81,14 +99,14 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('./app/android/*.gradle*', './app/android/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
-    
+
       - name: Decode Keystore
         id: decode_keystore
         uses: timheuer/base64-to-file@v1
         with:
           fileName: 'release.keystore'
           encodedString: ${{ secrets.ANDROID_SIGNING_KEY }}
-          
+
       - name: Update Google Services File
         uses: franzbischoff/replace_envs@v1
         env:
@@ -97,7 +115,7 @@ jobs:
           from_file: ./app/android/app/google-services.json
           to_file: ./app/android/app/google-services.json
           commit: false
-        
+
       - name: Generate App Bundle
         working-directory: ./app
         run: |
@@ -107,7 +125,7 @@ jobs:
           ANDROID_KEY_STORE_PASSWORD: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-   
+
       - name: Upload App to Google Play
         uses: r0adkll/upload-google-play@v1
         with:
@@ -117,3 +135,4 @@ jobs:
           track: ${{env.upload_track}}
           status: completed
           inAppUpdatePriority: 5
+#          changesNotSentForReview: true

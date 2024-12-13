@@ -2,15 +2,38 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Util;
 
 public static class EnumerableExtensions
 {
+  public static bool IsNullOrEmpty<T>(this IEnumerable<T>? enumerable)
+  {
+    return enumerable is null || !enumerable.Any();
+  }
+
+  public static (IEnumerable<T>, IEnumerable<T>) Split<T>(this IEnumerable<T> input, Func<T, bool> predicate)
+  {
+    var left = new List<T>();
+    var right = new List<T>();
+
+    foreach (var item in input)
+    {
+      if (predicate(item))
+      {
+        left.Add(item);
+      }
+      else
+      {
+        right.Add(item);
+      }
+    }
+
+    return (left, right);
+  }
+
   public static IEnumerable<T> TakeUntil<T>(this IEnumerable<T> input, T until) where T : notnull
   {
     bool found;
@@ -42,11 +65,51 @@ public static class EnumerableExtensions
   }
 
   public static IEnumerable<TOut> FilterSelect<T, TOut>(this IEnumerable<T> enumerable, Func<T, TOut?> transformer)
-    where TOut: notnull
+    where TOut : notnull
   {
     return enumerable.Select(transformer)
       .Where(e => e is not null)
       .Select(e => e!);
+  }
+
+  public static IEnumerable<TOut> FilterSelectMany<T, TOut>(this IEnumerable<T> enumerable, Func<T, IEnumerable<TOut?>> transformer)
+    where TOut : notnull
+  {
+    return enumerable.SelectMany(transformer)
+      .Where(e => e is not null)
+      .Select(e => e!);
+  }
+
+  public static IEnumerable<TOut> FilterSelectMany<T, TOut>(this IEnumerable<T> enumerable, Func<T, IEnumerable<TOut?>> transformer)
+    where TOut : struct
+  {
+    return enumerable.SelectMany(transformer)
+      .Where(e => e is not null)
+      .Select(e => e!.Value);
+  }
+
+  public static IEnumerable<TOut> FilterSelect<T, TOut>(this IEnumerable<T> enumerable, Func<T, TOut?> transformer)
+    where TOut : struct
+  {
+    return enumerable.Select(transformer)
+      .Where(e => e is not null)
+      .Select(e => e!.Value);
+  }
+
+  public static async Task<IEnumerable<TOut>> FilterSelectAsync<T, TOut>(this IEnumerable<T> enumerable, Func<T, Task<TOut?>> transformer)
+    where TOut : notnull
+  {
+    return (await enumerable.SelectAsync(transformer))
+      .Where(e => e is not null)
+      .Select(e => e!);
+  }
+
+  public static async Task<IEnumerable<TOut>> FilterSelectAsync<T, TOut>(this IEnumerable<T> enumerable, Func<T, Task<TOut?>> transformer)
+    where TOut : struct
+  {
+    return (await enumerable.SelectAsync(transformer))
+      .Where(e => e is not null)
+      .Select(e => e!.Value);
   }
 
   public static async Task<ImmutableList<TOut>> SelectAsync<T, TOut>(this IEnumerable<T> enumerable, Func<T, Task<TOut>> transformer, bool parallel = false)
@@ -56,6 +119,18 @@ public static class EnumerableExtensions
     foreach (var task in parallel ? enumerable.AsParallel().Select(transformer) : enumerable.Select(transformer))
     {
       outs.Add(await task);
+    }
+
+    return outs.ToImmutableList();
+  }
+
+  public static async Task<ImmutableList<TOut>> SelectManyAsync<T, TOut>(this IEnumerable<T> enumerable, Func<T, Task<IEnumerable<TOut>>> transformer, bool parallel = false)
+  {
+    var outs = ImmutableList.CreateBuilder<TOut>();
+
+    foreach (var task in parallel ? enumerable.AsParallel().Select(transformer) : enumerable.Select(transformer))
+    {
+      outs.AddRange(await task);
     }
 
     return outs.ToImmutableList();
@@ -73,29 +148,18 @@ public static class EnumerableExtensions
     return outs.ToImmutableList();
   }
 
-  public static PaginatedResponse<T> Paginate<T, TCursor>(this IReadOnlyCollection<T> collection, Pagination.Pagination pagination, Expression<Func<T, object?>> paginationField)
-    where T : IIdentity where TCursor : Cursor
+  public static async Task<ImmutableDictionary<TKey, TOutput>> GroupByAsync<TKey, T, TOutput>(
+    this IEnumerable<T> enumerable,
+    Func<T, TKey> keySelector,
+    Func<IGrouping<TKey, T>, Task<TOutput>> groupMapper) where TKey : notnull
   {
-    var totalCount = collection.Count;
-    IEnumerable<T> enumerable = collection;
-
-    enumerable = enumerable.Sort(pagination.SortAsc, paginationField.Compile());
-
-    if (pagination.Cursor is not null)
+    var outputs = new Dictionary<TKey, TOutput>();
+    foreach (var g in enumerable.GroupBy(keySelector))
     {
-      var filter = pagination.Cursor.ToFilter(pagination.SortAsc, paginationField);
-      enumerable = enumerable.Where(e => filter.Compile()(e));
+      outputs.Add(g.Key, await groupMapper(g));
     }
 
-    var paginated = enumerable
-      .Take(pagination.Limit + 1)
-      .ToImmutableList();
-    var limited = paginated.Take(pagination.Limit)
-      .ToImmutableList();
-    var last = limited.LastOrDefault();
-    var limit = limited.Count;
-    var next = paginated.Count > limited.Count && last is not null ? Cursor.From<TCursor, T>(last, paginationField) : null;
-    return new PaginatedResponse<T>(limit, next, limited, totalCount);
+    return outputs.ToImmutableDictionary();
   }
 
   private static IEnumerable<T> Sort<T, TField>(this IEnumerable<T> enumerable, bool sortAsc, Func<T, TField>? sortField)

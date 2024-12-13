@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Immutable;
 using System.Linq;
-using Liane.Api.Chat;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Http;
@@ -11,9 +10,8 @@ using MongoDB.Bson.Serialization.Attributes;
 namespace Liane.Service.Internal.Trip;
 
 public sealed record UserPing(
-  Ref<Api.User.User> User,
+  Ref<Api.Auth.User> User,
   DateTime At,
-  TimeSpan Delay,
   LatLng? Coordinate
 );
 
@@ -21,18 +19,17 @@ public sealed record WayPointDb(Ref<RallyingPoint> RallyingPoint, int Duration, 
 
 public sealed record LianeDb(
   string Id,
-  Ref<Api.User.User>? CreatedBy,
+  Ref<Api.Auth.User>? CreatedBy,
   DateTime? CreatedAt,
   DateTime DepartureTime,
-  Ref<Api.Trip.Liane>? Return,
-  ImmutableList<LianeMember> Members,
+  Ref<Api.Trip.Trip>? Return,
+  ImmutableList<TripMember> Members,
   Driver Driver,
-  LianeState State,
+  TripStatus State,
   ImmutableList<WayPointDb> WayPoints,
   ImmutableList<UserPing> Pings,
-  Ref<ConversationGroup>? Conversation,
-  Ref<LianeRecurrence>? Recurrence = null
-) : IEntity, ISharedResource<LianeMember>
+  Ref<Api.Community.Liane>? Liane
+) : IEntity<string>, ISharedResource<TripMember>
 {
   [BsonElement] public int TotalSeatCount => Members.Aggregate(0, (sum, v) => sum + v.SeatCount);
 }

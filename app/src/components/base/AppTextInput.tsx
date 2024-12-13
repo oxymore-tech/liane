@@ -1,8 +1,9 @@
 import React, { ForwardedRef, forwardRef } from "react";
-import { StyleSheet, TextInput, TextInputProps } from "react-native";
+import { StyleSheet, TextInput, TextInputProps, View } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { Row } from "@/components/base/AppLayout";
 import { AppStyles } from "@/theme/styles";
+import { AppText } from "@/components/base/AppText.tsx";
 
 export interface AppTextInputProps extends TextInputProps {
   leading?: React.ReactElement;
@@ -10,20 +11,37 @@ export interface AppTextInputProps extends TextInputProps {
   placeholder?: string;
   textColor?: string;
   placeholderTextColor?: string;
+  subText?: string;
 }
 
 export const AppTextInput = forwardRef(
-  ({ leading, trailing, style, textColor, placeholder, placeholderTextColor, ...props }: AppTextInputProps, ref: ForwardedRef<TextInput>) => {
+  (
+    { leading, trailing, style, textColor, placeholder, placeholderTextColor, subText, ...props }: AppTextInputProps,
+    ref: ForwardedRef<TextInput>
+  ) => {
     return (
-      <Row style={styles.container} spacing={8}>
+      <Row spacing={8} style={styles.container}>
         {leading}
-        <TextInput
-          placeholder={placeholder}
-          placeholderTextColor={placeholderTextColor ?? AppColorPalettes.gray[700]}
-          ref={ref}
-          style={[AppStyles.text, AppStyles.input, styles.input, style, { color: textColor ?? AppColors.fontColor }]}
-          {...props}
-        />
+        <View style={{ flexDirection: "column", height: 52, gap: 0, flex: 1 }}>
+          <TextInput
+            placeholder={placeholder}
+            placeholderTextColor={placeholderTextColor ?? AppColorPalettes.gray[400]}
+            ref={ref}
+            style={[
+              AppStyles.text,
+              AppStyles.input,
+              subText ? styles.inputWithSubText : styles.input,
+              { color: textColor ?? AppColors.fontColor },
+              style
+            ]}
+            {...props}
+          />
+          {subText && (
+            <AppText style={styles.subText} ellipsizeMode="middle">
+              {subText}
+            </AppText>
+          )}
+        </View>
         {trailing}
       </Row>
     );
@@ -32,12 +50,24 @@ export const AppTextInput = forwardRef(
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1
+    flex: 1,
+    alignItems: "center"
   },
   input: {
+    fontSize: 18,
+    flex: 1
+  },
+  inputWithSubText: {
+    marginTop: -16,
+    fontSize: 16,
     flex: 1,
-    padding: 0
+    fontWeight: "bold"
+  },
+  subText: {
+    position: "absolute",
+    bottom: 8,
+    left: 4,
+    fontSize: 14,
+    color: AppColorPalettes.gray[500]
   }
 });

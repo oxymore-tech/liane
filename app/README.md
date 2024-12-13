@@ -1,95 +1,63 @@
-# Getting started
+This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+
+# Getting Started
+
+>**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
+
+First you need to check that you have built the common part.
 
 ```bash
-cd app
-yarn
-# Pour IOS
-cd ios && pod install
+cd ../common
+yarn install
+yarn build
 ```
 
-Installer [Android studio](https://docs.expo.dev/workflow/android-studio-emulator/)
-
-Run the project
+You must then install the pods
 
 ```bash
+yarn post-install
+```
+
+## Step 1: Start the Metro Server
+
+First, you will need to start **Metro**, the JavaScript _bundler_ that ships _with_ React Native.
+
+To start Metro, run the following command from the _root_ of your React Native project:
+
+```bash
+yarn install
 yarn start
-# puis 'a' pour android 
-# ou 'i' pour ios
 ```
 
-# Upgrade react native version
+Hit `a` key to launch android (see instructions for more commands).
 
-Create a new empty project
+# Connect android device in WIFI
 
 ```bash
-npx react-native init liane
+adb tcpip 5555
+adb shell ip addr show wlan0 and copy the IP address after the "inet" until the "/". You can also go inside the Settings of the device to retrieve the IP address in Settings → About → Status.
+adb connect ip-address-of-device:5555
 ```
 
-- Configure prettier
-- Copy .svgrc
+# Stream IOS phone on linux
 
-### Android changes
-- Move package com.liane to tech.oxymore.liane in android in src dir (dir and .java files)
-- Edit android/app/build.gradle
-  - package
-  - versCode and Name
-  - signing.release
-- Copy resources (fonts and icons) and manifest
-- Copy google-services.json
-- Add onCreate to MainActivity
-
-```java
-  /**
-   * Required by react navigation to handle wake up
-   */
-  @Override
-  protected void onCreate(Bundle savedInstanceState) {
-    super.onCreate(null);
-  }
-```
-- Copy debug.keystore
-  
-### Apply IOS changes
-
-- folder ios/liane
-  - (Images.xcassets)
-  - edit Info.plist
-
-- folder liane.xcodeproj
-  - edit project.pbxproj (add resources and mapbox entries) 
-
-### Install npm deps
 
 ```bash
-yarn add --dev                  \
-  react-native-dotenv           \
-  babel-plugin-module-resolver  \
-  react-native-svg-transformer
-                
-yarn add                                                \
-  react-native-reanimated@next                          \
-  @react-navigation/native                              \
-  @react-navigation/native-stack                        \
-  @datadog/mobile-react-navigation                      \
-  @datadog/mobile-react-native                          \
-  rnmapbox/maps#main                                    \
-  @gorhom/bottom-sheet                                  \
-  @microsoft/signalr                                    \
-  @notifee/react-native                                 \
-  @react-native-firebase/app                            \
-  @react-native-firebase/messaging                      \
-  @react-navigation/bottom-tabs                         \
-  async-mutex                                           \
-  i18n-js                                               \
-  react-native-encrypted-storage                        \
-  react-native-eva-icons                                \
-  react-native-gesture-handler                          \
-  react-native-modal                                    \
-  react-native-safe-area-context                        \
-  react-native-screens                                  \
-  react-native-svg                                      \
-  react-query
+# Installer uxplay
+# pour que uxplay marche il faut que gstreamer soit à la version 1.22.x (max). Au le stream ne marche pas.
+sudo manjaro-downgrade gst-plugins-ugly gst-plugins-good gst-plugins-base gst-plugins-bad-libs  gst-libav gst-plugins-base-libs gstreamer gst-plugins-bad
 ```
-# Generate new ios certficate for distribution
 
-See [doc/ios_certificate.md](doc/ios_certificate.md)
+```bash
+# l'iphone et le PC doivent être sur le même réseau WIFI
+uxplay -vsync no -avdec
+# puis sur l'iphone, dans le menu du haut (faire glisser) selectionner le partage d'écran et sélectionner uxplay@nom-du-pc
+```
+
+# Stream ANDROID phone on linux
+
+```bash
+# brancher le telephone en USB
+scrcopy
+```
+

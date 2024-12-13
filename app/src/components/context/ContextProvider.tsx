@@ -1,85 +1,46 @@
 import React, { Component, createContext, ReactNode } from "react";
-import { AuthUser, FullUser, LatLng } from "@/api";
 import { AppServices, CreateAppServices } from "@/api/service";
-import { NetworkUnavailable, UnauthorizedError } from "@/api/exception";
+import { AuthUser, FullUser, HubState, LatLng, NetworkUnavailable, UnauthorizedError } from "@liane/common";
 import { initializeRum, registerRumUser } from "@/api/rum";
-import { initializeNotification, initializePushNotification } from "@/api/service/notification";
+import { initializeNotification, initPushNotification } from "@/api/service/notification";
 import { ActivityIndicator, AppState, AppStateStatus, NativeEventSubscription, StyleSheet, View } from "react-native";
 import { AppColors } from "@/theme/colors";
-import { AppText } from "@/components/base/AppText";
 import NetInfo, { NetInfoSubscription } from "@react-native-community/netinfo";
 import Splashscreen from "../../../native-modules/splashscreen";
-import { merge, SubscriptionLike } from "rxjs";
-import { HubState } from "@/api/service/interfaces/hub";
+import { SubscriptionLike } from "rxjs";
 import { QueryClient, QueryClientProvider } from "react-query";
-import { AppLogger } from "@/api/logger";
 import { QueryUpdateProvider } from "@/components/context/QueryUpdateProvider";
+import { AppLogger } from "@/api/logger";
+import { AppStorage } from "@/api/storage";
 
 interface AppContextProps {
   position?: LatLng;
   user?: FullUser;
   logout: () => void;
-  reconnect: () => void;
-  login: (user: AuthUser) => void;
+  login: (user?: AuthUser) => void;
+  refreshUser: () => Promise<void>;
   services: AppServices;
   status: HubState;
   appState: AppStateStatus;
+  hubState?: HubState;
 }
 
-let SERVICES = CreateAppServices();
-const queryClient = new QueryClient();
+const SERVICES = CreateAppServices();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { retry: false },
+    mutations: { retry: false }
+  }
+});
 
 export const AppContext = createContext<AppContextProps>({
   logout: () => {},
   login: () => {},
-  reconnect: () => {},
+  refreshUser: () => Promise.resolve(),
   services: SERVICES,
   status: "offline",
   appState: "active"
 });
-
-async function initContext(service: AppServices): Promise<{
-  user: FullUser | undefined;
-  online: boolean;
-}> {
-  let authUser = await service.auth.authUser();
-  let user;
-  let online = true;
-
-  await initializeRum();
-
-  if (authUser?.isSignedUp) {
-    try {
-      user = await service.realTimeHub.start();
-      await registerRumUser({ ...authUser, pseudo: user.pseudo });
-      // Branch hub to notifications
-      service.notification.initUnreadNotifications(service.realTimeHub.unreadNotifications);
-    } catch (e) {
-      AppLogger.warn("INIT", "Could not start hub :", e);
-
-      if (e instanceof UnauthorizedError) {
-      } else if (e instanceof NetworkUnavailable) {
-        AppLogger.warn("INIT", "Error : no network");
-        //user = cached value for an offline mode
-        user = await service.auth.currentUser();
-        online = false;
-      }
-    }
-  }
-  if (user) {
-    await initializeNotification();
-  }
-
-  if (online && user) {
-    try {
-      await initializePushNotification(user, service.auth);
-    } catch (e) {
-      AppLogger.warn("INIT", "Could not init notifications :", e);
-    }
-  }
-
-  return { user, online };
-}
 
 async function destroyContext(service: AppServices): Promise<void> {
   await service.realTimeHub.stop();
@@ -94,7 +55,7 @@ interface ContextProviderState {
   user?: FullUser;
   status: "online" | "offline";
   appState: AppStateStatus;
-  hubState: HubState;
+  hubState?: HubState;
 }
 
 class ContextProvider extends Component<ContextProviderProps, ContextProviderState> {
@@ -103,7 +64,6 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
   private unsubscribeToNetworkChange: NetInfoSubscription | undefined = undefined;
   private unsubscribeToHubState: SubscriptionLike | undefined = undefined;
   private userChangeSubscription: SubscriptionLike | undefined = undefined;
-  private notificationSubscription: SubscriptionLike | undefined = undefined;
 
   constructor(props: ContextProviderProps) {
     super(props);
@@ -111,12 +71,10 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
       appLoaded: false,
       user: undefined,
       status: "offline",
-      appState: "active",
-      hubState: "offline"
+      appState: "active"
     };
     // https://stackoverflow.com/questions/33973648/react-this-is-undefined-inside-a-component-function
     this.initContext = this.initContext.bind(this);
-    this.forceReconnect = this.forceReconnect.bind(this);
   }
 
   static getDerivedStateFromError() {
@@ -125,28 +83,23 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
   }
 
   private async initContext() {
-    const info = await initContext(SERVICES);
-    const status = info.online ? "online" : "offline";
-    this.setState(prev => ({
-      ...prev,
-      user: info.user,
-      appLoaded: true,
-      status,
-      hubState: status
-    }));
-    if (info.online && info.user) {
-      this.notificationSubscription = SERVICES.realTimeHub.subscribeToNotifications(async n => {
-        await SERVICES.notification.receiveNotification(n, true); // does nothing if this.state.appState !== "active");
-        // TODO disconnect from hub when app is not active
-      });
-      this.userChangeSubscription = merge(SERVICES.realTimeHub.userUpdates, SERVICES.auth.userChanges).subscribe(user => {
-        this.setState(prev => ({
-          ...prev,
-          user
-        }));
-      });
+    await initializeRum();
+
+    await initializeNotification();
+
+    const user = await AppStorage.getUser();
+    if (user) {
+      await registerRumUser(user);
+      await initPushNotification(user, SERVICES);
+
+      await SERVICES.realTimeHub.start();
     }
 
+    this.setState(prev => ({
+      ...prev,
+      user,
+      appLoaded: true
+    }));
     Splashscreen.hide();
   }
 
@@ -165,24 +118,32 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     }
     this.reconnecting = true;
     AppLogger.debug("INIT", "Try to reload...");
-    this.initContext()
-      .then(() => queryClient.invalidateQueries())
+    queryClient
+      .invalidateQueries()
+      .then(() => SERVICES.realTimeHub.start())
       .finally(() => {
         this.reconnecting = false;
       });
   }
 
   componentDidMount() {
-    this.initContext().then();
+    this.userChangeSubscription = SERVICES.realTimeHub.userUpdates.subscribe(async u => {
+      await registerRumUser({ ...u });
+      this.setState(prev => ({
+        ...prev,
+        user: u
+      }));
+    });
 
     this.unsubscribeToHubState = SERVICES.realTimeHub.hubState.subscribe(status => {
       this.setState(prev => ({
         ...prev,
+        status: status === "offline" ? "offline" : "online",
         hubState: status
       }));
     });
 
-    this.unsubscribeToNetworkChange = NetInfo.addEventListener(state => {
+    this.unsubscribeToNetworkChange = NetInfo.addEventListener(async state => {
       const wasOffline = this.state.status === "offline";
       const isJustReconnected = state.isInternetReachable === true && wasOffline && !!this.state.user;
       if (isJustReconnected) {
@@ -190,6 +151,8 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
       }
     });
     this.unsubscribeToStateChange = AppState.addEventListener("change", this.handleAppStateChange);
+
+    this.initContext().then();
   }
 
   componentWillUnmount() {
@@ -208,9 +171,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     if (this.userChangeSubscription) {
       this.userChangeSubscription.unsubscribe();
     }
-    if (this.notificationSubscription) {
-      this.notificationSubscription.unsubscribe();
-    }
+
     destroyContext(SERVICES).catch(err => AppLogger.warn("INIT", "Error destroying context:", err));
   }
 
@@ -232,46 +193,51 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     }
   }
 
+  refreshUser = async () => {
+    // Just sync with storage
+    const user = await AppStorage.getUser();
+    this.setState(prev => ({
+      ...prev,
+      user
+    }));
+  };
+
   setAuthUser = async (a?: AuthUser) => {
-    try {
-      let user: FullUser;
-      if (a) {
-        user = await SERVICES.realTimeHub.start();
-        await registerRumUser({ ...a, pseudo: user.pseudo });
-        AppLogger.debug("LOGIN", "Login successfully");
-      }
+    await AppStorage.storeSession(a);
+    if (a) {
+      AppLogger.debug("LOGIN", "Login successfully");
+      const user = await SERVICES.auth.me();
+      await SERVICES.realTimeHub.start();
       this.setState(prev => ({
         ...prev,
-        user: user
+        user
       }));
-    } catch (e) {
-      AppLogger.error("INIT", "Problem while setting auth user : ", e);
+    } else {
+      await AppStorage.storeUser(undefined);
+      this.setState(prev => ({
+        ...prev,
+        user: undefined
+      }));
     }
   };
+
   logout = async () => {
     // do not call "logout" endpoint here as this could be used after account deletion, account switch, etc.
-    await SERVICES.realTimeHub.stop();
-    AppLogger.info("LOGOUT", "Disconnected.");
     queryClient.clear();
-    SERVICES = CreateAppServices();
+    await destroyContext(SERVICES);
+    AppLogger.info("LOGOUT", "Disconnected.");
     await this.setAuthUser(undefined);
   };
 
   render() {
     const { children } = this.props;
-    const { appLoaded, user, status, appState } = this.state;
-    const { setAuthUser: login, logout, forceReconnect } = this;
+    const { appLoaded, user, status, appState, hubState } = this.state;
+    const { setAuthUser: login, logout, refreshUser } = this;
 
     if (!appLoaded) {
       return (
         <View style={styles.page}>
           <ActivityIndicator />
-        </View>
-      );
-    } else if (status !== "online" && !user) {
-      return (
-        <View style={styles.page}>
-          <AppText style={{ color: AppColors.white }}>Erreur: réseau indisponible</AppText>
         </View>
       );
     }
@@ -283,9 +249,10 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
             value={{
               logout,
               login,
-              reconnect: this.state.hubState === "offline" ? forceReconnect : () => {},
+              refreshUser,
               user,
-              status: this.state.hubState,
+              status,
+              hubState,
               appState,
               services: SERVICES
             }}>

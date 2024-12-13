@@ -1,5 +1,5 @@
 ﻿using System.Threading.Tasks;
-using Liane.Api.User;
+using Liane.Api.Auth;
 using Liane.Service.Internal.Util;
 using Liane.Web.Internal.Auth;
 using Microsoft.AspNetCore.Mvc;
@@ -9,17 +9,8 @@ namespace Liane.Web.Controllers;
 [Route("api/auth")]
 [ApiController]
 [RequiresAuth]
-public sealed class AuthController : ControllerBase
+public sealed class AuthController(IAuthService authService, ICurrentContext currentContext) : ControllerBase
 {
-  private readonly IAuthService authService;
-  private readonly ICurrentContext currentContext;
-
-  public AuthController(IAuthService authService, ICurrentContext currentContext)
-  {
-    this.authService = authService;
-    this.currentContext = currentContext;
-  }
-  
   [HttpPost("sms")]
   [DisableAuth]
   public Task SendSms([FromQuery] string phone)

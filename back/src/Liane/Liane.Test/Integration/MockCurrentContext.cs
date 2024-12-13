@@ -1,5 +1,5 @@
 using System;
-using Liane.Api.User;
+using Liane.Api.Auth;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.User;
@@ -17,9 +17,13 @@ public sealed class MockCurrentContext : ICurrentContext
     return CurrentAuthUser ?? new AuthUser(Fakers.FakeDbUsers[2].Id, false);
   }
 
-  public void SetCurrentUser(DbUser user, bool isAdmin = false)
+  public void SetCurrentUser(DbUser user, bool isAdmin = false) => SetCurrentUser(user.Id, isAdmin);
+
+  public void SetCurrentUser(User user, bool isAdmin = false) => SetCurrentUser(user.Id!, isAdmin);
+
+  public void SetCurrentUser(string userId, bool isAdmin = false)
   {
-    CurrentAuthUser = new AuthUser(user.Id, isAdmin);
+    CurrentAuthUser = new AuthUser(userId, isAdmin);
   }
 
   public T CurrentResource<T>() where T : class, IIdentity

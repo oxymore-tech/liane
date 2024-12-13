@@ -1,18 +1,18 @@
 import { ActivityIndicator, Alert, ColorValue, Platform, StyleSheet, Switch, View } from "react-native";
 import { Center, Column, Row, Space } from "@/components/base/AppLayout";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import { AppIcon, IconName } from "@/components/base/AppIcon";
 import { WithFullscreenModal } from "@/components/WithFullscreenModal";
-import { useAppNavigation } from "@/api/navigation";
+import { useAppNavigation } from "@/components/context/routing";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
-import { getSetting, saveSetting } from "@/api/storage";
 import { LianeGeolocation } from "@/api/service/location";
 import { useAppState } from "@react-native-community/hooks";
-import { AppContext } from "@/components/context/ContextProvider";
-import { GeolocationLevel } from "@/api";
 import { AppLogger } from "@/api/logger";
+import { AppStorage } from "@/api/storage";
+import { GeolocationLevel } from "@liane/common";
+import { GeolocationPermission } from "../../../native-modules/geolocation";
 
 export const TripGeolocationWizard = WithFullscreenModal(
   () => {
@@ -25,10 +25,10 @@ export const TripGeolocationWizard = WithFullscreenModal(
       if (appState !== "active") {
         return;
       }
-      LianeGeolocation.checkBackgroundGeolocationPermission().then(allowed => {
-        getSetting("geolocation")
+      LianeGeolocation.checkGeolocationPermission().then(permission => {
+        const allowed = permission !== GeolocationPermission.Denied;
+        AppStorage.getSetting("geolocation")
           .then(setting => {
-            console.log("setting", setting);
             if (setting) {
               const settingAllowed = setting !== "None";
               setPage(!allowed && settingAllowed ? 1 : 2);
@@ -70,7 +70,7 @@ export const TripGeolocationWizard = WithFullscreenModal(
         {page === 1 && (
           <Page2
             next={(authorize: boolean) => {
-              saveSetting("geolocation", authorize ? "Shared" : "None").then(next);
+              AppStorage.saveSetting("geolocation", authorize ? "Shared" : "None").then(next);
             }}
           />
         )}
@@ -78,7 +78,7 @@ export const TripGeolocationWizard = WithFullscreenModal(
           <Page3
             next={endTutorial}
             prev={() => {
-              saveSetting("geolocation", null).then(prev);
+              AppStorage.saveSetting("geolocation", undefined).then(prev);
             }}
           />
         )}
@@ -108,7 +108,7 @@ const Page2 = (props: { next: (authorize: boolean) => void }) => {
     );
 
   const authorize = async () => {
-    if (await LianeGeolocation.checkBackgroundGeolocationPermission()) {
+    if (await LianeGeolocation.checkGeolocationPermission()) {
       props.next(true);
 
       return;
@@ -120,9 +120,13 @@ const Page2 = (props: { next: (authorize: boolean) => void }) => {
 
     let text;
     if (Platform.OS === "ios" && parseInt(Platform.Version, 10) >= 13) {
-      text = ['Appuyez sur "Continuer"', 'Allez dans "Position"', 'Sélectionnez "Toujours" dans la liste des autorisations"'];
+      text = [
+        'Appuyez sur "Continuer"',
+        'Allez dans "Position"',
+        'Sélectionnez "Toujours" ou "Lorsque l\'app est active" dans la liste des autorisations"'
+      ];
     } else if (Platform.OS === "ios" && parseInt(Platform.Version, 10) < 13) {
-      text = ['Appuyez sur "Continuer"', 'Sélectionnez "Toujours" dans la liste des autorisations"'];
+      text = ['Appuyez sur "Continuer"', 'Sélectionnez "Toujours" ou "Lorsque l\'app est active" dans la liste des autorisations"'];
     } else if (Platform.OS === "android" && Platform.Version === 29) {
       text = ['Appuyez sur "Continuer"', 'Sélectionnez "Toujours autoriser" dans la liste des autorisations'];
     } else if (Platform.OS === "android" && Platform.Version > 29) {
@@ -134,7 +138,7 @@ const Page2 = (props: { next: (authorize: boolean) => void }) => {
       ];
     }
     if (text) {
-      Alert.alert("Autoriser la géolocalisation en arrière-plan", text.map((item, i) => i + 1 + ". " + item).join("\n"), [
+      Alert.alert("Autoriser la géolocalisation", text.map((item, i) => i + 1 + ". " + item).join("\n"), [
         {
           text: "Continuer",
           onPress: () => {
@@ -149,7 +153,7 @@ const Page2 = (props: { next: (authorize: boolean) => void }) => {
   return (
     <View style={{ alignItems: "center", flex: 1 }}>
       <AppText numberOfLines={3} style={{ fontSize: 20, fontWeight: "bold", textAlign: "center", marginVertical: 8 }}>
-        Autoriser l'accès à votre position offre de nombreux avantages
+        Autoriser l'accès à votre position lorsque l'application est fermée, offre de nombreux avantages
       </AppText>
       <Column style={{ width: "100%", marginVertical: 32, paddingHorizontal: 16 }} spacing={24}>
         {items.map(item => {
@@ -194,11 +198,10 @@ const Page1 = (props: { next: () => void; showAs: "driver" | "passenger" }) => (
 
 const Page3 = (props: { next: () => void; prev: () => void }) => {
   const { route } = useAppNavigation<"TripGeolocationWizard">();
-  const { services } = useContext(AppContext);
   const [loading, setLoading] = useState(false);
-  const [trackedLevel, setTrackedLevel] = useState<GeolocationLevel | null>(null);
+  const [trackedLevel, setTrackedLevel] = useState<GeolocationLevel>();
   useEffect(() => {
-    getSetting("geolocation").then(setTrackedLevel);
+    AppStorage.getSetting("geolocation").then(setTrackedLevel);
   }, []);
   if (!trackedLevel) {
     return <ActivityIndicator />;
@@ -206,7 +209,7 @@ const Page3 = (props: { next: () => void; prev: () => void }) => {
   const confirm = async () => {
     if (route.params?.lianeId) {
       setLoading(true);
-      await services.liane.setTracked(route.params.lianeId, trackedLevel);
+      await AppStorage.saveSetting("geolocation", trackedLevel);
     }
     props.next();
     setLoading(false);

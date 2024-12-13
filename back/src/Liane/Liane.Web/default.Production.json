@@ -18,8 +18,5 @@
   },
   "Osrm": {
     "Url": "http://osrm:5000"
-  },
-  "Firebase": {
-    "ServiceAccountFile": "/app/service-account.json"
   }
 }

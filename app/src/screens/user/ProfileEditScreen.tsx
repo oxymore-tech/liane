@@ -1,9 +1,8 @@
 import React, { useContext, useState } from "react";
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { launchImageLibrary, ImagePickerResponse } from "react-native-image-picker";
-import { formatMonthYear } from "@/api/i18n";
-import { useAppNavigation } from "@/api/navigation";
+import { ImagePickerResponse, launchImageLibrary } from "react-native-image-picker";
+import { AppLocalization } from "@/api/i18n";
+import { useAppNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppStatusBar } from "@/components/base/AppStatusBar";
@@ -13,7 +12,7 @@ import { Center, Column, Row } from "@/components/base/AppLayout";
 import { UserPicture } from "@/components/UserPicture";
 import { AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
-import { capitalize } from "@/util/strings";
+import { capitalize } from "@liane/common";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 export const ProfileEditScreen = () => {
@@ -27,8 +26,7 @@ export const ProfileEditScreen = () => {
 
 const ProfileEditView = () => {
   const { navigation } = useAppNavigation<"ProfileEdit">();
-  const { services, user } = useContext(AppContext);
-  const { top: insetsTop } = useSafeAreaInsets();
+  const { services, user, refreshUser } = useContext(AppContext);
 
   const [firstName, setFirstName] = useState<string>(user!.firstName);
   const [lastName, setLastName] = useState<string>(user!.lastName);
@@ -41,6 +39,7 @@ const ProfileEditView = () => {
     setLoading(true);
     setProfilePicture(uri);
     await services.auth.uploadProfileImage(formData);
+    await refreshUser();
     setLoading(false);
   };
 
@@ -61,8 +60,8 @@ const ProfileEditView = () => {
 
   return (
     <ScrollView overScrollMode="never">
-      <Center style={[styles.infoContainer, { paddingTop: insetsTop + 24 }]}>
-        <Pressable style={[styles.backContainer, { top: insetsTop + 24 }]} onPress={navigation.goBack}>
+      <Center style={[styles.infoContainer, { paddingTop: 24 }]}>
+        <Pressable style={[styles.backContainer, { top: 24 }]} onPress={navigation.goBack}>
           <AppIcon name={"arrow-ios-back-outline"} color={AppColors.white} />
         </Pressable>
         <Pressable onPress={() => openGallery(updateUserPicture)}>
@@ -123,7 +122,7 @@ const ProfileEditView = () => {
       </Row>
 
       <Column spacing={4} style={{ marginVertical: 24, marginHorizontal: 24 }}>
-        <AppText style={styles.userDateContainer}>Membre depuis {capitalize(formatMonthYear(new Date(user!.createdAt!)))}</AppText>
+        <AppText style={styles.userDateContainer}>Membre depuis {capitalize(AppLocalization.formatMonthYear(new Date(user!.createdAt!)))}</AppText>
         <AppText style={styles.userDateContainer}>{user!.phone}</AppText>
       </Column>
     </ScrollView>
@@ -155,7 +154,7 @@ const styles = StyleSheet.create({
   infoContainer: {
     paddingHorizontal: 24,
     paddingBottom: 24,
-    backgroundColor: AppColors.primaryColor
+    backgroundColor: AppColors.secondaryColor
   },
   backContainer: {
     position: "absolute",

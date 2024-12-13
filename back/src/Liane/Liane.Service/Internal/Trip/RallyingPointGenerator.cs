@@ -36,16 +36,24 @@ public sealed class RallyingPointGenerator : IRallyingPointGenerator
     this.addressService = addressService;
   }
 
-  public async Task Generate()
+  public async Task Generate(ImmutableList<string> sources)
   {
     logger.LogInformation("Generate rallying points...");
-
-    logger.LogDebug("Loading carpool areas...");
-    IEnumerable<RallyingPoint> rawRallyingPoints = await LoadCarpoolArea();
-    logger.LogDebug("Loading town halls...");
-    rawRallyingPoints = rawRallyingPoints.Concat(await LoadTownHall());
-    logger.LogDebug("Loading custom rallying points...");
-    rawRallyingPoints = rawRallyingPoints.Concat(LoadCustom());
+    IEnumerable<RallyingPoint> rawRallyingPoints;
+    if (sources.Count == 1 && sources.First() == "test")
+    {
+      rawRallyingPoints = await LoadTownHall();
+      rawRallyingPoints = rawRallyingPoints.Where(rp => new[] { "46", "31", "48", "09", "81", "82", "12" }.Any(code => rp.ZipCode.StartsWith(code)));
+    }
+    else
+    {
+      logger.LogDebug("Loading carpool areas...");
+      rawRallyingPoints = await LoadCarpoolArea();
+      logger.LogDebug("Loading town halls...");
+      rawRallyingPoints = rawRallyingPoints.Concat(await LoadTownHall());
+      logger.LogDebug("Loading custom rallying points...");
+      rawRallyingPoints = rawRallyingPoints.Concat(LoadCustom());
+    }
 
     logger.LogDebug("Clustering...");
 
@@ -107,7 +115,7 @@ public sealed class RallyingPointGenerator : IRallyingPointGenerator
     logger.LogInformation("Rallying points re-created with {Count} entries", rallyingPoints.Count);
   }
 
-  private IEnumerable<RallyingPoint> LoadCustom()
+  private static IEnumerable<RallyingPoint> LoadCustom()
   {
     yield return new RallyingPoint("custom:001", "Living Objects", new LatLng(43.567936, 1.390924), LocationType.Parking, "1 impasse Marcel Chalard", "31000", "Toulouse", 10, true);
     yield return new RallyingPoint("custom:002", "Michel Labrousse", new LatLng(43.568356, 1.386925), LocationType.Parking, "11 rue Michel Labrousse", "31000", "Toulouse", null, true);
@@ -125,7 +133,7 @@ public sealed class RallyingPointGenerator : IRallyingPointGenerator
     }
 
     using var reader = new StreamReader(stream);
-    var configuration = new CsvConfiguration(CultureInfo.InvariantCulture) { PrepareHeaderForMatch = (args) => args.Header.NormalizeToCamelCase() };
+    var configuration = new CsvConfiguration(CultureInfo.InvariantCulture) { PrepareHeaderForMatch = args => args.Header.NormalizeToCamelCase() };
     using var csvReader = new CsvReader(reader, configuration);
 
     var entries = csvReader.GetRecords<BnlcEntry>();

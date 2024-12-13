@@ -1,44 +1,77 @@
-import { RallyingPoint } from "@/api";
-import React, { useEffect, useState } from "react";
-import { TilesUrl } from "@/api/http";
+import { AppEnv, DayOfWeekFlag, RallyingPoint } from "@liane/common";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import MapLibreGL from "@maplibre/maplibre-react-native";
 import { Feature, Point } from "geojson";
 import { AppColors } from "@/theme/colors";
 import { useAppMapViewController } from "@/components/map/AppMapView";
 import { AppLogger } from "@/api/logger";
+import { RNAppEnv } from "@/api/env";
 
-export const getDateParams = (date: Date) =>
-  "offset=" +
-  date.getTimezoneOffset() +
-  "&day=" +
-  date.getFullYear() +
-  "-" +
-  (1 + date.getMonth()).toString().padStart(2, "0") +
-  "-" +
-  date.getDate().toString().padStart(2, "0");
+interface OnPressEvent {
+  features: GeoJSON.Feature[];
+  coordinates: {
+    latitude: number;
+    longitude: number;
+  };
+  point: {
+    x: number;
+    y: number;
+  };
+}
 
-export const LianeDisplayLayer = ({
-  date = new Date(),
-  onSelect
-}: {
-  date?: Date;
+export type LianeDisplayLayerProps = {
+  weekDays?: DayOfWeekFlag;
   onSelect?: (
     rp: RallyingPoint & {
       point_type: string;
     }
   ) => void;
-}) => {
-  const dateArg = getDateParams(date);
+};
+
+export const LianeDisplayLayer = ({ weekDays, onSelect }: LianeDisplayLayerProps) => {
+  const params = useMemo(() => AppEnv.getLianeDisplayParams(weekDays), [weekDays]);
   const [sourceId, setSourceId] = useState("");
   useEffect(() => {
-    setSourceId("segments" + dateArg);
-    AppLogger.debug("MAP", "tile source", dateArg);
-  }, [dateArg]);
+    setSourceId("segments" + params);
+    AppLogger.debug("MAP", "tile source", params);
+  }, [params]);
 
   const controller = useAppMapViewController();
-  const url = TilesUrl + "/liane_display?" + dateArg;
+  const url = RNAppEnv.lianeTilesUrl + "?" + params;
 
   const updateIdentifier = Math.floor(new Date().getTime() / 1000 / 3600); // update map every hour
+
+  const handleSelect = useCallback(
+    async (f: OnPressEvent) => {
+      if (!onSelect) {
+        return;
+      }
+      // @ts-ignore
+      const points: Feature<Point>[] = f.features.filter(feat => feat.geometry?.type === "Point");
+
+      const center = { lat: f.coordinates.latitude, lng: f.coordinates.longitude };
+      if (points.length === 1 && !points[0].properties!.hasOwnProperty("point_count")) {
+        const p = points[0];
+        AppLogger.debug("MAP", "selected point", p);
+
+        //@ts-ignore
+        onSelect({ ...p!.properties!, location: { lat: p.geometry.coordinates[1], lng: p.geometry.coordinates[0] } });
+      } else if (points.length > 0) {
+        const zoom = await controller.getZoom()!;
+
+        let newZoom;
+        if (zoom < 10.5) {
+          newZoom = 12.1; //rp ? 12.1 : zoom + 1.5;
+        } else if (zoom < 12) {
+          newZoom = 12.1;
+        } else {
+          newZoom = zoom + 1;
+        }
+        await controller.setCenter(center, newZoom);
+      }
+    },
+    [controller, onSelect]
+  );
 
   return (
     <MapLibreGL.VectorSource
@@ -46,37 +79,8 @@ export const LianeDisplayLayer = ({
       url={url}
       key={sourceId}
       maxZoomLevel={14}
-      hitbox={{ width: 64, height: 64 }}
-      onPress={
-        onSelect
-          ? async f => {
-              // console.debug(JSON.stringify(f));
-              // @ts-ignore
-              const points: Feature<Point>[] = f.features.filter(feat => feat.geometry?.type === "Point");
-
-              const center = { lat: f.coordinates.latitude, lng: f.coordinates.longitude };
-              if (points.length === 1 && !points[0].properties!.hasOwnProperty("point_count")) {
-                const p = points[0];
-                AppLogger.debug("MAP", "selected point", p);
-
-                //@ts-ignore
-                onSelect({ ...p!.properties!, location: { lat: p.geometry.coordinates[1], lng: p.geometry.coordinates[0] } });
-              } else if (points.length > 0) {
-                const zoom = await controller.getZoom()!;
-
-                let newZoom;
-                if (zoom < 10.5) {
-                  newZoom = 12.1; //rp ? 12.1 : zoom + 1.5;
-                } else if (zoom < 12) {
-                  newZoom = 12.1;
-                } else {
-                  newZoom = zoom + 1;
-                }
-                await controller.setCenter(center, newZoom);
-              }
-            }
-          : undefined
-      }>
+      hitbox={{ width: 40, height: 40 }}
+      onPress={handleSelect}>
       <MapLibreGL.LineLayer
         aboveLayerID="Highway"
         id="lianeLayer"
@@ -85,7 +89,7 @@ export const LianeDisplayLayer = ({
           //@ts-ignore
           lineSortKey: ["get", "count"],
           lineCap: "round",
-          lineColor: AppColors.darkBlue,
+          lineColor: AppColors.blue,
           lineWidth: 3
         }}
       />

@@ -2,7 +2,7 @@ using Liane.Api.Trip;
 
 namespace Liane.Api.Routing;
 
-public struct RouteSegment
+public record struct RouteSegment
 {
   public readonly RallyingPoint From;
   public readonly RallyingPoint To;

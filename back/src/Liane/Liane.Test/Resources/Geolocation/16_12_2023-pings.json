@@ -1,0 +1,2645 @@
+{
+  "_id": {"$oid": "657d86412c4206f8c66fca93"},
+  "createdAt": {"$date": "2023-12-16T11:13:05.100Z"},
+  "createdBy": {"$oid": "6578c34d5030769a55e888d7"},
+  "departureTime": {"$date": "2023-12-16T11:25:00.000Z"},
+  "driver": {
+    "user": {"$oid": "6578c34d5030769a55e888d7"},
+    "canDrive": true
+  },
+  "members": [
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "from": "bnlc:48016-C-002",
+      "to": "mairie:48101",
+      "seatCount": 3,
+      "feedback": null,
+      "geolocationLevel": "Shared",
+      "departure": {"$date": "2023-12-16T11:15:44.463Z"},
+      "cancellation": null
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "from": "bnlc:48016-C-002",
+      "to": "mairie:48101",
+      "seatCount": -1,
+      "feedback": null,
+      "geolocationLevel": "Shared",
+      "departure": {"$date": "2023-12-16T11:17:28.603Z"},
+      "cancellation": null
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "from": "bnlc:48016-C-002",
+      "to": "mairie:48101",
+      "seatCount": -1,
+      "feedback": null,
+      "geolocationLevel": "Shared",
+      "departure": {"$date": "2023-12-16T11:15:49.071Z"},
+      "cancellation": null
+    }
+  ],
+  "pings": [
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:15:45.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4831592, 44.5238952]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:15:29.480Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4827509096396865, 44.52407421539175]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:15:38.480Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4827509096396865, 44.52407421539175]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:15:49.700Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4823270971163978, 44.524334792027055]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:15:49.799Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4823270971163978, 44.524334792027055]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:15:59.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4831659, 44.5239067]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:16:13.285Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4831453, 44.5239249]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:16:27.285Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4827322, 44.5242958]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:16:41.285Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4820542, 44.5245111]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:17:26.889Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.476089917808447, 44.523395815560946]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:17:32.092Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4819208, 44.5247421]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:17:46.289Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4729038, 44.5246382]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:17:49.798Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4827509096396865, 44.52407421539175]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:17:49.872Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4823270971163978, 44.524334792027055]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:17:49.996Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4823270971163978, 44.524334792027055]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:17:50.437Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4723452, 44.5250851]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:18:00.289Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4711134, 44.5226845]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:18:05.895Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4703379011444686, 44.5215658695478]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:18:14.289Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4693486, 44.5201712]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:18:28.289Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4681269, 44.5176467]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:18:29.896Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.467840442117637, 44.517292820855374]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:18:42.289Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4676307, 44.5150395]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:18:56.289Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4698312, 44.5130926]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:18:56.896Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4700226215032943, 44.51298854375982]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:19:10.289Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4708399, 44.5115542]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:19:22.591Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4685509, 44.5105021]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:19:24.290Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4680553, 44.5102779]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:19:27.186Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.476089917808447, 44.523395815560946]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:19:31.895Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.466070182624707, 44.509305241559176]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:19:38.290Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4646195, 44.5084888]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:19:49.961Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4827509096396865, 44.52407421539175]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:19:50.052Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4823270971163978, 44.524334792027055]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:19:52.290Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4612583, 44.5066225]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:19:52.897Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4610348141782046, 44.506475632451064]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:19:55.773Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4685509, 44.5105021]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:20:22.888Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.462801121329412, 44.50192116390107]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:20:41.905Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.46262077801252, 44.49727591131301]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:20:49.663Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4601625, 44.5054276]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:20:52.593Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4628557, 44.4954919]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:20:57.102Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4700226215032943, 44.51298854375982]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:21:03.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4602522, 44.4957572]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:21:16.893Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.457542336587084, 44.494353894425025]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:21:17.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4575612, 44.4942139]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:21:26.481Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4628557, 44.4954919]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:21:31.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4577072, 44.4909944]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:21:32.159Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.466070182624707, 44.509305241559176]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:21:36.892Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.45825850032592, 44.48976924647064]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:21:45.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4593118, 44.4882478]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:21:50.151Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4827509096396865, 44.52407421539175]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:21:59.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4586081, 44.4858064]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:22:02.898Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.45790914260173, 44.48521405928255]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:22:13.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4574487, 44.4833572]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:22:21.592Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4577683, 44.4825967]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:22:27.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4576358, 44.4824619]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:22:41.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4568787, 44.48187]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:22:42.238Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.46262077801252, 44.49727591131301]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:22:55.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4564495, 44.4807918]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:22:54.916Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.456427305940032, 44.480797550682425]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:22:57.775Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4564254, 44.4805552]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:23:09.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4559985, 44.4800297]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:23:17.156Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.457542336587084, 44.494353894425025]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:23:23.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4550957, 44.4797278]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:23:37.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4537477, 44.4790723]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:23:37.111Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.45825850032592, 44.48976924647064]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:23:51.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4516304, 44.477645]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:23:51.000Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4516963921519475, 44.477688367519974]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:23:53.589Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4513846, 44.4774982]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:24:03.161Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.45790914260173, 44.48521405928255]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:24:05.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4498957, 44.477968]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:24:19.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4478521, 44.4787208]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:24:25.594Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4474092, 44.4784142]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:24:25.724Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4474143, 44.478406]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:24:33.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4483108, 44.4783383]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:24:47.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4492958, 44.4776816]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:24:55.180Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.456427305940032, 44.480797550682425]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:25:01.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.447443, 44.4778955]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:25:15.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.448756, 44.4774404]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:25:17.369Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.457542336587084, 44.494353894425025]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:25:29.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4504402, 44.4759901]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:25:31.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4505766, 44.4756953]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:25:33.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4506587, 44.4753789]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:25:35.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.450795, 44.4751073]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:25:37.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4509657, 44.4748564]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:25:39.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4511651, 44.4745796]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:25:41.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.45138, 44.4743131]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:25:43.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4515668, 44.47405]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:25:45.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4517546, 44.4738049]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:25:47.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4520248, 44.4736069]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:25:49.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4523725, 44.473457]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:25:51.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4526912, 44.4733205]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:25:51.298Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4516963921519475, 44.477688367519974]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:25:53.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4530031, 44.4732153]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:25:54.003Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4529878757926196, 44.47321766991585]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:25:55.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4533472, 44.4731455]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:25:57.594Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4536138, 44.472977]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:25:57.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.453658, 44.4730319]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:26:03.400Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.45790914260173, 44.48521405928255]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:26:09.289Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4544992, 44.4717166]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:26:11.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4546496, 44.4715243]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:26:13.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4550557, 44.4713817]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:26:15.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.455501, 44.4712422]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:26:17.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4559437, 44.4711003]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:26:19.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4563569, 44.4709867]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:26:21.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4567024, 44.4708265]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:26:23.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4570018, 44.4706115]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:26:25.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4572644, 44.47037]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:26:27.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4574567, 44.4700889]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:26:28.004Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.45741710444222, 44.469953867476]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:26:29.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4575897, 44.4697712]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:26:31.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4577071, 44.4694299]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:26:29.598Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4575763, 44.4697907]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:26:33.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4578727, 44.469083]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:26:35.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4580728, 44.4687484]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:26:37.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4582859, 44.4684167]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:26:39.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4584922, 44.4680757]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:26:41.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4586881, 44.4677108]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:26:43.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4588759, 44.4673435]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:26:45.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4590125, 44.4669845]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:26:47.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.45906, 44.466649]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:26:49.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4590751, 44.466293]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:26:51.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4591185, 44.4659517]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:26:53.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4591756, 44.4656559]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:26:55.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4592522, 44.4654136]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:26:55.005Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4591424666094346, 44.46554836998898]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:26:55.387Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.456427305940032, 44.480797550682425]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:26:57.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4593399, 44.4652438]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:26:59.279Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4589041, 44.4647957]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:27:01.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4591661, 44.4652537]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:27:03.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4591357, 44.465384]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:27:05.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4590796, 44.4655469]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:27:07.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4589811, 44.465782]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:27:09.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4588951, 44.4660502]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:27:11.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4588073, 44.4663196]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:27:13.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4587331, 44.4665869]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:27:17.612Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.457542336587084, 44.494353894425025]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:27:19.599Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4584293, 44.4671971]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:27:39.595Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4586015, 44.4647237]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:27:36.290Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4587346, 44.4651265]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:27:42.714Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4586754, 44.4643211]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:27:44.290Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4585314, 44.4639002]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:27:46.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4583291, 44.4636582]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:27:48.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4579999, 44.4634802]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:27:50.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4576297, 44.463309]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:27:52.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4572777, 44.4631409]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:27:54.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.456937, 44.4629925]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:27:54.370Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4529878757926196, 44.47321766991585]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:27:56.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4566672, 44.4628163]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:27:58.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4565353, 44.4625793]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:00.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4565816, 44.4623153]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:02.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4567796, 44.4620847]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:04.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4571062, 44.4619292]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:06.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4575041, 44.4618626]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:28:08.144Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4567233, 44.4613003]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:08.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4579121, 44.4618696]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:10.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4583171, 44.4618525]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:12.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4586839, 44.461762]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:14.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4590109, 44.4616111]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:16.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4593151, 44.4614263]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:18.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4596154, 44.4612076]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:20.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4599249, 44.4609703]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:28:20.007Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4597765740931505, 44.46100416045167]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:22.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4601856, 44.4607218]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:24.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4603337, 44.4604446]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:26.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4604013, 44.4601664]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:28:28.300Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4610761, 44.4601135]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:28.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4605602, 44.4599285]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:30.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4608573, 44.4597504]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:32.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4611891, 44.4596209]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:34.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4614957, 44.4594954]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:36.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4617786, 44.4593423]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:38.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4620171, 44.4591613]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:40.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4622411, 44.4589686]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:42.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4624697, 44.4587715]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:44.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4627026, 44.4585727]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:46.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4629422, 44.4583509]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:48.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4631915, 44.4581128]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:28:48.611Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4631774, 44.4580255]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:50.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4634667, 44.4578817]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:52.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4637138, 44.4576189]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:28:53.007Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4637567823601274, 44.457484738280336]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:54.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4639135, 44.4573504]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:28:55.332Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4591424666094346, 44.46554836998898]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:28:55.574Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.456427305940032, 44.480797550682425]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:56.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4641261, 44.4570939]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:28:58.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4643518, 44.4568136]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:29:00.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4645131, 44.4565201]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:29:02.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4646056, 44.4562144]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:29:04.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4646977, 44.455903]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:29:06.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4648266, 44.455577]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:29:08.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4649784, 44.4552849]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:29:08.953Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4654442, 44.4553973]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:29:10.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4652409, 44.4550875]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:29:12.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4655806, 44.4549714]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:29:14.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4659724, 44.454943]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:29:16.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4663354, 44.4549763]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:29:18.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4666552, 44.4550185]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:29:17.829Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.457542336587084, 44.494353894425025]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:29:20.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.466914, 44.4550629]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:29:22.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.467116, 44.4550926]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:29:24.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4672621, 44.4551133]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:29:26.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4673963, 44.4551239]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:29:28.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.467557, 44.4551162]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:29:29.059Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4679938, 44.4547918]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:29:30.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4677382, 44.4550961]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:29:32.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4679154, 44.4550537]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:29:34.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4681025, 44.4550098]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:29:36.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4683395, 44.4549281]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:29:38.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4685963, 44.4548429]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:29:40.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4688882, 44.4547683]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:29:42.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4692396, 44.4546884]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:29:44.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.469532, 44.4545553]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:29:49.365Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4703449, 44.4543462]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:29:46.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4698, 44.4543691]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:29:48.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4700874, 44.4541727]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:29:40.008Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4689434492819053, 44.454811506366845]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:29:50.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4703998, 44.4539754]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:30:09.595Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4730257, 44.4511918]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:29:52.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4707173, 44.4537724]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:29:54.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4710111, 44.4535445]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:30:12.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4732337, 44.4506014]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:30:32.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4751574, 44.4465932]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:30:37.977Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4756804, 44.4454942]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:30:46.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.476026, 44.4439617]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:31:00.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4765092, 44.441315]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:30:53.302Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4637567823601274, 44.457484738280336]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:30:54.000Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4763007983597705, 44.44255784158077]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:30:30.003Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4749214590750293, 44.446982251515706]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:30:55.738Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.456427305940032, 44.480797550682425]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:30:55.562Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4591424666094346, 44.46554836998898]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:30:09.009Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4729224219580543, 44.45127893747135]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:31:16.228Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4773437, 44.4385428]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:31:18.000Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4778175875576935, 44.43817532159801]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:31:32.224Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4807092, 44.436433]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:32:09.590Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4904575, 44.4317171]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:31:46.291Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4846084, 44.434545]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:31:40.000Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4828670342169556, 44.435408570512976]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:32:00.000Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4880279703016277, 44.43273960054606]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:32:00.291Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4880924, 44.4327123]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:32:14.290Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4918407, 44.4313203]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:32:22.000Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4935696143689503, 44.43027198318804]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:32:28.290Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4942941, 44.429176]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:32:42.291Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4968201, 44.4269695]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:32:45.000Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.497365956153753, 44.42660580725111]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:32:56.290Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4998074, 44.4252813]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:33:08.000Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.502387517046414, 44.42386886251826]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:33:10.329Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4637567823601274, 44.457484738280336]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:33:10.421Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4763007983597705, 44.44255784158077]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:33:10.424Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.456427305940032, 44.480797550682425]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:33:10.434Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4749214590750293, 44.446982251515706]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:33:11.544Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4689434492819053, 44.454811506366845]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:33:10.291Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5028164, 44.4236625]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:33:24.291Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5060578, 44.4226156]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:33:38.291Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5076261, 44.4205077]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:33:39.591Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5076706, 44.4202806]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:33:52.291Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5086808, 44.4177021]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:33:56.890Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5076706, 44.4202806]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:34:06.290Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5104532, 44.4155273]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:33:10.429Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4591424666094346, 44.46554836998898]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:33:58.000Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5096429195287726, 44.4167066691857]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:33:36.000Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5074341204050064, 44.420937225263955]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:34:17.867Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4828670342169556, 44.435408570512976]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:34:20.290Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5108631, 44.4129895]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:34:24.000Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5112508200141703, 44.41221342426204]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:34:34.290Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5121796, 44.4103811]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:34:48.290Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5130087, 44.407852]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:34:49.000Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5129941720548206, 44.407751946751404]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:35:02.291Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5138519, 44.4054467]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:35:08.257Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.502387517046414, 44.42386886251826]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:35:10.592Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.513717, 44.4050836]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:35:10.806Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4637567823601274, 44.457484738280336]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:35:11.118Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4763007983597705, 44.44255784158077]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:35:26.908Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.513717, 44.4050836]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:36:08.253Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5096429195287726, 44.4167066691857]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:36:08.226Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4591424666094346, 44.46554836998898]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:36:08.250Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4689434492819053, 44.454811506366845]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:36:08.253Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5074341204050064, 44.420937225263955]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:36:09.005Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4749214590750293, 44.446982251515706]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:36:29.115Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5136668, 44.4051633]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:36:40.591Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5136733, 44.405088]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:36:49.228Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5129941720548206, 44.407751946751404]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:36:56.916Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5136733, 44.405088]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:37:09.315Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.502387517046414, 44.42386886251826]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:37:12.023Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4763007983597705, 44.44255784158077]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:37:11.013Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4637567823601274, 44.457484738280336]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:37:30.792Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5136444, 44.4051077]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:37:37.000Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.514148443940574, 44.40325798936598]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:37:45.285Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5154348, 44.402225]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:37:59.285Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5182257, 44.4006731]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:38:03.000Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5189456945505273, 44.400182111624986]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:38:08.456Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4591424666094346, 44.46554836998898]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:38:08.470Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5074341204050064, 44.420937225263955]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:38:08.466Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4689434492819053, 44.454811506366845]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:38:08.460Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5096429195287726, 44.4167066691857]
+      }
+    },
+    {
+      "user": {"$oid": "654e2de81435035edcef9b7f"},
+      "at": {"$date": "2023-12-16T11:38:09.200Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4749214590750293, 44.446982251515706]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:38:13.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5202723, 44.398998]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:38:09.593Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5197653, 44.3994557]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:38:27.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5208676, 44.3968209]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:38:27.642Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5197653, 44.3994557]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:38:41.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5198266, 44.3945737]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:38:55.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5185677, 44.3926378]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:39:09.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5184369, 44.3902567]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:39:23.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.518253, 44.3876014]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:39:37.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5177617, 44.3849882]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:39:40.591Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5176131, 44.384632]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:39:51.285Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5178041, 44.3838894]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:40:05.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5193747, 44.3862125]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:40:06.480Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5176131, 44.384632]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:41:12.590Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5217254, 44.3878672]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:41:27.458Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5202195, 44.3878099]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:41:37.113Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5217254, 44.3878672]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:41:41.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5223463, 44.3875691]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:41:55.286Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5215375, 44.385077]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:42:09.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5207207, 44.3819465]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:42:23.287Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5199519, 44.3799075]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:42:39.593Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5201542, 44.3777868]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:43:51.433Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.533995, 44.3717762]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:44:11.591Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5213358, 44.3665603]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:44:38.189Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5213358, 44.3665603]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:45:29.353Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5206607, 44.3680908]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:45:39.592Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5177597, 44.3540275]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:46:29.636Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5177597, 44.3540275]
+      }
+    },
+    {
+      "user": {"$oid": "6578c34d5030769a55e888d7"},
+      "at": {"$date": "2023-12-16T11:47:00.288Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5108966, 44.351538]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2023-12-16T11:47:10.594Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.5101758, 44.3503829]
+      }
+    }
+  ],
+  "return": null,
+  "state": "Finished",
+  "totalSeatCount": 1,
+  "wayPoints": [
+    {
+      "rallyingPoint": "bnlc:48016-C-002",
+      "duration": 0,
+      "distance": 0,
+      "eta": {"$date": "2023-12-16T11:25:00.000Z"}
+    },
+    {
+      "rallyingPoint": "mairie:48101",
+      "duration": 1339,
+      "distance": 22819,
+      "eta": {"$date": "2023-12-16T11:47:19.000Z"}
+    }
+  ]
+}

@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 using Liane.Api.Image;
 using Liane.Api.Trip;
 using Liane.Api.Util;
-using Liane.Mock;
 using Liane.Service.Internal.Address;
-using Liane.Service.Internal.Chat;
+using Liane.Service.Internal.Community;
 using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Image;
 using Liane.Service.Internal.Mongo;
@@ -18,7 +17,7 @@ using Liane.Service.Internal.Postgis;
 using Liane.Service.Internal.Postgis.Db;
 using Liane.Service.Internal.Routing;
 using Liane.Service.Internal.Trip;
-using Liane.Service.Internal.Trip.Event;
+using Liane.Service.Internal.Trip.Geolocation;
 using Liane.Service.Internal.User;
 using Liane.Service.Internal.Util;
 using Liane.Web.Binder;
@@ -41,6 +40,7 @@ using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using NLog;
 using NLog.Config;
+using NLog.Filters;
 using NLog.Layouts;
 using NLog.Targets;
 using NLog.Targets.Wrappers;
@@ -76,7 +76,8 @@ public static class Startup
     services.AddService<MigrationService>();
 
     services.AddService<CurrentContextImpl>();
-    services.AddSettings<TwilioSettings>(context);
+    services.AddSettings<SmsSettings>(context);
+    services.AddService<SmsSender>();
     services.AddSettings<AuthSettings>(context);
     services.AddService<AuthServiceImpl>();
     services.AddService<UserServiceImpl>();
@@ -85,29 +86,28 @@ public static class Startup
     services.AddService<DeleteAccountServiceImpl>();
 
     services.AddService<RallyingPointServiceImpl>();
+    services.AddService<RallyingPointRequestServiceImpl>();
     services.AddService<RallyingPointGenerator>();
-    services.AddService<ChatServiceImpl>();
+    services.AddService<TripServiceImpl>();
+    services.AddService<LianeTrackerServiceImpl>();
+    services.AddService<LianeTrackerCache>();
+
+    services.AddService<LianeRequestFetcher>();
+    services.AddService<LianeFetcher>();
+    services.AddService<LianeMatcher>();
     services.AddService<LianeServiceImpl>();
-    services.AddService<LianeRecurrenceServiceImpl>();
-    services.AddSingleton<ILianeTrackerCache>(new LianeTrackerCacheImpl());
+    services.AddService<LianeMessageServiceImpl>();
 
     services.AddService<PushServiceImpl>();
-    services.AddService<NotificationServiceImpl>();
 
     services.AddSettings<FirebaseSettings>(context);
     services.AddService<FirebaseMessagingImpl>();
 
     services.AddEventListeners();
-    services.AddService<AutomaticAnswerService>();
 
     services.AddSingleton(MongoFactory.Create);
 
-    services.AddService<MockServiceImpl>();
-
-    services.AddSettings<GeneratorSettings>(context);
-    services.AddHostedService<LianeMockGenerator>();
     services.AddHostedService<LianeStatusUpdate>();
-    services.AddHostedService<LianeRecurrenceScheduler>();
 
     services.AddHealthChecks();
   }
@@ -133,6 +133,7 @@ public static class Startup
   {
     var loggingConfiguration = new LoggingConfiguration();
 
+#pragma warning disable CS0618 // Type or member is obsolete
     AspNetLayoutRendererBase.Register("trace_id",
       (_, _, _) => MappedDiagnosticsLogicalContext.GetObject("TraceId"));
     AspNetLayoutRendererBase.Register("span_id",
@@ -140,6 +141,7 @@ public static class Startup
     AspNetLayoutRendererBase.Register("user_id", (_, httpContext, _) => httpContext.User.Identity?.Name);
     AspNetLayoutRendererBase.Register("request_path",
       (_, _, _) => MappedDiagnosticsLogicalContext.GetObject("RequestPath"));
+#pragma warning restore CS0618 // Type or member is obsolete
 
     Layout jsonLayout = new JsonLayout
     {
@@ -178,8 +180,25 @@ public static class Startup
     };
     var consoleTarget = new AsyncTargetWrapper("console", coloredConsoleTarget);
     loggingConfiguration.AddTarget(consoleTarget);
+
+    var requestLoggingRule = new LoggingRule("Microsoft.AspNetCore.Hosting.Diagnostics", LogLevel.Info, LogLevel.Info, consoleTarget);
+
+    requestLoggingRule.Filters.Add(
+      new WhenMethodFilter(logEvent =>
+      {
+        if (!logEvent.Properties.TryGetValue("Path", out var path))
+        {
+          return FilterResult.LogFinal;
+        }
+
+        return path?.ToString() == "/health" ? FilterResult.IgnoreFinal : FilterResult.LogFinal;
+      })
+    );
+
+    loggingConfiguration.AddRule(requestLoggingRule);
     loggingConfiguration.AddRule(LogLevel.Debug, LogLevel.Fatal, consoleTarget);
-    var logFactory = NLogBuilder.ConfigureNLog(loggingConfiguration);
+
+    var logFactory = LogManager.Setup().LoadConfiguration(loggingConfiguration);
     return logFactory.GetCurrentClassLogger();
   }
 
@@ -191,7 +210,7 @@ public static class Startup
     services.AddCors(options =>
       {
         options.AddPolicy("AllowLocal",
-          p => p.WithOrigins("http://localhost:3000")
+          p => p.WithOrigins("http://localhost:3000", "http://localhost:3001")
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials());
@@ -247,12 +266,8 @@ public static class Startup
   private static Task StartCurrentModuleWeb(string[] args)
   {
     return WebHost.CreateDefaultBuilder(args)
-      .ConfigureLogging(logging =>
-      {
-        logging.ClearProviders();
-        logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
-      })
-      .UseNLog()
+      .ConfigureLogging(logging => { logging.ClearProviders(); })
+      .UseNLog(new NLogAspNetCoreOptions { RemoveLoggerFactoryFilter = false })
       .ConfigureAppConfiguration((hostingContext, config) =>
       {
         var env = hostingContext.HostingEnvironment;
@@ -265,8 +280,6 @@ public static class Startup
         config.SetFileProvider(compositeFileProvider);
         config.AddJsonFile("default.json", true, true);
         config.AddJsonFile($"default.{env.EnvironmentName}.json", true, true);
-        config.AddJsonFile("appsettings.json", true, true);
-        config.AddJsonFile($"appsettings.{env.EnvironmentName}.json", true, true);
         config.AddCommandLine(args);
         config.AddEnvironmentVariables("LIANE_");
       })
@@ -281,9 +294,9 @@ public static class Startup
   private static void Configure(WebHostBuilderContext context, IApplicationBuilder app)
   {
     app.UseOpenApi();
-    app.UseSwaggerUi3();
+    app.UseSwaggerUi();
     app.UseCors("AllowLocal");
-    
+
     var env = context.HostingEnvironment;
     if (env.IsDevelopment())
     {
@@ -324,14 +337,16 @@ public static class Startup
       .ConfigureAwait(false)
       .GetAwaiter()
       .GetResult();
-    
-    var lianeService = app.ApplicationServices.GetRequiredService<ILianeService>();
+
+    var lianeService = app.ApplicationServices.GetRequiredService<ITripService>();
     // Synchronize databases and cache 
     lianeService.ForceSyncDatabase()
       .ConfigureAwait(false)
       .GetAwaiter()
       .GetResult();
-    lianeService.SyncTrackers()
+
+    var lianeTrackerService = app.ApplicationServices.GetRequiredService<ILianeTrackerService>();
+    lianeTrackerService.SyncTrackers()
       .ConfigureAwait(false)
       .GetAwaiter()
       .GetResult();

@@ -1,6 +1,6 @@
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using Liane.Api.Auth;
 using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Util.Http;
@@ -12,8 +12,19 @@ public interface IResourceResolverService<TOut> where TOut : class, IIdentity
   /// </summary>
   Task<TOut> Get(Ref<TOut> reference);
 
-  Task<Dictionary<string, TOut>> GetMany(ImmutableList<Ref<TOut>> references);
-  
+  async Task<TOut?> TryGet(Ref<TOut> reference)
+  {
+    try
+    {
+      return await Get(reference);
+    }
+    catch
+    {
+      return null;
+    }
+  }
+
+  Task<ImmutableDictionary<string, TOut>> GetMany(ImmutableList<Ref<TOut>> references);
 }
 
 public interface ICrudService<in TIn, TOut> : IResourceResolverService<TOut> where TIn : class where TOut : class, IIdentity
@@ -23,17 +34,13 @@ public interface ICrudService<in TIn, TOut> : IResourceResolverService<TOut> whe
   Task<TOut> Create(TIn obj);
 }
 
-public interface ICrudService<T> : ICrudService<T, T> where T : class, IIdentity
-{
-}
+public interface ICrudService<T> : ICrudService<T, T> where T : class, IIdentity;
 
-public interface ICrudEntityService<in TIn, TOut> : IResourceResolverService<TOut> where TIn : class where TOut : class, IEntity
+public interface ICrudEntityService<in TIn, TOut> : IResourceResolverService<TOut> where TIn : class where TOut : class, IEntity<string>
 {
   Task<bool> Delete(Ref<TOut> reference);
 
-  Task<TOut> Create(TIn entity, Ref<User.User>? owner = null);
+  Task<TOut> Create(TIn entity, Ref<User>? owner = null);
 }
 
-public interface ICrudEntityService<T> : ICrudEntityService<T, T> where T : class, IEntity
-{
-}
+public interface ICrudEntityService<T> : ICrudEntityService<T, T> where T : class, IEntity<string>;

@@ -1,30 +1,46 @@
-import { AuthService, AuthServiceClient } from "@/api/service/auth";
-import { LianeService, LianeServiceClient } from "@/api/service/liane";
-import { RallyingPointClient, RallyingPointService } from "@/api/service/rallyingPoints";
-import { HubServiceClient } from "@/api/service/hub";
-import { LocationService, LocationServiceClient } from "@/api/service/location";
-import { NotificationServiceClient } from "@/api/service/notification";
-import { RoutingService, RoutingServiceClient } from "@/api/service/routing";
-import { HubService } from "@/api/service/interfaces/hub";
-import { NotificationService } from "@/api/service/interfaces/notification";
+import {
+  AuthService,
+  AuthServiceClient,
+  HttpClient,
+  HubService,
+  TripService,
+  TripServiceClient,
+  CommunityServiceClient,
+  RallyingPointClient,
+  RallyingPointService,
+  RoutingService,
+  RoutingServiceClient,
+  HubServiceClient,
+  LocationService,
+  CommunityService,
+  DEFAULT_TLS,
+  AppLogger
+} from "@liane/common";
+import { RNAppEnv } from "@/api/env";
+import { AppStorage } from "@/api/storage";
+import { ReactNativeLocationService } from "@/api/service/location";
+import { AppLogger as logger, ReactNativeLogger } from "@/api/logger";
 
 export type AppServices = {
-  readonly auth: AuthService;
-  readonly liane: LianeService;
-  readonly rallyingPoint: RallyingPointService;
-  readonly realTimeHub: HubService;
-  readonly location: LocationService;
-
-  readonly routing: RoutingService;
-  readonly notification: NotificationService;
+  logger: ReactNativeLogger;
+  auth: AuthService;
+  trip: TripService;
+  rallyingPoint: RallyingPointService;
+  realTimeHub: HubService;
+  location: LocationService;
+  routing: RoutingService;
+  community: CommunityService;
 };
 
+const http = new HttpClient(RNAppEnv.baseUrl, logger as AppLogger, AppStorage);
+
 export const CreateAppServices = (): AppServices => ({
-  auth: new AuthServiceClient(),
-  liane: new LianeServiceClient(),
-  rallyingPoint: new RallyingPointClient(),
-  realTimeHub: new HubServiceClient(),
-  location: new LocationServiceClient(),
-  routing: new RoutingServiceClient(),
-  notification: new NotificationServiceClient()
+  logger,
+  auth: new AuthServiceClient(http, AppStorage),
+  trip: new TripServiceClient(http),
+  rallyingPoint: new RallyingPointClient(http),
+  realTimeHub: new HubServiceClient(RNAppEnv.baseUrl, logger as AppLogger, AppStorage, http),
+  location: new ReactNativeLocationService(RNAppEnv, AppStorage, http, DEFAULT_TLS),
+  routing: new RoutingServiceClient(http),
+  community: new CommunityServiceClient(http)
 });

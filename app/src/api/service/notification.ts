@@ -1,60 +1,22 @@
-import notifee, { AndroidAction, AndroidImportance, Event, EventType, TriggerType } from "@notifee/react-native";
-import { FullUser, PaginatedResponse, RallyingPoint, Ref } from "@/api";
-import { get, patch } from "@/api/http";
+import notifee, { Event, EventType } from "@notifee/react-native";
+import { FullUser, HttpClient, TripServiceClient, Notification } from "@liane/common";
 import messaging, { FirebaseMessagingTypes } from "@react-native-firebase/messaging";
-import { AuthService } from "@/api/service/auth";
 import { Linking, Platform } from "react-native";
-import { AbstractNotificationService } from "@/api/service/interfaces/notification";
-import { Notification } from "@/api/notification";
-import { formatTime } from "@/api/i18n";
-import { LianeServiceClient } from "@/api/service/liane";
 import { AppLogger } from "@/api/logger";
+import { AppStorage } from "@/api/storage";
+import { RNAppEnv } from "@/api/env";
 import { startGeolocationService } from "@/screens/detail/components/GeolocationSwitch";
-
-export class NotificationServiceClient extends AbstractNotificationService {
-  async list(cursor?: string | undefined): Promise<PaginatedResponse<Notification>> {
-    const paramString = cursor ? `?cursor=${cursor}` : "";
-    return await get("/notification" + paramString);
-  }
-  override markAsRead = async (notification: Ref<Notification>) => {
-    await patch(`/notification/${notification}`);
-    await this.decrementCounter(notification);
-  };
-
-  override receiveNotification = async (notification: Notification, display: boolean = false): Promise<void> => {
-    await this.incrementCounter(notification.id!);
-    if (display) {
-      await displayNotifeeNotification(notification);
-    }
-  };
-}
+import { AppServices } from "@/api/service/index";
 
 const DefaultChannelId = "liane_default";
 
-const DefaultAndroidSettings = {
+export const DefaultAndroidSettings = {
   channelId: DefaultChannelId,
   pressAction: {
     id: "default"
   },
-  smallIcon: "ic_notification",
-  largeIcon: "ic_launcher"
+  smallIcon: "ic_notification"
 };
-
-const AndroidReminderActions: AndroidAction[] = [
-  {
-    title: "Démarrer le trajet",
-    pressAction: {
-      id: "loc"
-    }
-  }
-  /*{
-    title: "J'ai du retard",
-    pressAction: {
-      id: "delay",
-      launchActivity: "default"
-    }
-  }*/
-];
 
 async function onMessageReceived(message: FirebaseMessagingTypes.RemoteMessage) {
   AppLogger.debug("NOTIFICATIONS", "Received push", message);
@@ -72,26 +34,33 @@ async function onMessageReceived(message: FirebaseMessagingTypes.RemoteMessage) 
 
 const pressActionMap = {
   loc: async (lianeId: string) => {
-    const lianeService = new LianeServiceClient();
+    const logger = AppLogger as any;
+    const http = new HttpClient(RNAppEnv.baseUrl, logger, AppStorage);
+    const lianeService = new TripServiceClient(http);
     const liane = await lianeService.get(lianeId);
     await lianeService.start(liane.id!).then(() => startGeolocationService(liane));
   }
 } as const;
+
 const openNotification = async ({ type, detail }: Event) => {
   const { notification, pressAction } = detail;
   AppLogger.debug("NOTIFICATIONS", "notifee", detail);
 
-  if (type === EventType.PRESS && notification?.data?.uri) {
-    await Linking.openURL(<string>notification.data.uri);
-  } else if (type === EventType.ACTION_PRESS && notification?.data?.uri && pressAction) {
-    if (pressAction.id === "loc") {
-      // start sending pings
-      await pressActionMap.loc(notification.data.liane as string);
-    } else {
+  try {
+    if (type === EventType.PRESS && notification?.data?.uri) {
       await Linking.openURL(<string>notification.data.uri);
+    } else if (type === EventType.ACTION_PRESS && notification?.data?.uri && pressAction) {
+      if (pressAction.id === "loc") {
+        // start sending pings
+        await pressActionMap.loc(notification.data.liane as string);
+      } else {
+        await Linking.openURL(<string>notification.data.uri);
+      }
+    } else if (type === EventType.ACTION_PRESS || type === EventType.PRESS) {
+      AppLogger.warn("NOTIFICATIONS", "[NOTIFEE]", type, pressAction?.id, notification?.data?.uri);
     }
-  } else if (type === EventType.ACTION_PRESS || type === EventType.PRESS) {
-    AppLogger.warn("NOTIFICATIONS", "[NOTIFEE]", type, pressAction?.id, notification?.data?.uri);
+  } catch (e) {
+    AppLogger.error("NOTIFICATIONS", "Unable to open notification", e);
   }
 };
 
@@ -100,38 +69,16 @@ notifee.onBackgroundEvent(openNotification);
 notifee.onForegroundEvent(openNotification);
 
 export async function displayNotifeeNotification(notification: Notification) {
+  const data: { [key: string]: string | object | number } = {};
+  if (notification.uri) {
+    data.uri = notification.uri;
+  }
   await notifee.displayNotification({
     android: DefaultAndroidSettings,
     title: notification.title,
     body: notification.message,
-    data: notification
+    data
   });
-}
-
-export async function cancelReminder(lianeId: string) {
-  await notifee.cancelTriggerNotification(lianeId);
-}
-export async function createReminder(lianeId: string, departureLocation: RallyingPoint, departureTime: Date) {
-  await notifee.createTriggerNotification(
-    {
-      id: lianeId,
-      ios: {
-        categoryId: "reminder",
-        interruptionLevel: "timeSensitive"
-      },
-      android: {
-        ...DefaultAndroidSettings,
-        lightUpScreen: true,
-        importance: AndroidImportance.HIGH,
-        tag: "reminder",
-        actions: AndroidReminderActions
-      },
-      title: "Départ imminent",
-      body: `Vous avez rendez-vous à ${formatTime(departureTime)} à ${departureLocation.label}.`,
-      data: { uri: `liane://liane/${lianeId}`, liane: lianeId }
-    },
-    { timestamp: Math.max(departureTime.getTime() - 1000 * 60 * 5, new Date().getTime() + 5 * 1000), type: TriggerType.TIMESTAMP, alarmManager: true }
-  );
 }
 
 export async function initializeNotification() {
@@ -166,23 +113,21 @@ export async function initializeNotification() {
   ]);
 }
 
-export async function initializePushNotification(user: FullUser, authService: AuthService) {
+export async function initPushNotification(user: FullUser, services: AppServices) {
   try {
     const pushToken = await PushNotifications?.getToken();
+    services.logger.info("NOTIFICATIONS", "PUSH", pushToken);
     if (pushToken && pushToken !== user.pushToken) {
-      AppLogger.debug("NOTIFICATIONS", "New push token", pushToken);
-      // Update server's token
-      await authService.updatePushToken(pushToken);
+      services.logger.debug("NOTIFICATIONS", "New push token", pushToken);
+      await services.auth.updatePushToken(pushToken);
     }
     PushNotifications?.onTokenRefresh(async p => {
-      await authService.updatePushToken(p);
+      await services.auth.updatePushToken(p);
     });
     PushNotifications?.onMessage(onMessageReceived);
-    return true;
   } catch (e) {
-    console.error(e);
+    services.logger.error("NOTIFICATIONS", "Unable to initPushNotification", e);
   }
-  return false;
 }
 
 export const PushNotifications = (() => {
@@ -195,13 +140,13 @@ export const PushNotifications = (() => {
   }
   return undefined;
 })();
-const openFirebaseNotification = (m: FirebaseMessagingTypes.RemoteMessage | null) => {
+const openFirebaseNotification = async (m: FirebaseMessagingTypes.RemoteMessage | null) => {
   if (!m) {
     return;
   }
   AppLogger.info("NOTIFICATIONS", "opened firebase notification", m);
   if (m?.data?.uri) {
-    Linking.openURL(<string>m.data.uri);
+    await Linking.openURL(<string>m.data.uri);
   }
 };
 

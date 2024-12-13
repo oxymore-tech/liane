@@ -3,28 +3,27 @@ import { ColorValue, KeyboardAvoidingView, Platform, StyleSheet, View } from "re
 import { AppColors, defaultTextColor } from "@/theme/colors";
 import { Row } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
-import React, { PropsWithChildren } from "react";
+import React, { PropsWithChildren, useCallback } from "react";
 import { AppPressable } from "@/components/base/AppPressable";
 
 export interface SimpleModalProps extends PropsWithChildren {
   backgroundColor?: ColorValue;
   visible: boolean;
   setVisible: (visible: boolean) => void;
+  hideClose?: boolean;
 }
-export const SimpleModal = ({ backgroundColor = AppColors.darkBlue, visible, setVisible, children }: SimpleModalProps) => {
+export const SimpleModal = ({ backgroundColor = AppColors.darkBlue, visible, setVisible, children, hideClose }: SimpleModalProps) => {
+  const hide = useCallback(() => setVisible(false), [setVisible]);
   return (
-    <Modal
-      onBackButtonPress={() => setVisible(false)}
-      onBackdropPress={() => setVisible(false)}
-      isVisible={visible}
-      onSwipeComplete={() => setVisible(false)}
-      style={styles.modal}>
+    <Modal onBackButtonPress={hide} onBackdropPress={hide} isVisible={visible} onSwipeComplete={hide} style={styles.modal}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "position" : "height"}>
-        <View style={{ backgroundColor, padding: 24, margin: 32, borderRadius: 8 }}>
+        <View style={{ backgroundColor, padding: 16, borderRadius: 8 }}>
           <Row style={{ marginBottom: 8 }}>
-            <AppPressable style={{ paddingBottom: 16 }} onPress={() => setVisible(false)}>
-              <AppIcon name={"close-outline"} color={defaultTextColor(backgroundColor)} />
-            </AppPressable>
+            {!hideClose && (
+              <AppPressable style={{ paddingBottom: 16 }} onPress={hide}>
+                <AppIcon name={"close-outline"} color={defaultTextColor(backgroundColor)} />
+              </AppPressable>
+            )}
           </Row>
           {children}
         </View>
@@ -34,7 +33,5 @@ export const SimpleModal = ({ backgroundColor = AppColors.darkBlue, visible, set
 };
 
 const styles = StyleSheet.create({
-  modal: {
-    margin: 0
-  }
+  modal: { margin: 8 }
 });

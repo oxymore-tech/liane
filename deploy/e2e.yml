@@ -1,0 +1,70 @@
+services:
+
+  mongo:
+    image: "mongo:4.4"
+    command: mongod --quiet
+    volumes:
+      - "../common/tests/e2e/setup/init-mongodb.js:/docker-entrypoint-initdb.d/init.js"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongo
+      MONGO_INITDB_ROOT_PASSWORD: secret
+      MONGO_INITDB_DATABASE: liane
+
+  postgis:
+    image: "postgis/postgis:15-3.3"
+    environment:
+      POSTGRES_DB: liane
+      POSTGRES_USER: mongo
+      POSTGRES_PASSWORD: secret
+  
+  osrm:
+    image: "osrm/osrm-backend"
+    command: osrm-routed --algorithm mld /data/france-latest.osrm
+    volumes:
+      - "/data/osm:/data:ro"
+
+  back:
+    build: ../back
+    environment:
+      LIANE_Mongo__Username: mongo
+      LIANE_Mongo__Password: secret
+      LIANE_Database__Username: mongo
+      LIANE_Database__Password: secret
+      LIANE_Auth__SecretKey: "TjWnZr4t7w!z%C*F-JaNdRgUkXp2s5v8x/A?D(G+KbPeShVmYq3t6w9zBE)H@M"
+      LIANE_Auth__TestAccount: "0000111111"
+      LIANE_Auth__TestCode: "333333"
+      LIANE_Auth__Disabled: true
+      LIANE_Auth__Cooldown: 0
+      LIANE_Cloudflare__AccountId: ${CLOUDFLARE_ACCOUNT_ID}
+      LIANE_Cloudflare__AccountHash: ${CLOUDFLARE_ACCOUNT_HASH}
+      LIANE_Cloudflare__ApiKey: ${CLOUDFLARE_API_KEY}
+    depends_on:
+      - mongo
+      - postgis
+      - osrm
+
+  martin:
+    image: ghcr.io/maplibre/martin
+    command: [ "--config", "/config.yaml" ]
+    volumes:
+      - "./martin/config.yaml:/config.yaml:ro"
+    environment:
+      DB_USER: mongo
+      DB_PASSWORD: secret
+    depends_on:
+      back:
+          condition: service_healthy
+
+  test:
+    build:
+      context: ../common
+      target: test
+      args:
+        API_URL: "http://back:5000"
+        TILES_URL: "http://martin:3000"
+        TEST_CODE: "333333"
+    volumes:
+      - "/tmp/${TEST_PROJECT}:/tests/report"
+    depends_on:
+      - back
+      - martin

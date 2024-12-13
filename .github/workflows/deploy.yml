@@ -10,12 +10,19 @@ on:
       - back/**
       - web/**
       - deploy/**
+      - common/**
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}"
+  cancel-in-progress: false
 
 jobs:
+  
   deployment:
     runs-on: ubuntu-latest
     environment: production
     concurrency: production
+
     steps:
       - uses: actions/checkout@v3
 
@@ -30,7 +37,7 @@ jobs:
             echo "project=liane-dev" >> $GITHUB_ENV
             echo "branch=develop" >> $GITHUB_ENV
           fi
-          
+
       - name: Deploy on server
         uses: appleboy/ssh-action@master
         with:
@@ -60,11 +67,32 @@ jobs:
           source: "/tmp/it-${{ env.project }}/test-results.trx"
           target: "test-results.trx"
 
-      - name: Test Report
+      - name: Copy e2e results
+        uses: nicklasfrahm/scp-action@main
+        if: always()
+        with:
+          direction: download
+          insecure_ignore_fingerprint: true
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.KEY }}
+          port: ${{ secrets.PORT }}
+          source: "/tmp/e2e-${{ env.project }}/junit.xml"
+          target: "e2e-junit.xml"
+
+      - name: Test report
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: DotNET Tests
+          name: Integration tests
           path: "test-results.trx"
           reporter: dotnet-trx
           fail-on-error: true
+          
+      - name: e2e test report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: e2e tests
+          path: e2e-junit.xml
+          reporter: jest-junit

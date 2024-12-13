@@ -1,28 +1,45 @@
-using System.Collections.Generic;
-using System.Collections.Immutable;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Liane.Api.Chat;
+using Liane.Api.Auth;
+using Liane.Api.Community;
 using Liane.Api.Event;
 using Liane.Api.Util.Ref;
+using Liane.Service.Internal.Community;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Liane.Service.Internal.Event;
 
-public sealed class PushServiceImpl : IPushService
+public sealed class PushServiceImpl(IServiceProvider serviceProvider, LianeFetcher lianeFetcher, IUserService userService) : IPushService
 {
-  private readonly ImmutableList<IPushMiddleware> pushMiddlewares;
-
-  public PushServiceImpl(IEnumerable<IPushMiddleware> pushMiddlewares)
+  public async Task PushMessage(Ref<Api.Community.Liane> liane, LianeMessage message)
   {
-    this.pushMiddlewares = pushMiddlewares.OrderBy(p => p.Priority)
-      .ToImmutableList();
+    var resolvedLiane = await lianeFetcher.Get(liane.IdAsGuid());
+    var sender = await userService.Get(message.CreatedBy);
+    foreach (var member in resolvedLiane.Members)
+    {
+      await PushMessageInternal(sender, member.User, resolvedLiane, message);
+    }
   }
 
-  public async Task<bool> SendChatMessage(Ref<Api.User.User> receiver, Ref<ConversationGroup> conversation, ChatMessage message)
+  private async Task PushMessageInternal(Api.Auth.User sender, Ref<Api.Auth.User> receiver, Ref<Api.Community.Liane> liane, LianeMessage message)
   {
+    var pushMiddlewares = GetPushMiddlewares();
     foreach (var pushService in pushMiddlewares)
     {
-      if (await pushService.SendChatMessage(receiver, conversation, message))
+      if (await pushService.PushMessage(sender, receiver, liane, message))
+      {
+        return;
+      }
+    }
+  }
+
+  public async Task<bool> Push(Ref<Api.Auth.User> receiver, Notification notification)
+  {
+    var pushMiddlewares = GetPushMiddlewares();
+    foreach (var pushService in pushMiddlewares)
+    {
+      if (await pushService.Push(receiver, notification))
       {
         return true;
       }
@@ -31,16 +48,10 @@ public sealed class PushServiceImpl : IPushService
     return false;
   }
 
-  public async Task<bool> SendNotification(Ref<Api.User.User> receiver, Notification notification)
+  private IOrderedEnumerable<IPushMiddleware> GetPushMiddlewares()
   {
-    foreach (var pushService in pushMiddlewares)
-    {
-      if (await pushService.SendNotification(receiver, notification))
-      {
-        return true;
-      }
-    }
-
-    return false;
+    return serviceProvider.GetServices<IPushMiddleware>()
+      .Distinct()
+      .OrderBy(p => p.Priority);
   }
 }

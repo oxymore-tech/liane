@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
+using Liane.Service.Internal.Osrm.Response;
 
 namespace Liane.Service.Internal.Osrm;
 
@@ -25,17 +26,9 @@ public interface IOsrmService
   /// See parameters doc at : https://project-osrm.org/docs/v5.24.0/api/#trip-service
   /// </summary>
   /// <returns>A list of WayPoints</returns>
-  Task<Response.Trip> Trip(IEnumerable<LatLng> coordinates,
-    string roundtrip = "false",
-    string source = "first",
-    string destination = "last",
-    string geometries = "geojson",
-    string overview = "false",
-    string annotations = "false",
-    string steps = "false",
-    CancellationToken cancellationToken = default);
+  Task<Response.Trip> Trip(IEnumerable<LatLng> coordinates, CancellationToken cancellationToken = default);
 
-  Task<Response.Table> Table(IEnumerable<LatLng> coordinates, CancellationToken cancellationToken = default);
+  Task<Table> Table(IEnumerable<LatLng> coordinates, CancellationToken cancellationToken = default);
 
   Task<LatLng?> Nearest(LatLng coordinate, int number = 1, int? radius = null, CancellationToken cancellationToken = default);
 }

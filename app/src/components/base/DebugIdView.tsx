@@ -4,7 +4,7 @@ import React from "react";
 import { DEBUG_VIEWS } from "@env";
 import { Row } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
-import { Entity } from "@/api";
+import { Entity } from "@liane/common";
 
 export const DebugIdView = ({ style, object, id }: { style?: any; object: Entity; id?: string }) => {
   if (__DEV__ && DEBUG_VIEWS) {

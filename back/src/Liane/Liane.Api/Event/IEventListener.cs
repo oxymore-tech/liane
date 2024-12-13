@@ -1,32 +1,51 @@
 using System;
 using System.Threading.Tasks;
+using Liane.Api.Auth;
+using Liane.Api.Community;
 using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Event;
 
-public interface IEventListener
+public sealed record LianeEvent<T>(
+  Ref<Community.Liane> Liane,
+  T Content,
+  DateTime At,
+  Ref<User> Sender
+) where T : MessageContent
 {
-  Task OnEvent(LianeEvent e, Ref<Api.User.User>? sender = null);
-  Task OnAnswer(Notification.Event e, Answer answer, Ref<Api.User.User>? sender = null);
+  public Ref<Trip.Trip>? PublishTripUpdate => Content is MessageContent.TripMessage m ? m.Trip : null;
+
+  public bool PublishLianeUpdate => Content switch
+  {
+    MessageContent.LianeRequestModified => false,
+    MessageContent.MemberRequested => true,
+    MessageContent.MemberAdded => true,
+    MessageContent.MemberRejected => true,
+    MessageContent.MemberLeft => true,
+    MessageContent.TripAdded => true,
+    MessageContent.TripArchived => true,
+    MessageContent.TripFinished => true,
+    MessageContent.GeolocationLevelChanged => false,
+    MessageContent.MemberJoinedTrip => true,
+    MessageContent.MemberLeftTrip => true,
+    MessageContent.MemberHasStarted => true,
+    MessageContent.MemberFeedback => true,
+    _ => false
+  };
 }
 
-public interface IEventListener<in TEvent> : IEventListener
-  where TEvent : LianeEvent
+public interface IEventListener
 {
-  Task IEventListener.OnEvent(LianeEvent e, Ref<Api.User.User>? sender)
-  {
-    return e.GetType().IsAssignableTo(typeof(TEvent)) ? OnEvent((TEvent)e, sender) : Task.CompletedTask;
-  }
+  Task OnEvent(LianeEvent<MessageContent> e);
+}
 
-  Task IEventListener.OnAnswer(Notification.Event e, Answer answer, Ref<Api.User.User>? sender)
-  {
-    return e.Payload.GetType().IsAssignableTo(typeof(TEvent)) ? OnAnswer(e, (TEvent)e.Payload, answer, sender) : Task.CompletedTask;
-  }
+public interface IEventListener<TEvent> : IEventListener
+  where TEvent : MessageContent
+{
+  Task IEventListener.OnEvent(LianeEvent<MessageContent> e) =>
+    e.Content is TEvent content
+      ? OnEvent(new LianeEvent<TEvent>(e.Liane, content, e.At, e.Sender))
+      : Task.CompletedTask;
 
-  Task OnEvent(TEvent lianeEvent, Ref<Api.User.User>? sender = null);
-
-  Task OnAnswer(Notification.Event e, TEvent lianeEvent, Answer answer, Ref<Api.User.User>? sender = null)
-  {
-    throw new NotImplementedException();
-  }
+  Task OnEvent(LianeEvent<TEvent> lianeEvent);
 }

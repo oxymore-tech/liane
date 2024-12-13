@@ -34,25 +34,22 @@ internal class OwnerAccessLevelContext<TDb> : IMongoAccessLevelContext<TDb> wher
 
   public FilterDefinition<TDb> HasAccessLevelFilterDefinition
   {
-    get { return Builders<TDb>.Filter.Eq(m => m.CreatedBy, (Ref<Api.User.User>)currentUserId); }
+    get { return Builders<TDb>.Filter.Eq(m => m.CreatedBy, (Ref<Api.Auth.User>)currentUserId); }
   }
 }
 
-internal class MemberAccessLevelContext<TDb, TMemberDb> : IMongoAccessLevelContext<TDb> where TDb : class, IIdentity, ISharedResource<TMemberDb> where TMemberDb : IResourceMember
+internal class MemberAccessLevelContext<TDb, TMemberDb>(string? currentUserId) : IMongoAccessLevelContext<TDb>
+  where TDb : class, IIdentity, ISharedResource<TMemberDb>
+  where TMemberDb : IResourceMember
 {
-  private readonly string currentUserId;
-
-  public MemberAccessLevelContext(string? currentUserId)
-  {
-    this.currentUserId = currentUserId!;
-  }
+  private readonly string currentUserId = currentUserId!;
 
   public ResourceAccessLevel AccessLevel => ResourceAccessLevel.Member;
 
-  public Predicate<TDb> HasAccessLevelPredicate => delegate(TDb t) { return t.Members.Exists(m => m.User == (Ref<Api.User.User>)currentUserId); };
+  public Predicate<TDb> HasAccessLevelPredicate => delegate(TDb t) { return t.Members.Exists(m => m.User == (Ref<Api.Auth.User>)currentUserId); };
 
   public FilterDefinition<TDb> HasAccessLevelFilterDefinition
   {
-    get { return Builders<TDb>.Filter.ElemMatch(l => l.Members, m => m.User == (Ref<Api.User.User>)currentUserId); }
+    get { return Builders<TDb>.Filter.ElemMatch(l => l.Members, m => m.User == (Ref<Api.Auth.User>)currentUserId); }
   }
 }

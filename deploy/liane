@@ -28,6 +28,7 @@ case "$1" in
   ;;
  test)
    run_it_tests
+   run_e2e_tests
   ;;
  *)
   echo "Usage: liane (init_osrm|dump|dump_pg|start|stop|test)"

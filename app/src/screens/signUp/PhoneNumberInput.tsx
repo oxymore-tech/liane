@@ -1,72 +1,64 @@
-import React, { useState } from "react";
+import React from "react";
 import { AppTextInput } from "@/components/base/AppTextInput";
-import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
-import { AppIcon } from "@/components/base/AppIcon";
+import { ActivityIndicator, Pressable, StyleSheet } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppDimensions } from "@/theme/dimensions";
+import { Row } from "@/components/base/AppLayout.tsx";
+import { AppIcon } from "@/components/base/AppIcon.tsx";
 
 type PhoneNumberInputProps = {
-  onValidate: () => Promise<void>;
-  phoneNumber: string;
+  submitting?: boolean;
+  submit: () => void;
   onChange: (code: string) => void;
+  canSubmit: boolean;
+  phoneNumber: string;
 };
 
-export const PhoneNumberInput = ({ onValidate, phoneNumber, onChange }: PhoneNumberInputProps) => {
-  const [validating, setValidating] = useState(false);
-  const disabled = phoneNumber.length < 10 || validating;
+export const PhoneNumberInput = ({ submit, onChange, submitting, canSubmit }: PhoneNumberInputProps) => {
   const buttonColor = {
-    backgroundColor: disabled ? AppColorPalettes.gray[400] : AppColorPalettes.blue[500]
-  };
-
-  const validate = () => {
-    setValidating(true);
-    onValidate().finally(() => setValidating(false));
+    backgroundColor: canSubmit ? AppColorPalettes.blue[500] : AppColorPalettes.gray[400]
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.inputContainer}>
+    <Row style={styles.container}>
+      <Row style={styles.inputContainer}>
         <AppTextInput
           style={styles.input}
-          placeholder="0XXXXXXXXX"
+          placeholder="0#########"
           autoFocus={true}
-          returnKeyLabel={"next"}
+          returnKeyLabel="next"
           onChangeText={onChange}
-          keyboardType={"phone-pad"}
-          autoComplete={"tel"}
-          textContentType={"telephoneNumber"}
-          onSubmitEditing={validate}
+          keyboardType="phone-pad"
+          autoComplete="tel"
+          textContentType="telephoneNumber"
+          onSubmitEditing={submit}
           maxLength={10}
         />
-        <Pressable style={[styles.button, buttonColor]} disabled={disabled} onPress={validate}>
-          {!validating && <AppIcon name="arrow-circle-right-outline" color={AppColors.white} />}
-          {validating && <ActivityIndicator color={AppColors.white} size={"small"} />}
+        <Pressable style={[styles.button, buttonColor]} disabled={!canSubmit} onPress={submit}>
+          {!submitting && <AppIcon name="arrow-circle-right-outline" color={AppColors.white} />}
+          {submitting && <ActivityIndicator color={AppColors.white} size={"small"} />}
         </Pressable>
-      </View>
-    </View>
+      </Row>
+    </Row>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    display: "flex",
-    alignItems: "center"
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20
   },
   inputContainer: {
-    marginVertical: 16,
-    height: 52,
-    width: "75%",
-    minWidth: 250,
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: AppColors.white,
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
     borderRadius: 52,
-    paddingLeft: 20
+    paddingLeft: 20,
+    width: 270
   },
   input: {
-    fontSize: AppDimensions.textSize.large,
-    color: AppColorPalettes.gray[800]
+    fontSize: AppDimensions.textSize.large
   },
   button: {
     height: 52,

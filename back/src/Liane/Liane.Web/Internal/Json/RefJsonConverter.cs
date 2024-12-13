@@ -24,4 +24,9 @@ internal sealed class RefJsonConverter<T> : JsonConverter<Ref<T>> where T : clas
       v => JsonSerializer.Serialize(writer, v, options)
     );
   }
+
+  public override void WriteAsPropertyName(Utf8JsonWriter writer, Ref<T> value, JsonSerializerOptions options)
+  {
+    writer.WritePropertyName(value.ToString());
+  }
 }

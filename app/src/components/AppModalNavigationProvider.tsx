@@ -1,19 +1,19 @@
 import React, { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
 
-import { getSetting } from "@/api/storage";
 import { LianeGeolocation } from "@/api/service/location";
-import { RootNavigation } from "@/api/navigation";
+import { RootNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
-import { UnionUtils } from "@/api";
-import { MemberAccepted } from "@/api/event";
-import { Event } from "@/api/notification";
+import { AppStorage } from "@/api/storage";
+import { GeolocationPermission } from "../../native-modules/geolocation";
 
-export interface IAppModalNavigation {
+export type AppModalNavigationProps = {
   showTutorial: (as: "passenger" | "driver", lianeId?: string) => void;
   shouldShow: undefined | "driver" | "passenger";
-}
+};
+
 // @ts-ignore
-export const AppModalNavigationContext = createContext<IAppModalNavigation>();
+export const AppModalNavigationContext = createContext<AppModalNavigationProps>();
+
 export const AppModalNavigationProvider = (props: PropsWithChildren) => {
   const { services, user: u } = useContext(AppContext);
   const [shouldShow, setShowTutorial] = useState<{ showAs: "driver" | "passenger"; lianeId?: undefined | string } | undefined>(undefined);
@@ -22,8 +22,9 @@ export const AppModalNavigationProvider = (props: PropsWithChildren) => {
     if (!u) {
       return;
     }
-    getSetting("geolocation").then(async setting => {
-      const mismatchedPermissions = !!setting && setting !== "None" && !(await LianeGeolocation.checkBackgroundGeolocationPermission());
+    AppStorage.getSetting("geolocation").then(async setting => {
+      const geolocationPermission = await LianeGeolocation.checkGeolocationPermission();
+      const mismatchedPermissions = !!setting && setting !== "None" && geolocationPermission === GeolocationPermission.Denied;
       if (mismatchedPermissions) {
         // Permissions don't match saved settings, so show again
 
@@ -33,14 +34,6 @@ export const AppModalNavigationProvider = (props: PropsWithChildren) => {
 
       if (!setting) {
         setShowTutorial({ showAs: "driver" });
-        const sub = services.realTimeHub.subscribeToNotifications(async n => {
-          if (UnionUtils.isInstanceOf<Event>(n, "Event") && UnionUtils.isInstanceOf<MemberAccepted>(n.payload, "MemberAccepted")) {
-            setShowTutorial({ showAs: "passenger", lianeId: n.payload.liane });
-            sub.unsubscribe();
-          }
-        });
-
-        return () => sub.unsubscribe();
       }
     });
   }, [services.realTimeHub, u]);

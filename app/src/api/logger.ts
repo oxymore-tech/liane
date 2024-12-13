@@ -1,7 +1,8 @@
 import { consoleTransport, logger } from "react-native-logs";
 import { datadogTransport } from "@/api/dd-logger";
+import { AppLogger as CommonAppLogger } from "@liane/common";
 
-const LoggerNamespaces = [
+export const LoggerNamespaces = [
   "INIT",
   "HOME",
   "HUB",
@@ -14,9 +15,15 @@ const LoggerNamespaces = [
   "LOGOUT",
   "GEOPINGS",
   "GEOLOC",
-  "DEEP_LINKING"
+  "DEEP_LINKING",
+  "RALLYING_POINT",
+  "COMMUNITIES",
+  "CHAT"
 ] as const;
-const config = {
+
+export type LoggerNamespace = (typeof LoggerNamespaces)[number];
+
+const rootLogger = logger.createLogger({
   severity: __DEV__ ? "debug" : "info",
   dateFormat: "iso",
   transport: [consoleTransport, datadogTransport],
@@ -28,39 +35,38 @@ const config = {
     }
   },
   enabledExtensions: [...LoggerNamespaces]
-};
+});
 
-const rootLogger = logger.createLogger(config);
-
-export type LoggerNamespace = (typeof config.enabledExtensions)[number];
-export type LoggerAction = (tag: LoggerNamespace, ...args: any[]) => void;
 const namespaceLoggers = (() => {
   return Object.fromEntries(LoggerNamespaces.map(n => [n, rootLogger.extend(n)]));
 })();
 
-export interface ILogger {
-  debug: LoggerAction;
-  info: LoggerAction;
-  warn: LoggerAction;
-  error: LoggerAction;
+function getLogger(tag: LoggerNamespace) {
+  const namespaceLogger = namespaceLoggers[tag];
+  if (!namespaceLogger) {
+    throw new Error(`Logger namespace "${tag}" not declared`);
+  }
+  return namespaceLogger;
 }
 
-export class AppLoggerImpl implements ILogger {
+export class ReactNativeLogger implements CommonAppLogger<LoggerNamespace> {
   debug(tag: LoggerNamespace, ...args: any[]): void {
-    namespaceLoggers[tag].debug(...args);
+    if (__DEV__) {
+      getLogger(tag).debug(...args);
+    }
   }
 
   info(tag: LoggerNamespace, ...args: any[]): void {
-    namespaceLoggers[tag].info(...args);
+    getLogger(tag).info(...args);
   }
 
   warn(tag: LoggerNamespace, ...args: any[]): void {
-    namespaceLoggers[tag].warn(...args);
+    getLogger(tag).warn(...args);
   }
 
   error(tag: LoggerNamespace, ...args: any[]): void {
-    namespaceLoggers[tag].error(...args);
+    getLogger(tag).error(...args);
   }
 }
 
-export const AppLogger = new AppLoggerImpl();
+export const AppLogger = new ReactNativeLogger();

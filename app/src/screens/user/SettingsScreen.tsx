@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { getSetting, saveSetting } from "@/api/storage";
 import { AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import { Column, Row, Space } from "@/components/base/AppLayout";
-import { GeolocationLevel } from "@/api";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
-import { useAppNavigation } from "@/api/navigation";
+import { useAppNavigation } from "@/components/context/routing";
 import { useIsFocused } from "@react-navigation/native";
+import { GeolocationLevel } from "@liane/common";
+import { AppStorage } from "@/api/storage";
 
 const geolocationValues = {
   None: "Désactivée",
@@ -15,14 +15,14 @@ const geolocationValues = {
   Hidden: "Activée (position masquée)"
 } as const;
 export const SettingsScreen = () => {
-  const [geoloc, setGeoloc] = useState<GeolocationLevel | null>(null);
+  const [geoloc, setGeoloc] = useState<GeolocationLevel>();
   const { navigation } = useAppNavigation();
   const focused = useIsFocused();
   useEffect(() => {
     if (!focused) {
       return;
     }
-    getSetting("geolocation").then(s => setGeoloc(s));
+    AppStorage.getSetting("geolocation").then(setGeoloc);
   }, [focused]);
   return (
     <View style={styles.container}>
@@ -35,7 +35,9 @@ export const SettingsScreen = () => {
         <AppPressableOverlay
           style={{ paddingHorizontal: 24 }}
           onPress={() => {
-            saveSetting("geolocation", null).then(() => navigation.navigate("TripGeolocationWizard", { showAs: null, lianeId: undefined }));
+            AppStorage.saveSetting("geolocation", undefined).then(() =>
+              navigation.navigate("TripGeolocationWizard", { showAs: null, lianeId: undefined })
+            );
           }}>
           <Row style={styles.settingRow}>
             <AppText style={styles.settingTitle}>Géolocalisation</AppText>
@@ -54,7 +56,7 @@ export const SettingsScreen = () => {
 const SettingCheckbox = ({ name, label }: { name: keyof AppSettings; label: string }) => {
   const [value, setValue] = useState<boolean | undefined>(undefined);
   useEffect(() => {
-    getSetting(name)
+    AppStorage.getSetting(name)
       .then(setting => {
         setValue(setting);
       })
@@ -70,7 +72,7 @@ const SettingCheckbox = ({ name, label }: { name: keyof AppSettings; label: stri
           fillColor={AppColors.primaryColor}
           textStyle={{ textDecorationLine: undefined, color: AppColorPalettes.gray[800] }}
           onPress={(checked: boolean) => {
-            saveSetting(name, checked)
+            AppStorage.saveSetting(name, checked)
               .then(() => setValue(checked))
               .catch(e => console.warn(e));
           }}

@@ -1,17 +1,14 @@
 import React, { useMemo, useState } from "react";
 import { ColorValue, Platform, StyleSheet } from "react-native";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-
-import { formatShortMonthDay, toRelativeDateString } from "@/api/i18n";
-
+import { AppLocalization } from "@/api/i18n";
 import { Center, Row } from "@/components/base/AppLayout";
 import { AppPressableIcon, AppPressableOverlay } from "@/components/base/AppPressable";
 import { AppText } from "@/components/base/AppText";
 
 import { AppColors } from "@/theme/colors";
 
-import { isToday, withOffsetHours } from "@/util/datetime";
-import { capitalize } from "@/util/strings";
+import { capitalize, isToday, withOffsetHours } from "@liane/common";
 
 export const DatePagerSelector = ({
   date = new Date(),
@@ -35,28 +32,31 @@ export const DatePagerSelector = ({
     const now = new Date();
     return [now, new Date(new Date(now).setFullYear(now.getFullYear() + 1))];
   }, []);
+  const iconSize = Math.max(size, 32);
 
   return (
     <Center>
-      <Row spacing={8} style={borderBottomDisplayed ? styles.containerBorderStyle : {}}>
+      <Row spacing={8} style={[borderBottomDisplayed ? styles.containerBorderStyle : {}, { alignItems: "center", justifyContent: "space-between" }]}>
         <AppPressableIcon
           backgroundStyle={styles.buttonBorderRadius}
           clickable={!dateIsToday}
           onPress={() => (!dateIsToday ? previousDate(date, onSelectDate) : null)}
           name={"chevron-left"}
           color={color}
-          size={size + 26}
+          size={iconSize}
           opacity={dateIsToday ? 0.4 : 1}
         />
 
         <Center>
           <AppPressableOverlay
-            style={{ paddingVertical: 8, paddingHorizontal: 4 }}
+            style={{ paddingVertical: 4, paddingHorizontal: 4 }}
             onPress={() => setDatePickerVisible(true)}
             backgroundStyle={styles.buttonBorderRadius}>
             <Row spacing={6}>
               <AppText style={{ fontWeight: "bold", color, fontSize: size }}>
-                {formatter ? formatter(date || new Date()) : capitalize(toRelativeDateString(date, formatShortMonthDay))}
+                {formatter
+                  ? formatter(date || new Date())
+                  : capitalize(AppLocalization.toRelativeDateString(date, AppLocalization.formatShortMonthDay))}
               </AppText>
             </Row>
           </AppPressableOverlay>
@@ -67,7 +67,7 @@ export const DatePagerSelector = ({
           onPress={() => (onSelectDate ? onSelectDate(new Date(withOffsetHours(24, date))) : null)}
           name={"chevron-right"}
           color={color}
-          size={size + 26}
+          size={iconSize}
         />
 
         <DateTimePickerModal

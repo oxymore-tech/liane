@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { ActivityIndicator, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
 import messaging from "@react-native-firebase/messaging";
 import { scopedTranslate } from "@/api/i18n";
@@ -10,14 +10,15 @@ import { PhoneNumberInput } from "@/screens/signUp/PhoneNumberInput";
 import { CodeInput } from "@/screens/signUp/CodeInput";
 import { AppDimensions } from "@/theme/dimensions";
 import { useActor, useInterpret } from "@xstate/react";
-import { CreateSignUpMachine, SignUpLianeContext } from "@/screens/signUp/StateMachine";
 import { SignUpFormScreen } from "@/screens/signUp/SignUpFormScreen";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { APP_VERSION, TEST_ACCOUNT } from "@env";
+import { APP_VERSION } from "@env";
 import { AppStyles } from "@/theme/styles";
-import { AppLogger } from "@/api/logger";
 import { PasswordInput } from "@/screens/signUp/PasswordInput";
-import { storeUserSession } from "@/api/storage";
+import { CreateLoginMachine, SignUpStateMachineInterpreter } from "@liane/common";
+import { AppLogger } from "@/api/logger";
+import { RNAppEnv } from "@/api/env";
+import { Center } from "@/components/base/AppLayout";
 
 const t = scopedTranslate("SignUp");
 
@@ -32,36 +33,20 @@ async function getPushToken() {
 const SignUpPage = () => {
   const machine = useContext(SignUpLianeContext);
   const [state] = useActor(machine);
-  const [value, setValue] = useState<string>("");
-  const [error, setError] = useState("");
-  const { services } = useContext(AppContext);
   const insets = useSafeAreaInsets();
-
-  const sendCode = async () => {
-    try {
-      setError("");
-      const phone = state.matches("phone") ? value : state.context.phone!;
-      await services.auth.sendSms(phone);
-      machine.send("SET_PHONE", { data: { phone: phone } });
-    } catch (e) {
-      AppLogger.error("LOGIN", "Sign up error ", e);
-      setError("Impossible d'effectuer la demande");
-    }
-  };
-  const submitCode = async () => {
-    // try {
-    const pushToken = await getPushToken();
-    const authUser = await services.auth.login({ phone: state.context.phone!, code: value, pushToken });
-    AppLogger.info("LOGIN", "as ", authUser, machine.send);
-    machine.send("LOGIN", { data: { authUser } });
-    /*  } catch (e: any) {
-      if (e instanceof UnauthorizedError) {
-        setError("Le code est incorrect");
-      } else {
-        console.warn("Error during login", e);
-        setError(e.toString());
-      }
-    }*/
+  const error = state.toStrings().some(x => x.includes("failure")) ? "Impossible d'effectuer la demande" : undefined;
+  const submitting = state.toStrings().some(x => x.includes("pending"));
+  const set = (data: string) => machine.send("SET", { data });
+  const submit = () => {
+    AppLogger.debug(
+      "INIT",
+      state.context,
+      state.value,
+      RNAppEnv.raw.TEST_ACCOUNT,
+      state.context.phone.value,
+      state.context.phone.value === RNAppEnv.raw.TEST_ACCOUNT
+    );
+    machine.send(state.toStrings().some(x => x.includes("failure")) ? "RETRY" : "NEXT");
   };
 
   return (
@@ -73,16 +58,28 @@ const SignUpPage = () => {
         <AppText numberOfLines={-1} style={styles.helperText}>
           {state.matches("phone")
             ? t("Veuillez entrer votre numéro de téléphone")
-            : state.context.phone === TEST_ACCOUNT
+            : state.context.phone.value === RNAppEnv.raw.TEST_ACCOUNT
             ? t("Entrez votre mot de passe")
             : t("Entrez le code reçu par SMS")}
         </AppText>
         {state.matches("phone") ? (
-          <PhoneNumberInput phoneNumber={value} onChange={setValue} onValidate={sendCode} />
-        ) : state.context.phone === TEST_ACCOUNT ? (
-          <PasswordInput code={value} onChange={setValue} onValidate={submitCode} />
+          <PhoneNumberInput
+            phoneNumber={state.context.phone.value || ""}
+            canSubmit={!!state.context.phone.valid}
+            onChange={set}
+            submit={submit}
+            submitting={submitting}
+          />
+        ) : state.context.phone.value === RNAppEnv.raw.TEST_ACCOUNT ? (
+          <PasswordInput code={state.context.code.value || ""} onChange={set} onValidate={submit} />
         ) : (
-          <CodeInput code={value} onChange={setValue} onValidate={submitCode} retry={sendCode} />
+          <CodeInput
+            code={state.context.code.value || ""}
+            canSubmit={!!state.context.code.valid}
+            onChange={set}
+            submit={submit}
+            retry={() => machine.send("RESEND")}
+          />
         )}
         <AppText style={styles.errorText}>{error || " "}</AppText>
       </View>
@@ -94,19 +91,33 @@ const SignUpPage = () => {
   );
 };
 
+// @ts-ignore
+export const SignUpLianeContext = React.createContext<SignUpStateMachineInterpreter>();
 const SignUpScreen = () => {
-  const { login } = useContext(AppContext);
-  const [m] = useState(() => CreateSignUpMachine());
+  const { login, services } = useContext(AppContext);
+  const [m] = useState(() =>
+    CreateLoginMachine(
+      {
+        sendPhone: phone => services.auth.sendSms(phone),
+        sendCode: async (phone, code) => {
+          const pushToken = await getPushToken();
+          return await services.auth.login({ phone, code, pushToken });
+        },
+        signUpUser: payload => services.auth.updateUserInfo(payload)
+      },
+      RNAppEnv.raw.TEST_ACCOUNT
+    )
+  );
   const machine = useInterpret(m);
   const [state] = useActor(machine);
-  machine.onDone(async _ => {
-    // Fixes a xstate bug where onDone is called as many times as there are states in the machine
+  useEffect(() => {
     if (!state.done) {
       return;
     }
-    await storeUserSession(state.context.authUser);
-    login({ ...state.context.authUser! });
-  });
+    machine.onDone(async _ => {
+      login(state.context.authUser);
+    });
+  }, [login, machine, state.context.authUser, state.done]);
 
   return (
     <SignUpLianeContext.Provider
@@ -115,7 +126,9 @@ const SignUpScreen = () => {
       {["code", "phone"].some(state.matches) && <SignUpPage />}
       {state.matches("form") && <SignUpFormScreen />}
       {!["code", "phone", "form"].some(state.matches) && (
-        <ActivityIndicator style={[AppStyles.center, AppStyles.fullHeight]} color={AppColors.primaryColor} size="large" />
+        <Center style={[AppStyles.fullHeight]}>
+          <ActivityIndicator color={AppColors.primaryColor} size="large" />
+        </Center>
       )}
     </SignUpLianeContext.Provider>
   );

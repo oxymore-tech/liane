@@ -1,23 +1,28 @@
-import { FlatListProps, ScrollViewProps, StyleProp, StyleSheet } from "react-native";
-import React, { createContext, forwardRef, PropsWithChildren, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
-import { FlatList, Gesture, GestureDetector, ScrollView } from "react-native-gesture-handler";
+import { StyleProp, StyleSheet, View } from "react-native";
+import React, { createContext, PropsWithChildren, useCallback, useEffect, useImperativeHandle, useMemo } from "react";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { interpolate, interpolateColor, runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
-import { AppColorPalettes, AppColors } from "@/theme/colors";
+import { AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Observable, Subject } from "rxjs";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
+import Handle from "@/components/base/Handle.tsx";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-export const AppBottomSheetHandleHeight = 24;
+export const AppBottomSheetHandleHeight = 60;
 
 export interface BottomSheetProps extends PropsWithChildren {
+  // Preset heights for this bottom sheet. I the value is greater than 1, the unit is in pixels,
+  // otherwise the value is considered to be a ratio of the total height.
   stops: number[];
+  // The index of the initial bottom sheet height.
   initialStop?: number;
   margins?: { bottom?: number; right?: number; left?: number };
+  // The upper space from which to consider the bottom sheet as expanded.
   padding?: { top?: number };
   onScrolled?: (y: number) => void;
   canScroll?: boolean;
-  backgroundStyle?: StyleProp<any>;
+  style?: StyleProp<any>;
 }
 
 export type BottomSheetRefProps = {
@@ -26,7 +31,6 @@ export type BottomSheetRefProps = {
 };
 
 export interface BottomSheetObservableMessage {
-  //TODO why?
   expanded: boolean;
   top: number;
 }
@@ -42,49 +46,63 @@ interface BottomSheetContext {
 const BottomSheetContext = createContext<BottomSheetContext>();
 
 export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
-  ({ onScrolled, children, backgroundStyle, canScroll, stops, margins, padding, initialStop = 0 }, ref) => {
-    const marginBottom = margins?.bottom || 0;
+  ({ onScrolled, children, style, canScroll, stops, margins, initialStop = 0 }, ref) => {
     const insets = useSafeAreaInsets();
-    const paddingTop = (padding?.top || insets.top + 16) - AppBottomSheetHandleHeight;
+    const marginBottom = margins?.bottom ?? insets.bottom + 30 ?? 0;
+    const paddingTop = 0;
     const { height, width } = useAppWindowsDimensions();
-    const fillLimit = padding?.top || 0;
-    const currentStop = useRef<number>(initialStop);
+    const fillLimit = 0;
+    const currentStop = useSharedValue<number>(initialStop);
 
-    const getPixelValue = (v: number) => {
-      "worklet";
-      return Math.min(v <= 1 ? v * height : v, height);
-    };
+    const getPixelValue = useCallback(
+      (v: number) => {
+        "worklet";
+        return Math.min(v <= 1 ? v * height : v, height);
+      },
+      [height]
+    );
 
     const pStops = stops.map(s => getPixelValue(s));
 
-    const h = useSharedValue(pStops[currentStop.current]);
+    // Current height of the bottom sheet
+    const h = useSharedValue(pStops[currentStop.value]);
 
+    // Context used to retain values while panning the bottom sheet
     const context = useSharedValue({ y: 0 });
+
+    // Store margins as shared values to allow animation
     const margin = useSharedValue({ bottom: marginBottom, left: margins?.left ?? 0, right: margins?.right ?? 0 });
 
     useEffect(() => {
       margin.value = { bottom: marginBottom, left: margins?.left ?? 0, right: margins?.right ?? 0 };
-    }, [margins?.bottom, margins?.left, margins?.right]);
+    }, [margin, marginBottom, margins?.bottom, margins?.left, margins?.right]);
 
-    const expanded = new Subject<boolean>();
+    const expanded = useMemo(() => new Subject<boolean>(), []);
 
-    const notifyExpanded = (v: boolean) => {
-      expanded.next(v);
-    };
+    const notifyExpanded = useCallback(
+      (v: boolean) => {
+        expanded.next(v);
+      },
+      [expanded]
+    );
 
     const updateCurrentStop = (index: number) => {
-      currentStop.current = index;
+      currentStop.value = index;
     };
 
-    const isExpanded = () => {
+    const isExpanded = useCallback(() => {
       "worklet";
       return h.value + marginBottom + paddingTop >= pStops[pStops.length - 1];
-    };
-    const scrollTo = (y: number) => {
-      "worklet";
-      h.value = withSpring(getPixelValue(y), { damping: 50 });
-      runOnJS(notifyExpanded)(isExpanded());
-    };
+    }, [h.value, marginBottom, pStops, paddingTop]);
+
+    const scrollTo = useCallback(
+      (y: number) => {
+        "worklet";
+        h.value = withSpring(getPixelValue(y), { damping: 50 });
+        runOnJS(notifyExpanded)(isExpanded());
+      },
+      [getPixelValue, h, isExpanded, notifyExpanded]
+    );
 
     const PanThreshHold = 52;
     const findClosestStop = (value: number, direction: number) => {
@@ -93,6 +111,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
       if (value < pStops[0]) {
         return 0;
       }
+      // Find the closest stop in the current scrolling direction
       for (let i = 1; i < stops.length; i++) {
         const a = value - pStops[i - 1];
         const b = pStops[i] - value;
@@ -111,10 +130,12 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
     useImperativeHandle(ref, () => ({ scrollTo, getTop: () => Math.min(height - h.value - marginBottom, height - pStops[0] - marginBottom) }), [
       h.value,
       height,
+      marginBottom,
       pStops,
       scrollTo
     ]);
 
+    // Handle pan gesture and scroll to closest stop
     const gesture = Gesture.Pan()
       .onStart(() => {
         context.value = { y: h.value };
@@ -136,9 +157,10 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
       .enabled(canScroll || true);
 
     const bgColor = useMemo(() => {
-      return StyleSheet.flatten(backgroundStyle).backgroundColor || AppColors.white;
-    }, [backgroundStyle]);
+      return StyleSheet.flatten(style)?.backgroundColor || AppColors.white;
+    }, [style]);
 
+    // Animate the expanded bottom sheet background
     const bSheetBgStyle = useAnimatedStyle(() => {
       const backgroundColor = interpolateColor(
         h.value,
@@ -160,6 +182,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
       };
     });
 
+    // Animate shadow and elevation
     const bSheetStyle = useAnimatedStyle(() => {
       const shadowColor = interpolateColor(
         h.value,
@@ -173,16 +196,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
         width: withTiming(width - margin.value.right - margin.value.left, { duration: 300 }) // withTiming is important as is forces recalculation of the layout
       };
     });
-    const handleStyle = useAnimatedStyle(() => {
-      const backgroundColor = interpolateColor(
-        h.value,
-        [0, height - fillLimit - AppBottomSheetHandleHeight, height - fillLimit, height],
-        [AppColorPalettes.gray[400], AppColorPalettes.gray[400], "rgba(255,255,255,0)", "rgba(255,255,255,0)"]
-      );
-      return {
-        backgroundColor
-      };
-    });
+
     return (
       <GestureDetector gesture={gesture}>
         <Animated.View
@@ -199,7 +213,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
           <Animated.View
             style={[
               styles.bottomSheetContainerDefaults,
-              backgroundStyle,
+              style,
               styles.bottomSheetContainer,
               AppStyles.shadow,
               marginBottom > 0
@@ -210,8 +224,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
                 : {},
               bSheetStyle
             ]}>
-            <Animated.View style={[styles.handler, handleStyle]} />
-
+            <Handle animatedIndex={currentStop} animatedPosition={h} />
             <BottomSheetContext.Provider
               value={{
                 expanded,
@@ -235,7 +248,7 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
                   context.value = { y: h.value };
                 }
               }}>
-              {children}
+              <View style={style}>{children}</View>
             </BottomSheetContext.Provider>
           </Animated.View>
         </Animated.View>
@@ -244,104 +257,10 @@ export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetP
   }
 );
 
-const WithBottomSheetContext =
-  <T,>(WrappedComponent: React.ComponentType<T & ScrollViewProps>) =>
-  (props: T & ScrollViewProps) => {
-    const context = useContext(BottomSheetContext);
-    const expandedScrollDelta = useSharedValue({ y: 0, expanded: false });
-
-    if (!context) {
-      return <WrappedComponent {...props} />;
-    }
-    const { onScroll, onEndScroll, onStartScroll, expanded } = context;
-    const [sheetExpanded, setBSheetExpanded] = useState(false);
-
-    useEffect(() => {
-      const sub = expanded.subscribe(setBSheetExpanded);
-      return () => sub.unsubscribe();
-    }, [expanded, expandedScrollDelta]);
-
-    const scrollRef = useRef<AppBottomSheetScrollRefProps>();
-    const scrollTo = (y: number) => {
-      scrollRef.current?.scrollTo(y);
-    };
-
-    // Handles pan gestures while bsheet is not expanded
-    const gesture = Gesture.Pan()
-      .onStart(event => {
-        onStartScroll(-event.translationY);
-      })
-      .onUpdate(event => {
-        const nowExpanded = onScroll(-event.translationY);
-        //console.log("exp", nowExpanded);
-        if (nowExpanded && !expandedScrollDelta.value.expanded) {
-          expandedScrollDelta.value.expanded = true;
-          expandedScrollDelta.value.y = event.translationY;
-        } else if (nowExpanded) {
-          runOnJS(scrollTo)(-event.translationY + expandedScrollDelta.value.y);
-        }
-      })
-      .onEnd(event => {
-        // Scroll to the closest stop
-        onEndScroll(-event.translationY);
-        expandedScrollDelta.value.expanded = false;
-      })
-      .enabled(!sheetExpanded);
-
-    return (
-      <GestureDetector gesture={gesture}>
-        <WrappedComponent
-          {...props}
-          ref={scrollRef}
-          showsVerticalScrollIndicator={sheetExpanded}
-          overScrollMode={"never"}
-          bounces={false}
-          scrollEventThrottle={16}
-          scrollEnabled={sheetExpanded}
-          onScroll={event => {
-            // reached top
-            //console.debug("scroll", event.nativeEvent);
-            if (event.nativeEvent.contentOffset.y === 0) {
-              setBSheetExpanded(false);
-            }
-          }}
-          onScrollEndDrag={event => {
-            if (event.nativeEvent.contentOffset.y === 0) {
-              setBSheetExpanded(false);
-            }
-          }}
-        />
-      </GestureDetector>
-    );
-  };
-
-interface AppBottomSheetScrollRefProps {
-  scrollTo: (y: number) => void;
-}
-
-export const AppBottomSheetFlatList = WithBottomSheetContext(
-  forwardRef<AppBottomSheetScrollRefProps, FlatListProps<any>>((props: FlatListProps<any>, ref) => {
-    const fRef = useRef<FlatList>(null);
-    useImperativeHandle(ref, () => ({
-      scrollTo: y => fRef.current?.scrollToOffset({ offset: y, animated: false })
-    }));
-    return <FlatList ref={fRef} {...props} />;
-  })
-);
-
-export const AppBottomSheetScrollView = WithBottomSheetContext(
-  forwardRef<AppBottomSheetScrollRefProps, ScrollViewProps>((props: ScrollViewProps, ref) => {
-    const fRef = useRef<ScrollView>(null);
-    useImperativeHandle(ref, () => ({
-      scrollTo: y => fRef.current?.scrollTo({ y, animated: false })
-    }));
-    return <ScrollView ref={fRef} {...props} />;
-  })
-);
-
 const styles = StyleSheet.create({
   bottomSheetContainerDefaults: {
     backgroundColor: AppColors.white,
+    paddingTop: 12,
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12
   },
@@ -351,13 +270,5 @@ const styles = StyleSheet.create({
     width: "100%",
     zIndex: 100,
     alignSelf: "center"
-  },
-  handler: {
-    width: 52,
-    height: 4,
-    backgroundColor: AppColorPalettes.gray[400],
-    alignSelf: "center",
-    marginVertical: 10,
-    borderRadius: 2
   }
 });

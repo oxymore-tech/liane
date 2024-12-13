@@ -1,0 +1,99 @@
+{
+  "_id": {"$oid": "6617deeb1766bd0c08459a34"},
+  "createdAt": {"$date": "2024-04-11T13:00:27.546Z"},
+  "createdBy": {"$oid": "65f2cbd9e94a0516ac1e6dac"},
+  "departureTime": {"$date": "2024-04-11T13:10:00.000Z"},
+  "driver": {
+    "user": {"$oid": "65f2cbd9e94a0516ac1e6dac"},
+    "canDrive": true
+  },
+  "members": [
+    {
+      "user": {"$oid": "65f2cbd9e94a0516ac1e6dac"},
+      "from": "Toulouse",
+      "to": "custom:001",
+      "seatCount": 1,
+      "feedback": null,
+      "geolocationLevel": "Shared",
+      "departure": {"$date": "2024-04-11T13:01:24.385Z"},
+      "cancellation": {"$date": "2024-04-11T13:04:24.140Z"}
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "from": "Toulouse",
+      "to": "custom:001",
+      "seatCount": -1,
+      "feedback": null,
+      "geolocationLevel": "Shared",
+      "departure": {"$date": "2024-04-11T13:01:18.329Z"},
+      "cancellation": null
+    }
+  ],
+  "pings": [
+    {
+      "user": {"$oid": "65f2cbd9e94a0516ac1e6dac"},
+      "at": {"$date": "2024-04-11T13:00:17.501Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [1.3910746260507483, 43.56814282497395]
+      }
+    },
+    {
+      "user": {"$oid": "65f2cbd9e94a0516ac1e6dac"},
+      "at": {"$date": "2024-04-11T13:00:08.501Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [1.3910746260507483, 43.56814282497395]
+      }
+    },
+    {
+      "user": {"$oid": "65f2cbd9e94a0516ac1e6dac"},
+      "at": {"$date": "2024-04-11T13:01:25.418Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [1.39157592227448, 43.56823775087554]
+      }
+    },
+    {
+      "user": {"$oid": "65f2cbd9e94a0516ac1e6dac"},
+      "at": {"$date": "2024-04-11T13:01:25.920Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [1.3910826694267724, 43.56808972241449]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2024-04-11T13:01:41.585Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.484683, 44.3377874]
+      }
+    },
+    {
+      "user": {"$oid": "63f73936d3436d499d1075f6"},
+      "at": {"$date": "2024-04-11T13:03:06.431Z"},
+      "coordinate": {
+        "type": "Point",
+        "coordinates": [3.4845875, 44.3378072]
+      }
+    }
+  ],
+  "return": null,
+  "state": "Canceled",
+  "totalSeatCount": 0,
+  "wayPoints": [
+    {
+      "rallyingPoint": "Toulouse",
+      "duration": 0,
+      "distance": 0,
+      "eta": {"$date": "2024-04-11T13:10:00.000Z"}
+    },
+    {
+      "rallyingPoint": "custom:001",
+      "duration": 893,
+      "distance": 9871,
+      "eta": {"$date": "2024-04-11T13:24:53.000Z"}
+    }
+  ]
+}

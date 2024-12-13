@@ -42,6 +42,9 @@ export const AppPressableIcon = (
 
 /**
  * Pressable with an overlay when pressed
+ * Props:
+ * - "backgroundStyle" : style the pressable container (use to set appearance properties)
+ * - "style" : style of the inner content of the pressable
  */
 export function AppPressableOverlay({
   backgroundStyle,
@@ -117,7 +120,6 @@ const styles = StyleSheet.create({
   pressedDefault: {
     backgroundColor: WithAlpha(AppColors.black, 0.3)
   },
-
   pressedFixed: {
     position: "absolute",
     right: 0,
@@ -126,7 +128,7 @@ const styles = StyleSheet.create({
     bottom: 0
   },
   pressableTarget: {
-    minHeight: 24,
+    minHeight: 36,
     minWidth: 36
   }
 });

@@ -1,4 +1,3 @@
-version: "3.8"
 services:
 
   mongo:
@@ -25,7 +24,33 @@ services:
       POSTGRES_USER: ${MONGO_USERNAME}
       POSTGRES_PASSWORD: ${MONGO_PASSWORD}
     restart: unless-stopped
-    
+
+  backup:
+    image: docker.io/tiredofit/db-backup
+    depends_on:
+      - mongo
+    volumes:
+      - "/data/${PROJECT}:/backup"
+    environment:
+      # - DEBUG_MODE=TRUE
+      - DEFAULT_BACKUP_INTERVAL=720 # backup 12 hours 12 * 60
+      - DEFAULT_CLEANUP_TIME=1      # clean backups that are older than 1 minute
+      - DEFAULT_CHECKSUM=SHA1
+      - DEFAULT_COMPRESSION=GZ
+      - DB01_TYPE=pgsql
+      - DB01_HOST=postgis
+      - DB01_NAME=jamin
+      - DB01_USER=${MONGO_USERNAME}
+      - DB01_PASS=${MONGO_PASSWORD}
+      - DB01_EXTRA_BACKUP_OPTS=--clean
+      - DB02_TYPE=mongo
+      - DB02_HOST=mongo
+      - DB02_USER=${MONGO_USERNAME}
+      - DB02_PASS=${MONGO_PASSWORD}
+    restart: unless-stopped
+    networks:
+      - default
+
   martin:
     image: ghcr.io/maplibre/martin
     command: [ "--config", "/config.yaml" ]
@@ -76,16 +101,16 @@ services:
       LIANE_Mongo__Password: ${MONGO_PASSWORD}
       LIANE_Database__Username: ${MONGO_USERNAME}
       LIANE_Database__Password: ${MONGO_PASSWORD}
-      LIANE_Twilio__Account: ${TWILIO_ACCOUNT}
-      LIANE_Twilio__Token: ${TWILIO_TOKEN}
-      LIANE_Twilio__From: ${TWILIO_FROM}
+      LIANE_Sms__ApiKey: ${SMS_API_KEY}
       LIANE_Auth__SecretKey: ${AUTH_SECRET_KEY}
       LIANE_Auth__TestAccount: ${AUTH_TEST_ACCOUNT}
       LIANE_Auth__TestCode: ${AUTH_TEST_CODE}
+      LIANE_Auth__Cooldown: 30
       LIANE_Cloudflare__AccountId: ${CLOUDFLARE_ACCOUNT_ID}
       LIANE_Cloudflare__AccountHash: ${CLOUDFLARE_ACCOUNT_HASH}
       LIANE_Cloudflare__ApiKey: ${CLOUDFLARE_API_KEY}
       LIANE_Generator__IsEnabled: ${GENERATOR_IS_ENABLED}
+      LIANE_Firebase__ServiceAccountFile: "/app/service-account.json"
     restart: unless-stopped
     networks:
       - gateway
@@ -94,9 +119,14 @@ services:
 
   web:
     build:
-      context: ../web
+      context: ..
       args:
-        DOMAIN: ${DOMAIN}
+        DD_CLIENT_TOKEN: ""
+        DD_APP_ID: ""
+        APP_ENV: ${APP_ENV} 
+        APP_VERSION: ${APP_VERSION}
+        MAPTILER_KEY: ${MAPTILER_KEY}
+        TEST_ACCOUNT: ${AUTH_TEST_ACCOUNT}
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=gateway"

@@ -1,7 +1,6 @@
 import React from "react";
-import { RallyingPoint, UTCDateTime, WayPoint } from "@/api";
+import { getTripMatch, RallyingPoint, UTCDateTime, WayPoint } from "@liane/common";
 import { WayPointsView } from "@/components/trip/WayPointsView";
-import { getTripMatch } from "@/components/trip/trip";
 
 export interface LianeMatchViewProps {
   to: RallyingPoint;

@@ -4,184 +4,63 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Ref;
-using Liane.Service.Internal.Mongo;
-using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Postgis;
+using Liane.Service.Internal.Trip.Geolocation;
 using Liane.Service.Internal.Util;
-using Microsoft.Extensions.Logging;
-using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Trip;
 
-
 public sealed class LianeTracker
 {
-  private const double NearPointDistanceInMeters = 100;
-  private readonly Api.Trip.Liane liane;
-  private readonly ConcurrentDictionary<string, MemberLocationSample?> currentLocationMap = new();
-  private readonly Action onTripArrivedDestination;
-  private readonly IOsrmService osrmService;
-  private readonly IMongoDatabase mongo;
-  private readonly IOngoingTripSession ongoingTripSession;
+  private readonly ConcurrentDictionary<string, BufferedList<MemberLocationSample>> currentLocationMap = new();
   private readonly double[] wayPointFractions;
-  private bool finished = false;
-  private LianeTracker(IOsrmService osrmService, IMongoDatabase mongo, Api.Trip.Liane liane, Action onTripArrivedDestination, IOngoingTripSession ongoingTripSession)
+  private TrackingInfo? lastTrackingInfo;
+
+  public LianeTracker(ITripSession tripSession, Api.Trip.Trip trip)
   {
-    this.liane = liane;
-    this.onTripArrivedDestination = onTripArrivedDestination;
-    this.ongoingTripSession = ongoingTripSession;
-    this.mongo = mongo;
-    this.osrmService = osrmService;
-    wayPointFractions = new double[liane.WayPoints.Count];
+    Trip = trip;
+    TripSession = tripSession;
+    wayPointFractions = new double[trip.WayPoints.Count];
     Array.Fill(wayPointFractions, -1);
     wayPointFractions[0] = 0.0;
   }
-  
-  public sealed class Builder
+
+  public Api.Trip.Trip Trip { get; }
+
+  public ITripSession TripSession { get; }
+
+  public bool Finished { get; private set; }
+
+  public void Finish()
   {
-    private readonly Api.Trip.Liane liane;
-    private Action? onTripArrivedDestination;
-    private IOngoingTripSession tripSession = null!;
-
-    public Builder(Api.Trip.Liane liane)
-    {
-      this.liane = liane;
-    }
-
-    public Builder SetTripArrivedDestinationCallback(Action onArrivedDestination)
-    {
-      onTripArrivedDestination = onArrivedDestination;
-      return this;
-    }
-
-    public async Task<LianeTracker> Build(IOsrmService osrmService, IPostgisService postgisService, IMongoDatabase mongo, ILogger<LianeTracker> logger)
-    {
-      var route = await osrmService.Route(liane.WayPoints.Select(w => w.RallyingPoint.Location));
-      var routeAsLineString = route.Routes[0].Geometry.Coordinates.ToLineString();
-      tripSession  = await postgisService.CreateOngoingTrip(liane.Id, routeAsLineString);
-
-      var previousReport = (await mongo.GetCollection<LianeTrackReport>().FindAsync(r => r.Id == liane.Id)).FirstOrDefault();
-      if (previousReport is not null)
-      {
-        logger.LogInformation($"Using previously created report : {liane.Id}");
-      }
-      else
-      {
-        await mongo.GetCollection<LianeTrackReport>().InsertOneAsync(new LianeTrackReport(liane, ImmutableList<MemberLocationSample>.Empty, DateTime.UtcNow));
-      }
-      return new LianeTracker(osrmService, mongo, liane, onTripArrivedDestination ?? delegate {  }, tripSession);
-    }
-  }
-  private int GetFirstPoint(Ref<Api.User.User> user)
-  {
-    var member = liane.Members.First(m => m.User.Id == user.Id);
-    return liane.WayPoints.FindIndex(w => w.RallyingPoint.Id == member.From.Id);
+    Finished = true;
   }
 
-  private async Task InsertMemberLocation(Ref<Api.User.User> user, MemberLocationSample data)
-  {
-    currentLocationMap[user.Id] = data;
-    await mongo.GetCollection<LianeTrackReport>()
-      .FindOneAndUpdateAsync(r => r.Id == liane.Id, Builders<LianeTrackReport>.Update.Push(r => r.MemberLocations,data ));
-  }
-  
-  public async Task Push(UserPing ping)
-  {
-    var pingTime = ping.At;
-
-    currentLocationMap.TryGetValue(ping.User.Id, out var currentLocation);
-    var nextPointIndex = currentLocation?.NextPointIndex ?? GetFirstPoint(ping.User.Id);
-
-    if (ping.Coordinate is null)
-    {
-      await InsertMemberLocation(ping.User.Id, new (pingTime, nextPointIndex, ping.Delay, null, null, double.PositiveInfinity, ping.User));
-      return;
-    }
- 
-    // Snap coordinate to nearest road segment
-    var locationOnRoute = await ongoingTripSession.LocateOnRoute(ping.Coordinate.Value);
-    // If too far away from route, skip
-    if (locationOnRoute.distance > NearPointDistanceInMeters)
-    {
-      var nextPoint = liane.WayPoints[nextPointIndex].RallyingPoint;
-      var nextPointDistance = ping.Coordinate.Value.Distance(nextPoint.Location);
-      var computedLocation =  await osrmService.Nearest(ping.Coordinate.Value) ?? ping.Coordinate.Value;
-      var table = await osrmService.Table(new List<LatLng> { computedLocation, nextPoint.Location });
-      var estimatedDuration = TimeSpan.FromSeconds(table.Durations[0][1]!.Value);
-      var delay = estimatedDuration + ping.Delay;
-      await InsertMemberLocation(ping.User.Id,  new (pingTime,  nextPointIndex, delay, computedLocation, ping.Coordinate.Value, nextPointDistance, ping.User));
-      
-    }
-    else
-    {
-      var nextPoint = liane.WayPoints[nextPointIndex].RallyingPoint;
-      var nextPointDistance = ping.Coordinate.Value.Distance(nextPoint.Location);
-      var wayPointInRange = nextPointDistance <= NearPointDistanceInMeters;
-      var pingNextPointIndex = nextPointIndex;
-      if (wayPointInRange)
-      {
-        // Send raw coordinate
-        if (nextPointIndex == liane.WayPoints.Count - 1 && ping.User == liane.Driver.User)
-        {
-          // Driver arrived near destination point
-          await mongo.GetCollection<LianeTrackReport>()
-            .FindOneAndUpdateAsync(r => r.Id == liane.Id, Builders<LianeTrackReport>.Update.Set(r => r.FinishedAt, DateTime.UtcNow));
-          finished = true;
-          onTripArrivedDestination();
-        }
-
-        await InsertMemberLocation(ping.User.Id, new(pingTime, pingNextPointIndex, ping.Delay, ping.Coordinate.Value, ping.Coordinate.Value, nextPointDistance, ping.User));
-        return;
-      }
-      else if (currentLocation is not null && currentLocation.PointDistance <= NearPointDistanceInMeters)
-      {
-        // Getting out of a way point zone
-        pingNextPointIndex++;
-      }
-      else
-      {
-        // check point fraction 
-        var nextPointFraction = await GetWayPointFraction(nextPointIndex);
-
-        if (nextPointFraction < locationOnRoute.fraction)
-        {
-          // One or more waypoints were missed 
-          pingNextPointIndex = await FindNextWayPointIndex(nextPointIndex + 1, locationOnRoute.fraction);
-
-        }
-      }
-
-      var computedLocation = locationOnRoute.nearestPoint;
-      var table = await osrmService.Table(new List<LatLng> { computedLocation, nextPoint.Location });
-      var estimatedDuration = TimeSpan.FromSeconds(table.Durations[0][1]!.Value);
-      var delay = estimatedDuration + ping.Delay;
-
-      await InsertMemberLocation(ping.User.Id, new(pingTime, pingNextPointIndex, delay, computedLocation, ping.Coordinate.Value, nextPointDistance, ping.User));
-    }
-  }
-
-  private async Task<double> GetWayPointFraction(int index)
+  public async Task<double> GetWayPointFraction(int index)
   {
     var nextPointFraction = wayPointFractions[index];
-    if (nextPointFraction < 0)
+    if (!(nextPointFraction < 0))
     {
-      var locationOnRoute = await ongoingTripSession.LocateOnRoute(liane.WayPoints[index].RallyingPoint.Location);
-      if (locationOnRoute.distance < NearPointDistanceInMeters)
-      {
-        nextPointFraction = locationOnRoute.fraction;
-        wayPointFractions[index] = nextPointFraction;
-      }
+      return nextPointFraction;
     }
+
+    var locationOnRoute = await TripSession.LocateOnRoute(Trip.WayPoints[index].RallyingPoint.Location);
+    if (!(locationOnRoute.distance < ILianeTrackerService.NearPointDistanceInMeters))
+    {
+      return nextPointFraction;
+    }
+
+    nextPointFraction = locationOnRoute.fraction;
+    wayPointFractions[index] = nextPointFraction;
 
     return nextPointFraction;
   }
 
-  private async Task<int> FindNextWayPointIndex(int startIndex, double routeFraction)
+  public async Task<int> FindNextWayPointIndex(int startIndex, double routeFraction)
   {
-    while (startIndex < liane.WayPoints.Count)
+    while (startIndex < Trip.WayPoints.Count)
     {
       var nextPointFraction = await GetWayPointFraction(startIndex);
       if (nextPointFraction >= routeFraction)
@@ -195,55 +74,156 @@ public sealed class LianeTracker
     return -1;
   }
 
-  public async Task Dispose()
+  public void InsertMemberLocation(Ref<Api.Auth.User> user, MemberLocationSample data)
   {
-    await ongoingTripSession.Dispose();
-  }
-  public TrackedMemberLocation? GetCurrentMemberLocation(Ref<Api.User.User> member)
-  {
-    currentLocationMap.TryGetValue(member.Id, out var currentLocation);
-    if (currentLocation is null) return null;
-    return new TrackedMemberLocation(member, liane, currentLocation.At, liane.WayPoints[currentLocation.NextPointIndex].RallyingPoint, (long)currentLocation.Delay.TotalSeconds, currentLocation.RawCoordinate);
-  }
-
-  private int? GetDriverNextIndex()
-  {
-    currentLocationMap.TryGetValue(liane.Driver.User.Id, out var driverCurrentLocation);
-    if (driverCurrentLocation is not null)
+    currentLocationMap.TryGetValue(user.Id, out var bufferedLocations);
+    if (bufferedLocations is null)
     {
-      return driverCurrentLocation.NextPointIndex;
+      currentLocationMap[user.Id] = new BufferedList<MemberLocationSample>(3) { data };
+    }
+    else
+    {
+      bufferedLocations.Add(data);
     }
 
-    return null;
+    // Invalidate tracking info
+    lastTrackingInfo = null;
   }
+
+
+  public MemberLocationSample? GetCurrentLocation(string userId)
+  {
+    currentLocationMap.TryGetValue(userId, out var currentLocation);
+    return currentLocation is not null && currentLocation.Count > 0 ? currentLocation.Peek() : null;
+  }
+
+  public TrackedMemberLocation? GetCurrentMemberLocation(Ref<Api.Auth.User> member)
+  {
+    var lastLocations = currentLocationMap.GetValueOrDefault(member.Id);
+
+    var currentLocation = lastLocations?.Peek();
+    if (currentLocation is null) return null;
+    var isMoving = IsMoving(currentLocation, lastLocations);
+
+    var nextWayPoint = Trip.GetWayPoint(currentLocation.NextPointIndex);
+
+    var delay = nextWayPoint.Eta - currentLocation.At.AddMilliseconds(currentLocation.Delay.TotalMilliseconds);
+
+    return new TrackedMemberLocation(member, Trip, currentLocation.At, nextWayPoint.RallyingPoint, (long)delay.TotalMilliseconds,
+      currentLocation.RawCoordinate, isMoving);
+  }
+
+  private static bool IsMoving(MemberLocationSample currentLocation, IReadOnlyCollection<MemberLocationSample>? lastLocations)
+  {
+    return !currentLocation.Coordinate.HasValue || lastLocations!.Count == 1 ||
+           lastLocations.Any(l => l.Coordinate.HasValue && l.Coordinate.Value.Distance(currentLocation.Coordinate.Value) > 1);
+  }
+
   /// <summary>
   /// Check if given member, or else the driver has arrived
   /// </summary>
   /// <param name="member"></param>
   /// <returns>null if current member does not share its position, a boolean otherwise</returns>
-  public bool? MemberHasArrived(Ref<Api.User.User> member)
+  public bool? MemberHasArrived(Ref<Api.Auth.User> member)
   {
-    currentLocationMap.TryGetValue(member.Id, out var currentLocation);
-    var memberArrivalIndex = liane.WayPoints.FindIndex(w => w.RallyingPoint.Id == liane.Members.Find(m => m.User.Id == member.Id)!.To.Id);
+    var currentLocation = GetCurrentLocation(member.Id);
+
+    var memberArrivalIndex = Trip.WayPoints.FindIndex(w => w.RallyingPoint.Id == Trip.Members.Find(m => m.User.Id == member.Id)!.To.Id);
     if (currentLocation is null)
     {
-      if (liane.Driver.User.Id != member.Id)
+      if (Trip.Driver.User.Id != member.Id)
       {
         var driverNextIndex = GetDriverNextIndex();
-        return driverNextIndex is null ? null : memberArrivalIndex < driverNextIndex || finished;
+        return driverNextIndex is null ? null : memberArrivalIndex < driverNextIndex || Finished;
       }
 
       return null;
     }
 
-    var arrived = memberArrivalIndex < currentLocation.NextPointIndex || finished;
+    var arrived = memberArrivalIndex < currentLocation.NextPointIndex || Finished;
     if (arrived) return true;
-    if (liane.Driver.User.Id != member.Id)
+    if (Trip.Driver.User.Id != member.Id)
     {
       var driverNextIndex = GetDriverNextIndex();
-      return driverNextIndex is null ? null : memberArrivalIndex < driverNextIndex || finished;
+      return driverNextIndex is null ? null : memberArrivalIndex < driverNextIndex || Finished;
     }
 
     return false;
+  }
+
+  public int GetFirstWayPoint(string userId)
+  {
+    int foundIndex;
+    if (Trip.Driver.User.Id == userId)
+    {
+      var waypointsWithPassengers = Trip.Members
+        .Where(m => m.User.Id != Trip.Driver.User)
+        .GroupBy(m => m.From)
+        .Select(g => g.Key.Id)
+        .ToImmutableHashSet();
+      foundIndex = Trip.WayPoints.FindIndex(w => waypointsWithPassengers.Contains(w.RallyingPoint.Id!));
+    }
+    else
+    {
+      var lianeMember = Trip.Members.Find(m => m.User.Id == userId);
+      if (lianeMember is null) return 0;
+      foundIndex = Trip.WayPoints.FindIndex(w => w.RallyingPoint.Id! == lianeMember.From.Id);
+    }
+
+    return foundIndex < 0 ? 0 : foundIndex;
+  }
+
+  public TrackingInfo GetTrackingInfo()
+  {
+    if (lastTrackingInfo is not null) return lastTrackingInfo;
+    var carPassengers = currentLocationMap.Where(entry =>
+      {
+        var userId = entry.Key;
+        var lastLocation = entry.Value.Peek()!;
+        var lianeMember = Trip.Members.Find(m => m.User.Id == userId)!;
+        return userId == Trip.Driver.User.Id || lianeMember.From.Id != Trip.GetWayPoint(lastLocation.NextPointIndex).RallyingPoint.Id;
+      })
+      .Select(entry => (Ref<Api.Auth.User>)entry.Key).ToImmutableHashSet();
+
+    var lastCarPings = currentLocationMap
+      .Where(entry => carPassengers.Contains(entry.Key))
+      .SelectMany(entry => entry.Value)
+      .OrderByDescending(ping => ping.At)
+      .Take(3)
+      .ToImmutableList();
+
+    var carPosition = lastCarPings.FirstOrDefault();
+
+    var car = carPosition?.Coordinate is not null
+      ? new Car(
+        carPosition.At,
+        Trip.GetWayPoint(carPosition.NextPointIndex).RallyingPoint,
+        (long)carPosition.Delay.TotalMilliseconds,
+        carPosition.Coordinate.Value,
+        carPassengers,
+        IsMoving(lastCarPings.First(), lastCarPings)
+      )
+      : null;
+
+    var otherMembers = currentLocationMap
+      .Where(entry => !carPassengers.Contains(entry.Key))
+      .ToImmutableDictionary(
+        entry => entry.Key,
+        entry => GetCurrentMemberLocation(entry.Key)!
+      );
+    lastTrackingInfo = new TrackingInfo(Trip, car, otherMembers);
+    return lastTrackingInfo;
+  }
+
+  public async Task Dispose()
+  {
+    await TripSession.DisposeAsync();
+  }
+
+  private int? GetDriverNextIndex()
+  {
+    var driverCurrentLocation = GetCurrentLocation(Trip.Driver.User.Id);
+
+    return driverCurrentLocation?.NextPointIndex;
   }
 }

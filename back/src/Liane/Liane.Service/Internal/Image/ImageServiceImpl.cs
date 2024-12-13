@@ -4,7 +4,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Liane.Api.Image;
-using Liane.Api.User;
+using Liane.Api.Auth;
 using Liane.Api.Util.Exception;
 using Liane.Service.Internal.Util;
 using Microsoft.AspNetCore.Http;

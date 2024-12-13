@@ -20,7 +20,7 @@ export type BaseFormComponent<T, TProps> = (props: TProps & BaseFormComponentPro
 export const WithFormController =
   <T extends unknown>(WrappedForm: BaseFormComponent<T, unknown>): FormComponent<T, unknown> =>
   ({ name, rules, defaultValue, ...props }) => {
-    let rulesWithDefaults = rules || { required: true };
+    const rulesWithDefaults = rules || { required: true };
     if (rulesWithDefaults.required === undefined) {
       rulesWithDefaults.required = true;
     }

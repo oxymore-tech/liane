@@ -25,6 +25,8 @@ import java.io.DataOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.*
+import android.content.pm.ServiceInfo
+import androidx.core.app.ServiceCompat
 
 
 const val serviceId = 2
@@ -41,6 +43,7 @@ class LocationService : Service() {
   private val wayPoints = mutableListOf<Location>()
   private var preciseTrackingMode = true
   private var lastLocationResult: Location? = null
+  private var lastPing: Long = 0
 
   fun postPing(
     location: Location
@@ -62,8 +65,7 @@ class LocationService : Service() {
           locationObject.put("lat", location.latitude)
           locationObject.put("lng", location.longitude)
           val jsonObject = JSONObject()
-          jsonObject.put("type", "MemberPing")
-          jsonObject.put("liane", pingConfig.lianeId)
+          jsonObject.put("trip", pingConfig.lianeId)
           jsonObject.put("coordinate", locationObject)
           jsonObject.put("timestamp", location.time)
           if (delay > 0) jsonObject.put("delay", delay)
@@ -107,8 +109,9 @@ class LocationService : Service() {
         if (location != null) {
           Log.d(LogTag, "location update $location")
 
-          if (!preciseTrackingMode || lastLocationResult == null || location.distanceTo(lastLocationResult!!) >= 10) {
+          if (!preciseTrackingMode || lastLocationResult == null || location.distanceTo(lastLocationResult!!) >= 10 || (System.currentTimeMillis() - lastPing) >= 2 * 60 * 1000) {
             // Avoid sending too many pings in precise mode: only post ping if distance is above 10 meters
+            lastPing = location.time
             postPing(location)
           }
           lastLocationResult = location
@@ -123,7 +126,7 @@ class LocationService : Service() {
                   stopSelf()
                   Log.w(LogTag, "Service stopped.")
                 }
-              }, 60*1000)
+              }, 60 * 1000)
               stopSelf()
             }
           } else if (preciseTrackingMode) {
@@ -135,7 +138,8 @@ class LocationService : Service() {
     }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) createNotificationChannel()
     val notification = createNotification()
-    startForeground(serviceId, notification)
+    var serviceType = if (Build.VERSION.SDK_INT >= 29) ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION else 0
+    ServiceCompat.startForeground(this, serviceId, notification, serviceType)
 
     Log.d(
       LogTag, "Created service"
@@ -167,7 +171,7 @@ class LocationService : Service() {
     val builder =
       notificationBuilder.setOngoing(true)
         .setContentTitle("Votre trajet est en cours")
-     //   .setContentText("Ne désactivez pas votre GPS.")
+        //   .setContentText("Ne désactivez pas votre GPS.")
         .setSmallIcon(R.drawable.ic_notification)
         .setCategory(Notification.CATEGORY_SERVICE)
         .setContentIntent(pendingIntent)
@@ -189,18 +193,18 @@ class LocationService : Service() {
       try {
         val pingConfigRaw = intent.extras!!.getBundle("pingConfig")!!
         this.pingConfig = PingConfig(
-                lianeId = pingConfigRaw.getString("lianeId")!!,
-                userId = pingConfigRaw.getString("userId")!!,
-                token = pingConfigRaw.getString("token")!!,
-                url = pingConfigRaw.getString("url")!!
+          lianeId = pingConfigRaw.getString("lianeId")!!,
+          userId = pingConfigRaw.getString("userId")!!,
+          token = pingConfigRaw.getString("token")!!,
+          url = pingConfigRaw.getString("url")!!
         )
         delay = intent.extras!!.getDouble("delay").toInt()
         val timeout = intent.extras!!.getDouble("timeout").toLong()
         val geolocConfigRaw = intent.extras!!.getBundle("geolocationConfig")!!
         this.geolocationConfig = GeolocationConfig(
-                defaultInterval = geolocConfigRaw.getDouble("interval").toLong() * 1000,
-                nearWayPointInterval = geolocConfigRaw.getDouble("nearWayPointInterval").toLong() * 1000,
-                nearWayPointRadius = geolocConfigRaw.getDouble("nearWayPointRadius").toInt()
+          defaultInterval = geolocConfigRaw.getDouble("interval").toLong() * 1000,
+          nearWayPointInterval = geolocConfigRaw.getDouble("nearWayPointInterval").toLong() * 1000,
+          nearWayPointRadius = geolocConfigRaw.getDouble("nearWayPointRadius").toInt()
         )
 
         val wayPointsRaw = intent.extras!!.getString("wayPoints")!!
@@ -225,15 +229,14 @@ class LocationService : Service() {
             stopSelf()
           }
         }, timeout)
-      } catch (e: Exception){
-          Toast.makeText(this, "Erreur: impossible de démarrer la géolocalisation", Toast.LENGTH_SHORT).show()
-          e.printStackTrace()
+      } catch (e: Exception) {
+        Toast.makeText(this, "Erreur: impossible de démarrer la géolocalisation", Toast.LENGTH_SHORT).show()
+        e.printStackTrace()
+        stopSelf()
       }
     }
 
-    if (!::pingConfig.isInitialized || !::geolocationConfig.isInitialized) {
-      Log.e(LogTag, "Config incomplete")
-    }
+
     return START_STICKY
   }
 

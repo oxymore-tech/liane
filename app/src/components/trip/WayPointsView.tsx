@@ -4,23 +4,17 @@ import { Column, Row } from "@/components/base/AppLayout";
 import { TimeView } from "@/components/TimeView";
 import { AppText } from "@/components/base/AppText";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
-import { RallyingPoint, Ref, WayPoint } from "@/api";
+import { addSeconds, Car, WayPoint } from "@liane/common";
 import { AppIcon } from "@/components/base/AppIcon";
-import { addSeconds } from "@/util/datetime";
 
 export interface WayPointsViewProps {
   wayPoints: WayPoint[];
-  nextWayPoint?:
-    | Readonly<{
-        id: Ref<RallyingPoint>;
-        delay: number;
-      }>
-    | undefined;
+  carLocation?: Car;
+  dark?: boolean;
 }
 
 // TODO share state with detail view
 const extractData = (wayPoints: WayPoint[]) => {
-  //console.debug("extract data", JSON.stringify(wayPoints), departureTime);
   const from = wayPoints[0];
   const to = wayPoints[wayPoints.length - 1];
   const steps = wayPoints.slice(1, -1);
@@ -32,25 +26,40 @@ const extractData = (wayPoints: WayPoint[]) => {
   };
 };
 
-const WayPointView = ({
+export const WayPointView = ({
   wayPoint,
   type,
   isPast = false,
-  delay
+  delay,
+  dark
 }: {
   wayPoint: WayPoint;
   type: "pickup" | "deposit" | "step";
   isPast?: boolean;
   delay?: number | undefined;
+  dark?: boolean;
 }) => {
-  /* console.log(
-    wayPoint.rallyingPoint.label,
-    delay,
-    new Date(wayPoint.eta),
-    delay ? new Date(addSeconds(new Date(wayPoint.eta), Math.floor(delay))) : null
-  );*/
   return (
     <Row style={{ alignItems: "center" }} spacing={8}>
+      {(!delay || isPast) && (
+        <TimeView
+          textStyle={[styles.mainWayPointTime, { color: isPast ? AppColorPalettes.gray[400] : AppColors.primaryColor }]}
+          value={wayPoint.effectiveTime ?? wayPoint.eta}
+        />
+      )}
+      {!!delay && !isPast && (
+        <Column>
+          <TimeView
+            textStyle={[styles.mainWayPointTime, { color: isPast ? AppColorPalettes.gray[400] : AppColors.primaryColor }]}
+            value={addSeconds(new Date(wayPoint.eta), delay).toISOString()}
+          />
+          <View style={{ height: 8 }} />
+          <TimeView
+            textStyle={{ position: "absolute", bottom: 0, right: 0, textDecorationLine: "line-through" }}
+            value={wayPoint.effectiveTime ?? wayPoint.eta}
+          />
+        </Column>
+      )}
       {type === "step" && (
         <View style={{ backgroundColor: isPast ? AppColorPalettes.gray[500] : AppColors.primaryColor, borderRadius: 16, margin: 5, padding: 4 }} />
       )}
@@ -62,28 +71,29 @@ const WayPointView = ({
           style={{ width: 18 }}
         />
       )}
-      {(!delay || isPast) && (
-        <TimeView style={[styles.mainWayPointTime, { color: isPast ? AppColorPalettes.gray[400] : AppColors.primaryColor }]} value={wayPoint.eta} />
-      )}
-      {!!delay && !isPast && (
-        <Column>
-          <TimeView
-            style={[styles.mainWayPointTime, { color: isPast ? AppColorPalettes.gray[400] : AppColors.primaryColor }]}
-            value={addSeconds(new Date(wayPoint.eta), delay).toISOString()}
-          />
-          <View style={{ height: 8 }} />
-          <TimeView style={{ position: "absolute", bottom: 0, right: 0, textDecorationLine: "line-through" }} value={wayPoint.eta} />
-        </Column>
-      )}
-      <View style={{ flexGrow: 1, flexShrink: 1 }}>
-        <AppText style={[styles.mainWayPointCity]}>{wayPoint.rallyingPoint.city}</AppText>
+      <Column>
+        <AppText style={[styles.mainWayPointCity, { color: dark ? AppColorPalettes.gray[100] : AppColorPalettes.gray[800] }]}>
+          {wayPoint.rallyingPoint.city}
+        </AppText>
         <AppText style={[styles.mainWayPointLabel]}>{wayPoint.rallyingPoint.label}</AppText>
-      </View>
+      </Column>
     </Row>
   );
 };
 
-export const WayPointsView = ({ wayPoints, nextWayPoint }: WayPointsViewProps) => {
+function computeDelay(carLocation: Car | undefined, wayPoints: WayPoint[]) {
+  if (!carLocation) {
+    return;
+  }
+  const nextWayPoint = wayPoints.find(w => w.rallyingPoint.id === carLocation.nextPoint);
+  if (!nextWayPoint) {
+    return;
+  }
+
+  return (new Date(carLocation.at).getTime() + carLocation.delay - new Date(nextWayPoint.eta).getTime()) / 1000;
+}
+
+export const WayPointsView = ({ wayPoints, carLocation, dark }: WayPointsViewProps) => {
   const { to, from, steps } = useMemo(() => extractData(wayPoints), [wayPoints]);
   /* Open in map app
  () => showLocation({
@@ -97,20 +107,24 @@ export const WayPointsView = ({ wayPoints, nextWayPoint }: WayPointsViewProps) =
               directionsMode: "walk"
             })
  */
-  const nextWayPointIndex = nextWayPoint ? wayPoints.findIndex(w => w.rallyingPoint.id === nextWayPoint.id) : undefined;
+
+  const nextWayPointIndex = carLocation ? wayPoints.findIndex(w => w.rallyingPoint.id === carLocation.nextPoint) : undefined;
+  const delay = computeDelay(carLocation, wayPoints);
+
   return (
     <Column style={{ flexGrow: 1, flexShrink: 1 }}>
-      <WayPointView wayPoint={from} type={"pickup"} isPast={!!nextWayPointIndex && nextWayPointIndex > 0} delay={nextWayPoint?.delay} />
+      <WayPointView wayPoint={from} type={"pickup"} isPast={!!nextWayPointIndex && nextWayPointIndex > 0} delay={delay} dark={dark} />
       {steps.map((s, i) => (
         <WayPointView
           wayPoint={s}
           type={"step"}
           key={s.rallyingPoint.id}
-          delay={nextWayPoint?.delay}
+          delay={delay}
           isPast={!!nextWayPointIndex && nextWayPointIndex > i + 1}
+          dark={dark}
         />
       ))}
-      <WayPointView wayPoint={to} type={"deposit"} delay={nextWayPoint?.delay} />
+      <WayPointView wayPoint={to} type={"deposit"} delay={delay} dark={dark} />
     </Column>
   );
 };
@@ -136,43 +150,5 @@ const styles = StyleSheet.create({
     paddingBottom: 6,
     color: AppColors.primaryColor,
     flexShrink: 0
-  },
-  intermediateWayPointLabel: {
-    fontSize: 15,
-    fontWeight: "500",
-    color: AppColorPalettes.gray[700]
-  },
-  intermediateFromWayPointLabelColor: {
-    color: AppColors.primaryColor
-  },
-  iconTravel: {
-    paddingTop: 10,
-    paddingBottom: 6,
-    marginHorizontal: 10
-  },
-  alignCenter: {
-    alignSelf: "center",
-    textAlignVertical: "center"
-  },
-  shrink: {
-    flexShrink: 1
-  },
-  column: {
-    justifyContent: "space-between"
-  },
-  waypointLine: {
-    borderLeftColor: AppColorPalettes.gray[400],
-    borderLeftWidth: 1,
-    minHeight: 12,
-    alignSelf: "center",
-    position: "relative",
-    top: -2
-  },
-  horizontalLine: {
-    marginVertical: 4,
-    borderLeftColor: AppColorPalettes.gray[200],
-    borderLeftWidth: 1,
-    minHeight: 18,
-    alignSelf: "center"
   }
 });

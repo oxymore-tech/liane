@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using Liane.Api.User;
+using Liane.Api.Auth;
 using Liane.Service.Internal.Util;
 using Liane.Web.Internal.Auth;
 using Microsoft.AspNetCore.Mvc;
@@ -33,7 +33,7 @@ public sealed class UserController : ControllerBase
   {
     return userService.UpdatePushToken(currentContext.CurrentUser().Id, pushToken);
   }
-
+  
   [HttpPatch]
   public Task<FullUser> UpdateInfo([FromBody] UserInfo info)
   {

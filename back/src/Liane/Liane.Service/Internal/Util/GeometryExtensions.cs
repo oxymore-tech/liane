@@ -2,9 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using GeoJSON.Text.Geometry;
 using Liane.Api.Routing;
 using MongoDB.Driver.GeoJsonObjectModel;
+using NetTopologySuite.Geometries;
+using Position = GeoJSON.Net.Geometry.Position;
 
 namespace Liane.Service.Internal.Util;
 
@@ -14,7 +15,7 @@ public static class GeometryExtensions
 {
   public static LineString ToLineString(this IEnumerable<LngLatTuple> coordinates)
   {
-    return new LineString(coordinates.Select(c => new Position(c.Item2, c.Item1)));
+    return new LineString(coordinates.Select(c => new Coordinate(c.Item1, c.Item2)).ToArray()) { SRID = 4326 };
   }
 
   public static GeoJsonPoint<GeoJson2DGeographicCoordinates> ToGeoJson(this LatLng c)
