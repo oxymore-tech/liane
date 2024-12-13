@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { StyleSheet, View} from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Center, Column } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
@@ -8,10 +8,9 @@ import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
 import { AppLogger } from "@/api/logger.ts";
 import AppMapView from "@/components/map/AppMapView.tsx";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
-import { DisplayWayPoints } from "@/components/communities/DisplayWayPoints";
 import { LianeMatchLianeRouteLayer } from "@/components/map/layers/LianeMatchRouteLayer.tsx";
 import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay.tsx";
-import { getLianeId, getBoundingBox, isLiane, WayPoint } from "@liane/common";
+import { getBoundingBox, getLianeId, isLiane, WayPoint } from "@liane/common";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider.tsx";
 import { AppBottomSheet, AppBottomSheetHandleHeight } from "@/components/base/AppBottomSheet.tsx";
 import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
@@ -19,13 +18,19 @@ import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker.tsx";
 import { AppAvatars } from "@/components/UserPicture.tsx";
 import { ContextActions, PendingAction } from "@/components/communities/ContextActions.tsx";
 import { FloatingBackButton } from "@/components/FloatingBackButton.tsx";
+import { WayPointsView } from "@/components/trip/WayPointsView.tsx";
+import { useQueryClient } from "react-query";
+import { CoLianeMatchQueryKey } from "@/screens/communities/CommunitiesScreen.tsx";
 
 export const LianeMapDetailScreen = () => {
   const { navigation, route } = useAppNavigation<"LianeMapDetail">();
   const { liane: matchOrLiane, request: lianeRequest } = route.params;
   const { services } = useContext(AppContext);
+  const queryClient = useQueryClient();
+
   const { height } = useAppWindowsDimensions();
   const insets = useSafeAreaInsets();
+
   const [error, setError] = useState<Error | undefined>(undefined);
   const [bSheetTop, setBSheetTop] = useState<number>(0.55 * height);
   const [wayPoints, setWayPoints] = useState<WayPoint[]>([]);
@@ -70,26 +75,28 @@ export const LianeMapDetailScreen = () => {
       try {
         const result = await services.community.joinRequest(lianeRequest.id, lianeId);
         AppLogger.debug("COMMUNITIES", "Demande de rejoindre une liane avec succès", result);
-        navigation.navigate("Lianes");
+        await queryClient.invalidateQueries(CoLianeMatchQueryKey);
+        navigation.popToTop();
       } finally {
         setPendingAction(undefined);
       }
     } else {
       navigation.navigate("Publish", { liane: matchOrLiane });
     }
-  }, [lianeId, lianeRequest, matchOrLiane, navigation, services.community]);
+  }, [lianeId, lianeRequest, matchOrLiane, navigation, queryClient, services.community]);
 
   const handleReject = useCallback(async () => {
     if (lianeRequest && lianeRequest.id && lianeId) {
       setPendingAction("reject");
       try {
         await services.community.reject(lianeRequest.id, lianeId);
-        navigation.navigate("Lianes");
+        await queryClient.invalidateQueries(CoLianeMatchQueryKey);
+        navigation.popToTop();
       } finally {
         setPendingAction(undefined);
       }
     }
-  }, [lianeId, lianeRequest, navigation, services.community]);
+  }, [lianeId, lianeRequest, navigation, queryClient, services.community]);
 
   const handleLeave = useCallback(async () => {
     if (!lianeId) {
@@ -98,11 +105,12 @@ export const LianeMapDetailScreen = () => {
     setPendingAction("leave");
     try {
       await services.community.leave(lianeId);
-      navigation.navigate("Lianes");
+      await queryClient.invalidateQueries(CoLianeMatchQueryKey);
+      navigation.popToTop();
     } finally {
       setPendingAction(undefined);
     }
-  }, [lianeId, navigation, services.community]);
+  }, [lianeId, navigation, queryClient, services.community]);
 
   return (
     <GestureHandlerRootView style={styles.mainContainer}>
@@ -153,7 +161,7 @@ export const LianeMapDetailScreen = () => {
 
           <Column spacing={10} style={styles.bottom}>
             <DayOfTheWeekPicker selectedDays={matchOrLiane.weekDays} dualOptionMode={true} />
-            <DisplayWayPoints wayPoints={wayPoints} style={{ backgroundColor: AppColorPalettes.gray[100], borderRadius: 20 }} />
+            <WayPointsView wayPoints={wayPoints} style={{ backgroundColor: AppColorPalettes.gray[100], borderRadius: 20 }} dark={false} />
             <View
               style={{
                 flex: 1,

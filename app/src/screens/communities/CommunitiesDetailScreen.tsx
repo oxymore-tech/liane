@@ -34,8 +34,8 @@ export const CommunitiesDetailScreen = () => {
     if (group && group.id) {
       try {
         const result = await services.community.leave(group.id);
-        AppLogger.debug("COMMUNITIES", "Lien quittée avec succès", result);
-        navigation.navigate("Lianes");
+        AppLogger.debug("COMMUNITIES", "Liane quittée avec succès", result);
+        navigation.popToTop();
       } catch (e) {
         AppLogger.debug("COMMUNITIES", "Au moment de quitter la liane, une erreur c'est produite", e);
       }

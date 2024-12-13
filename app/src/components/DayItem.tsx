@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.primaryColor
   },
   textContainer: {
-    color: AppColorPalettes.gray[200],
+    color: AppColorPalettes.gray[600],
     textAlign: "center"
   },
   textSelectedContainer: {

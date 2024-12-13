@@ -312,7 +312,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     var snapedPoints = await rallyingPointService.Snap(rawMatches.FilterSelectMany<LianeRawMatch, LatLng>(r => [r.Deposit, r.Pickup]).ToImmutableHashSet());
     var pendingJoinRequests = (await connection.QueryAsync<(Guid, DateTime)>(
         """
-        SELECT liane_request.id, requested_at
+        SELECT liane_member.liane_id, requested_at
         FROM liane_request
                  INNER JOIN liane_member ON liane_request.id = liane_member.liane_request_id
         WHERE liane_request.created_by = @userId AND liane_member.joined_at IS NULL

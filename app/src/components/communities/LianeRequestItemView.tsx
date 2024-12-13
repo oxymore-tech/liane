@@ -57,6 +57,11 @@ export const LianeRequestItem = ({ item, onRefresh, unreadLianes }: LianeRequest
                   backgroundColor: AppColorPalettes.gray[400]
                 }}>
                 <AppIcon name="people-outline" color={AppColors.white} size={32} />
+                {unread && (
+                  <View style={styles.notificationDotContainer}>
+                    <View style={styles.notificationDot} />
+                  </View>
+                )}
               </View>
               <View
                 style={{
@@ -95,11 +100,6 @@ export const LianeRequestItem = ({ item, onRefresh, unreadLianes }: LianeRequest
                     <AppText style={styles.cityFont}>{to.city}</AppText>
                   </View>
                   <Row>
-                    {unread && (
-                      <View style={styles.notificationDotContainer}>
-                        <View style={styles.notificationDot} />
-                      </View>
-                    )}
                     {item.state.type === "Detached" && <DetachedLianeItem state={item.state} />}
                     {item.state.type === "Attached" && <JoinedLianeView liane={item.state.liane} />}
                   </Row>
@@ -131,13 +131,13 @@ const styles = StyleSheet.create({
     color: AppColors.darkGray
   },
   notificationDotContainer: {
-    justifyContent: "center",
-    alignItems: "center"
+    position: "absolute",
+    right: 0
   },
   notificationDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 14,
+    height: 14,
+    borderRadius: 14,
     backgroundColor: AppColorPalettes.orange[500],
     borderColor: AppColors.white,
     borderWidth: 1
