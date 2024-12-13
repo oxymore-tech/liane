@@ -15,22 +15,13 @@ namespace Liane.Web.Controllers;
 [Route("api/rallying_point")]
 [ApiController]
 [RequiresAuth]
-public sealed class RallyingPointController : ControllerBase
+public sealed class RallyingPointController(
+  IRallyingPointService rallyingPointService,
+  IRallyingPointGenerator rallyingPointGenerator,
+  ICurrentContext currentContext,
+  IRallyingPointRequestService rallyingPointRequestService)
+  : ControllerBase
 {
-  private readonly IRallyingPointService rallyingPointService;
-  private readonly IRallyingPointGenerator rallyingPointGenerator;
-  private readonly ICurrentContext currentContext;
-  private readonly IRallyingPointRequestService rallyingPointRequestService;
-
-  public RallyingPointController(IRallyingPointService rallyingPointService, IRallyingPointGenerator rallyingPointGenerator, ICurrentContext currentContext,
-    IRallyingPointRequestService rallyingPointRequestService)
-  {
-    this.rallyingPointService = rallyingPointService;
-    this.rallyingPointGenerator = rallyingPointGenerator;
-    this.currentContext = currentContext;
-    this.rallyingPointRequestService = rallyingPointRequestService;
-  }
-
   [HttpPost("")]
   [RequiresAdminAuth]
   public async Task<RallyingPoint> Create([FromBody] RallyingPoint rallyingPoint)

@@ -26,7 +26,7 @@ export const LianeShapeDisplayLayer = ({
         /* @ts-ignore */
         filter={lianeId ? ["in", lianeId, ["get", "lianes"]] : undefined}
         style={{
-          lineColor: loading ? AppColorPalettes.gray[400] : AppColors.darkBlue,
+          lineColor: loading ? AppColorPalettes.gray[400] : AppColors.secondaryColor,
           lineWidth: useWidth ? useWidth : ["step", ["length", ["get", "lianes"]], 1, 2, 2, 3, 3, 4, 4, 5, 5]
         }}
       />

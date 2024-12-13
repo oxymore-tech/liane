@@ -12,6 +12,7 @@ import { QueryClient, QueryClientProvider } from "react-query";
 import { QueryUpdateProvider } from "@/components/context/QueryUpdateProvider";
 import { AppLogger } from "@/api/logger";
 import { AppStorage } from "@/api/storage";
+import { checkVersion, CheckVersionResponse } from "react-native-check-version";
 
 interface AppContextProps {
   position?: LatLng;
@@ -23,6 +24,7 @@ interface AppContextProps {
   status: HubState;
   appState: AppStateStatus;
   hubState?: HubState;
+  version?: CheckVersionResponse;
 }
 
 const SERVICES = CreateAppServices();
@@ -39,7 +41,8 @@ export const AppContext = createContext<AppContextProps>({
   refreshUser: () => Promise.resolve(),
   services: SERVICES,
   status: "offline",
-  appState: "active"
+  appState: "active",
+  version: undefined
 });
 
 async function destroyContext(service: AppServices): Promise<void> {
@@ -56,6 +59,7 @@ interface ContextProviderState {
   status: "online" | "offline";
   appState: AppStateStatus;
   hubState?: HubState;
+  version?: CheckVersionResponse;
 }
 
 class ContextProvider extends Component<ContextProviderProps, ContextProviderState> {
@@ -71,7 +75,8 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
       appLoaded: false,
       user: undefined,
       status: "offline",
-      appState: "active"
+      appState: "active",
+      version: undefined
     };
     // https://stackoverflow.com/questions/33973648/react-this-is-undefined-inside-a-component-function
     this.initContext = this.initContext.bind(this);
@@ -152,7 +157,14 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
     });
     this.unsubscribeToStateChange = AppState.addEventListener("change", this.handleAppStateChange);
 
-    this.initContext().then();
+    this.initContext()
+      .then(() => checkVersion())
+      .then(version => {
+        this.setState(prev => ({
+          ...prev,
+          version
+        }));
+      });
   }
 
   componentWillUnmount() {
@@ -231,7 +243,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
 
   render() {
     const { children } = this.props;
-    const { appLoaded, user, status, appState, hubState } = this.state;
+    const { appLoaded, user, status, appState, hubState, version } = this.state;
     const { setAuthUser: login, logout, refreshUser } = this;
 
     if (!appLoaded) {
@@ -254,6 +266,7 @@ class ContextProvider extends Component<ContextProviderProps, ContextProviderSta
               status,
               hubState,
               appState,
+              version,
               services: SERVICES
             }}>
             {children}
@@ -269,7 +282,7 @@ export default ContextProvider;
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    backgroundColor: AppColors.darkBlue,
+    backgroundColor: AppColors.secondaryColor,
     alignItems: "center",
     justifyContent: "center"
   }

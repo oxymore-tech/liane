@@ -14,7 +14,7 @@ export interface SlideUpModalProps extends PropsWithChildren {
   visible: boolean;
   setVisible: (visible: boolean) => void;
 }
-export const SlideUpModal = ({ backgroundColor = AppColors.darkBlue, visible, setVisible, children, actionText, onAction }: SlideUpModalProps) => {
+export const SlideUpModal = ({ backgroundColor = AppColors.secondaryColor, visible, setVisible, children, actionText, onAction }: SlideUpModalProps) => {
   return (
     <Modal
       propagateSwipe
