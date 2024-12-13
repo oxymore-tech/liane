@@ -63,7 +63,7 @@ export const RouteLayer = ({
         aboveLayerID="Highway"
         id={"match_route_display" + (id ? "_" + id : "")}
         style={{
-          lineColor: AppColors.darkBlue,
+          lineColor: AppColors.secondaryColor,
           lineWidth: 3,
           ...argStyle
         }}

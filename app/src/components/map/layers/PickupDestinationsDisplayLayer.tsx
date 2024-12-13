@@ -70,7 +70,7 @@ export const PickupDestinationsDisplayLayer = ({ weekDays, onSelect, point, type
           //@ts-ignore
           lineSortKey: ["get", "count"],
           lineCap: "round",
-          lineColor: AppColors.darkBlue,
+          lineColor: AppColors.secondaryColor,
           lineWidth: 3
         }}
       />

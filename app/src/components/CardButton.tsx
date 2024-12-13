@@ -202,7 +202,7 @@ const CardModal = ({ x, y, children, onClosed, color, useOkButton, onClose }: Ca
 
                 {useOkButton && (
                   <ModalButton
-                    color={color === AppColors.white ? AppColors.white : AppColors.darkBlue}
+                    color={color === AppColors.white ? AppColors.white : AppColors.secondaryColor}
                     backgroundColor={color === AppColors.white ? AppColorPalettes.blue[500] : AppColors.white}
                     text="Ok"
                     onPress={() => closeModal(true)}

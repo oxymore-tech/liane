@@ -12,7 +12,7 @@ export interface SimpleModalProps extends PropsWithChildren {
   setVisible: (visible: boolean) => void;
   hideClose?: boolean;
 }
-export const SimpleModal = ({ backgroundColor = AppColors.darkBlue, visible, setVisible, children, hideClose }: SimpleModalProps) => {
+export const SimpleModal = ({ backgroundColor = AppColors.secondaryColor, visible, setVisible, children, hideClose }: SimpleModalProps) => {
   const hide = useCallback(() => setVisible(false), [setVisible]);
   return (
     <Modal onBackButtonPress={hide} onBackdropPress={hide} isVisible={visible} onSwipeComplete={hide} style={styles.modal}>

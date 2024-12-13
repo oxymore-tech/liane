@@ -6982,7 +6982,12 @@ react-native-bouncy-checkbox@^4.1.2:
   dependencies:
     "@freakycoder/react-native-bounceable" "^1.0.3"
 
-react-native-device-info@^14.0.0:
+react-native-check-version@^1.3.0:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/react-native-check-version/-/react-native-check-version-1.3.0.tgz#d0851a850ad53ac0de4771e25c0bc129569210f6"
+  integrity sha512-3wvE637IKl4B1fMjnDVAv2eGrctwn26C48w/YdE0FIj9DnkNJWm3tGG7yspALcHRGLhI5ZqAaKDd0R5F+8m9EA==
+
+react-native-device-info@^14.0.1:
   version "14.0.1"
   resolved "https://registry.yarnpkg.com/react-native-device-info/-/react-native-device-info-14.0.1.tgz#88b0246be7b5eec00f16843306ac95244b23ceb9"
   integrity sha512-/ygggNdYgddjEnWxaNOwrL8bT9u8iJXCdz/CKpQi61SptIMmlCXmn125ey4rr0CTK/YIVpL6kZhVFInnNo+Q3w==

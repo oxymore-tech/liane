@@ -33,6 +33,8 @@ import { MatchListScreen } from "@/screens/communities/MatchListScreen.tsx";
 import { useObservable } from "@/util/hooks/subscription.ts";
 import { map } from "rxjs";
 import { AppPressableIcon } from "@/components/base/AppPressable.tsx";
+import { RNAppEnv } from "@/api/env.ts";
+import { UpdateScreen } from "@/screens/signUp/UpdateScreen.tsx";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -58,7 +60,7 @@ function Home() {
         tabBarStyle: useBottomBarStyle(),
         tabBarShowLabel: true,
         tabBarHideOnKeyboard: true,
-        animation: "fade",
+        animation: "fade"
       }}>
       {makeTab(
         "Explorer",
@@ -101,7 +103,15 @@ function Home() {
 }
 
 function Navigation() {
-  const { user } = useContext(AppContext);
+  const { user, version } = useContext(AppContext);
+
+  if (!RNAppEnv.isDev && version && version.needsUpdate) {
+    return (
+      <Stack.Navigator>
+        <Stack.Screen name="Update" component={UpdateScreen} options={{ headerShown: false }} />
+      </Stack.Navigator>
+    );
+  }
 
   if (user) {
     return (
@@ -142,7 +152,7 @@ interface TabIconProps {
 }
 const TabIcon = ({ iconName, focused, size }: TabIconProps) => {
   return (
-    <View >
+    <View>
       {typeof iconName === "string" ? (
         <AppIcon size={size} name={iconName} color={focused ? AppColors.secondaryColor : AppColorPalettes.gray[400]} />
       ) : (
