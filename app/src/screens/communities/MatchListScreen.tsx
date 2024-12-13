@@ -13,6 +13,13 @@ import { useObservable } from "@/util/hooks/subscription.ts";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
 
 type Status = "Pending" | "Received" | "None";
+
+const StatusOrder = {
+  Pending: 1,
+  Received: 2,
+  None: 3
+};
+
 type Section = { data: CoMatch[]; status: Status };
 
 export const MatchListScreen = () => {
@@ -34,7 +41,9 @@ export const MatchListScreen = () => {
 
         return m.pendingRequest ? "Pending" : "None";
       })
-    ).map(([key, value]) => ({ data: value, status: key } as Section));
+    )
+      .map(([key, value]) => ({ data: value, status: key }) as Section)
+      .sort((a, b) => StatusOrder[a.status] - StatusOrder[b.status]);
   }, [matches]);
 
   return (

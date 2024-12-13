@@ -31,11 +31,12 @@ const styles = StyleSheet.create({
     right: -6,
     top: -6,
     height: 16,
-    minWidth: 16
+    minWidth: 16,
+    justifyContent: "center",
+    alignItems: "center"
   },
   badgeValue: {
     color: AppColors.white,
-    textAlign: "center",
     fontSize: 10
   }
 });
