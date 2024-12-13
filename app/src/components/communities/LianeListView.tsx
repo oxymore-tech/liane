@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useLayoutEffect } from "react";
 
 import { FlatList, RefreshControl } from "react-native";
 import { CoLianeMatch } from "@liane/common";
@@ -7,6 +7,7 @@ import { LianeRequestItem } from "@/components/communities/LianeRequestItemView.
 import { AppText } from "@/components/base/AppText.tsx";
 import { AppStyles } from "@/theme/styles.ts";
 import { Center } from "@/components/base/AppLayout.tsx";
+import { useObservable } from "@/util/hooks/subscription.ts";
 
 export interface LianeListViewProps {
   data: CoLianeMatch[];
@@ -17,11 +18,12 @@ export interface LianeListViewProps {
 
 export const LianeListView = ({ data, isFetching, onRefresh, loadMore }: LianeListViewProps) => {
   const { services } = useContext(AppContext);
-  const [unreadLianes, setUnreadLianes] = useState<Record<string, number>>({});
 
-  useEffect(() => {
-    services.community.getUnreadLianes().then(setUnreadLianes);
-  }, [services.community]);
+  const unreadLianes = useObservable(services.realTimeHub.unreadNotifications, {});
+
+  useLayoutEffect(() => {
+    services.realTimeHub.askForOverview().then();
+  }, [services.realTimeHub]);
 
   return (
     <FlatList

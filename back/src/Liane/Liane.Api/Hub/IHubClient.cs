@@ -14,6 +14,8 @@ public interface IHubClient
   Task<bool> ReceiveLianeMessage(string conversationId, LianeMessage message);
 
   Task Me(FullUser user);
+  
+  Task AskForOverview();
 
   Task ReceiveTrackingInfo(TrackingInfo update);
 

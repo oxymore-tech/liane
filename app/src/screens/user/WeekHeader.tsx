@@ -64,7 +64,9 @@ function Day({ date, selected, onSelect, incomingTrips }: DayProps) {
   return (
     <AppPressable style={{ flexDirection: "column", alignItems: "center" }} onPress={() => onSelect(date)}>
       <AppText style={styles.weekday}>{AppLocalization.formatDay(date).substring(0, 3)}</AppText>
-      <AppText style={[styles.day, selected && { backgroundColor: AppColorPalettes.pink[500], color: AppColors.white }]}>{date.getDate()}</AppText>
+      <View style={[styles.day, selected && { backgroundColor: AppColorPalettes.pink[500] }]}>
+        <AppText style={[styles.dayLabel, selected && { color: AppColors.white }]}>{date.getDate()}</AppText>
+      </View>
       {indication && (
         <View
           style={[
@@ -90,12 +92,15 @@ const styles = StyleSheet.create({
     fontSize: 14
   },
   day: {
-    color: AppColorPalettes.gray[800],
-    fontSize: 18,
     borderRadius: 45,
     width: 45,
     height: 45,
-    textAlign: "center"
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  dayLabel: {
+    color: AppColorPalettes.gray[800],
+    fontSize: 18
   },
   dot: {
     position: "absolute",

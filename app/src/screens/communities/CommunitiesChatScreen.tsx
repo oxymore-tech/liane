@@ -88,10 +88,11 @@ export const CommunitiesChatScreen = () => {
       const r = await services.community.getMessages(liane.id!, { limit: 15, asc: false });
       setMessages(r.data);
       setPaginationCursor(r.next);
+      services.realTimeHub.markAsRead(liane.id!, new Date().toISOString()).then();
     } finally {
       setLoading(false);
     }
-  }, [liane, services.community]);
+  }, [liane, services.community, services.realTimeHub]);
 
   useEffect(() => {
     fetchMessages().then();
@@ -114,17 +115,20 @@ export const CommunitiesChatScreen = () => {
   const launchTrip = useCallback(
     async (arriveAt: Date, returnAt: Date | undefined, from: Ref<RallyingPoint>, to: Ref<RallyingPoint>) => {
       setLaunching(true);
-      await services.trip.post({
-        liane: liane!.id!,
-        arriveAt: arriveAt.toISOString(),
-        returnAt: returnAt?.toISOString(),
-        from,
-        to,
-        availableSeats: me!.lianeRequest.canDrive ? 1 : -1
-      });
-      await queryClient.invalidateQueries(TripQueryKey);
-      setLaunching(false);
-      setTripModalVisible(false);
+      try {
+        await services.trip.post({
+          liane: liane!.id!,
+          arriveAt: arriveAt.toISOString(),
+          returnAt: returnAt?.toISOString(),
+          from,
+          to,
+          availableSeats: me!.lianeRequest.canDrive ? 1 : -1
+        });
+        await queryClient.invalidateQueries(TripQueryKey);
+      } finally {
+        setLaunching(false);
+        setTripModalVisible(false);
+      }
     },
     [liane, me, queryClient, services.trip]
   );

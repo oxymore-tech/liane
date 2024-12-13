@@ -13,6 +13,13 @@ import { useObservable } from "@/util/hooks/subscription.ts";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
 
 type Status = "Pending" | "Received" | "None";
+
+const StatusOrder = {
+  Pending: 1,
+  Received: 2,
+  None: 3
+};
+
 type Section = { data: CoMatch[]; status: Status };
 
 export const MatchListScreen = () => {
@@ -34,7 +41,9 @@ export const MatchListScreen = () => {
 
         return m.pendingRequest ? "Pending" : "None";
       })
-    ).map(([key, value]) => ({ data: value, status: key } as Section));
+    )
+      .map(([key, value]) => ({ data: value, status: key }) as Section)
+      .sort((a, b) => StatusOrder[a.status] - StatusOrder[b.status]);
   }, [matches]);
 
   return (
@@ -74,8 +83,11 @@ const renderSectionHeader = ({ section }: { section: Section }) => {
     text = `${section.data.length} demande${section.data.length > 1 ? "s" : ""} reçu${section.data.length > 1 ? "s" : ""}`;
   }
 
+  const unread = section.status === "Pending" || section.status === "Received";
+
   return (
     <View style={styles.headerSection}>
+      {unread && <View style={styles.dot} />}
       <AppText style={{ color: AppColors.black, fontWeight: "bold" }}>{text}</AppText>
     </View>
   );
@@ -87,7 +99,7 @@ type GroupItemProps = {
   onPress: () => void;
 };
 
-const GroupItem = ({ group, onPress, unread }: GroupItemProps) => {
+const GroupItem = ({ group, onPress }: GroupItemProps) => {
   return (
     <Pressable onPress={onPress} style={styles.memberContainer}>
       <View style={styles.memberInfo}>
@@ -113,7 +125,6 @@ const GroupItem = ({ group, onPress, unread }: GroupItemProps) => {
               <AppAvatars users={group.members} />
             </Row>
           </View>
-          {unread && <View style={styles.dot} />}
         </View>
       </View>
       <View style={{ position: "absolute", top: 20, right: 15 }}>
@@ -134,7 +145,9 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 10,
     flexDirection: "row",
-    justifyContent: "center"
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 8
   },
   membersContainer: {
     paddingTop: 12,
@@ -161,11 +174,12 @@ const styles = StyleSheet.create({
     flex: 1
   },
   dot: {
-    position: "absolute",
-    width: 8,
-    height: 8,
-    borderRadius: 6,
-    backgroundColor: AppColors.orange
+    width: 14,
+    height: 14,
+    borderRadius: 14,
+    backgroundColor: AppColorPalettes.orange[500],
+    borderColor: AppColors.white,
+    borderWidth: 1
   },
   city: {
     fontSize: 18,

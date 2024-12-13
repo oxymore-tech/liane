@@ -79,22 +79,27 @@ public sealed class LianeMessageServiceImpl(
       new { userId }
       , tx);
     var unreadReceivedJoinRequests = await connection.QueryAsync<(Guid, int)>("""
-                                                                              SELECT m.liane_id, COUNT(req.id) AS unread
-                                                                              FROM liane_member m
-                                                                                INNER JOIN liane_request req ON m.liane_request_id = req.id
+                                                                              SELECT req.id, COUNT(req.id)
+                                                                              FROM liane_request req
+                                                                                INNER JOIN liane_member m ON m.liane_id = req.id
                                                                               WHERE m.joined_at IS NULL AND req.created_by = @userId
-                                                                              GROUP BY m.liane_id
+                                                                              GROUP BY req.id
                                                                               """,
       new { userId }
       , tx);
     var unread = await connection.QueryAsync<(Guid, int)>("""
-                                                          SELECT m.liane_id, COUNT(msg.id) AS unread
+                                                          SELECT m.liane_request_id, COUNT(msg.id)
                                                           FROM liane_member m
-                                                            INNER JOIN liane_request r ON m.liane_request_id = r.id
-                                                            LEFT JOIN liane_message msg ON msg.liane_id = m.liane_id AND msg.created_at > m.joined_at AND msg.created_by != @userId
-                                                          WHERE m.joined_at IS NOT NULL AND r.created_by = @userId
-                                                            AND (m.last_read_at IS NULL OR msg.created_at > m.last_read_at)
-                                                          GROUP BY m.liane_id
+                                                            INNER JOIN liane_request r ON
+                                                              m.liane_request_id = r.id AND
+                                                              r.created_by = @userId
+                                                            LEFT JOIN liane_message msg ON
+                                                              msg.liane_id = m.liane_id AND
+                                                              msg.created_at > m.joined_at AND
+                                                              msg.created_by != @userId
+                                                          WHERE m.joined_at IS NOT NULL AND
+                                                                (m.last_read_at IS NULL OR msg.created_at > m.last_read_at)
+                                                          GROUP BY m.liane_request_id
                                                           """,
       new { userId }
       , tx);

@@ -160,7 +160,7 @@ function isLiane(l: CoLiane | CoMatch): l is CoLiane {
 
 const styles = StyleSheet.create({
   headerText: {
-    color: AppColorPalettes.gray[800],
+    color: AppColorPalettes.gray[200],
     fontSize: 16,
     textAlign: "center",
     marginVertical: 8
@@ -169,6 +169,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 16,
     flex: 1,
-    backgroundColor: AppColors.white
+    backgroundColor: AppColorPalettes.gray[800]
   }
 });
