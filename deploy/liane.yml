@@ -39,7 +39,7 @@ services:
       - DEFAULT_COMPRESSION=GZ
       - DB01_TYPE=pgsql
       - DB01_HOST=postgis
-      - DB01_NAME=jamin
+      - DB01_NAME=liane
       - DB01_USER=${MONGO_USERNAME}
       - DB01_PASS=${MONGO_PASSWORD}
       - DB01_EXTRA_BACKUP_OPTS=--clean
