@@ -62,38 +62,38 @@ export const RallyingPointsDisplayLayer = ({ dispayCluster = false, selected, on
     [controller, onSelect]
   );
 
-  return (
-    <MapLibreGL.VectorSource
-      id={"all_rallying_points"}
-      url={RNAppEnv.rallyingPointsTilesUrl}
-      maxZoomLevel={14}
-      hitbox={{ width: 32, height: 32 }}
-      onPress={handleSelect}>
+  const layers =  [
+    <MapLibreGL.SymbolLayer
+      key="rp_symbols"
+      id="rp_symbols"
+      sourceLayerID={"rallying_point_display"}
+      filter={["!", ["has", "point_count"]]}
+      style={{
+        textFont: ["Open Sans Regular", "Noto Sans Regular"],
+        textSize: 14,
+        textColor: onSelect ? ["case", ["==", ["get", "id"], selected ?? "XXXXXXXXX"], AppColors.primaryColor, AppColors.black] : AppColors.black,
+        textHaloColor: AppColors.white,
+        textHaloWidth: 1,
+        textField: ["get", "label"],
+        textAllowOverlap: false,
+        iconAllowOverlap: true,
+        textAnchor: "bottom",
+        textOffset: [0, -3.4],
+        textMaxWidth: 5.4,
+        visibility: "visible",
+        textOptional: true,
+        iconOptional: false,
+        iconImage: "rp",
+        iconAnchor: "bottom",
+        iconSize: ["step", ["zoom"], 0.32, 12, 0.4]
+      }}
+    />
+  ];
+
+  if (dispayCluster) {
+    layers.push(
       <MapLibreGL.SymbolLayer
-        id="rp_symbols"
-        sourceLayerID={"rallying_point_display"}
-        filter={["!", ["has", "point_count"]]}
-        style={{
-          textFont: ["Open Sans Regular", "Noto Sans Regular"],
-          textSize: 14,
-          textColor: onSelect ? ["case", ["==", ["get", "id"], selected ?? "XXXXXXXXX"], AppColors.primaryColor, AppColors.black] : AppColors.black,
-          textHaloColor: AppColors.white,
-          textHaloWidth: 1,
-          textField: ["get", "label"],
-          textAllowOverlap: false,
-          iconAllowOverlap: true,
-          textAnchor: "bottom",
-          textOffset: [0, -3.4],
-          textMaxWidth: 5.4,
-          visibility: "visible",
-          textOptional: true,
-          iconOptional: false,
-          iconImage: "rp",
-          iconAnchor: "bottom",
-          iconSize: ["step", ["zoom"], 0.32, 12, 0.4]
-        }}
-      />
-      <MapLibreGL.SymbolLayer
+        key="rp_clusters"
         id="rp_clusters"
         sourceLayerID={"rallying_point_display"}
         filter={["has", "point_count"]}
@@ -107,12 +107,23 @@ export const RallyingPointsDisplayLayer = ({ dispayCluster = false, selected, on
           iconAllowOverlap: true,
           textMaxWidth: 5.4,
           textOptional: true,
-          visibility: dispayCluster ? "visible" : false,
+          visibility: "visible",
           iconImage: "deposit_cluster",
           iconAnchor: "center",
           iconSize: ["step", ["zoom"], 0.5, 12, 0.4]
         }}
       />
+    );
+  }
+
+  return (
+    <MapLibreGL.VectorSource
+      id={"all_rallying_points"}
+      url={RNAppEnv.rallyingPointsTilesUrl}
+      maxZoomLevel={14}
+      hitbox={{ width: 32, height: 32 }}
+      onPress={handleSelect}>
+      {layers}
     </MapLibreGL.VectorSource>
   );
 };

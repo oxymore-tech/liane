@@ -1,5 +1,4 @@
 import React, {
-  ComponentType,
   ForwardedRef,
   forwardRef,
   PropsWithChildren,
@@ -15,7 +14,7 @@ import { Platform, StyleSheet, useWindowDimensions, View } from "react-native";
 import MapLibreGL, {CameraRef, Logger, MapViewRef, RegionPayload} from "@maplibre/maplibre-react-native";
 import { contains, DEFAULT_TLS, DisplayBoundingBox, FR_BBOX, fromBoundingBox, getMapStyleUrl, LatLng } from "@liane/common";
 import { AppColorPalettes } from "@/theme/colors";
-import { FeatureCollection, Point, Position } from "geojson";
+import { Point, Position } from "geojson";
 import { AppContext } from "@/components/context/ContextProvider";
 import { Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";

@@ -7,6 +7,7 @@ import { AppStyles } from "@/theme/styles";
 import { Observable, Subject } from "rxjs";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 import Handle from "@/components/base/Handle.tsx";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export const AppBottomSheetHandleHeight = 60;
 
@@ -46,7 +47,8 @@ const BottomSheetContext = createContext<BottomSheetContext>();
 
 export const AppBottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
   ({ onScrolled, children, style, canScroll, stops, margins, initialStop = 0 }, ref) => {
-    const marginBottom = margins?.bottom || 0;
+    const insets = useSafeAreaInsets();
+    const marginBottom = margins?.bottom ?? insets.bottom + 30 ?? 0;
     const paddingTop = 0;
     const { height, width } = useAppWindowsDimensions();
     const fillLimit = 0;

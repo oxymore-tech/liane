@@ -167,7 +167,8 @@ const styles = StyleSheet.create({
   },
   columnAlignment: {
     borderRadius: 16,
-    padding: 16,
+    paddingVertical: 16,
+    flex: 1,
     backgroundColor: AppColors.white
   }
 });

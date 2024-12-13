@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Center, Column } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";

@@ -1,93 +1,14 @@
-import { getPoint, getTripFromMatch, getTripMatch, LianeMatch, RallyingPoint, WayPoint } from "@liane/common";
+import { getTripFromMatch, LianeMatch, RallyingPoint, WayPoint } from "@liane/common";
 import { FeatureCollection } from "geojson";
 import React, { useContext, useMemo } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 import { useQuery } from "react-query";
-import { AppColorPalettes, AppColors } from "@/theme/colors";
+import { AppColors } from "@/theme/colors";
 import MapLibreGL, { LineLayerStyle } from "@maplibre/maplibre-react-native";
 import { LianeShapeDisplayLayer } from "@/components/map/layers/LianeShapeDisplayLayer";
 import { StyleProp } from "react-native";
 import ShapeSource = MapLibreGL.ShapeSource;
 import LineLayer = MapLibreGL.LineLayer;
-
-export const LianeMatchRouteLayer = (props: { match: LianeMatch; to?: RallyingPoint; from?: RallyingPoint; loadingFeatures?: FeatureCollection }) => {
-  const { services } = useContext(AppContext);
-  const match = props.match;
-  const fromPoint = getPoint(match, "pickup");
-  const toPoint = getPoint(match, "deposit");
-  const to = props.to || toPoint;
-  const from = props.from || fromPoint;
-  const isSamePickup = !from || from.id === fromPoint.id;
-  const isSameDeposit = !to || to.id === toPoint.id;
-
-  const wayPoints = useMemo(() => {
-    const trip = getTripMatch(
-      toPoint,
-      fromPoint,
-      match.trip.wayPoints,
-      match.trip.departureTime,
-      match.match.type === "Compatible" ? match.match.wayPoints : match.trip.wayPoints
-    );
-    return trip.wayPoints; //.slice(trip.departureIndex, trip.arrivalIndex + 1);
-  }, [fromPoint, match, toPoint]);
-
-  const { data, isLoading } = useQuery(["match", from?.id, to?.id!, match.trip.id!], () => {
-    const wp = [...(isSamePickup ? [] : [from!.location]), ...wayPoints.map(w => w.rallyingPoint.location), ...(isSameDeposit ? [] : [to!.location])];
-
-    return services.routing.getRoute(wp);
-  });
-
-  const mapFeatures: GeoJSON.FeatureCollection | undefined = useMemo(() => {
-    if (!data || data.geometry.coordinates.length === 0) {
-      return undefined;
-    }
-
-    const features: GeoJSON.FeatureCollection = {
-      type: "FeatureCollection",
-      features: data.geometry.coordinates.map((line, i): GeoJSON.Feature => {
-        return {
-          type: "Feature",
-          properties: {
-            isWalk: (!isSamePickup && i === 0) || (!isSameDeposit && i === data.geometry.coordinates.length - 1)
-          },
-          geometry: {
-            type: "LineString",
-            coordinates: line
-          }
-        };
-      })
-    };
-
-    return features;
-  }, [data, isSameDeposit, isSamePickup]);
-
-  if (!mapFeatures || isLoading) {
-    return <LianeShapeDisplayLayer lianeDisplay={props.loadingFeatures} loading={true} useWidth={3} />;
-  }
-
-  return (
-    <ShapeSource id={"match_trip_source"} shape={mapFeatures}>
-      <LineLayer
-        id={"match_route_display"}
-        filter={["!", ["get", "isWalk"]]}
-        style={{
-          lineColor: AppColors.darkBlue,
-          lineWidth: 3
-        }}
-      />
-      <LineLayer
-        id={"match_remainder_display"}
-        filter={["get", "isWalk"]}
-        style={{
-          lineColor: AppColorPalettes.gray[800],
-          lineWidth: 3,
-          lineCap: "round",
-          lineDasharray: [0, 2]
-        }}
-      />
-    </ShapeSource>
-  );
-};
 
 export const RouteLayer = ({
   wayPoints,
@@ -106,9 +27,12 @@ export const RouteLayer = ({
 
     return services.routing.getRoute(wp);
   });
-  const mapFeatures: GeoJSON.FeatureCollection | undefined = useMemo(() => {
+  const mapFeatures: GeoJSON.FeatureCollection = useMemo(() => {
     if (!data || data.geometry.coordinates.length === 0) {
-      return undefined;
+      return {
+        type: "FeatureCollection",
+        features: []
+      };
     }
 
     const features: GeoJSON.FeatureCollection = {
@@ -151,7 +75,6 @@ export const RouteLayer = ({
 export const RouteLianeLayer = ({
   wayPoints,
   id,
-  loadingFeatures,
   style,
   color
 }: {
@@ -167,9 +90,12 @@ export const RouteLianeLayer = ({
 
     return services.routing.getRoute(wp);
   });
-  const mapFeatures: GeoJSON.FeatureCollection | undefined = useMemo(() => {
+  const mapFeatures: GeoJSON.FeatureCollection = useMemo(() => {
     if (!data || data.geometry.coordinates.length === 0) {
-      return undefined;
+      return {
+        type: "FeatureCollection",
+        features: []
+      };
     }
 
     const features: GeoJSON.FeatureCollection = {
@@ -189,8 +115,8 @@ export const RouteLianeLayer = ({
     return features;
   }, [data]);
 
-  if (!mapFeatures || isLoading) {
-    return <LianeShapeDisplayLayer lianeDisplay={loadingFeatures} loading={true} useWidth={3} />;
+  if (isLoading) {
+    return null;
   }
 
   const argStyle = (style ?? {}) as object; // MapLibre doesn't support passing an array of style objects
