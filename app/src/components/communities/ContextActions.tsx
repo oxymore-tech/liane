@@ -169,6 +169,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 16,
     flex: 1,
-    backgroundColor: AppColorPalettes.gray[800]
+    backgroundColor: AppColorPalettes.gray[700]
   }
 });

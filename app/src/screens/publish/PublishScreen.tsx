@@ -89,19 +89,14 @@ export const PublishScreen = () => {
       } as CoLianeRequest;
       if (route.params.initialValue && lianeRequest.id) {
         await services.community.update(lianeRequest.id, newLianeRequest);
-        await queryClient.invalidateQueries(CoLianeMatchQueryKey);
-        navigation.navigate("Lianes");
       } else {
         const created = await services.community.create(newLianeRequest);
-        await queryClient.invalidateQueries(CoLianeMatchQueryKey);
-
         if (lianeId) {
           await services.community.joinRequest(created.id!, lianeId);
         }
-
-        navigation.popToTop();
-        navigation.navigate("Lianes");
       }
+      await queryClient.invalidateQueries(CoLianeMatchQueryKey);
+      navigation.popToTop();
     } finally {
       setPending(false);
     }
