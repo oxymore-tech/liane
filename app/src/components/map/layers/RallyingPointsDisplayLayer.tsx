@@ -66,7 +66,7 @@ export const RallyingPointsDisplayLayer = ({ dispayCluster = false, selected, on
     <MapLibreGL.SymbolLayer
       key="rp_symbols"
       id="rp_symbols"
-      sourceLayerID={"rallying_point_display"}
+      sourceLayerID="rallying_point_display"
       filter={["!", ["has", "point_count"]]}
       style={{
         textFont: ["Open Sans Regular", "Noto Sans Regular"],
@@ -95,7 +95,7 @@ export const RallyingPointsDisplayLayer = ({ dispayCluster = false, selected, on
       <MapLibreGL.SymbolLayer
         key="rp_clusters"
         id="rp_clusters"
-        sourceLayerID={"rallying_point_display"}
+        sourceLayerID="rallying_point_display"
         filter={["has", "point_count"]}
         style={{
           textFont: ["Open Sans Regular", "Noto Sans Regular"],
@@ -118,7 +118,7 @@ export const RallyingPointsDisplayLayer = ({ dispayCluster = false, selected, on
 
   return (
     <MapLibreGL.VectorSource
-      id={"all_rallying_points"}
+      id="all_rallying_points"
       url={RNAppEnv.rallyingPointsTilesUrl}
       maxZoomLevel={14}
       hitbox={{ width: 32, height: 32 }}

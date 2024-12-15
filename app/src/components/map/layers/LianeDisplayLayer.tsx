@@ -95,7 +95,7 @@ export const LianeDisplayLayer = ({ weekDays, onSelect }: LianeDisplayLayerProps
       />
       <MapLibreGL.SymbolLayer
         id="rp_symbols"
-        sourceLayerID={"rallying_point_display"}
+        sourceLayerID="rallying_point_display"
         minZoomLevel={7}
         style={{
           symbolSortKey: ["case", ["==", ["get", "point_type"], "deposit"], 0, ["==", ["get", "point_type"], "suggestion"], 1, 2],
@@ -120,7 +120,7 @@ export const LianeDisplayLayer = ({ weekDays, onSelect }: LianeDisplayLayerProps
       />
       <MapLibreGL.SymbolLayer
         id="rp_symbols_clustered"
-        sourceLayerID={"rallying_point_display"}
+        sourceLayerID="rallying_point_display"
         filter={["has", "point_count"]}
         style={{
           textFont: ["Open Sans Regular", "Noto Sans Regular"],

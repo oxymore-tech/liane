@@ -38,7 +38,7 @@ export const LianeOnMapItem = ({ item, openLiane }: LianeOnMapItemProps) => {
             <AppText style={styles.days}>{extractDaysOnly(item)}</AppText>
           </View>
           <View style={{ position: "absolute", top: 10, right: 10 }}>
-            <AppIcon name={"arrow-right"} color={AppColors.darkGray} size={22} />
+            <AppIcon name="arrow-right" color={AppColors.darkGray} size={22} />
           </View>
           <View style={{ position: "absolute", bottom: 10, right: 10 }}>
             <JoinedLianeView liane={item} />

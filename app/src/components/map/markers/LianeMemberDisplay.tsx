@@ -44,8 +44,7 @@ export const LianeMemberDisplay = ({
   return (
     <MarkerView id={user.id!} coordinate={[location.lng, location.lat]} anchor={{ x: 0.5, y: 1 }}>
       <Animated.View entering={FadeIn} exiting={FadeOut} pointerEvents="none" style={[styles.wayPointContainer, { bottom: -4 }]}>
-        {
-          <View style={styles.wayPointContainer}>
+        <View style={styles.wayPointContainer}>
             {zoom > 7.5 && (
               <Animated.View style={styles.userNameContainer} entering={ZoomIn}>
                 <Text style={styles.userNameText}>{user.pseudo + description}</Text>
@@ -59,7 +58,6 @@ export const LianeMemberDisplay = ({
               {isCar ? <Car width={size - 8} height={size - 8} /> : <UserPicture url={user.pictureUrl} id={user.id} size={size - 8} />}
             </View>
           </View>
-        }
 
         <Svg width="10" height="16" viewBox="0 0 13 18" fill="none" opacity={showLocationPin ? 1 : 0} transform={[{ translateY: -4 }]}>
           <Path

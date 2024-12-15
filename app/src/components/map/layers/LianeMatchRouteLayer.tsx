@@ -58,7 +58,7 @@ export const RouteLayer = ({
 
   const argStyle = (style ?? {}) as object; // MapLibre doesn't support passing an array of style objects
   return (
-    <ShapeSource id={"match_trip_source"} shape={mapFeatures}>
+    <ShapeSource id="match_trip_source" shape={mapFeatures}>
       <LineLayer
         aboveLayerID="Highway"
         id={"match_route_display" + (id ? "_" + id : "")}
@@ -116,7 +116,7 @@ export const RouteLianeLayer = ({
 
   const argStyle = (style ?? {}) as object; // MapLibre doesn't support passing an array of style objects
   return (
-    <ShapeSource id={"match_trip_source"} shape={mapFeatures}>
+    <ShapeSource id="match_trip_source" shape={mapFeatures}>
       <LineLayer
         aboveLayerID="Highway"
         id={"match_route_display" + (id ? "_" + id : "")}

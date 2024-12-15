@@ -54,7 +54,7 @@ export const LianeContextActions = ({ liane, lianeRequest, onJoin, onReject, pen
     if (!pendingMember) {
       return (
         <Center style={styles.columnAlignment}>
-          <AppText style={styles.headerText}>{"Vous êtes membre de cette liane"}</AppText>
+          <AppText style={styles.headerText}>Vous êtes membre de cette liane</AppText>
           <Row>
             <AppButton onPress={onReject} color={AppColors.secondaryColor} value="Quitter" loading={pendingAction === "leave"} />
           </Row>
@@ -70,7 +70,7 @@ export const LianeContextActions = ({ liane, lianeRequest, onJoin, onReject, pen
         <Center>
           <Row>
             <AppText style={[styles.headerText, { marginLeft: 8, fontWeight: "bold" }]}>{pendingMember.user.pseudo}</AppText>
-            <AppText style={[styles.headerText, { marginLeft: 8 }]}>{"souhaite rejoindre la liane"}</AppText>
+            <AppText style={[styles.headerText, { marginLeft: 8 }]}>souhaite rejoindre la liane</AppText>
           </Row>
           <Row spacing={5}>
             <AppButton onPress={onJoin} color={AppColors.primaryColor} value="Accepter" loading={pendingAction === "join"} />
@@ -84,7 +84,7 @@ export const LianeContextActions = ({ liane, lianeRequest, onJoin, onReject, pen
   if (liane.pendingMembers.find(m => m.user.id === user?.id)) {
     return (
       <Center style={styles.columnAlignment}>
-        <AppText style={styles.headerText}>{"Vous avez demandé à rejoindre cette liane"}</AppText>
+        <AppText style={styles.headerText}>Vous avez demandé à rejoindre cette liane</AppText>
         <Row>
           <AppButton onPress={onReject} color={AppColors.secondaryColor} value="Annuler ma demande" loading={pendingAction === "reject"} />
         </Row>
@@ -94,7 +94,7 @@ export const LianeContextActions = ({ liane, lianeRequest, onJoin, onReject, pen
 
   return (
     <Center style={styles.columnAlignment}>
-      <AppText style={styles.headerText}>{`Voulez-vous rejoindre cette liane ?`}</AppText>
+      <AppText style={styles.headerText}>Voulez-vous rejoindre cette liane ?</AppText>
       <Row>
         <AppButton onPress={onJoin} color={AppColors.primaryColor} value="Rejoindre" loading={pendingAction === "join"} />
       </Row>
@@ -113,7 +113,7 @@ export const MatchContextActions = ({ match, onJoin, onReject, pendingAction }: 
   if ((match.type === "Single" && match.joinRequest?.type === "Pending") || (match.type === "Group" && match.pendingRequest)) {
     return (
       <Center style={styles.columnAlignment}>
-        <AppText style={styles.headerText}>{"Vous avez demandé à rejoindre cette liane"}</AppText>
+        <AppText style={styles.headerText}>Vous avez demandé à rejoindre cette liane</AppText>
         <Row>
           <AppButton onPress={onReject} color={AppColors.secondaryColor} value="Annuler ma demande" loading={pendingAction === "reject"} />
         </Row>
@@ -136,7 +136,7 @@ export const MatchContextActions = ({ match, onJoin, onReject, pendingAction }: 
   if (match.type === "Group" && match.pendingRequest) {
     return (
       <Center style={styles.columnAlignment}>
-        <AppText style={styles.headerText}>{"Vous avez demandé à rejoindre cette liane"}</AppText>
+        <AppText style={styles.headerText}>Vous avez demandé à rejoindre cette liane</AppText>
         <Row>
           <AppButton onPress={onReject} color={AppColors.secondaryColor} value="Annuler ma demande" loading={pendingAction === "reject"} />
         </Row>
@@ -146,7 +146,7 @@ export const MatchContextActions = ({ match, onJoin, onReject, pendingAction }: 
 
   return (
     <Center style={styles.columnAlignment}>
-      <AppText style={styles.headerText}>{`Voulez-vous rejoindre cette liane ?`}</AppText>
+      <AppText style={styles.headerText}>Voulez-vous rejoindre cette liane ?</AppText>
       <Row>
         <AppButton onPress={onJoin} color={AppColors.primaryColor} value="Rejoindre" loading={pendingAction === "join"} />
       </Row>
