@@ -121,7 +121,7 @@ function Navigation() {
         <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="Publish" component={PublishScreen} options={{ animation: "fade" }} />
         <Stack.Screen name="TripDetail" component={TripDetailScreen} />
-        <Stack.Screen name="CommunitiesChat" component={CommunitiesChatScreen} />
+        <Stack.Screen name="CommunitiesChat" component={CommunitiesChatScreen} options={{ headerShown: false }} />
         <Stack.Screen name="LianeMapDetail" component={LianeMapDetailScreen} />
         <Stack.Screen name="LianeTripDetail" component={LianeTripDetailScreen} />
         <Stack.Screen name="CommunitiesDetails" component={CommunitiesDetailScreen} />
@@ -208,7 +208,7 @@ export const PageHeader = (props: { title?: string | undefined; goBack?: () => v
 const styles = StyleSheet.create({
   header: {
     paddingBottom: 8,
-    backgroundColor: AppColors.white,
+    backgroundColor: AppColorPalettes.gray[100],
     alignItems: "center"
   },
   tabLabel: {

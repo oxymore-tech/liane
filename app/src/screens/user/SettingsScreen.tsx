@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { AppColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppText } from "@/components/base/AppText";
 import { Column, Row, Space } from "@/components/base/AppLayout";
 import { AppPressableOverlay } from "@/components/base/AppPressable";
@@ -8,6 +8,7 @@ import { useAppNavigation } from "@/components/context/routing";
 import { useIsFocused } from "@react-navigation/native";
 import { GeolocationLevel } from "@liane/common";
 import { AppStorage } from "@/api/storage";
+import { AppButton } from "@/components/base/AppButton.tsx";
 
 const geolocationValues = {
   None: "Désactivée",
@@ -26,6 +27,10 @@ export const SettingsScreen = () => {
   }, [focused]);
   return (
     <View style={styles.container}>
+      <Row style={{ justifyContent: "flex-start", alignItems: "center", padding: 16 }} spacing={16}>
+        <AppButton onPress={() => navigation.goBack()} icon="arrow-left" color={AppColorPalettes.gray[800]} />
+        <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 16, lineHeight: 27, color: AppColors.black }}>Paramètres</AppText>
+      </Row>
       <View
         style={{
           flex: 1

@@ -75,6 +75,9 @@ export const CommunitiesChatScreen = () => {
     if (liane?.id !== lianeId) {
       return;
     }
+    if (messages.find(msg => msg.id === m.id)) {
+      return;
+    }
     setMessages(oldList => [m, ...oldList]);
     services.realTimeHub.markAsRead(liane?.id, new Date().toISOString()).then();
   };
@@ -113,7 +116,7 @@ export const CommunitiesChatScreen = () => {
   const [launching, setLaunching] = useState(false);
 
   const launchTrip = useCallback(
-    async (arriveAt: Date, returnAt: Date | undefined, from: Ref<RallyingPoint>, to: Ref<RallyingPoint>) => {
+    async (arriveAt: Date, returnAt: Date | undefined, from: Ref<RallyingPoint>, to: Ref<RallyingPoint>, availableSeats: number) => {
       setLaunching(true);
       try {
         await services.trip.post({
@@ -122,7 +125,7 @@ export const CommunitiesChatScreen = () => {
           returnAt: returnAt?.toISOString(),
           from,
           to,
-          availableSeats: me!.lianeRequest.canDrive ? 1 : -1
+          availableSeats
         });
         await queryClient.invalidateQueries(TripQueryKey);
       } finally {
@@ -130,7 +133,7 @@ export const CommunitiesChatScreen = () => {
         setTripModalVisible(false);
       }
     },
-    [liane, me, queryClient, services.trip]
+    [liane, queryClient, services.trip]
   );
 
   useEffect(() => {
@@ -164,11 +167,15 @@ export const CommunitiesChatScreen = () => {
   }, [liane, services.realTimeHub]);
 
   return (
-    <View style={[styles.mainContainer, { paddingBottom: insets.bottom }]}>
-      <Row style={{ backgroundColor: AppColors.white, justifyContent: "space-between", alignItems: "center", padding: 16 }} spacing={16}>
-        <AppButton onPress={() => navigation.goBack()} icon="arrow-left" color={AppColors.primaryColor} />
-        <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 16, lineHeight: 27, color: AppColors.primaryColor }}>{name}</AppText>
-        <AppButton onPress={() => liane && navigation.navigate("CommunitiesDetails", { liane: liane })} icon="edit" color={AppColors.white} />
+    <View style={[styles.mainContainer, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+      <Row style={styles.header} spacing={16}>
+        <AppButton onPress={() => navigation.goBack()} icon="arrow-left" color={AppColorPalettes.gray[800]} />
+        <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 20, lineHeight: 27, color: AppColorPalettes.gray[100] }}>{name}</AppText>
+        <AppButton
+          onPress={() => liane && navigation.navigate("CommunitiesDetails", { liane: liane })}
+          icon="edit"
+          color={AppColorPalettes.gray[800]}
+        />
       </Row>
       <GestureHandlerRootView>
         <FlatList
@@ -192,7 +199,7 @@ export const CommunitiesChatScreen = () => {
       </GestureHandlerRootView>
       <KeyboardAvoidingView
         behavior={Platform.OS === "android" ? "height" : "padding"}
-        style={{ paddingBottom: 8, paddingHorizontal: 8, backgroundColor: AppColorPalettes.gray[150] }}>
+        style={{ paddingBottom: 8, paddingHorizontal: 8, backgroundColor: AppColorPalettes.gray[800] }}>
         <Row spacing={8} style={{ alignItems: "center" }}>
           <AppButton color={AppColors.primaryColor} onPress={() => setTripModalVisible(true)} icon="plus" />
           <AppExpandingTextInput
@@ -235,8 +242,15 @@ export const CommunitiesChatScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  header: {
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 16,
+    borderColor: AppColorPalettes.gray[100],
+    borderBottomWidth: 1
+  },
   mainContainer: {
-    backgroundColor: AppColors.grayBackground,
+    backgroundColor: AppColorPalettes.gray[800],
     justifyContent: "flex-start",
     flex: 1
   }

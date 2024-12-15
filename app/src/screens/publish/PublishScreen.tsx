@@ -97,6 +97,8 @@ export const PublishScreen = () => {
       }
       await queryClient.invalidateQueries(CoLianeMatchQueryKey);
       navigation.popToTop();
+      // @ts-ignore
+      navigation.navigate("Home", { screen: "Lianes" });
     } finally {
       setPending(false);
     }

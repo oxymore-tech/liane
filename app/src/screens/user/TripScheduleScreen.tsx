@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useMemo, useState } from "react";
+import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { FlatList, RefreshControl, StyleSheet, View } from "react-native";
 import { useQuery } from "react-query";
 import { CoLiane, DayOfWeekUtils, Ref, Trip, UnauthorizedError } from "@liane/common";
@@ -13,6 +13,7 @@ import { useSubscription } from "@/util/hooks/subscription.ts";
 import { TripItem } from "@/screens/user/TripItem.tsx";
 import { useAppNavigation } from "@/components/context/routing.ts";
 import { AppLocalization } from "@/api/i18n.ts";
+import { StaticScreenProps } from "@react-navigation/native";
 
 function nowAtNoon() {
   const date = new Date();
@@ -20,8 +21,13 @@ function nowAtNoon() {
   return date;
 }
 
-const TripScheduleScreen = () => {
+type Props = StaticScreenProps<{
+  trip?: Ref<Trip>;
+}>;
+
+const TripScheduleScreen = ({ route }: Props) => {
   const { services } = useContext(AppContext);
+  const { navigation } = useAppNavigation<"Calendrier">();
 
   const trip = useQuery(TripQueryKey, async () => await services.community.getIncomingTrips());
 
@@ -35,7 +41,22 @@ const TripScheduleScreen = () => {
 
   const [currentDate, setCurrentDate] = useState(nowAtNoon());
 
-  const { navigation } = useAppNavigation();
+  useEffect(() => {
+    if (!route.params?.trip) {
+      return;
+    }
+    if (!trip.data) {
+      return;
+    }
+    const found = Object.values(trip.data)
+      .flatMap(t => t)
+      .find(t => t.trip.id === route.params.trip);
+    if (!found) {
+      return;
+    }
+    const date = new Date(found.trip.departureTime);
+    setCurrentDate(new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0, 0));
+  }, [route.params?.trip, trip.data]);
 
   const handleOpenTrip = useCallback(
     (t: Trip) => {
