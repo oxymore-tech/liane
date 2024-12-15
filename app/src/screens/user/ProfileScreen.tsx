@@ -47,7 +47,7 @@ const ProfileView = ({ user }: { user: User }) => {
       <Center style={{ paddingHorizontal: 24, paddingTop: 24, paddingBottom: 12, backgroundColor: AppColors.secondaryColor }}>
         {!isMyPage && (
           <Pressable style={{ position: "absolute", left: 24, top: 24 }} onPress={navigation.goBack}>
-            <AppIcon name={"arrow-ios-back-outline"} color={AppColors.white} />
+            <AppIcon name="arrow-left" color={AppColors.white} />
           </Pressable>
         )}
         <UserPicture size={120} url={displayedUser.pictureUrl} id={displayedUser.id} />
@@ -72,22 +72,18 @@ const Actions = () => {
   return (
     <Column>
       {/*<ActionListItem onPress={() => {}} iconName={"bell-outline"} text={"Notifications"} />*/}
-      <ActionListItem onPress={() => navigation.navigate("ArchivedTrips")} iconName={"history"} text={"Historique des trajets"} />
-      <ActionListItem onPress={() => navigation.navigate("Settings")} iconName={"settings-outline"} text={"Paramètres"} />
-      <ActionListItem
-        onPress={() => navigation.navigate("RallyingPointRequests")}
-        iconName={"pin-outline"}
-        text={"Proposer un point de ralliement"}
-      />
+      <ActionListItem onPress={() => navigation.navigate("ArchivedTrips")} iconName="history" text="Historique des trajets" />
+      <ActionListItem onPress={() => navigation.navigate("Settings")} iconName="settings" text="Paramètres" />
+      <ActionListItem onPress={() => navigation.navigate("RallyingPointRequests")} iconName="pin" text="Proposer un point de ralliement" />
 
       <LineSeparator />
-      <ActionListItem onPress={() => navigation.navigate("Account")} iconName={"person-outline"} text={"Compte"} />
+      <ActionListItem onPress={() => navigation.navigate("Account")} iconName="person" text="Compte" />
       <ActionListItem
         onPress={() => {
           Linking.openURL(`https://${RNAppEnv.host}/privacy-policy`);
         }}
-        text={"Politique de confidentialité"}
-        iconName={"book-open-outline"}
+        text="Politique de confidentialité"
+        iconName="book"
       />
       <ActionListItem
         onPress={async () => {
@@ -95,8 +91,8 @@ const Actions = () => {
           logout();
         }}
         color={ContextualColors.redAlert.text}
-        iconName={"log-out-outline"}
-        text={"Se déconnecter"}
+        iconName="log-out"
+        text="Se déconnecter"
       />
       <LineSeparator />
       <AppText style={{ marginLeft: 32, marginVertical: 8 }}>Version : {APP_VERSION}</AppText>

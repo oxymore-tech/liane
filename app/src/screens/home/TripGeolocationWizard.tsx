@@ -90,10 +90,10 @@ export const TripGeolocationWizard = WithFullscreenModal(
 );
 const Page2 = (props: { next: (authorize: boolean) => void }) => {
   const items: { icon: IconName; text: string }[] = [
-    { icon: "navigation-2-outline", text: "Le suivi de votre position nous permet de certifier que vos trajets ont bien été effectués." },
-    { icon: "people-outline", text: "Conducteur et passagers peuvent voir leur position sur la carte. Se retrouver devient un jeu d'enfant !" },
+    { icon: "send", text: "Le suivi de votre position nous permet de certifier que vos trajets ont bien été effectués." },
+    { icon: "people", text: "Conducteur et passagers peuvent voir leur position sur la carte. Se retrouver devient un jeu d'enfant !" },
     {
-      icon: "play-circle-outline",
+      icon: "send",
       text: "Vos données vous appartiennent. Le partage de votre position commence quand vous confirmez avoir démarré."
     }
   ];
@@ -168,10 +168,10 @@ const Page2 = (props: { next: (authorize: boolean) => void }) => {
       <Space />
       <Column style={{ alignItems: "center" }}>
         <Row spacing={8} style={{ justifyContent: "space-between", alignItems: "center", marginTop: 16 }}>
-          <Button text={"Autoriser"} onPress={authorize} />
+          <Button text="Autoriser" onPress={authorize} />
         </Row>
         <Row spacing={8} style={{ justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-          <Button text={"Refuser"} onPress={alertLocation} color={AppColorPalettes.gray[400]} />
+          <Button text="Refuser" onPress={alertLocation} color={AppColorPalettes.gray[400]} />
         </Row>
       </Column>
     </View>
@@ -180,7 +180,7 @@ const Page2 = (props: { next: (authorize: boolean) => void }) => {
 
 const Page1 = (props: { next: () => void; showAs: "driver" | "passenger" }) => (
   <View style={{ alignItems: "center", flex: 1 }}>
-    <AppIcon name={"checkmark-circle-2"} color={AppColors.primaryColor} size={120} />
+    <AppIcon name="checkmark" color={AppColors.primaryColor} size={120} />
     <AppText style={{ fontSize: 24, fontWeight: "bold", textAlign: "center", marginVertical: 8 }}>Félicitations !</AppText>
 
     <AppText numberOfLines={5} style={{ alignSelf: "center", textAlign: "center", fontSize: 18 }}>
@@ -190,7 +190,7 @@ const Page1 = (props: { next: () => void; showAs: "driver" | "passenger" }) => (
     <Space />
     <Column style={{ alignItems: "center" }} spacing={16}>
       <Row spacing={8} style={{ justifyContent: "space-between", alignItems: "center" }}>
-        <Button text={"Continuer"} onPress={props.next} />
+        <Button text="Continuer" onPress={props.next} />
       </Row>
     </Column>
   </View>
@@ -220,7 +220,7 @@ const Page3 = (props: { next: () => void; prev: () => void }) => {
       <AppText numberOfLines={3} style={{ fontSize: 20, fontWeight: "bold", textAlign: "center", marginVertical: 8 }}>
         {trackedLevel !== "None" ? "La géolocalisation des trajets est activée" : "Votre position ne sera pas utilisée par Liane"}
       </AppText>
-      <AppIcon name={trackedLevel !== "None" ? "checkmark-circle-2" : "close-circle"} color={AppColors.primaryColor} size={120} />
+      <AppIcon name={trackedLevel !== "None" ? "checkmark" : "close-circle"} color={AppColors.primaryColor} size={120} />
       {trackedLevel !== "None" && (
         <AppText numberOfLines={6} style={{ padding: 12 }}>
           {
@@ -253,12 +253,12 @@ const Page3 = (props: { next: () => void; prev: () => void }) => {
       <Space />
       <Column style={{ alignItems: "center" }}>
         <Row spacing={8} style={{ justifyContent: "space-between", alignItems: "center", marginTop: 16 }}>
-          <Button text={"J'ai compris !"} onPress={confirm} />
+          <Button text="J'ai compris !" onPress={confirm} />
         </Row>
         {trackedLevel === "None" && (
           <Row spacing={8} style={{ justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-            {!loading && <Button text={"Précédent"} onPress={props.prev} color={AppColorPalettes.gray[400]} />}
-            {loading && <ActivityIndicator color={AppColors.primaryColor} size={"small"} />}
+            {!loading && <Button text="Précédent" onPress={props.prev} color={AppColorPalettes.gray[400]} />}
+            {loading && <ActivityIndicator color={AppColors.primaryColor} size="small" />}
           </Row>
         )}
       </Column>

@@ -26,16 +26,16 @@ export const WayPointDisplay = ({
 
   switch (type) {
     case "to":
-      icon = <AppIcon name={"flag"} color={AppColors.white} size={size} />;
+      icon = <AppIcon name="flag" color={AppColors.white} size={size} />;
       break;
     case "from":
-      icon = <AppIcon name={"pin"} color={AppColors.white} size={size} />;
+      icon = <AppIcon name="pin" color={AppColors.white} size={size} />;
       break;
     case "pickup":
-      icon = <AppIcon name={"car"} color={AppColors.white} size={size} />;
+      icon = <AppIcon name="car" color={AppColors.white} size={size} />;
       break;
     case "deposit":
-      icon = <AppIcon name={"directions-walk"} color={AppColors.white} size={size} />;
+      icon = <AppIcon name="directions-walk" color={AppColors.white} size={size} />;
       break;
     default:
       icon = undefined;

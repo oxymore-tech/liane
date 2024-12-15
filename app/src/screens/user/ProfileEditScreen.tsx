@@ -62,7 +62,7 @@ const ProfileEditView = () => {
     <ScrollView overScrollMode="never">
       <Center style={[styles.infoContainer, { paddingTop: 24 }]}>
         <Pressable style={[styles.backContainer, { top: 24 }]} onPress={navigation.goBack}>
-          <AppIcon name={"arrow-ios-back-outline"} color={AppColors.white} />
+          <AppIcon name="arrow-left" color={AppColors.white} />
         </Pressable>
         <Pressable onPress={() => openGallery(updateUserPicture)}>
           <UserPicture size={180} url={profilePicture} id={user!.id} />
@@ -87,7 +87,7 @@ const ProfileEditView = () => {
                 height: 180,
                 width: 180
               }}>
-              <AppIcon name={"edit-outline"} size={90} color={"rgba(255,255,255,0.6)"} />
+              <AppIcon name="edit" size={90} color="rgba(255,255,255,0.6)" />
             </Center>
           )}
         </Pressable>
@@ -112,11 +112,11 @@ const ProfileEditView = () => {
         )}
         {isEditingUserName ? (
           <Pressable onPress={saveUserName}>
-            <AppIcon name={"checkmark-outline"} color={AppColors.black} />
+            <AppIcon name="checkmark" color={AppColors.black} />
           </Pressable>
         ) : (
           <Pressable onPress={() => setIsEditingUserName(true)}>
-            <AppIcon name={"edit-outline"} color={AppColors.black} />
+            <AppIcon name="edit" color={AppColors.black} />
           </Pressable>
         )}
       </Row>

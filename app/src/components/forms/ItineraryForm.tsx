@@ -68,8 +68,8 @@ export const ItineraryForm = ({
           onRequestFocus("from");
         }}
         editable={editable}
-        placeholder={"D'où partez vous ?"}
-        icon={<AppIcon name={"pin"} color={AppColors.primaryColor} />}
+        placeholder="D'où partez vous ?"
+        icon={<AppIcon name="pin" color={AppColors.primaryColor} />}
         showTrailing={(field === "from" && (from || (searchFrom && searchFrom.length > 0))) === true}
       />
       <RallyingPointField
@@ -84,14 +84,14 @@ export const ItineraryForm = ({
           onRequestFocus("to");
         }}
         editable={editable}
-        placeholder={"Où allez-vous ?"}
-        icon={<AppIcon name={"flag"} color={AppColors.primaryColor} />}
+        placeholder="Où allez-vous ?"
+        icon={<AppIcon name="flag" color={AppColors.primaryColor} />}
         showTrailing={field === "to" && (to || (searchTo && searchTo.length > 0)) === true}
       />
       {(to || from) && (
         <View style={{ position: "absolute", right: 0, top: 6, height: "100%", justifyContent: "center" }}>
           <AppPressableIcon
-            name={"arrow-switch"}
+            name="arrow-switch"
             style={{ width: 40, height: 40, justifyContent: "center", alignItems: "center" }}
             backgroundStyle={{
               backgroundColor: AppColors.primaryColor,

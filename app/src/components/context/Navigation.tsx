@@ -65,7 +65,7 @@ function Home() {
       {makeTab(
         "Explorer",
         ({ focused }) => (
-          <TabIcon iconName={"map-outline"} focused={focused} size={iconSize} />
+          <TabIcon iconName="map" focused={focused} size={iconSize} />
         ),
         HomeScreen
       )}
@@ -115,13 +115,13 @@ function Navigation() {
 
   if (user) {
     return (
-      <Stack.Navigator initialRouteName={"Home"} screenOptions={{ header: EmptyPageHeader }}>
+      <Stack.Navigator initialRouteName="Home" screenOptions={{ header: EmptyPageHeader }}>
         <Stack.Screen name="Home" component={Home} />
         <Stack.Screen name="ArchivedTrips" component={ArchivedTripsScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="Publish" component={PublishScreen} options={{ animation: "fade" }} />
         <Stack.Screen name="TripDetail" component={TripDetailScreen} />
-        <Stack.Screen name="CommunitiesChat" component={CommunitiesChatScreen} />
+        <Stack.Screen name="CommunitiesChat" component={CommunitiesChatScreen} options={{ headerShown: false }} />
         <Stack.Screen name="LianeMapDetail" component={LianeMapDetailScreen} />
         <Stack.Screen name="LianeTripDetail" component={LianeTripDetailScreen} />
         <Stack.Screen name="CommunitiesDetails" component={CommunitiesDetailScreen} />
@@ -199,12 +199,7 @@ export const PageHeader = (props: { title?: string | undefined; goBack?: () => v
   const defaultName = props.route?.name ? NavigationScreenTitles[props.route.name] || "" : "";
   return (
     <Row style={[styles.header, { paddingTop: 16 }]} spacing={24}>
-      <AppPressableIcon
-        name={"arrow-ios-back-outline"}
-        color={AppColors.primaryColor}
-        size={32}
-        onPress={props.goBack || (() => props.navigation?.goBack())}
-      />
+      <AppPressableIcon name="arrow-left" color={AppColors.primaryColor} size={32} onPress={props.goBack || (() => props.navigation?.goBack())} />
       <AppText style={{ fontSize: 20, fontWeight: "bold", color: AppColors.primaryColor }}>{props.title || defaultName}</AppText>
     </Row>
   );
@@ -213,7 +208,7 @@ export const PageHeader = (props: { title?: string | undefined; goBack?: () => v
 const styles = StyleSheet.create({
   header: {
     paddingBottom: 8,
-    backgroundColor: AppColors.white,
+    backgroundColor: AppColorPalettes.gray[100],
     alignItems: "center"
   },
   tabLabel: {

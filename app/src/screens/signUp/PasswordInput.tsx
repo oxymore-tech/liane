@@ -33,7 +33,7 @@ export const PasswordInput = ({ code, onChange, onValidate }: PasswordInputProps
           />
         </Column>
         <Pressable style={[styles.button, buttonColor]} disabled={disabled} onPress={onValidate}>
-          <AppIcon name="arrow-circle-right-outline" color={AppColors.white} />
+          <AppIcon name="arrow-right" color={AppColors.white} />
         </Pressable>
       </View>
     </Column>

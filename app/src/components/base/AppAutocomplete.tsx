@@ -73,11 +73,11 @@ export const AppAutocomplete = <T extends BasicItem>({
     inputRef.current?.focus();
   };
 
-  const leading = <AppIcon name={"search-outline"} color={focused ? AppColorPalettes.blue[500] : AppColorPalettes.gray[400]} />;
+  const leading = <AppIcon name="search" color={focused ? AppColorPalettes.blue[500] : AppColorPalettes.gray[400]} />;
   const trailingIcon =
     value || (search && search.length > 0) ? (
       <Pressable onPress={reset}>
-        <AppIcon name={"close-outline"} color={AppColorPalettes.gray[800]} />
+        <AppIcon name="close" color={AppColorPalettes.gray[800]} />
       </Pressable>
     ) : (
       trailing

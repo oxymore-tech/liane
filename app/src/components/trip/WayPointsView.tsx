@@ -102,18 +102,18 @@ export const WayPointsView = ({ style, wayPoints, carLocation, dark }: WayPoints
 
   return (
     <Column style={[{ flexGrow: 1, flexShrink: 1 }, style]}>
-      <WayPointView wayPoint={from} type={"pickup"} isPast={!!nextWayPointIndex && nextWayPointIndex > 0} delay={delay} dark={dark} />
+      <WayPointView wayPoint={from} type="pickup" isPast={!!nextWayPointIndex && nextWayPointIndex > 0} delay={delay} dark={dark} />
       {steps.map((s, i) => (
         <WayPointView
           wayPoint={s}
-          type={"step"}
+          type="step"
           key={s.rallyingPoint.id}
           delay={delay}
           isPast={!!nextWayPointIndex && nextWayPointIndex > i + 1}
           dark={dark}
         />
       ))}
-      <WayPointView wayPoint={to} type={"deposit"} delay={delay} dark={dark} />
+      <WayPointView wayPoint={to} type="deposit" delay={delay} dark={dark} />
     </Column>
   );
 };

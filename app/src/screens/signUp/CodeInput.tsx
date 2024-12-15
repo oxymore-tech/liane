@@ -75,8 +75,8 @@ export const CodeInput = ({ canSubmit, onChange, submitting, submit, retry, code
           />
         </Column>
         <Pressable style={[styles.button, buttonColor]} disabled={!canSubmit} onPress={submit}>
-          {!submitting && <AppIcon name="arrow-circle-right-outline" color={AppColors.white} />}
-          {submitting && <ActivityIndicator color={AppColors.white} size={"small"} />}
+          {!submitting && <AppIcon name="arrow-right" color={AppColors.white} />}
+          {submitting && <ActivityIndicator color={AppColors.white} size="small" />}
         </Pressable>
       </View>
       <Retry retry={retry} />

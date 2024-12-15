@@ -1,17 +1,24 @@
 import React, { useCallback } from "react";
 import { ActivityIndicator, FlatList, RefreshControl, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { WithFetchPaginatedResponse } from "@/components/base/WithFetchPaginatedResponse";
-import { Center } from "@/components/base/AppLayout";
+import { Center, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { Trip } from "@liane/common";
 import { AppStyles } from "@/theme/styles";
-import { AppColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { useAppNavigation } from "@/components/context/routing.ts";
 import { AppPressable } from "@/components/base/AppPressable.tsx";
+import { AppButton } from "@/components/base/AppButton.tsx";
+import { useNavigation } from "@react-navigation/native";
 
 export const ArchivedTripsScreen = () => {
+  const navigation = useNavigation();
   return (
     <View style={styles.container}>
+      <Row style={{ justifyContent: "flex-start", alignItems: "center", padding: 16 }} spacing={16}>
+        <AppButton onPress={() => navigation.goBack()} icon="arrow-left" color={AppColorPalettes.gray[800]} />
+        <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 16, lineHeight: 27, color: AppColors.black }}>Historique</AppText>
+      </Row>
       <ArchivedTripsView />
     </View>
   );

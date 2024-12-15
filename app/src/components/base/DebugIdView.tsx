@@ -15,7 +15,7 @@ export const DebugIdView = ({ style, object, id }: { style?: any; object: Entity
           <AppText>_id: {id}</AppText>
         </Pressable>
         <Pressable onPress={() => console.debug(JSON.stringify(object))}>
-          <AppIcon name={"play-circle"} size={18} />
+          <AppIcon name="send" size={18} />
         </Pressable>
       </Row>
     );

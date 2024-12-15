@@ -13,9 +13,9 @@ export const PotentialLianeLayer = ({ from, to }: { from: RallyingPoint; to: Ral
     return services.routing.getRoute([from.location, to.location]);
   });
   return data ? (
-    <ShapeSource id={"potential_trip_source"} shape={data.geometry}>
+    <ShapeSource id="potential_trip_source" shape={data.geometry}>
       <LineLayer
-        id={"potential_route_display"}
+        id="potential_route_display"
         style={{
           lineColor: AppColorPalettes.gray[400],
           lineWidth: 3

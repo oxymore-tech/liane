@@ -58,7 +58,7 @@ export const RouteLayer = ({
 
   const argStyle = (style ?? {}) as object; // MapLibre doesn't support passing an array of style objects
   return (
-    <ShapeSource id={"match_trip_source"} shape={mapFeatures}>
+    <ShapeSource id="match_trip_source" shape={mapFeatures}>
       <LineLayer
         aboveLayerID="Highway"
         id={"match_route_display" + (id ? "_" + id : "")}
@@ -85,9 +85,8 @@ export const RouteLianeLayer = ({
   color?: AppColors;
 }) => {
   const { services } = useContext(AppContext);
-  const { data, isLoading } = useQuery(["match", wayPoints[0].id, wayPoints[wayPoints.length - 1].id], () => {
+  const { data } = useQuery(["match", wayPoints[0].id, wayPoints[wayPoints.length - 1].id], () => {
     const wp = wayPoints.map(w => w.location);
-
     return services.routing.getRoute(wp);
   });
   const mapFeatures: GeoJSON.FeatureCollection = useMemo(() => {
@@ -115,19 +114,15 @@ export const RouteLianeLayer = ({
     return features;
   }, [data]);
 
-  if (isLoading) {
-    return null;
-  }
-
   const argStyle = (style ?? {}) as object; // MapLibre doesn't support passing an array of style objects
   return (
-    <ShapeSource id={"match_trip_source"} shape={mapFeatures}>
+    <ShapeSource id="match_trip_source" shape={mapFeatures}>
       <LineLayer
         aboveLayerID="Highway"
         id={"match_route_display" + (id ? "_" + id : "")}
         style={{
           lineColor: color ?? AppColors.blue,
-          lineWidth: 3,
+          lineWidth: 6,
           ...argStyle
         }}
       />

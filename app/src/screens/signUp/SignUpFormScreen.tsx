@@ -44,10 +44,10 @@ export const SignUpFormScreen = () => {
       <FormProvider {...methods}>
         <Column style={{ flex: 1 }} spacing={12}>
           <View style={{ paddingHorizontal: 8, paddingBottom: 16 }}>
-            <OptionField name={"gender"} options={["M.", "Mme", "Non spécifié"]} defaultIndex={2} />
+            <OptionField name="gender" options={["M.", "Mme", "Non spécifié"]} defaultIndex={2} />
           </View>
-          <TextField name={"name"} minLength={2} label={labels.name} />
-          <TextField name={"firstname"} minLength={2} label={labels.firstname} />
+          <TextField name="name" minLength={2} label={labels.name} />
+          <TextField name="firstname" minLength={2} label={labels.firstname} />
 
           <Space />
           {pending && (

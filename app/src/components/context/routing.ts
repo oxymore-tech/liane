@@ -1,7 +1,7 @@
 import { createNavigationContainerRef, LinkingOptions, RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { CoLiane, CoMatch, Ref, ResolvedLianeRequest, Trip, User } from "@liane/common";
 import { checkInitialNotification } from "@/api/service/notification";
-import {NativeStackNavigationProp} from "@react-navigation/native-stack";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 export type NavigationParamList = {
   Home: undefined;
@@ -21,6 +21,7 @@ export type NavigationParamList = {
   RallyingPointRequests: undefined;
   CommunitiesDetails: { liane: CoLiane };
   MatchList: { matches: CoMatch[]; lianeRequest: ResolvedLianeRequest };
+  Calendrier: { trip?: Ref<Trip> };
 };
 
 export const NavigationScreenTitles = {
@@ -56,7 +57,6 @@ export const AppLinking: LinkingOptions<NavigationParamList> = {
 export const useAppNavigation = <ScreenName extends keyof NavigationParamList>() => {
   const route = useRoute<RouteProp<NavigationParamList, ScreenName>>();
   const navigation = useNavigation<NativeStackNavigationProp<NavigationParamList, ScreenName>>();
-
   return { navigation, route };
 };
 

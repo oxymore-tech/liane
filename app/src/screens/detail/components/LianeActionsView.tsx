@@ -77,7 +77,7 @@ export const LianeActionsView = ({ match }: { match: LianeMatch }) => {
           color={defaultTextColor(AppColors.primaryColor)}
           onPress={() => setEditOptionsModalVisible(true)}
           backgroundColor={AppColors.primaryColor}
-          text={"Modifier le trajet"}
+          text="Modifier le trajet"
         />
       )}
       {liane.state === "NotStarted" && currentUserIsMember && !currentUserIsDriver && (
@@ -87,7 +87,7 @@ export const LianeActionsView = ({ match }: { match: LianeMatch }) => {
             leaveLiane(navigation, services, queryClient, liane);
           }}
           backgroundColor={ContextualColors.redAlert.bg}
-          text={"Quitter le trajet"}
+          text="Quitter le trajet"
         />
       )}
       {liane.state === "Started" && (
@@ -97,7 +97,7 @@ export const LianeActionsView = ({ match }: { match: LianeMatch }) => {
             cancelLiane(navigation, services, queryClient, liane);
           }}
           backgroundColor={ContextualColors.redAlert.bg}
-          text={"Annuler ce trajet"}
+          text="Annuler ce trajet"
         />
       )}
 
@@ -111,7 +111,7 @@ export const LianeActionsView = ({ match }: { match: LianeMatch }) => {
       />
 
       <SlideUpModal
-        actionText={"Modifier l'horaire"}
+        actionText="Modifier l'horaire"
         backgroundColor={AppColors.white}
         onAction={async () => {
           const updated = await services.trip.updateDepartureTime(liane.id!, date.toISOString());

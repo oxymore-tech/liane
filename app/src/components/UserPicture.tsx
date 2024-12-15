@@ -138,7 +138,7 @@ export const UserPicture = ({ url, size = 48, id, style, borderWidth = 0, border
         />
       ) : (
         <AppIcon
-          name={"person-outline"}
+          name="person"
           size={0.6 * size}
           style={{
             borderRadius: size,

@@ -77,7 +77,7 @@ export const PickupDestinationsDisplayLayer = ({ weekDays, onSelect, point, type
 
       <MapLibreGL.SymbolLayer
         id="rp_symbols"
-        sourceLayerID={"rallying_point_display"}
+        sourceLayerID="rallying_point_display"
         filter={["all", ["!=", ["get", "id"], point], ["!", ["has", "point_count"]]]}
         style={{
           symbolSortKey: ["case", ["==", ["get", "point_type"], "suggestion"], 0, 1],
@@ -103,7 +103,7 @@ export const PickupDestinationsDisplayLayer = ({ weekDays, onSelect, point, type
 
       <MapLibreGL.SymbolLayer
         id="rp_symbols_clustered"
-        sourceLayerID={"rallying_point_display"}
+        sourceLayerID="rallying_point_display"
         filter={["has", "point_count"]}
         style={{
           textFont: ["Open Sans Regular", "Noto Sans Regular"],

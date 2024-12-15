@@ -9,12 +9,13 @@ import { TimeView } from "@/components/TimeView.tsx";
 import { DateView } from "@/components/DateView.tsx";
 import { ItineraryForm } from "@/components/forms/ItineraryForm.tsx";
 import { AppButton } from "@/components/base/AppButton.tsx";
+import { SeatsForm } from "@/components/forms/SeatsForm.tsx";
 
 export type LaunchTripProps = {
   lianeRequest: ResolvedLianeRequest;
   tripModalVisible: boolean;
   setTripModalVisible: (v: boolean) => void;
-  launchTrip: (arriveBefore: Date, returnAfter: Date | undefined, from: Ref<RallyingPoint>, to: Ref<RallyingPoint>) => void;
+  launchTrip: (arriveBefore: Date, returnAfter: Date | undefined, from: Ref<RallyingPoint>, to: Ref<RallyingPoint>, availableSeats: number) => void;
   launching?: boolean;
 };
 
@@ -25,6 +26,7 @@ export const LaunchTripModal = ({ tripModalVisible, setTripModalVisible, launchT
   const [arriveBefore, setArriveBefore] = useState(lianeRequest.arriveBefore);
   const [returnAfter, setReturnAfter] = useState(lianeRequest.returnAfter);
   const plannedDate = useMemo(() => getNextAvailableDay(lianeRequest.weekDays, lianeRequest.arriveBefore), [lianeRequest]);
+  const [availableSeats, setAvailableSeats] = useState(-3);
 
   const [date, setDate] = useState(plannedDate);
 
@@ -37,8 +39,8 @@ export const LaunchTripModal = ({ tripModalVisible, setTripModalVisible, launchT
     arriveAt.setHours(arriveBefore.hour, arriveBefore.minute ?? 0);
     const returnAt = roundTrip ? new Date(date) : undefined;
     returnAt?.setHours(returnAfter.hour, returnAfter.minute ?? 0);
-    launchTrip(arriveAt, returnAt, from.id!, to.id!);
-  }, [arriveBefore.hour, arriveBefore.minute, date, from.id, launchTrip, returnAfter.hour, returnAfter.minute, roundTrip, to.id]);
+    launchTrip(arriveAt, returnAt, from.id!, to.id!, availableSeats);
+  }, [arriveBefore.hour, arriveBefore.minute, availableSeats, date, from.id, launchTrip, returnAfter.hour, returnAfter.minute, roundTrip, to.id]);
 
   const handleSetVisible = useCallback(
     (visible: boolean) => {
@@ -96,7 +98,12 @@ export const LaunchTripModal = ({ tripModalVisible, setTripModalVisible, launchT
               editable={roundTrip}
             />
           </Row>
-          <AppButton style={styles.breathe} color={AppColors.primaryColor} value="Valider" icon="liane" onPress={launch} loading={launching} />
+
+          <Row spacing={4} style={{ maxWidth: "100%", alignItems: "center", justifyContent: "space-between" }}>
+            <AppText style={styles.modalText}>Places</AppText>
+            <SeatsForm seats={availableSeats} setSeats={setAvailableSeats} />
+          </Row>
+          <AppButton style={styles.breathe} color={AppColors.primaryColor} value="Valider" icon="car" onPress={launch} loading={launching} />
         </Column>
       </Column>
     </SimpleModal>

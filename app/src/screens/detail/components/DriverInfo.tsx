@@ -22,7 +22,7 @@ export const DriverInfo = ({ user }: { user: User }) => {
         <View>
           <UserPicture url={user.pictureUrl} id={user.id} />
           <View style={{ backgroundColor: AppColorPalettes.blue[300], borderRadius: 40, padding: 4, position: "absolute", left: 24, top: 24 }}>
-            <AppIcon name={"car"} size={20} />
+            <AppIcon name="car" size={20} />
           </View>
         </View>
       }

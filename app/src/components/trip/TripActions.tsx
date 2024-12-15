@@ -7,6 +7,7 @@ import { Row } from "@/components/base/AppLayout.tsx";
 import { AppButton } from "@/components/base/AppButton.tsx";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
 import { AppIcon } from "@/components/base/AppIcon.tsx";
+import { AppText } from "@/components/base/AppText.tsx";
 
 type TripActionsProps = {
   trip: IncomingTrip;
@@ -68,6 +69,8 @@ export function TripActions({ style, trip, onUpdate, user }: TripActionsProps) {
     return;
   }
 
+  const availableSeats = trip.trip.members.reduce((acc, m) => acc + m.seatCount, 0);
+
   return (
     <Row style={[styles.container, style]}>
       {status === "Started" && <AppIcon style={{ marginLeft: 5 }} name="car" color={AppColors.primaryColor} size={30} />}
@@ -82,8 +85,10 @@ export function TripActions({ style, trip, onUpdate, user }: TripActionsProps) {
         ) : (
           <AppButton value="C'est parti?" loading={starting} onPress={handleStart} color={AppColors.primaryColor} />
         )
-      ) : (
+      ) : availableSeats < 0 ? (
         <AppButton value="Rejoindre" loading={joining} onPress={handleJoin} color={AppColors.primaryColor} />
+      ) : (
+        <AppText>Plus de place</AppText>
       )}
     </Row>
   );

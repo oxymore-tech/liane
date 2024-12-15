@@ -56,7 +56,7 @@ export const LianeRequestItem = ({ item, onRefresh, unreadLianes }: LianeRequest
                   borderRadius: 50,
                   backgroundColor: AppColorPalettes.gray[400]
                 }}>
-                <AppIcon name="people-outline" color={AppColors.white} size={32} />
+                <AppIcon name="people" color={AppColors.white} size={32} />
                 {unread && (
                   <View style={styles.notificationDotContainer}>
                     <View style={styles.notificationDot} />
@@ -86,7 +86,7 @@ export const LianeRequestItem = ({ item, onRefresh, unreadLianes }: LianeRequest
                     onPress={() => {
                       setMyModalVisible(true);
                     }}>
-                    <AppIcon name={"edit-2-outline"} color={AppColors.darkGray} size={24} />
+                    <AppIcon name="edit" color={AppColors.darkGray} size={24} />
                   </Pressable>
                 </Row>
                 <View

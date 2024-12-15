@@ -54,9 +54,9 @@ export const SelectOnMapView = ({ onSelect, title, liane }: SelectOnMapViewProps
           <Row style={{}} spacing={16}>
             <RallyingPointItem item={selectedRP} labelSize={18} showIcon={false} detailed={true} />
             <View style={{ flex: 1 }} />
-            <AppPressableIcon name={"close"} onPress={() => setSelectedRP(undefined)} />
+            <AppPressableIcon name="close" onPress={() => setSelectedRP(undefined)} />
           </Row>
-          <AppRoundedButton backgroundColor={AppColors.primaryColor} text={"Choisir ce point"} onPress={() => onSelect(selectedRP)} />
+          <AppRoundedButton backgroundColor={AppColors.primaryColor} text="Choisir ce point" onPress={() => onSelect(selectedRP)} />
         </Column>
       )}
     </View>

@@ -223,7 +223,7 @@ export const ItinerarySearchForm = ({
             <>
               <AppPressableOverlay onPress={() => setMapOpen(currentPoint)} style={{ paddingHorizontal: 16, paddingVertical: 16 }}>
                 <Row spacing={16}>
-                  <AppIcon name={"map-outline"} size={22} />
+                  <AppIcon name="map" size={22} />
                   <AppText>Choisir sur la carte</AppText>
                 </Row>
               </AppPressableOverlay>

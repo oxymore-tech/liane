@@ -12,7 +12,7 @@ export interface NoItemPlaceholderProps {
 export const NoItemPlaceholder = ({ action }: NoItemPlaceholderProps) => {
   return (
     <Column style={[AppStyles.center]} spacing={16}>
-      <LoneTree height={"40%"} opacity={0.9} />
+      <LoneTree height="40%" opacity={0.9} />
       <AppText style={styles.text}>Aucun résultat</AppText>
       {action}
     </Column>

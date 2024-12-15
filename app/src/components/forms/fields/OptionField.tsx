@@ -39,8 +39,8 @@ export const OptionDropdownField = ({
         placeholder={label}
         placeholderStyle={{ color: AppColorPalettes.gray[500] }}
         data={options}
-        labelField={"label"}
-        valueField={"key"}
+        labelField="label"
+        valueField="key"
         onChange={v => field.onChange(v.key)}
       />
     </Column>

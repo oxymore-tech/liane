@@ -13,8 +13,8 @@ export const LianeProofDisplay = ({ id }: { id: Ref<Trip> }) => {
     return services.trip.getProof(id);
   });
   return data ? (
-    <ShapeSource id={"proof_display"} shape={data}>
-      <CircleLayer id={"proof_display"} style={{ circleColor: AppColors.blue, circleRadius: 3 }} />
+    <ShapeSource id="proof_display" shape={data}>
+      <CircleLayer id="proof_display" style={{ circleColor: AppColors.blue, circleRadius: 3 }} />
     </ShapeSource>
   ) : null;
 };

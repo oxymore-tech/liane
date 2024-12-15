@@ -54,7 +54,7 @@ export const LianeTripDetailScreen = () => {
       <View style={{ height: "100%", width: "100%" }}>
         <View style={{ flexDirection: "row", position: "absolute", top: 25, left: 15, zIndex: 40 }}>
           <View style={{ backgroundColor: AppColors.white, borderRadius: 90, marginRight: 5 }}>
-            <AppPressableIcon onPress={() => navigation.goBack()} name={"arrow-ios-back-outline"} color={AppColors.primaryColor} size={32} />
+            <AppPressableIcon onPress={() => navigation.goBack()} name="arrow-left" color={AppColors.primaryColor} size={32} />
           </View>
         </View>
         <View style={{ flex: 1, flexDirection: "column", height: "100%", width: "100%" }}>
@@ -80,7 +80,7 @@ export const LianeTripDetailScreen = () => {
                   color={defaultTextColor(AppColors.primaryColor)}
                   onPress={joinTrip}
                   backgroundColor={AppColors.primaryColor}
-                  text={"Planifier ce trajet dans mon calendrier "}
+                  text="Planifier ce trajet dans mon calendrier "
                 />
               </View>
               <View style={{ marginLeft: 40, paddingTop: 20 }}>

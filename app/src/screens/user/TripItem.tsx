@@ -37,7 +37,7 @@ export function TripItem({ item, onOpenChat, onOpenTrip, user, onUpdate }: TripI
             <AppAvatars users={item.trip.members.map(m => m.user)} driver={item.trip.driver?.user} />
             <AppIcon
               style={{ marginLeft: 4 }}
-              name="message-circle-outline"
+              name="message"
               color={item.booked ? AppColorPalettes.gray[800] : AppColorPalettes.gray[100]}
               size={30}
             />

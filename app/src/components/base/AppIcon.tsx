@@ -1,5 +1,4 @@
 import React from "react";
-import { Icon } from "react-native-eva-icons";
 import { ColorValue, StyleProp, ViewStyle } from "react-native";
 
 import CarQuestionMark from "@/assets/icons/car_question_mark.svg";
@@ -27,11 +26,32 @@ import ThumbUp from "@/assets/icons/thumb_up.svg";
 import ThumbDown from "@/assets/icons/thumb_down.svg";
 import Liane from "@/assets/icons/liane.svg";
 import Bulb from "@/assets/icons/bulb.svg";
+import Search from "@/assets/icons/search.svg";
+import Close from "@/assets/icons/close.svg";
+import Send from "@/assets/icons/send.svg";
+import Refresh from "@/assets/icons/refresh.svg";
+import Flag from "@/assets/icons/flag.svg";
+import Pin from "@/assets/icons/pin.svg";
+import People from "@/assets/icons/people.svg";
+import Edit from "@/assets/icons/edit.svg";
+import Plus from "@/assets/icons/plus.svg";
+import Map from "@/assets/icons/map.svg";
+import Calendar from "@/assets/icons/calendar.svg";
+import Minus from "@/assets/icons/minus.svg";
+import Person from "@/assets/icons/person.svg";
+import WifiOff from "@/assets/icons/wifi-off.svg";
+import Swap from "@/assets/icons/swap.svg";
+import Logout from "@/assets/icons/log-out.svg";
+import MoreVertical from "@/assets/icons/more-vertical.svg";
+import ArrowUp from "@/assets/icons/arrow-up.svg";
+import ArrowDown from "@/assets/icons/arrow-down.svg";
+import CloseCircle from "@/assets/icons/close-circle.svg";
+import Checkmark from "@/assets/icons/checkmark.svg";
+import Settings from "@/assets/icons/settings.svg";
+import Message from "@/assets/icons/message.svg";
 
 import { AppDimensions } from "@/theme/dimensions";
 import { AppColorPalettes } from "@/theme/colors";
-
-export type IconName = `${(typeof EvaIconsNames)[number]}-outline` | (typeof EvaIconsNames)[number] | CustomIconName;
 
 export type AppIconProps = {
   name: IconName;
@@ -41,7 +61,7 @@ export type AppIconProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-export function AppIcon({ name, color = AppColorPalettes.gray[800], size = AppDimensions.iconSize, opacity = 1, style }: AppIconProps) {
+export function AppIcon({ name, color = AppColorPalettes.gray[800], size = AppDimensions.iconSize, style }: AppIconProps) {
   const props = { color, width: size, height: size, style };
   switch (name) {
     case "car-check-mark":
@@ -69,35 +89,80 @@ export function AppIcon({ name, color = AppColorPalettes.gray[800], size = AppDi
     case "seat":
       return <Seat {...props} />;
     case "arrow-switch":
-      return <ArrowSwitch {...props} opacity={opacity} width={size} height={size} fill={color} />;
+      return <ArrowSwitch {...props} />;
     case "arrow-right":
-      return <ArrowRight {...props} opacity={opacity} width={size} height={size} fill={color} />;
-    case "arrow2-left":
-      return <ArrowLeft {...props} opacity={opacity} width={size} height={size} fill={color} />;
+      return <ArrowRight {...props} />;
+    case "arrow-left":
+      return <ArrowLeft {...props} />;
     case "trash":
-      return <Trash {...props} opacity={opacity} width={size} height={size} fill={color} />;
+      return <Trash {...props} />;
     case "info":
-      return <Info {...props} opacity={opacity} width={size} height={size} fill={color} />;
+      return <Info {...props} />;
     case "book":
-      return <Book {...props} opacity={opacity} width={size} height={size} fill={color} />;
+      return <Book {...props} />;
     case "cloud":
-      return <Cloud {...props} opacity={opacity} width={size} height={size} fill={color} />;
+      return <Cloud {...props} />;
     case "thumb-up":
-      return <ThumbUp {...props} opacity={opacity} width={size} height={size} fill={color} />;
+      return <ThumbUp {...props} />;
     case "thumb-down":
-      return <ThumbDown {...props} opacity={opacity} width={size} height={size} fill={color} />;
+      return <ThumbDown {...props} />;
     case "position-marker":
-      return <PositionMarker {...props} opacity={opacity} width={size} height={size} fill={color} />;
+      return <PositionMarker {...props} />;
     case "liane":
-      return <Liane {...props} opacity={opacity} width={size} height={size} fill={color} />;
+      return <Liane {...props} />;
     case "bulb":
-      return <Bulb {...props} opacity={opacity} width={size} height={size} fill={color} />;
+      return <Bulb {...props} />;
+    case "close":
+      return <Close {...props} />;
+    case "send":
+      return <Send {...props} />;
+    case "refresh":
+      return <Refresh {...props} />;
+    case "flag":
+      return <Flag {...props} />;
+    case "pin":
+      return <Pin {...props} />;
+    case "people":
+      return <People {...props} />;
+    case "close-circle":
+      return <CloseCircle {...props} />;
+    case "checkmark":
+      return <Checkmark {...props} />;
+    case "more-vertical":
+      return <MoreVertical {...props} />;
+    case "arrow-up":
+      return <ArrowUp {...props} />;
+    case "arrow-down":
+      return <ArrowDown {...props} />;
+    case "plus":
+      return <Plus {...props} />;
+    case "edit":
+      return <Edit {...props} />;
+    case "map":
+      return <Map {...props} />;
+    case "calendar":
+      return <Calendar {...props} />;
+    case "minus":
+      return <Minus {...props} />;
+    case "person":
+      return <Person {...props} />;
+    case "wifi-off":
+      return <WifiOff {...props} />;
+    case "swap":
+      return <Swap {...props} />;
+    case "log-out":
+      return <Logout {...props} />;
+    case "settings":
+      return <Settings {...props} />;
+    case "message":
+      return <Message {...props} />;
+    case "search":
     default:
-      return <Icon {...props} opacity={opacity} name={name} width={size} height={size} fill={color} />;
+      return <Search {...props} />;
   }
 }
 
-type CustomIconName = (typeof AppIconsNames)[number];
+export type IconName = (typeof AppIconsNames)[number];
 
 const AppIconsNames = [
   "car-check-mark",
@@ -116,254 +181,35 @@ const AppIconsNames = [
   "arrow-switch",
   "thumb-down",
   "thumb-up",
-  "liane"
-] as const;
-
-const EvaIconsNames = [
-  "activity",
-  "alert-circle",
-  "alert-triangle",
-  "archive",
-  "arrow-back",
-  "arrow-circle-down",
-  "arrow-circle-left",
-  "arrow-circle-right",
-  "arrow-circle-up",
-  "arrow-down",
-  "arrow-downward",
-  "arrow-forward",
-  "arrow-ios-back",
-  "arrow-ios-downward",
-  "arrow-ios-forward",
-  "arrow-ios-upward",
-  "arrow-left",
-  "arrow2-left",
-  "arrow-right",
-  "arrow-up",
-  "arrow-upward",
-  "arrowhead-down",
-  "arrowhead-left",
-  "arrowhead-right",
-  "arrowhead-up",
-  "at",
-  "attach-2",
-  "attach",
-  "award",
-  "backspace",
-  "bar-chart-2",
-  "bar-chart",
-  "battery",
-  "behance",
-  "bell-off",
-  "bell",
-  "bluetooth",
-  "book-open",
-  "book",
-  "bookmark",
-  "briefcase",
-  "browser",
-  "brush",
+  "liane",
   "bulb",
-  "calendar",
-  "camera",
-  "car",
-  "cast",
-  "charging",
-  "checkmark-circle-2",
-  "checkmark-circle",
-  "checkmark",
-  "checkmark-square-2",
-  "checkmark-square",
-  "chevron-down",
-  "chevron-left",
-  "chevron-right",
-  "chevron-up",
-  "clipboard",
-  "clock",
-  "close-circle",
-  "close",
-  "close-square",
-  "cloud-download",
-  "cloud-upload",
-  "cloud",
-  "code-download",
-  "code",
-  "collapse",
-  "color-palette",
-  "color-picker",
-  "compass",
-  "copy",
-  "corner-down-left",
-  "corner-down-right",
-  "corner-left-down",
-  "corner-left-up",
-  "corner-right-down",
-  "corner-right-up",
-  "corner-up-left",
-  "corner-up-right",
-  "credit-card",
-  "crop",
-  "cube",
-  "diagonal-arrow-left-down",
-  "diagonal-arrow-left-up",
-  "diagonal-arrow-right-down",
-  "diagonal-arrow-right-up",
-  "done-all",
-  "download",
-  "droplet-off",
-  "droplet",
-  "edit-2",
-  "edit",
-  "email",
-  "expand",
-  "external-link",
-  "eye-off-2",
-  "eye-off",
-  "eye",
-  "facebook",
-  "file-add",
-  "file",
-  "file-remove",
-  "file-text",
-  "film",
-  "flag",
-  "flash-off",
-  "flash",
-  "flip-2",
-  "flip",
-  "folder-add",
-  "folder",
-  "folder-remove",
-  "funnel",
-  "gift",
-  "github",
-  "globe-2",
-  "globe",
-  "google",
-  "grid",
-  "hard-drive",
-  "hash",
-  "headphones",
-  "heart",
-  "home",
-  "image",
-  "inbox",
-  "info",
-  "keypad",
-  "layers",
-  "layout",
-  "link-2",
-  "link",
-  "linkedin",
-  "list",
-  "loader",
-  "lock",
-  "log-in",
-  "log-out",
-  "map",
-  "maximize",
-  "menu-2",
-  "menu-arrow",
-  "menu",
-  "message-circle",
-  "message-square",
-  "mic-off",
-  "mic",
-  "minimize",
-  "minus-circle",
-  "minus",
-  "minus-square",
-  "monitor",
-  "moon",
-  "more-horizontal",
-  "more-vertical",
-  "move",
-  "music",
-  "navigation-2",
-  "navigation",
-  "npm",
-  "options-2",
-  "options",
-  "pantone",
-  "paper-plane",
-  "pause-circle",
-  "people",
-  "percent",
-  "person-add",
-  "person-delete",
-  "person-done",
-  "person",
-  "person-remove",
-  "phone-call",
-  "phone-missed",
-  "phone-off",
-  "phone",
-  "pie-chart",
-  "pin",
-  "play-circle",
-  "plus-circle",
-  "plus",
-  "plus-square",
-  "power",
-  "pricetags",
-  "printer",
-  "question-mark-circle",
-  "question-mark",
-  "radio-button-off",
-  "radio-button-on",
-  "radio",
-  "recording",
-  "refresh",
-  "repeat",
-  "rewind-left",
-  "rewind-right",
-  "save",
-  "scissors",
-  "search",
-  "settings-2",
-  "settings",
-  "shake",
-  "share",
-  "shield-off",
-  "shield",
-  "shopping-bag",
-  "shopping-cart",
-  "shuffle-2",
-  "shuffle",
-  "skip-back",
-  "skip-forward",
-  "slash",
-  "smartphone",
-  "smiling-face",
-  "speaker",
-  "square",
-  "star",
-  "stop-circle",
-  "sun",
-  "swap",
-  "sync",
-  "text",
-  "thermometer-minus",
-  "thermometer",
-  "thermometer-plus",
-  "toggle-left",
-  "toggle-right",
-  "trash-2",
+  "arrow-right",
+  "arrow-left",
   "trash",
-  "trending-down",
-  "trending-up",
-  "tv",
-  "twitter",
-  "umbrella",
-  "undo",
-  "unlock",
-  "upload",
-  "video-off",
-  "video",
-  "volume-down",
-  "volume-mute",
-  "volume-off",
-  "volume-up",
+  "info",
+  "book",
+  "cloud",
+  "search",
+  "close",
+  "send",
+  "refresh",
+  "flag",
+  "pin",
+  "people",
+  "edit",
+  "plus",
+  "map",
+  "calendar",
+  "minus",
+  "person",
   "wifi-off",
-  "wifi"
+  "swap",
+  "log-out",
+  "more-vertical",
+  "arrow-up",
+  "arrow-down",
+  "close-circle",
+  "checkmark",
+  "settings",
+  "message"
 ] as const;

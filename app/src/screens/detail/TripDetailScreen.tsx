@@ -192,7 +192,7 @@ export const LianeWithDateView = (props: { trip: Trip }) => {
                   <View key={m.user.id}>
                     <UserPicture url={m.user.pictureUrl} size={28} borderColor={AppColors.primaryColor} borderWidth={1} />
                     <View style={{ position: "absolute", bottom: -2, left: -2, backgroundColor: AppColorPalettes.gray[200], borderRadius: 20 }}>
-                      <AppIcon name={"arrow-upward"} color={AppColors.primaryColor} size={18} />
+                      <AppIcon name="arrow-up" color={AppColors.primaryColor} size={18} />
                     </View>
                   </View>
                 ))}
@@ -202,7 +202,7 @@ export const LianeWithDateView = (props: { trip: Trip }) => {
                   <View key={m.user.id}>
                     <UserPicture url={m.user.pictureUrl} size={28} borderColor={AppColors.primaryColor} borderWidth={1} />
                     <View style={{ position: "absolute", bottom: -2, left: -2, backgroundColor: AppColorPalettes.gray[200], borderRadius: 20 }}>
-                      <AppIcon name={"arrow-downward"} color={AppColorPalettes.gray[800]} size={18} />
+                      <AppIcon name="arrow-down" color={AppColorPalettes.gray[800]} size={18} />
                     </View>
                   </View>
                 ))}
@@ -246,16 +246,16 @@ const LianeDetailView = ({ liane }: { liane: LianeMatch }) => {
         <Column style={{ flex: 1 }} spacing={4}>
           <Row>
             <Row style={AppStyles.center}>
-              <AppIcon name={"arrow-forward-outline"} size={12} color={AppColorPalettes.gray[500]} />
+              <AppIcon name="arrow-right" size={12} color={AppColorPalettes.gray[500]} />
               <AppText style={styles.infoTravel}>Aller simple</AppText>
             </Row>
           </Row>
           <Row>
-            <InfoItem icon={"twisting-arrow"} value={userTripDistance + " km"} />
+            <InfoItem icon="twisting-arrow" value={userTripDistance + " km"} />
           </Row>
           <Row>
             <InfoItem
-              icon={"seat"}
+              icon="seat"
               value={liane.freeSeatsCount > 0 ? "Reste " + liane.freeSeatsCount + " place" + (liane.freeSeatsCount > 1 ? "s" : "") : "Complet"}
             />
           </Row>

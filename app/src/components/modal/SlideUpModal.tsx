@@ -14,7 +14,14 @@ export interface SlideUpModalProps extends PropsWithChildren {
   visible: boolean;
   setVisible: (visible: boolean) => void;
 }
-export const SlideUpModal = ({ backgroundColor = AppColors.secondaryColor, visible, setVisible, children, actionText, onAction }: SlideUpModalProps) => {
+export const SlideUpModal = ({
+  backgroundColor = AppColors.secondaryColor,
+  visible,
+  setVisible,
+  children,
+  actionText,
+  onAction
+}: SlideUpModalProps) => {
   return (
     <Modal
       propagateSwipe
@@ -26,7 +33,7 @@ export const SlideUpModal = ({ backgroundColor = AppColors.secondaryColor, visib
         <View style={{ backgroundColor, paddingHorizontal: 12, paddingVertical: 24, borderTopLeftRadius: 8, borderTopRightRadius: 8 }}>
           <Row style={{ position: "absolute", right: 20, top: 27, zIndex: 10 }}>
             <AppPressableOverlay style={{ padding: 4 }} onPress={() => setVisible(false)}>
-              <AppIcon name={"close-outline"} color={defaultTextColor(backgroundColor)} size={28} />
+              <AppIcon name="close" color={defaultTextColor(backgroundColor)} size={28} />
             </AppPressableOverlay>
           </Row>
 

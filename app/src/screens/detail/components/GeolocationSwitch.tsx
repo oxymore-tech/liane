@@ -154,7 +154,7 @@ export const GeolocationSwitch = ({ liane: match }: { liane: Trip }) => {
           onValueChange={setGeolocalisationEnabled}
         />
       )}
-      {isTracked === undefined && <ActivityIndicator color={AppColors.primaryColor} size={"small"} />}
+      {isTracked === undefined && <ActivityIndicator color={AppColors.primaryColor} size="small" />}
       <AppText style={[styles.geolocText, { color: isTrackedLive ? AppColors.primaryColor : AppColorPalettes.gray[400] }]}>Géolocalisation</AppText>
     </Row>
   );
