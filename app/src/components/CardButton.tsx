@@ -47,7 +47,7 @@ const CancelButton = ({ color, label, onCancel }: CancelButtonProps) => {
       style={styles.cancelContainer}
       backgroundStyle={[styles.cancelPressable, { backgroundColor: cancelColor }, positionStyleOverride]}
       onPress={onCancel}>
-      <AppIcon name="close-outline" color={cancelIconColor} />
+      <AppIcon name="close" color={cancelIconColor} />
     </AppPressableOverlay>
   );
 };

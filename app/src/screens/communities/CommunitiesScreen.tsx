@@ -37,7 +37,7 @@ export const CommunitiesScreen = () => {
             <AppText style={AppStyles.errorData}>Une erreur est survenue.</AppText>
             <AppText style={AppStyles.errorData}>Message: {(error as any).message}</AppText>
             <View style={{ marginTop: 12 }}>
-              <AppButton color={AppColors.primaryColor} value="Réessayer" icon="refresh-outline" onPress={() => lianeMatches.refetch()} />
+              <AppButton color={AppColors.primaryColor} value="Réessayer" icon="refresh" onPress={() => lianeMatches.refetch()} />
             </View>
           </Column>
         </View>

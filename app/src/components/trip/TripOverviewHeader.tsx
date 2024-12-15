@@ -22,7 +22,7 @@ export const TripOverviewHeader = ({ from, to, dateTime, color }: TripOverviewHe
     <Column style={{ flexShrink: 1, flexGrow: 1 }}>
       <Row style={{ alignItems: "center" }} spacing={4}>
         <AppText style={[styles.headerText, { color: textColor }]}>{from.city}</AppText>
-        <AppIcon name={"arrow-forward-outline"} color={textColor} size={14} />
+        <AppIcon name="arrow-right" color={textColor} size={14} />
         <AppText style={[styles.headerText, { color: textColor }]}>{to.city}</AppText>
       </Row>
       <AppText style={[styles.headerText, { color: textColor, fontSize: 14 }]}>{AppLocalization.formatDateTime(new Date(dateTime))}</AppText>

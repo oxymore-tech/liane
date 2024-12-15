@@ -209,7 +209,7 @@ export const PublishScreen = () => {
       )}
       {step >= MaxSteps && (
         <View style={[styles.accordion, styles.bottom]}>
-          <AppButton value="Envoyer" icon="arrow-circle-right-outline" onPress={handleDone} loading={pending} />
+          <AppButton value="Envoyer" icon="arrow-right" onPress={handleDone} loading={pending} />
         </View>
       )}
     </View>
@@ -287,12 +287,12 @@ const TimeConstraintView = ({
     <View>
       <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
         {title && <AppText style={{ fontWeight: "bold", paddingVertical: 4 }}>{title}</AppText>}
-        {!!value && defaultValue && <AppPressableIcon name={"trash-2-outline"} onPress={() => onChange(defaultValue)} />}
+        {!!value && defaultValue && <AppPressableIcon name="trash" onPress={() => onChange(defaultValue)} />}
       </Row>
       {!value && defaultValue ? (
         <Pressable onPress={() => onChange(defaultValue)}>
           <Center style={{ paddingVertical: 32 }}>
-            <AppIcon name={"plus-circle-outline"} size={32} />
+            <AppIcon name="plus" size={32} />
           </Center>
         </Pressable>
       ) : (

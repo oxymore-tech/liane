@@ -41,7 +41,7 @@ const ListItem = ({
       <Row style={[styles.section, { alignItems: "center" }]} spacing={16}>
         {leadingComponent}
         {descriptionComponent}
-        <AppIcon name={"chevron-right-outline"} />
+        <AppIcon name="arrow-right" />
       </Row>
     </AppPressableOverlay>
   );

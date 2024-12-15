@@ -49,19 +49,19 @@ export const CommunitiesDetailScreen = () => {
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View style={{ flexDirection: "row", width: "100%" }}>
-            <AppPressableIcon onPress={() => navigation.goBack()} name={"arrow-ios-back-outline"} color={AppColors.white} size={32} />
+            <AppPressableIcon onPress={() => navigation.goBack()} name="arrow-left" color={AppColors.white} size={32} />
           </View>
           <View style={styles.statsContainer}>
             <View style={styles.statBox}>
               <View style={styles.iconContainer}>
-                <AppIcon name={"book"} size={72} />
+                <AppIcon name="book" size={72} />
                 <AppText style={styles.iconText}>500</AppText>
               </View>
               <AppText style={styles.labelText}>km effectués</AppText>
             </View>
             <View style={styles.statBox}>
               <View style={styles.iconContainer}>
-                <AppIcon name={"cloud"} size={72} />
+                <AppIcon name="cloud" size={72} />
                 <AppText style={styles.iconText}>50</AppText>
               </View>
               <AppText style={styles.labelText}>kg de CO2 économisés</AppText>
@@ -88,11 +88,11 @@ export const CommunitiesDetailScreen = () => {
                   initialValue: group.members.find(member => member.user?.id === user.id)?.lianeRequest
                 });
             }}>
-            <AppIcon name={"swap"} />
+            <AppIcon name="swap" />
             <AppText style={{ marginLeft: 5, fontSize: 16, fontWeight: "bold", lineHeight: 24 }}>Modifier mes contraintes</AppText>
           </Pressable>
           <Pressable style={{ margin: 16, flexDirection: "row" }} onPress={leaveLiane}>
-            <AppIcon color={AppColors.primaryColor} name={"log-out"} />
+            <AppIcon color={AppColors.primaryColor} name="log-out" />
             <AppText style={{ marginLeft: 5, fontSize: 16, fontWeight: "bold", lineHeight: 24, color: AppColors.primaryColor }}>
               Quitter la liane
             </AppText>
@@ -102,7 +102,7 @@ export const CommunitiesDetailScreen = () => {
       <SimpleModal visible={modalVisible} setVisible={closeModalUser} backgroundColor={AppColors.white} hideClose>
         <Column>
           <Pressable style={{ flexDirection: "row", marginHorizontal: 16 }} onPress={reportUser}>
-            <AppIcon name={"info"} />
+            <AppIcon name="info" />
             <AppText style={{ marginLeft: 5, fontSize: 16, fontWeight: "bold", lineHeight: 24 }}>Signaler l'utilisateur</AppText>
           </Pressable>
         </Column>
@@ -134,7 +134,7 @@ const MemberItem = ({ member, user, setMyModalVisible, setModalVisible }: Member
         </View>
       </View>
       <Pressable onPress={() => (member.user?.id === user?.id ? setMyModalVisible(true) : setModalVisible(true))}>
-        <AppIcon name={"more-vertical"} />
+        <AppIcon name="more-vertical" />
       </Pressable>
     </View>
   );

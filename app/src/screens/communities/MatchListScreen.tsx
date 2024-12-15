@@ -49,7 +49,7 @@ export const MatchListScreen = () => {
   return (
     <View style={styles.mainContainer}>
       <Row style={{ backgroundColor: AppColors.white, justifyContent: "flex-start", alignItems: "center", padding: 16 }} spacing={16}>
-        <AppButton onPress={() => navigation.goBack()} icon={"arrow-ios-back-outline"} color={AppColors.primaryColor} />
+        <AppButton onPress={() => navigation.goBack()} icon="arrow-left" color={AppColors.primaryColor} />
         <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 16, lineHeight: 27, color: AppColors.black }}>Propositions</AppText>
       </Row>
       <SectionList
@@ -128,7 +128,7 @@ const GroupItem = ({ group, onPress }: GroupItemProps) => {
         </View>
       </View>
       <View style={{ position: "absolute", top: 20, right: 15 }}>
-        <AppIcon name={"arrow-right"} />
+        <AppIcon name="arrow-right" />
       </View>
     </Pressable>
   );

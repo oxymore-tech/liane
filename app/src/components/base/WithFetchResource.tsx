@@ -71,7 +71,7 @@ export const WithFetchResource =
               {error.message}
             </AppText>
             <Center>
-              <AppButton color={AppColors.primaryColor} value="Réessayer" icon="refresh-outline" onPress={onRefresh} />
+              <AppButton color={AppColors.primaryColor} value="Réessayer" icon="refresh" onPress={onRefresh} />
             </Center>
           </View>
         );

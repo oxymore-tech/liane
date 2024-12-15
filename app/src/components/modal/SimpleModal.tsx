@@ -21,7 +21,7 @@ export const SimpleModal = ({ backgroundColor = AppColors.secondaryColor, visibl
           <Row style={{ marginBottom: 8 }}>
             {!hideClose && (
               <AppPressable style={{ paddingBottom: 16 }} onPress={hide}>
-                <AppIcon name={"close-outline"} color={defaultTextColor(backgroundColor)} />
+                <AppIcon name="close" color={defaultTextColor(backgroundColor)} />
               </AppPressable>
             )}
           </Row>

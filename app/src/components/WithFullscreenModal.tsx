@@ -15,7 +15,7 @@ export const WithFullscreenModal =
       <View style={[styles.page, { backgroundColor: AppColors.white, paddingTop: Math.max(top, 16), paddingBottom: Math.max(16, bottom) }]}>
         {Platform.OS === "android" && <AppStatusBar style="light-content" />}
         <Row style={{ paddingVertical: 4 }}>
-          {dismissible && <AppPressableIcon onPress={props.navigation.goBack} name="close-outline" size={32} />}
+          {dismissible && <AppPressableIcon onPress={props.navigation.goBack} name="close" size={32} />}
           <AppText style={[styles.title]}>{title} </AppText>
         </Row>
 

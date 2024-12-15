@@ -65,7 +65,7 @@ function Home() {
       {makeTab(
         "Explorer",
         ({ focused }) => (
-          <TabIcon iconName={"map-outline"} focused={focused} size={iconSize} />
+          <TabIcon iconName="map" focused={focused} size={iconSize} />
         ),
         HomeScreen
       )}
@@ -115,7 +115,7 @@ function Navigation() {
 
   if (user) {
     return (
-      <Stack.Navigator initialRouteName={"Home"} screenOptions={{ header: EmptyPageHeader }}>
+      <Stack.Navigator initialRouteName="Home" screenOptions={{ header: EmptyPageHeader }}>
         <Stack.Screen name="Home" component={Home} />
         <Stack.Screen name="ArchivedTrips" component={ArchivedTripsScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
@@ -199,12 +199,7 @@ export const PageHeader = (props: { title?: string | undefined; goBack?: () => v
   const defaultName = props.route?.name ? NavigationScreenTitles[props.route.name] || "" : "";
   return (
     <Row style={[styles.header, { paddingTop: 16 }]} spacing={24}>
-      <AppPressableIcon
-        name={"arrow-ios-back-outline"}
-        color={AppColors.primaryColor}
-        size={32}
-        onPress={props.goBack || (() => props.navigation?.goBack())}
-      />
+      <AppPressableIcon name="arrow-left" color={AppColors.primaryColor} size={32} onPress={props.goBack || (() => props.navigation?.goBack())} />
       <AppText style={{ fontSize: 20, fontWeight: "bold", color: AppColors.primaryColor }}>{props.title || defaultName}</AppText>
     </Row>
   );

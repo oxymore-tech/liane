@@ -119,7 +119,7 @@ export function NewRallyingPointRequestScreen() {
   if (showConfirmation) {
     return (
       <Column style={{ flex: 1, paddingHorizontal: 24, alignItems: "center", paddingBottom }}>
-        <AppIcon name={"checkmark-circle-2"} color={AppColors.primaryColor} size={120} />
+        <AppIcon name="checkmark" color={AppColors.primaryColor} size={120} />
         <AppText style={{ fontSize: 24, fontWeight: "bold", textAlign: "center", marginVertical: 8 }}>Requête envoyée !</AppText>
 
         <AppText numberOfLines={5} style={{ alignSelf: "center", textAlign: "center", fontSize: 18 }}>
@@ -131,7 +131,7 @@ export function NewRallyingPointRequestScreen() {
             color={defaultTextColor(AppColors.primaryColor)}
             onPress={() => navigation.goBack()}
             backgroundColor={AppColors.primaryColor}
-            text={"Terminer"}
+            text="Terminer"
           />
         </View>
       </Column>
@@ -140,12 +140,12 @@ export function NewRallyingPointRequestScreen() {
 
   return (
     <FormProvider {...methods}>
-      <PageHeader title={"Proposer un point de ralliement"} navigation={navigation} />
+      <PageHeader title="Proposer un point de ralliement" navigation={navigation} />
       <View style={{ flex: 1, maxHeight: !location ? undefined : 152 }}>
         <AppMapView ref={mapRef} onPress={!location ? undefined : () => setValue("point.location", undefined)}>
           {location && (
             <Animated.View entering={ZoomIn} exiting={ZoomOut}>
-              <WayPointDisplay rallyingPoint={{ location, id: "selected" } as RallyingPoint} type={"from"} size={24} offsetY={-24} />
+              <WayPointDisplay rallyingPoint={{ location, id: "selected" } as RallyingPoint} type="from" size={24} offsetY={-24} />
             </Animated.View>
           )}
         </AppMapView>
@@ -162,17 +162,17 @@ export function NewRallyingPointRequestScreen() {
                     onPress={() => {
                       setInputText("");
                     }}>
-                    <AppIcon name={"close-outline"} color={AppColorPalettes.gray[800]} />
+                    <AppIcon name="close" color={AppColorPalettes.gray[800]} />
                   </Pressable>
                 ) : undefined
               }
               value={inputText}
               onChangeText={setInputText}
-              placeholder={"Chercher une adresse..."}
+              placeholder="Chercher une adresse..."
               placeholderTextColor={AppColorPalettes.gray[500]}
               textColor={AppColorPalettes.gray[800]}
               style={AppStyles.input}
-              leading={<AppIcon name={"search-outline"} color={AppColors.primaryColor} />}
+              leading={<AppIcon name="search" color={AppColors.primaryColor} />}
             />
           </Animated.View>
         )}
@@ -182,7 +182,7 @@ export function NewRallyingPointRequestScreen() {
               <AppRoundedButton
                 flex={2}
                 backgroundColor={AppColors.primaryColor}
-                text={"Choisir cet emplacement"}
+                text="Choisir cet emplacement"
                 onPress={async () => {
                   const center = await mapRef.current?.getCenter();
                   if (!center) {
@@ -197,7 +197,7 @@ export function NewRallyingPointRequestScreen() {
         {!location && (
           <Center style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} pointerEvents="none">
             <View>
-              <AppIcon name={"position-on"} color={AppColors.primaryColor} size={32} style={[AppStyles.shadow]} />
+              <AppIcon name="position-on" color={AppColors.primaryColor} size={32} style={[AppStyles.shadow]} />
               <Center
                 style={{
                   position: "absolute",
@@ -224,13 +224,13 @@ export function NewRallyingPointRequestScreen() {
         <Column style={{ flex: 1 }}>
           <KeyboardAwareScrollView style={{ flex: 1, flexGrow: 1 }}>
             <Column style={{ paddingHorizontal: 16, paddingVertical: 8 }} spacing={4}>
-              <TextField name={"point.label"} label={RallyingPointPropertiesLabels.label} minLength={2} />
-              <OptionDropdownField label={RallyingPointPropertiesLabels.type} name={"point.type"} options={locationTypes} defaultIndex={undefined} />
-              <TextField name={"point.address"} label={RallyingPointPropertiesLabels.address} />
-              <TextField name={"point.zipCode"} label={RallyingPointPropertiesLabels.zipCode} />
-              <TextField name={"point.city"} label={RallyingPointPropertiesLabels.city} />
-              <TextField name={"point.placeCount"} label={RallyingPointPropertiesLabels.placeCount!} required={false} keyboardType={"numeric"} />
-              <TextField name={"comment"} label={"Description"} expandable={true} required={false} placeholder={"Ajouter une description..."} />
+              <TextField name="point.label" label={RallyingPointPropertiesLabels.label} minLength={2} />
+              <OptionDropdownField label={RallyingPointPropertiesLabels.type} name="point.type" options={locationTypes} defaultIndex={undefined} />
+              <TextField name="point.address" label={RallyingPointPropertiesLabels.address} />
+              <TextField name="point.zipCode" label={RallyingPointPropertiesLabels.zipCode} />
+              <TextField name="point.city" label={RallyingPointPropertiesLabels.city} />
+              <TextField name="point.placeCount" label={RallyingPointPropertiesLabels.placeCount!} required={false} keyboardType="numeric" />
+              <TextField name="comment" label="Description" expandable={true} required={false} placeholder="Ajouter une description..." />
             </Column>
           </KeyboardAwareScrollView>
           <View style={{ backgroundColor: AppColors.white, paddingBottom, paddingHorizontal: 16, paddingTop: 8 }}>

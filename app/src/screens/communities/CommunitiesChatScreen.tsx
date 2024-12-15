@@ -166,13 +166,9 @@ export const CommunitiesChatScreen = () => {
   return (
     <View style={[styles.mainContainer, { paddingBottom: insets.bottom }]}>
       <Row style={{ backgroundColor: AppColors.white, justifyContent: "space-between", alignItems: "center", padding: 16 }} spacing={16}>
-        <AppButton onPress={() => navigation.goBack()} icon={"arrow-ios-back-outline"} color={AppColors.primaryColor} />
+        <AppButton onPress={() => navigation.goBack()} icon="arrow-left" color={AppColors.primaryColor} />
         <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 16, lineHeight: 27, color: AppColors.primaryColor }}>{name}</AppText>
-        <AppButton
-          onPress={() => liane && navigation.navigate("CommunitiesDetails", { liane: liane })}
-          icon={"edit-2-outline"}
-          color={AppColors.white}
-        />
+        <AppButton onPress={() => liane && navigation.navigate("CommunitiesDetails", { liane: liane })} icon="edit" color={AppColors.white} />
       </Row>
       <GestureHandlerRootView>
         <FlatList
@@ -198,7 +194,7 @@ export const CommunitiesChatScreen = () => {
         behavior={Platform.OS === "android" ? "height" : "padding"}
         style={{ paddingBottom: 8, paddingHorizontal: 8, backgroundColor: AppColorPalettes.gray[150] }}>
         <Row spacing={8} style={{ alignItems: "center" }}>
-          <AppButton color={AppColors.primaryColor} onPress={() => setTripModalVisible(true)} icon="plus-outline" />
+          <AppButton color={AppColors.primaryColor} onPress={() => setTripModalVisible(true)} icon="plus" />
           <AppExpandingTextInput
             multiline={true}
             placeholder="Message"
@@ -214,7 +210,7 @@ export const CommunitiesChatScreen = () => {
                 style={{ borderRadius: 16 }}
                 onPress={sendMessage}
                 disabled={inputValue.length === 0}
-                icon="paper-plane-outline"
+                icon="send"
                 loading={isSending}
                 color={AppColors.secondaryColor}
               />

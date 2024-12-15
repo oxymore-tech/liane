@@ -13,7 +13,7 @@ export const FloatingBackButton = (props: { onPress: () => void; color?: ColorVa
         props.color ? { backgroundColor: props.color } : {}
       ]}
       onPress={() => props.onPress()}>
-      <AppIcon name={"arrow-ios-back-outline"} color={props.iconColor ?? AppColors.primaryColor} size={32} />
+      <AppIcon name="arrow-left" color={props.iconColor ?? AppColors.primaryColor} size={32} />
     </Pressable>
   );
 };

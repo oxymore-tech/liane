@@ -69,7 +69,7 @@ const TripScheduleScreen = () => {
             <AppText style={AppStyles.errorData}>Une erreur est survenue.</AppText>
             <AppText style={AppStyles.errorData}>Message: {(trip.error as any).message}</AppText>
             <View style={{ marginTop: 12 }}>
-              <AppButton color={AppColors.primaryColor} value="Réessayer" icon="refresh-outline" onPress={() => trip.refetch()} />
+              <AppButton color={AppColors.primaryColor} value="Réessayer" icon="refresh" onPress={() => trip.refetch()} />
             </View>
           </Column>
         </View>

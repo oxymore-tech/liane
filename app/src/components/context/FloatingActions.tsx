@@ -69,7 +69,7 @@ export const DefaultFloatingActions = ({ actions = ["add", "position"], position
         } as FloatingActionProps,
         {
           id: "add",
-          icon: "plus-outline",
+          icon: "plus",
           title: "Créer une annonce",
           color: AppColors.primaryColor,
           onPress: handleCreate

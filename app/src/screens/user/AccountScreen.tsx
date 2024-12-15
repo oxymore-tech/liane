@@ -22,7 +22,7 @@ export const AccountScreen = () => {
       <ScrollView overScrollMode="never">
         <Center style={[styles.infoContainer, { paddingTop: 24 }]}>
           <Pressable style={[styles.backContainer, { top: 24 }]} onPress={navigation.goBack}>
-            <AppIcon name={"arrow-ios-back-outline"} color={AppColors.white} />
+            <AppIcon name="arrow-left" color={AppColors.white} />
           </Pressable>
           <UserPicture size={180} url={user!.pictureUrl} id={user!.id} />
         </Center>
@@ -33,7 +33,7 @@ export const AccountScreen = () => {
         </Column>
 
         <LineSeparator />
-        <ActionListItem onPress={() => navigation.navigate("ProfileEdit")} iconName={"edit-outline"} text={"Mes informations"} />
+        <ActionListItem onPress={() => navigation.navigate("ProfileEdit")} iconName="edit" text="Mes informations" />
         <ActionListItem
           onPress={() => {
             Alert.alert("Supprimer définitivement ce compte ?", "Toutes les données liées seront supprimées.", [
@@ -53,8 +53,8 @@ export const AccountScreen = () => {
             ]);
           }}
           color={ContextualColors.redAlert.text}
-          iconName={"trash-outline"}
-          text={"Supprimer ce compte"}
+          iconName="trash"
+          text="Supprimer ce compte"
         />
       </ScrollView>
     </>

@@ -75,7 +75,7 @@ const AccordionSummary = ({ title, onPress }: AccordionSummaryProps) => {
       <Pressable onPress={onPress}>
         <Row style={styles.summaryContainer}>
           <AppText style={styles.summary}>{title}</AppText>
-          <AppIcon name={"edit-2"} color={AppColors.white} />
+          <AppIcon name="edit" color={AppColors.white} />
         </Row>
       </Pressable>
     </Animated.View>

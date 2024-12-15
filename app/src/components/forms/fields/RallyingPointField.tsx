@@ -37,7 +37,7 @@ export const RallyingPointField = forwardRef(
                   onChange("");
                   inputRef.current?.focus();
                 }}>
-                <AppIcon name={"close-outline"} color={AppColorPalettes.gray[800]} />
+                <AppIcon name="close" color={AppColorPalettes.gray[800]} />
               </Pressable>
             ) : undefined
           }
