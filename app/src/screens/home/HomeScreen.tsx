@@ -58,7 +58,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
         bottomPadding={bottomPadding}
         onMapMoved={fetchLianeOnMap}
       />
-      <DefaultFloatingActions onPosition={setUserLocation} position="top" />
+      {bottomPadding > 0 && <DefaultFloatingActions onPosition={setUserLocation} position="top" />}
       <HomeMapBottomSheetContainer lianes={lianes} onBottomPaddingChange={setBottomPadding} isFetching={isFetching} />
       <OfflineWarning />
     </View>

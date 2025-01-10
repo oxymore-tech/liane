@@ -7,7 +7,7 @@ import Handle from "@/components/base/Handle.tsx";
 
 export const AppBottomSheetHandleHeight = 60;
 
-type AppBottomSheetProps = Omit<BottomSheetProps, "onChange"> & { onChange?: (position: number) => void; dark?: boolean };
+type AppBottomSheetProps = Omit<BottomSheetProps, "onChange"> & { onChange?: (padding: number) => void; dark?: boolean };
 
 export const AppBottomSheet = ({ onChange, dark = true, ...props }: AppBottomSheetProps) => {
   const insets = useSafeAreaInsets();
