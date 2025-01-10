@@ -15,9 +15,13 @@ export function toLatLng(position: Position): LatLng {
 
 export function fromPositions(bbox: Position[]): BoundingBox {
   const [upperLeft, bottomRight] = bbox;
+  const width = Math.abs(upperLeft[0] - bottomRight[0]);
+  const height = Math.abs(upperLeft[1] - bottomRight[1]);
+  const delta = (Math.max(width, height) - Math.min(width, height)) / 2;
+
   return {
-    max: toLatLng(upperLeft), //maxs
-    min: toLatLng(bottomRight) //mins
+    max: toLatLng([upperLeft[0], upperLeft[1] - delta]), //maxs
+    min: toLatLng([bottomRight[0], bottomRight[1] + delta]) //mins
   };
 }
 
