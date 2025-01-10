@@ -55,7 +55,7 @@ liane dump_on_local
 ```
 
 ```bash
-# En losal on peut se faire passer pour utilisateur avec son numro de téléphone
+# En local on peut se faire passer pour utilisateur avec son numro de téléphone
 # en générant un token pour effectuer une requête
 xh "http://localhost:5000/api/trip" `liane token local 0628412298`
 ```
