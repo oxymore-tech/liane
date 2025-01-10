@@ -148,7 +148,7 @@ export const PublishScreen = () => {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: "white" }}>
+    <View style={{ flex: 1 }}>
       <PageHeader title={lianeId ? "Rejoindre une liane" : "Créer une annonce"} navigation={navigation} />
       <ItinerarySearchForm
         style={{ paddingHorizontal: 16 }}

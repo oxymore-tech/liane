@@ -20,7 +20,7 @@ import { Row } from "@/components/base/AppLayout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 
-export interface LianeCardProps extends PressableProps {
+export type LianeCardProps = PressableProps & {
   label?: string;
   value: string | React.ReactElement;
   onCancel?: () => void;
@@ -30,7 +30,7 @@ export interface LianeCardProps extends PressableProps {
   useOkButton?: boolean;
   onCloseExtendedView?: (isOk: boolean) => void;
   showPopup?: boolean;
-}
+};
 
 type CancelButtonProps = {
   color: ColorValue;

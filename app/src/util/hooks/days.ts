@@ -1,6 +1,7 @@
 import { DayOfWeekFlag, TimeOnly, TimeRange } from "@liane/common";
 
 export const weekDays = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+
 export const extractDays = (days: DayOfWeekFlag | undefined) => {
   if (!days) {
     return "";
@@ -16,7 +17,7 @@ export const extractTime = (time: TimeRange | undefined) => {
     return "";
   }
 
-  return `${formatTime(time.start)} / ${formatTime(time.end)}`;
+  return `${formatTime(time.start)} ➔ ${formatTime(time.end)}`;
 };
 
 const formatTime = (time: TimeOnly): string => {

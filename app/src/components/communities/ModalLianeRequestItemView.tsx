@@ -97,7 +97,7 @@ export const ModalLianeRequestItem = ({ item, onRefresh, myModalVisible, setMyMo
           </Pressable>
         </Column>
       ) : (
-        <Column>
+        <Column spacing={32}>
           <AppTextInput value={name} onChangeText={setName} autoFocus={true} placeholder="Choisissez un libéllé pour vous" />
           <Row spacing={8} style={{ justifyContent: "center" }}>
             <AppButton color={AppColors.secondaryColor} onPress={() => setLianeNameInputVisible(false)} value="Annuler" />
