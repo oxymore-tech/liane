@@ -105,7 +105,7 @@ export const PageLayout = ({ children, ...props }: PropsWithChildren & React.HTM
   }, [pathname, router, user]);
 
   return (
-    <main className="h-screen w-full flex flex-col dark:bg-gray-800 bg-white overflow-hidden" {...props}>
+    <main className={`${user ? "h-screen w-full" : undefined} flex flex-col dark:bg-gray-800 bg-white overflow-hidden`} {...props}>
       <Flowbite>
         <Header />
 

@@ -132,7 +132,7 @@ export function Header({}: HeaderProps) {
 
   return (
     <>
-      <Navbar fluid className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 z-[8] border-b">
+      <Navbar fluid className="fixed bg-white dark:bg-gray-900 z-[8] w-full">
         <Navbar.Brand className="flex-none text-xl font-semibold dark:text-white text-orange-800 h-12" href="#">
           <svg className="mr-3 h-6 sm:h-9 fill-[#F25757] dark:fill-white" height="24" viewBox="0 0 512 95" aria-label="Liane Brand Logo">
             <use href="/logo.svg#img"></use>
