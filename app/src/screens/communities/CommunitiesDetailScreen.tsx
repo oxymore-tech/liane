@@ -3,7 +3,6 @@ import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { useAppNavigation } from "@/components/context/routing";
-import { AppPressableIcon } from "@/components/base/AppPressable";
 import { AppIcon } from "@/components/base/AppIcon";
 import { UserPicture } from "@/components/UserPicture";
 import { AppColors } from "@/theme/colors";
@@ -113,70 +112,6 @@ export const CommunitiesDetailScreen = () => {
       </SimpleModal>
     </View>
   );
-
-  return (
-    <View style={styles.mainContainer}>
-      <View style={styles.header}>
-        <View style={{ flexDirection: "row", width: "100%" }}>
-          <AppPressableIcon onPress={() => navigation.goBack()} name="arrow-left" color={AppColors.white} size={32} />
-        </View>
-        <View style={styles.statsContainer}>
-          <View style={styles.statBox}>
-            <View style={styles.iconContainer}>
-              <AppIcon name="book" size={72} />
-              <AppText style={styles.iconText}>500</AppText>
-            </View>
-            <AppText style={styles.labelText}>km effectués</AppText>
-          </View>
-          <View style={styles.statBox}>
-            <View style={styles.iconContainer}>
-              <AppIcon name="cloud" size={72} />
-              <AppText style={styles.iconText}>50</AppText>
-            </View>
-            <AppText style={styles.labelText}>kg de CO2 économisés</AppText>
-          </View>
-        </View>
-      </View>
-      <View style={styles.membersContainer}>
-        <AppText style={styles.membersTitle}>Membres ({group.members.length})</AppText>
-        <FlatList
-          data={group.members}
-          renderItem={({ item }) => <MemberItem member={item} user={user} setMyModalVisible={setMyModalVisible} setModalVisible={setModalVisible} />}
-          keyExtractor={item => item.user?.id || "id"}
-        />
-      </View>
-      <SimpleModal visible={myModalVisible} setVisible={setMyModalVisible} backgroundColor={AppColors.white} hideClose>
-        <Column>
-          <Pressable
-            style={{ marginHorizontal: 16, marginBottom: 10, flexDirection: "row" }}
-            onPress={() => {
-              setMyModalVisible(false);
-              user &&
-                navigation.navigate("Publish", {
-                  initialValue: group.members.find(member => member.user?.id === user.id)?.lianeRequest
-                });
-            }}>
-            <AppIcon name="swap" />
-            <AppText style={{ marginLeft: 5, fontSize: 16, fontWeight: "bold", lineHeight: 24 }}>Modifier mes contraintes</AppText>
-          </Pressable>
-          <Pressable style={{ margin: 16, flexDirection: "row" }} onPress={leaveLiane}>
-            <AppIcon color={AppColors.primaryColor} name="log-out" />
-            <AppText style={{ marginLeft: 5, fontSize: 16, fontWeight: "bold", lineHeight: 24, color: AppColors.primaryColor }}>
-              Quitter la liane
-            </AppText>
-          </Pressable>
-        </Column>
-      </SimpleModal>
-      <SimpleModal visible={modalVisible} setVisible={closeModalUser} backgroundColor={AppColors.white} hideClose>
-        <Column>
-          <Pressable style={{ flexDirection: "row", marginHorizontal: 16 }} onPress={reportUser}>
-            <AppIcon name="info" />
-            <AppText style={{ marginLeft: 5, fontSize: 16, fontWeight: "bold", lineHeight: 24 }}>Signaler l'utilisateur</AppText>
-          </Pressable>
-        </Column>
-      </SimpleModal>
-    </View>
-  );
 };
 
 type MemberItemProps = {
@@ -213,7 +148,6 @@ const MemberItem = ({ member, user, setMyModalVisible, setModalVisible }: Member
 };
 
 const styles = StyleSheet.create({
-  mainContainer: {},
   header: {
     backgroundColor: AppColors.primaryColor,
     padding: 16,
