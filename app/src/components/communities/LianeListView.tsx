@@ -9,12 +9,12 @@ import { AppStyles } from "@/theme/styles.ts";
 import { Center } from "@/components/base/AppLayout.tsx";
 import { useObservable } from "@/util/hooks/subscription.ts";
 
-export interface LianeListViewProps {
+export type LianeListViewProps = {
   data: CoLianeMatch[];
   isFetching?: boolean;
   onRefresh?: () => void;
   loadMore?: () => void;
-}
+};
 
 export const LianeListView = ({ data, isFetching, onRefresh, loadMore }: LianeListViewProps) => {
   const { services } = useContext(AppContext);

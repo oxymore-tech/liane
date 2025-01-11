@@ -1,7 +1,7 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import AppMapView from "@/components/map/AppMapView";
-import { AppBottomSheet, AppBottomSheetHandleHeight, BottomSheetRefProps } from "@/components/base/AppBottomSheet";
+import { AppBottomSheet, AppBottomSheetHandleHeight } from "@/components/base/AppBottomSheet";
 import { Column, Row } from "@/components/base/AppLayout";
 import { FloatingBackButton } from "@/components/FloatingBackButton";
 import {
@@ -11,8 +11,8 @@ import {
   getTripCostContribution,
   getTripFromMatch,
   getUserTrip,
-  Trip,
-  LianeMatch
+  LianeMatch,
+  Trip
 } from "@liane/common";
 import { useTripStatus } from "@/components/trip/trip";
 import { useAppNavigation } from "@/components/context/routing";
@@ -73,9 +73,7 @@ const LianeDetailPage = ({ match }: { match: LianeMatch | undefined }) => {
   const { height } = useAppWindowsDimensions();
   const { navigation } = useAppNavigation();
 
-  const ref = useRef<BottomSheetRefProps>(null);
-
-  const [bSheetTop, setBSheetTop] = useState<number>(0.7 * height);
+  const [bSheetTop, setBSheetTop] = useState<number>(0);
 
   const tripMatch = useMemo(() => (match ? getTripFromMatch(match) : undefined), [match]);
 
@@ -132,15 +130,7 @@ const LianeDetailPage = ({ match }: { match: LianeMatch | undefined }) => {
           {driver && tripMatch && trackingInfo?.car && <LocationMarker isCar={true} user={driver} info={trackingInfo?.car} />}
           {match && ["Finished", "Archived"].includes(match.trip.state) && <LianeProofDisplay id={match.trip.id!} />}
         </AppMapView>
-        <AppBottomSheet
-          onScrolled={v => setBSheetTop(v)}
-          ref={ref}
-          stops={[AppBottomSheetHandleHeight + 96, 0.45, 1]}
-          padding={{ top: 80 }}
-          initialStop={1}
-          style={{
-            backgroundColor: AppColorPalettes.gray[100]
-          }}>
+        <AppBottomSheet onChange={v => setBSheetTop(v)} snapPoints={[AppBottomSheetHandleHeight + 96, 0.45, 1]} index={1}>
           {match && (
             <ScrollView style={{ paddingHorizontal: 12, backgroundColor: AppColorPalettes.gray[100], paddingBottom: 100 }}>
               <LianeDetailView liane={match} />

@@ -11,9 +11,8 @@ import { AppContext } from "@/components/context/ContextProvider.tsx";
 import { LianeMatchLianeRouteLayer } from "@/components/map/layers/LianeMatchRouteLayer.tsx";
 import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay.tsx";
 import { getBoundingBox, getLianeId, isLiane, WayPoint } from "@liane/common";
-import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider.tsx";
 import { AppBottomSheet, AppBottomSheetHandleHeight } from "@/components/base/AppBottomSheet.tsx";
-import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker.tsx";
 import { AppAvatars } from "@/components/UserPicture.tsx";
 import { ContextActions, PendingAction } from "@/components/communities/ContextActions.tsx";
@@ -21,6 +20,7 @@ import { FloatingBackButton } from "@/components/FloatingBackButton.tsx";
 import { WayPointsView } from "@/components/trip/WayPointsView.tsx";
 import { useQueryClient } from "react-query";
 import { CoLianeMatchQueryKey } from "@/screens/communities/CommunitiesScreen.tsx";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 
 export const LianeMapDetailScreen = () => {
   const { navigation, route } = useAppNavigation<"LianeMapDetail">();
@@ -28,11 +28,10 @@ export const LianeMapDetailScreen = () => {
   const { services } = useContext(AppContext);
   const queryClient = useQueryClient();
 
-  const { height } = useAppWindowsDimensions();
   const insets = useSafeAreaInsets();
 
   const [error, setError] = useState<Error | undefined>(undefined);
-  const [bSheetTop, setBSheetTop] = useState<number>(0.55 * height);
+  const [bSheetTop, setBSheetTop] = useState<number>(0);
   const [wayPoints, setWayPoints] = useState<WayPoint[]>([]);
 
   const [pendingAction, setPendingAction] = useState<PendingAction>();
@@ -59,15 +58,14 @@ export const LianeMapDetailScreen = () => {
       return;
     }
 
-    const bSheetTopPixels = bSheetTop > 1 ? bSheetTop : bSheetTop * height;
     const coordinates = wayPoints.map(w => [w.rallyingPoint.location.lng, w.rallyingPoint.location.lat]);
     const bbox = getBoundingBox(coordinates);
     bbox.paddingTop = 24;
     bbox.paddingLeft = 100;
     bbox.paddingRight = 100;
-    bbox.paddingBottom = bSheetTopPixels;
+    bbox.paddingBottom = bSheetTop;
     return bbox;
-  }, [bSheetTop, height, wayPoints]);
+  }, [bSheetTop, wayPoints]);
 
   const handleJoin = useCallback(async () => {
     if (lianeRequest && lianeRequest.id) {
@@ -134,15 +132,8 @@ export const LianeMapDetailScreen = () => {
           return <WayPointDisplay key={`liane_${w.rallyingPoint.id}`} rallyingPoint={w.rallyingPoint} type={type} />;
         })}
       </AppMapView>
-      <AppBottomSheet
-        onScrolled={v => setBSheetTop(v)}
-        stops={[AppBottomSheetHandleHeight, 0.5, 1]}
-        padding={{ top: 80 }}
-        initialStop={1}
-        style={{
-          backgroundColor: AppColorPalettes.gray[100]
-        }}>
-        <ScrollView style={{ paddingHorizontal: 10, paddingBottom: insets.bottom + 50 }}>
+      <AppBottomSheet onChange={v => setBSheetTop(v)} snapPoints={[AppBottomSheetHandleHeight, "50%", "100%"]} index={1}>
+        <BottomSheetScrollView style={{ paddingHorizontal: 10, paddingBottom: insets.bottom + 50 }}>
           <View
             style={{
               flexDirection: "row",
@@ -172,7 +163,7 @@ export const LianeMapDetailScreen = () => {
               <AppAvatars users={members} size={40} max={10} />
             </View>
           </Column>
-        </ScrollView>
+        </BottomSheetScrollView>
       </AppBottomSheet>
     </GestureHandlerRootView>
   );

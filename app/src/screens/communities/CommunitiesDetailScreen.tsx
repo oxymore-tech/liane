@@ -1,17 +1,18 @@
 import React, { useContext, useMemo, useState } from "react";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
-import { Column } from "@/components/base/AppLayout";
+import { Column, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { useAppNavigation } from "@/components/context/routing";
-import { AppPressableIcon } from "@/components/base/AppPressable";
 import { AppIcon } from "@/components/base/AppIcon";
 import { UserPicture } from "@/components/UserPicture";
 import { AppColors } from "@/theme/colors";
 import { SimpleModal } from "@/components/modal/SimpleModal";
 import { AppLogger } from "@/api/logger";
 import { CoLianeMember, FullUser } from "@liane/common";
-import { extractDaysTimes, extractWaypointFromTo } from "@/util/hooks/lianeRequest";
+import { extractWaypointFromTo } from "@/util/hooks/lianeRequest";
 import { AppContext } from "@/components/context/ContextProvider";
+import { AppButton } from "@/components/base/AppButton.tsx";
+import { extractDays, extractTime } from "@/util/hooks/days.ts";
 
 export const CommunitiesDetailScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesDetails">();
@@ -45,12 +46,12 @@ export const CommunitiesDetailScreen = () => {
   };
 
   return (
-    <View style={styles.mainContainer}>
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <View style={{ flexDirection: "row", width: "100%" }}>
-            <AppPressableIcon onPress={() => navigation.goBack()} name="arrow-left" color={AppColors.white} size={32} />
-          </View>
+    <View>
+      <View>
+        <View style={styles.header}>
+          <Row>
+            <AppButton onPress={() => navigation.goBack()} icon="arrow-left" color={AppColors.white} />
+          </Row>
           <View style={styles.statsContainer}>
             <View style={styles.statBox}>
               <View style={styles.iconContainer}>
@@ -68,14 +69,16 @@ export const CommunitiesDetailScreen = () => {
             </View>
           </View>
         </View>
-      </View>
-      <View style={styles.membersContainer}>
-        <AppText style={styles.membersTitle}>Membres ({group.members.length})</AppText>
-        <FlatList
-          data={group.members}
-          renderItem={({ item }) => <MemberItem member={item} user={user} setMyModalVisible={setMyModalVisible} setModalVisible={setModalVisible} />}
-          keyExtractor={item => item.user?.id || "id"}
-        />
+        <View style={styles.membersContainer}>
+          <AppText style={styles.membersTitle}>Membres ({group.members.length})</AppText>
+          <FlatList
+            data={group.members}
+            renderItem={({ item }) => (
+              <MemberItem member={item} user={user} setMyModalVisible={setMyModalVisible} setModalVisible={setModalVisible} />
+            )}
+            keyExtractor={item => item.user?.id || "id"}
+          />
+        </View>
       </View>
       <SimpleModal visible={myModalVisible} setVisible={setMyModalVisible} backgroundColor={AppColors.white} hideClose>
         <Column>
@@ -129,8 +132,12 @@ const MemberItem = ({ member, user, setMyModalVisible, setModalVisible }: Member
         </View>
         <View style={styles.textContainer}>
           <AppText style={styles.nameText}>{member.user?.pseudo}</AppText>
-          <AppText style={styles.locationText}>{`${from.label} ➔ ${to.label}`}</AppText>
-          <AppText style={styles.timeText}>{extractDaysTimes(member.lianeRequest)}</AppText>
+          <Column>
+            <AppText style={styles.locationText}>{from.city}</AppText>
+            <AppText style={styles.locationText}>{to.city}</AppText>
+          </Column>
+          <AppText style={styles.timeText}>{extractTime({ start: member.lianeRequest.arriveBefore, end: member.lianeRequest.returnAfter })}</AppText>
+          <AppText style={styles.timeText}>{extractDays(member.lianeRequest.weekDays)}</AppText>
         </View>
       </View>
       <Pressable onPress={() => (member.user?.id === user?.id ? setMyModalVisible(true) : setModalVisible(true))}>
@@ -141,33 +148,15 @@ const MemberItem = ({ member, user, setMyModalVisible, setModalVisible }: Member
 };
 
 const styles = StyleSheet.create({
-  mainContainer: {
-    backgroundColor: AppColors.lightGrayBackground,
-    justifyContent: "flex-start",
-    flex: 1,
-    height: "100%"
-  },
   header: {
     backgroundColor: AppColors.primaryColor,
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    padding: 16
-  },
-  headerContent: {
-    flex: 1,
-    flexDirection: "column",
-    alignItems: "center",
-    width: "100%"
+    padding: 16,
+    gap: 16,
+    marginBottom: 10
   },
   statsContainer: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    width: "100%",
-    paddingTop: 16,
-    backgroundColor: AppColors.primaryColor
+    justifyContent: "space-around"
   },
   statBox: {
     alignItems: "center",
@@ -175,7 +164,6 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.primaryColor,
     borderRadius: 10,
     padding: 10,
-    margin: 5,
     width: "45%",
     borderWidth: 2,
     borderColor: AppColors.white
@@ -200,7 +188,6 @@ const styles = StyleSheet.create({
     textAlign: "center"
   },
   membersContainer: {
-    marginTop: 340,
     marginLeft: 15
   },
   membersTitle: {
@@ -214,7 +201,6 @@ const styles = StyleSheet.create({
   memberContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 10,
     marginHorizontal: 16,
     marginBottom: 10,
     borderRadius: 8
@@ -236,15 +222,13 @@ const styles = StyleSheet.create({
     lineHeight: 24
   },
   locationText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "bold",
-    lineHeight: 27,
     color: AppColors.black
   },
   timeText: {
     fontSize: 14,
     fontWeight: "normal",
-    lineHeight: 16,
     color: AppColors.black
   }
 });

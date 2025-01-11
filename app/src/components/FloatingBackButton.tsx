@@ -1,5 +1,5 @@
 import { AppIcon } from "@/components/base/AppIcon";
-import { AppColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { ColorValue, Pressable, StyleSheet } from "react-native";
 import React from "react";
 
@@ -10,10 +10,12 @@ export const FloatingBackButton = (props: { onPress: () => void; color?: ColorVa
         styles.floatingBackButton,
         styles.actionButton,
         { top: props.topOffset ?? -2, marginTop: 8 },
-        props.color ? { backgroundColor: props.color } : {}
+        {
+          backgroundColor: AppColorPalettes.gray[700]
+        }
       ]}
       onPress={() => props.onPress()}>
-      <AppIcon name="arrow-left" color={props.iconColor ?? AppColors.primaryColor} size={32} />
+      <AppIcon name="arrow-left" color={props.iconColor ?? AppColorPalettes.gray[100]} size={32} />
     </Pressable>
   );
 };
@@ -28,6 +30,6 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     padding: 8,
-    borderRadius: 18
+    borderRadius: 32
   }
 });

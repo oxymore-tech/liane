@@ -152,7 +152,6 @@ export const CommunitiesChatScreen = () => {
     services.realTimeHub
       .connectToLianeChat(appendMessage)
       .then(conv => {
-        console.log("Connected to chat", conv);
         setChat(conv);
       })
       .catch(e => {

@@ -3,19 +3,18 @@ import React, {
   forwardRef,
   PropsWithChildren,
   ReactNode,
+  useCallback,
   useContext,
   useEffect,
   useImperativeHandle,
   useMemo,
-  useRef,
-  useState
+  useRef
 } from "react";
-import { Platform, StyleSheet, useWindowDimensions, View } from "react-native";
-import MapLibreGL, {CameraRef, Logger, MapViewRef, RegionPayload} from "@maplibre/maplibre-react-native";
-import { contains, DEFAULT_TLS, DisplayBoundingBox, FR_BBOX, fromBoundingBox, getMapStyleUrl, LatLng } from "@liane/common";
+import { StyleSheet, View } from "react-native";
+import MapLibreGL, { CameraRef, Logger, MapViewRef, RegionPayload } from "@maplibre/maplibre-react-native";
+import { DisplayBoundingBox, getMapStyleUrl, LatLng } from "@liane/common";
 import { AppColorPalettes } from "@/theme/colors";
 import { Point, Position } from "geojson";
-import { AppContext } from "@/components/context/ContextProvider";
 import { Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import MapTilerLogo from "@/assets/images/maptiler-logo.svg";
@@ -29,8 +28,6 @@ const rp_icon = require("../../../assets/icons/rp_gray.png");
 const rp_deposit_icon = require("../../../assets/icons/rp_pink.png");
 const rp_deposit_cluster_icon = require("../../../assets/icons/rp_pink_blank.png");
 
-MapLibreGL.setAccessToken(null);
-
 Logger.setLogCallback(log => {
   const { message } = log;
   // expected warnings - see https://github.com/mapbox/mapbox-gl-native/issues/15341#issuecomment-522889062
@@ -41,15 +38,15 @@ Logger.setLogCallback(log => {
   );
 });
 
-export interface AppMapViewController {
-  setCenter: (position: LatLng, zoom?: number, duration?: number) => Promise<void> | undefined;
+export type AppMapViewController = {
+  setCenter: (position: LatLng, zoom?: number, duration?: number) => void;
   getVisibleBounds: () => Promise<GeoJSON.Position[]> | undefined;
-  fitBounds: (bbox: DisplayBoundingBox, duration?: number) => void;
+  // fitBounds: (bbox: DisplayBoundingBox, duration?: number) => void;
   getZoom: () => Promise<number> | undefined;
   getCenter: () => Promise<Position> | undefined;
   //queryFeatures: (coordinate?: Position, filter?: Expression, layersId?: string[]) => Promise<FeatureCollection | undefined> | undefined;
   subscribeToRegionChanges: (callback: (payload: RegionPayload) => void) => SubscriptionLike;
-}
+};
 // @ts-ignore
 const MapControllerContext = React.createContext<AppMapViewController>();
 
@@ -66,6 +63,7 @@ export interface AppMapViewProps extends PropsWithChildren {
   onMapLoaded?: () => void;
   onLongPress?: ((coordinates: Position) => void) | undefined;
   onPress?: ((coordinates: Position) => void) | undefined;
+  cameraPadding?: number;
 }
 
 const AppMapView = forwardRef(
@@ -80,146 +78,74 @@ const AppMapView = forwardRef(
       onMapLoaded,
       onStopMovingRegion,
       onLongPress,
-      onPress
+      onPress,
+      cameraPadding
     }: AppMapViewProps,
     ref: ForwardedRef<AppMapViewController>
   ) => {
-    const { services } = useContext(AppContext);
     const mapRef = useRef<MapViewRef>();
     const cameraRef = useRef<CameraRef>();
-    const [animated, setAnimated] = useState(false);
 
-    const wd = useWindowDimensions();
-    const scale = Platform.OS === "android" ? wd.scale : 1;
     const regionSubject = useSubject<RegionPayload>();
 
     const controller: AppMapViewController = useMemo(() => {
       return {
         getCenter: () => mapRef.current?.getCenter(),
-        setCenter: (p: LatLng, zoom?: number, duration = 350) => {
+        setCenter: (p: LatLng, zoom?: number, duration = 250) => {
           cameraRef.current?.setCamera({
             centerCoordinate: [p.lng, p.lat],
             zoomLevel: zoom,
-            animationMode: "easeTo",
+            animationMode: "flyTo",
             animationDuration: duration
           });
-          if (cameraRef.current) {
-            return new Promise<void>(resolve => setTimeout(resolve, duration));
-          }
         },
-        // queryFeatures: async (coordinates?: Position, filter?: Expression, layersId?: string[]) => {
-        //   if (coordinates) {
-        //     // query at point
-        //     const pointInView = await mapRef.current?.getPointInView(coordinates)!;
-        //     return mapRef.current?.queryRenderedFeaturesAtPoint(pointInView, filter, layersId);
-        //   } else {
-        //     // query visible viewport
-        //     const b = await mapRef.current?.getVisibleBounds()!;
-        //     const ne = await mapRef.current?.getPointInView(b[0])!;
-        //     const sw = await mapRef.current?.getPointInView(b[1])!;
-        //     return mapRef.current?.queryRenderedFeaturesInRect([sw[1] * scale, ne[0] * scale, 0, 0], filter, layersId);
-        //   }
-        // },
         getVisibleBounds: () => mapRef.current?.getVisibleBounds(),
         getZoom: () => mapRef.current?.getZoom(),
-        fitBounds: (bbox: DisplayBoundingBox, duration?: number) =>
-          cameraRef.current?.fitBounds(bbox.ne, bbox.sw, [bbox.paddingTop, bbox.paddingRight, bbox.paddingBottom, bbox.paddingLeft], duration),
+        // fitBounds: (bbox: DisplayBoundingBox, duration?: number) =>
+        //   cameraRef.current?.fitBounds(bbox.ne, bbox.sw, [bbox.paddingTop, bbox.paddingRight, bbox.paddingBottom, bbox.paddingLeft], duration),
         subscribeToRegionChanges: callback => regionSubject.subscribe(callback)
       };
-    }, [regionSubject, scale]);
+    }, [regionSubject]);
 
     useImperativeHandle(ref, () => controller);
-    const regionMoveCallbackRef = useRef<ReturnType<typeof setTimeout> | undefined>();
-    const moving = useRef<boolean>(false);
 
     useEffect(() => {
       if (!userLocation) {
         return;
       }
-      controller.setCenter(userLocation, undefined);
+
+      controller.setCenter(userLocation, 10);
     }, [controller, userLocation]);
+
+    const handleRegionMoved = useCallback(
+      (feature: GeoJSON.Feature<GeoJSON.Point, RegionPayload>) => {
+        if (onRegionChanged) {
+          onRegionChanged(feature.properties);
+        }
+      },
+      [onRegionChanged]
+    );
 
     return (
       <View style={[styles.map]}>
         <MapLibreGL.MapView
+          contentInset={[0, 0, cameraPadding ?? 0, 0]}
           onLongPress={onLongPress ? e => onLongPress((e.geometry as Point).coordinates) : undefined}
           onPress={onPress ? e => onPress((e.geometry as Point).coordinates) : undefined}
           // @ts-ignore
           ref={mapRef}
-          onTouchMove={() => {
-            if (!moving.current) {
-              moving.current = true;
-              if (animated) {
-                if (onStartMovingRegion) {
-                  onStartMovingRegion();
-                }
-              }
-            }
-          }}
           onTouchEnd={() => {
-            regionMoveCallbackRef.current = setTimeout(async () => {
-              moving.current = false;
-              if (onStopMovingRegion) {
-                onStopMovingRegion();
-              }
-            }, 300);
+            cameraRef.current?.setCamera({ centerCoordinate: undefined });
           }}
-          onTouchCancel={() => {
-            regionMoveCallbackRef.current = setTimeout(async () => {
-              moving.current = false;
-              if (onStopMovingRegion) {
-                onStopMovingRegion();
-              }
-            }, 300);
-          }}
-          onRegionWillChange={() => {
-            if (regionMoveCallbackRef.current) {
-              clearTimeout(regionMoveCallbackRef.current);
-              regionMoveCallbackRef.current = undefined;
-            }
-          }}
-          onRegionIsChanging={feature => regionSubject.next(feature.properties)}
-          onRegionDidChange={feature => {
-            if (animated) {
-              moving.current = false;
-              if (onStopMovingRegion) {
-                onStopMovingRegion();
-              }
-              if (onRegionChanged) {
-                onRegionChanged(feature.properties);
-              }
-            }
-          }}
-          onDidFinishLoadingMap={async () => {
-            if (!bounds) {
-              let position = services.location.getLastKnownLocation();
-              if (!contains(FR_BBOX, position)) {
-                position = DEFAULT_TLS;
-              }
-              cameraRef.current?.setCamera({
-                centerCoordinate: [position.lng, position.lat],
-                zoomLevel: 10,
-                animationDuration: 0
-              });
-            }
-            setAnimated(true);
-            if (onMapLoaded) {
-              onMapLoaded();
-            }
-          }}
+          onRegionDidChange={handleRegionMoved}
           rotateEnabled={false}
           pitchEnabled={false}
           style={styles.map}
-          styleURL={getMapStyleUrl(RNAppEnv)}
+          mapStyle={getMapStyleUrl(RNAppEnv)}
           logoEnabled={false}
           attributionEnabled={false}>
           <MapLibreGL.Camera
             bounds={bounds}
-            maxBounds={fromBoundingBox(FR_BBOX)}
-            animationMode={animated ? "flyTo" : "moveTo"}
-            maxZoomLevel={18}
-            minZoomLevel={4}
-            zoomLevel={10}
             // @ts-ignore
             ref={cameraRef}
           />

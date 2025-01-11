@@ -1,20 +1,22 @@
-import {CoLiane} from "@liane/common";
-import {AppColorPalettes} from "@/theme/colors.ts";
-import {FlatList} from "react-native-gesture-handler";
-import {LianeOnMapItem} from "@/screens/home/LianeOnMapItemView.tsx";
-import React, {useCallback, useContext, useRef} from "react";
-import {useAppNavigation} from "@/components/context/routing.ts";
-import {AppBottomSheet, BottomSheetRefProps} from "@/components/base/AppBottomSheet.tsx";
-import {AppText} from "@/components/base/AppText.tsx";
-import {AppContext} from "@/components/context/ContextProvider.tsx";
-import {Column} from "@/components/base/AppLayout.tsx";
+import { CoLiane } from "@liane/common";
+import { AppColorPalettes } from "@/theme/colors.ts";
+import { LianeOnMapItem } from "@/screens/home/LianeOnMapItemView.tsx";
+import React, { useCallback, useContext } from "react";
+import { useAppNavigation } from "@/components/context/routing.ts";
+import { AppText } from "@/components/base/AppText.tsx";
+import { AppContext } from "@/components/context/ContextProvider.tsx";
+import { Column } from "@/components/base/AppLayout.tsx";
+import { BottomSheetFlatList } from "@gorhom/bottom-sheet";
+import { ActivityIndicator } from "react-native";
+import { AppBottomSheet } from "@/components/base/AppBottomSheet.tsx";
 
 type HomeMapBottomSheetProps = {
   lianes?: CoLiane[];
+  onBottomPaddingChange?: (padding: number) => void;
+  isFetching?: boolean;
 };
 
-export const HomeMapBottomSheetContainer = ({ lianes = [] }: HomeMapBottomSheetProps) => {
-  const refBottomSheet = useRef<BottomSheetRefProps>(null);
+export const HomeMapBottomSheetContainer = ({ lianes = [], onBottomPaddingChange, isFetching }: HomeMapBottomSheetProps) => {
   const { navigation } = useAppNavigation<"Home">();
   const { user } = useContext(AppContext);
 
@@ -31,31 +33,29 @@ export const HomeMapBottomSheetContainer = ({ lianes = [] }: HomeMapBottomSheetP
   );
 
   return (
-    <AppBottomSheet
-      ref={refBottomSheet}
-      stops={[0.5, 1]}
-      initialStop={0}
-      style={{
-        backgroundColor: AppColorPalettes.gray[700]
-      }}>
+    <AppBottomSheet snapPoints={[60, "50%", "100%"]} index={lianes.length === 0 ? 0 : 1} onChange={onBottomPaddingChange}>
       <Column style={{ backgroundColor: AppColorPalettes.gray[700] }}>
-        <AppText
-          style={{
-            color: AppColorPalettes.gray[100],
-            fontSize: 16,
-            textAlign: "center"
-          }}>
-          {lianes.length === 0
-            ? "Déplacez-vous sur la carte"
-            : `${lianes.length} liane${lianes.length > 1 ? "s" : ""} disponible${lianes.length > 1 ? "s" : ""} dans cette zone`}
-        </AppText>
-        <FlatList
+        {isFetching ? (
+          <ActivityIndicator color={AppColorPalettes.gray[100]} />
+        ) : (
+          <AppText
+            style={{
+              color: AppColorPalettes.gray[100],
+              fontSize: 16,
+              textAlign: "center"
+            }}>
+            {lianes.length === 0
+              ? "Déplacez-vous sur la carte"
+              : `${lianes.length} liane${lianes.length > 1 ? "s" : ""} disponible${lianes.length > 1 ? "s" : ""} dans cette zone`}
+          </AppText>
+        )}
+        <BottomSheetFlatList
           style={{ marginHorizontal: 8 }}
           showsVerticalScrollIndicator={false}
           data={lianes}
           renderItem={props => <LianeOnMapItem {...props} openLiane={openLiane} />}
           keyExtractor={item => item.id!}
-          contentContainerStyle={{ marginBottom: 100, paddingBottom: 250 }}
+          contentContainerStyle={{ minHeight: "100%", marginBottom: 100, paddingBottom: 100 }}
         />
       </Column>
     </AppBottomSheet>

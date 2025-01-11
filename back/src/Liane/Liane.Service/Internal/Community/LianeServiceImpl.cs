@@ -170,6 +170,7 @@ public sealed class LianeServiceImpl(
     }
 
     return (await lianeFetcher.FetchLianes(connection, lianeRequests.Select(l => l.Id!.Value).Take(20))).Values
+      .Where(l => l.TotalMembers > 0 || l.CreatedBy.Id != userId)
       .OrderByDescending(l => l.TotalMembers)
       .ThenByDescending(l => l.WeekDays)
       .ThenByDescending(l => l.ReturnAfter - l.ArriveBefore)

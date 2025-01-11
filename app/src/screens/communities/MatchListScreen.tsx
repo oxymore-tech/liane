@@ -1,6 +1,6 @@
 import React, { useContext, useMemo } from "react";
 import { Pressable, SectionList, StyleSheet, View } from "react-native";
-import { Center, Row } from "@/components/base/AppLayout";
+import { Center, Column, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppIcon } from "@/components/base/AppIcon";
@@ -48,12 +48,11 @@ export const MatchListScreen = () => {
 
   return (
     <View style={styles.mainContainer}>
-      <Row style={{ backgroundColor: AppColors.white, justifyContent: "flex-start", alignItems: "center", padding: 16 }} spacing={16}>
+      <Row style={{ backgroundColor: AppColorPalettes.gray[100], justifyContent: "flex-start", alignItems: "center", padding: 16 }} spacing={16}>
         <AppButton onPress={() => navigation.goBack()} icon="arrow-left" color={AppColors.primaryColor} />
         <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 16, lineHeight: 27, color: AppColors.black }}>Propositions</AppText>
       </Row>
       <SectionList
-        style={styles.membersContainer}
         renderSectionHeader={renderSectionHeader}
         ListEmptyComponent={
           <Center>
@@ -104,23 +103,19 @@ const GroupItem = ({ group, onPress }: GroupItemProps) => {
     <Pressable onPress={onPress} style={styles.memberContainer}>
       <View style={styles.memberInfo}>
         <View style={styles.textContainer}>
-          <Row spacing={6}>
+          <Column>
             <AppText style={styles.city}>{group.pickup.city}</AppText>
-            <AppText style={styles.label}>{group.pickup.label}</AppText>
-          </Row>
-          <Row spacing={6}>
             <AppText style={styles.city}>{group.deposit.city}</AppText>
-            <AppText style={styles.label}>{group.deposit.label}</AppText>
-          </Row>
+          </Column>
           <View
             style={{
               flexDirection: "row",
               justifyContent: "space-between"
             }}>
-            <View style={{ flexDirection: "row" }}>
-              <AppText style={styles.days}>{`${extractDays(group.weekDays)}`}</AppText>
-              <AppText style={[styles.days, { marginLeft: 6 }]}>{`${extractTime(group.when)}`}</AppText>
-            </View>
+            <Column>
+              <AppText style={styles.days}>{extractTime(group.when)}</AppText>
+              <AppText style={styles.days}>{extractDays(group.weekDays)}</AppText>
+            </Column>
             <Row style={{ justifyContent: "flex-end", marginRight: 12 }}>
               <AppAvatars users={group.members} />
             </Row>
@@ -138,25 +133,19 @@ const styles = StyleSheet.create({
   mainContainer: {
     backgroundColor: AppColors.grayBackground,
     justifyContent: "flex-start",
-    flex: 1,
-    height: "100%"
+    flex: 1
   },
   headerSection: {
-    paddingTop: 16,
+    paddingTop: 10,
     paddingBottom: 10,
     flexDirection: "row",
     justifyContent: "center",
-    alignItems: "center",
-    gap: 8
-  },
-  membersContainer: {
-    paddingTop: 12,
-    height: "100%"
+    alignItems: "center"
   },
   memberContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 10,
+    marginBottom: 10,
     marginHorizontal: 8,
     borderRadius: 8,
     borderWidth: 1,
@@ -182,19 +171,12 @@ const styles = StyleSheet.create({
     borderWidth: 1
   },
   city: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
     flexShrink: 1,
     lineHeight: 27,
     paddingRight: 8,
     color: AppColors.black
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: "normal",
-    flexShrink: 1,
-    lineHeight: 27,
-    color: AppColorPalettes.gray[500]
   },
   days: {
     fontSize: 15,
