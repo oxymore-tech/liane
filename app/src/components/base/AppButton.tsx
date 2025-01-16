@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ActivityIndicator, ColorValue, PressableProps, StyleProp, StyleSheet, TouchableOpacity, View, ViewStyle } from "react-native";
+import { ActivityIndicator, ColorValue, PressableProps, StyleProp, StyleSheet, TextStyle, TouchableOpacity, View, ViewStyle } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppText } from "./AppText";
 import { AppDimensions } from "@/theme/dimensions";
@@ -21,7 +21,9 @@ export type AppButtonProps = PressableProps & {
   user?: User | null;
   loading?: boolean;
   style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
   title?: string;
+  iconSize?: number;
 } & ({ value: string; icon?: IconName } | { icon: IconName; value?: string });
 
 export function AppButton({
@@ -35,6 +37,8 @@ export function AppButton({
   foregroundColor,
   loading = false,
   style,
+  textStyle,
+  iconSize = 28,
   ...props
 }: AppButtonProps) {
   const { navigation } = useAppNavigation();
@@ -70,7 +74,8 @@ export function AppButton({
                 flexShrink: 1,
                 alignSelf: "center"
               },
-              AppStyles.shadow
+              AppStyles.shadow,
+              textStyle
             ]}>
             <AppText style={{ color: AppColors.white, fontWeight: "bold", fontSize: 16 }}>{title}</AppText>
           </View>
@@ -78,7 +83,7 @@ export function AppButton({
       )}
 
       <Row style={styles.contentContainer} spacing={8}>
-        {icon && <AppIcon style={styles.iconContainer} opacity={loading ? 0 : 1} name={icon} color={textColor} size={28} />}
+        {icon && <AppIcon style={[styles.iconContainer, textStyle]} opacity={loading ? 0 : 1} name={icon} color={textColor} size={iconSize} />}
         {value && <AppText style={[{ color: textColor }, styles.text, loading && { opacity: 0 }]}>{value}</AppText>}
         {loading && <ActivityIndicator style={styles.loader} color={textColor} size="small" />}
       </Row>

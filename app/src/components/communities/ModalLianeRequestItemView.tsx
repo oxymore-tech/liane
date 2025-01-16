@@ -93,7 +93,9 @@ export const ModalLianeRequestItem = ({ item, onRefresh, myModalVisible, setMyMo
             </AppText>
           </Pressable>
           <Pressable style={{ margin: 16, flexDirection: "row" }} onPress={deleteLiane}>
-            <AppText style={{ marginLeft: 5, fontSize: 16, fontWeight: "bold", lineHeight: 24, color: AppColors.darkGray }}>Quitter la liane</AppText>
+            <AppText style={{ marginLeft: 5, fontSize: 16, fontWeight: "bold", lineHeight: 24, color: AppColors.darkGray }}>
+              {item.state.type === "Attached" ? "Quitter la liane" : "Supprimer la liane"}
+            </AppText>
           </Pressable>
         </Column>
       ) : (
