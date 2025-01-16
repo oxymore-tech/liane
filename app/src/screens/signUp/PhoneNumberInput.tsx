@@ -20,12 +20,12 @@ export const PhoneNumberInput = ({ submit, onChange, submitting, canSubmit, phon
   };
 
   const value = useMemo(() => {
-    return phoneNumber.replaceAll(/[^0-9]/g, "");
+    return phoneNumber.replaceAll(" ", "");
   }, [phoneNumber]);
 
   const handleChange = useCallback(
     (v: string) => {
-      onChange(v.replaceAll(/[^0-9]/g, ""));
+      onChange(v.replaceAll(" ", ""));
     },
     [onChange]
   );
@@ -44,7 +44,7 @@ export const PhoneNumberInput = ({ submit, onChange, submitting, canSubmit, phon
           autoComplete="tel"
           textContentType="telephoneNumber"
           onSubmitEditing={submit}
-          maxLength={10}
+          maxLength={12}
         />
         <Pressable style={[styles.button, buttonColor]} disabled={!canSubmit} onPress={submit}>
           {!submitting && <AppIcon name="arrow-right" color={AppColors.white} />}

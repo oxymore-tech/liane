@@ -19,7 +19,7 @@ import { ContextActions, PendingAction } from "@/components/communities/ContextA
 import { FloatingBackButton } from "@/components/FloatingBackButton.tsx";
 import { WayPointsView } from "@/components/trip/WayPointsView.tsx";
 import { useQueryClient } from "react-query";
-import { CoLianeMatchQueryKey } from "@/screens/communities/CommunitiesScreen.tsx";
+import { LianeQueryKey } from "@/screens/communities/CommunitiesScreen.tsx";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 
 export const LianeMapDetailScreen = () => {
@@ -73,7 +73,7 @@ export const LianeMapDetailScreen = () => {
       try {
         const result = await services.community.joinRequest(lianeRequest.id, lianeId);
         AppLogger.debug("COMMUNITIES", "Demande de rejoindre une liane avec succès", result);
-        await queryClient.invalidateQueries(CoLianeMatchQueryKey);
+        await queryClient.invalidateQueries(LianeQueryKey);
         navigation.popToTop();
       } finally {
         setPendingAction(undefined);
@@ -88,7 +88,7 @@ export const LianeMapDetailScreen = () => {
       setPendingAction("reject");
       try {
         await services.community.reject(lianeRequest.id, lianeId);
-        await queryClient.invalidateQueries(CoLianeMatchQueryKey);
+        await queryClient.invalidateQueries(LianeQueryKey);
         navigation.popToTop();
       } finally {
         setPendingAction(undefined);
@@ -103,7 +103,7 @@ export const LianeMapDetailScreen = () => {
     setPendingAction("leave");
     try {
       await services.community.leave(lianeId);
-      await queryClient.invalidateQueries(CoLianeMatchQueryKey);
+      await queryClient.invalidateQueries(LianeQueryKey);
       navigation.popToTop();
     } finally {
       setPendingAction(undefined);

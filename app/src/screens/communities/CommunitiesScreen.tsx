@@ -1,6 +1,6 @@
-import React, { useContext } from "react";
+import React, { useCallback, useContext } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
-import { useQuery } from "react-query";
+import { useQuery, useQueryClient } from "react-query";
 import { UnauthorizedError } from "@liane/common";
 import { AppText } from "@/components/base/AppText";
 import { Column } from "@/components/base/AppLayout";
@@ -13,10 +13,15 @@ import { DefaultFloatingActions } from "@/components/context/FloatingActions.tsx
 
 export const CommunitiesScreen = () => {
   const { services } = useContext(AppContext);
+  const queryClient = useQueryClient();
 
-  const lianeMatches = useQuery(CoLianeMatchQueryKey, () => services.community.match());
+  const lianeMatches = useQuery([LianeQueryKey, "match"], () => services.community.match());
 
   const { isFetching, error, data } = lianeMatches;
+
+  const handleRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries(LianeQueryKey);
+  }, [queryClient]);
 
   if (lianeMatches.isLoading) {
     return (
@@ -48,7 +53,7 @@ export const CommunitiesScreen = () => {
   const list = data ?? [];
   return (
     <Column style={styles.headerContainer}>
-      <LianeListView data={list} isFetching={isFetching} onRefresh={() => lianeMatches.refetch()} />
+      <LianeListView data={list} isFetching={isFetching} onRefresh={handleRefresh} />
       <DefaultFloatingActions actions={["add"]} />
     </Column>
   );
@@ -67,4 +72,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export const CoLianeMatchQueryKey = "liane/match";
+export const LianeQueryKey = "liane";

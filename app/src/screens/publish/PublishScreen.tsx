@@ -21,7 +21,7 @@ import { Accordion } from "@/screens/publish/Accordion.tsx";
 import { PageHeader } from "@/components/context/Navigation.tsx";
 import { ItinerarySearchForm, Notice } from "@/screens/ItinerarySearchForm.tsx";
 import { AppButton } from "@/components/base/AppButton.tsx";
-import { CoLianeMatchQueryKey } from "@/screens/communities/CommunitiesScreen.tsx";
+import { LianeQueryKey } from "@/screens/communities/CommunitiesScreen.tsx";
 
 type StepProps<T> = {
   onChange: (v: T) => void;
@@ -95,7 +95,7 @@ export const PublishScreen = () => {
           await services.community.joinRequest(created.id!, lianeId);
         }
       }
-      await queryClient.invalidateQueries(CoLianeMatchQueryKey);
+      await queryClient.invalidateQueries(LianeQueryKey);
       navigation.popToTop();
       // @ts-ignore
       navigation.navigate("Home", { screen: "Lianes" });

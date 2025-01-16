@@ -1,4 +1,4 @@
-import { Observable, Subject } from "rxjs";
+import { Observable } from "rxjs";
 import { FeatureCollection, Position } from "geojson";
 import { LatLng, Ref, Trip } from "@liane/common";
 import React, { useCallback, useImperativeHandle, useRef } from "react";
@@ -11,7 +11,6 @@ export type HomeMapProps = {
   onMovingStateChanged?: (moving: boolean) => void;
   bottomPadding: number;
   displaySource: Observable<[FeatureCollection, Set<Ref<Trip>> | undefined]>;
-  featureSubject?: Subject<GeoJSON.Feature[] | undefined>;
   onMapMoved?: (visibleBounds: Position[], center: Position) => void;
 };
 

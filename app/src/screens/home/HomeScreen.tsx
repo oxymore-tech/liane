@@ -1,6 +1,6 @@
 import { StyleSheet, View } from "react-native";
 import React, { useCallback, useContext, useEffect, useState } from "react";
-import { CoLiane, EmptyFeatureCollection, fromPositions, LatLng, Ref, Trip } from "@liane/common";
+import { BoundingBox, EmptyFeatureCollection, fromPositions, LatLng, Ref, Trip } from "@liane/common";
 import { AppContext } from "@/components/context/ContextProvider";
 import { FeatureCollection, Position } from "geojson";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -11,35 +11,38 @@ import { HomeMap } from "@/screens/home/HomeMap";
 import { useBehaviorSubject } from "@/util/hooks/subscription";
 import { HomeMapBottomSheetContainer } from "@/screens/home/HomeMapBottomSheet.tsx";
 import { DefaultFloatingActions } from "@/components/context/FloatingActions.tsx";
+import { useQuery } from "react-query";
+
+export const LianeOnMapQueryKey = "lianesOnMap";
 
 const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureCollection, Set<Ref<Trip>> | undefined]> }) => {
-  const [lianes, setLianes] = useState<CoLiane[]>();
-  const [isFetching, setFetching] = useState<boolean>();
-  const mapFeatureSubject = useBehaviorSubject<GeoJSON.Feature[] | undefined>(undefined);
   const { services } = useContext(AppContext);
 
-  const [boundingBox, setBoundingBox] = useState("");
+  const [bbox, setBbox] = useState<BoundingBox>();
+  const [bboxAsString, setBboxAsString] = useState("");
 
-  const fetchLianeOnMap = useCallback(
-    async (visibleBounds: Position[], center: Position) => {
-      try {
-        setFetching(true);
-        const bbox = fromPositions(visibleBounds, center);
-        const current = JSON.stringify(bbox);
-        if (current === boundingBox) {
-          return;
-        }
-        setBoundingBox(current);
-        const lianesTemp: CoLiane[] = await services.community.list({
-          forCurrentUser: false,
-          bbox
-        });
-        setLianes(lianesTemp);
-      } finally {
-        setFetching(false);
-      }
+  const { data, isFetching } = useQuery(
+    [LianeOnMapQueryKey, bboxAsString],
+    () => {
+      return services.community.list({
+        forCurrentUser: false,
+        bbox
+      });
     },
-    [boundingBox, services.community]
+    { keepPreviousData: true }
+  );
+
+  const refreshBoundingBox = useCallback(
+    async (visibleBounds: Position[], center: Position) => {
+      const newBbox = fromPositions(visibleBounds, center);
+      const value = JSON.stringify(newBbox);
+      if (value === bboxAsString) {
+        return;
+      }
+      setBboxAsString(value);
+      setBbox(newBbox);
+    },
+    [setBbox, bboxAsString]
   );
 
   const [userLocation, setUserLocation] = useState<LatLng>(services.location.getLastKnownLocation());
@@ -51,15 +54,9 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
 
   return (
     <View style={styles.container}>
-      <HomeMap
-        userLocation={userLocation}
-        featureSubject={mapFeatureSubject}
-        displaySource={displaySource}
-        bottomPadding={bottomPadding}
-        onMapMoved={fetchLianeOnMap}
-      />
+      <HomeMap userLocation={userLocation} displaySource={displaySource} bottomPadding={bottomPadding} onMapMoved={refreshBoundingBox} />
       {bottomPadding > 0 && <DefaultFloatingActions onPosition={setUserLocation} position="top" />}
-      <HomeMapBottomSheetContainer lianes={lianes} onBottomPaddingChange={setBottomPadding} isFetching={isFetching} />
+      <HomeMapBottomSheetContainer lianes={data} onBottomPaddingChange={setBottomPadding} isFetching={isFetching} />
       <OfflineWarning />
     </View>
   );
