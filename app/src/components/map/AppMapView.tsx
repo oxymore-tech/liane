@@ -113,10 +113,6 @@ const AppMapView = forwardRef(
         return;
       }
 
-      // if (userLocation === appliedCenter) {
-      //   return;
-      // }
-
       controller.setCenter(appliedCenter, 10);
       setAppliedCenter(appliedCenter);
     }, [controller, appliedCenter, setAppliedCenter]);
@@ -140,7 +136,7 @@ const AppMapView = forwardRef(
           // @ts-ignore
           ref={mapRef}
           onTouchEnd={() => {
-            cameraRef.current?.setCamera({ centerCoordinate: undefined, padding: undefined });
+            cameraRef.current?.setCamera({ centerCoordinate: undefined, padding: { paddingBottom: cameraPadding } });
             setAppliedCenter(undefined);
           }}
           onRegionDidChange={handleRegionMoved}
