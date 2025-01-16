@@ -8,7 +8,8 @@ import React, {
   useEffect,
   useImperativeHandle,
   useMemo,
-  useRef
+  useRef,
+  useState
 } from "react";
 import { StyleSheet, View } from "react-native";
 import MapLibreGL, { CameraRef, Logger, MapViewRef, RegionPayload } from "@maplibre/maplibre-react-native";
@@ -68,25 +69,15 @@ export interface AppMapViewProps extends PropsWithChildren {
 
 const AppMapView = forwardRef(
   (
-    {
-      onRegionChanged,
-      onStartMovingRegion,
-      children,
-      extra,
-      userLocation,
-      bounds,
-      onMapLoaded,
-      onStopMovingRegion,
-      onLongPress,
-      onPress,
-      cameraPadding
-    }: AppMapViewProps,
+    { onRegionChanged, children, extra, userLocation, bounds, onLongPress, onPress, cameraPadding }: AppMapViewProps,
     ref: ForwardedRef<AppMapViewController>
   ) => {
     const mapRef = useRef<MapViewRef>();
     const cameraRef = useRef<CameraRef>();
 
     const regionSubject = useSubject<RegionPayload>();
+
+    const [appliedCenter, setAppliedCenter] = useState<LatLng>();
 
     const controller: AppMapViewController = useMemo(() => {
       return {
@@ -96,7 +87,10 @@ const AppMapView = forwardRef(
             centerCoordinate: [p.lng, p.lat],
             zoomLevel: zoom,
             animationMode: "flyTo",
-            animationDuration: duration
+            animationDuration: duration,
+            padding: {
+              paddingBottom: cameraPadding ?? 0
+            }
           });
         },
         getVisibleBounds: () => mapRef.current?.getVisibleBounds(),
@@ -105,7 +99,7 @@ const AppMapView = forwardRef(
         //   cameraRef.current?.fitBounds(bbox.ne, bbox.sw, [bbox.paddingTop, bbox.paddingRight, bbox.paddingBottom, bbox.paddingLeft], duration),
         subscribeToRegionChanges: callback => regionSubject.subscribe(callback)
       };
-    }, [regionSubject]);
+    }, [cameraPadding, regionSubject]);
 
     useImperativeHandle(ref, () => controller);
 
@@ -114,8 +108,13 @@ const AppMapView = forwardRef(
         return;
       }
 
+      if (userLocation === appliedCenter) {
+        return;
+      }
+
       controller.setCenter(userLocation, 10);
-    }, [controller, userLocation]);
+      setAppliedCenter(userLocation);
+    }, [controller, userLocation, appliedCenter, setAppliedCenter]);
 
     const handleRegionMoved = useCallback(
       (feature: GeoJSON.Feature<GeoJSON.Point, RegionPayload>) => {
@@ -129,13 +128,12 @@ const AppMapView = forwardRef(
     return (
       <View style={[styles.map]}>
         <MapLibreGL.MapView
-          contentInset={[0, 0, cameraPadding ?? 0, 0]}
           onLongPress={onLongPress ? e => onLongPress((e.geometry as Point).coordinates) : undefined}
           onPress={onPress ? e => onPress((e.geometry as Point).coordinates) : undefined}
           // @ts-ignore
           ref={mapRef}
           onTouchEnd={() => {
-            cameraRef.current?.setCamera({ centerCoordinate: undefined });
+            cameraRef.current?.setCamera({ centerCoordinate: undefined, padding: undefined });
           }}
           onRegionDidChange={handleRegionMoved}
           rotateEnabled={false}
