@@ -1855,10 +1855,10 @@
     url-join "^5.0.0"
     xstate "^4.37.0"
 
-"@maplibre/maplibre-react-native@^10.0.0-beta.18":
-  version "10.0.0-beta.18"
-  resolved "https://registry.yarnpkg.com/@maplibre/maplibre-react-native/-/maplibre-react-native-10.0.0-beta.18.tgz#9ab93d471525f98a158846ddda682e2a2663914a"
-  integrity sha512-j6tn78wg6hd7pAZsQdNVLXSgNWecQPy1m10F5WydvT5ADtaT573L5M2czfcX6DglKTa+UYd/JIkcYgJTfpFBdA==
+"@maplibre/maplibre-react-native@^10.0.0":
+  version "10.0.0"
+  resolved "https://registry.yarnpkg.com/@maplibre/maplibre-react-native/-/maplibre-react-native-10.0.0.tgz#c08328ef0dd67a578fe511590fa6ec6fc8cb7123"
+  integrity sha512-iDXT+FCz61zhmxn0egsxJYlvX4cV9BFYta/ftst9WO22/+YEMbsSxLewyxYN30YlOqiLebDHTg6TctwVdVfWJg==
   dependencies:
     "@turf/distance" "^7.1.0"
     "@turf/helpers" "^7.1.0"
