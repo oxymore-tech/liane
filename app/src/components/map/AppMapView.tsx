@@ -42,10 +42,8 @@ Logger.setLogCallback(log => {
 export type AppMapViewController = {
   setCenter: (position: LatLng, zoom?: number, duration?: number) => void;
   getVisibleBounds: () => Promise<GeoJSON.Position[]> | undefined;
-  // fitBounds: (bbox: DisplayBoundingBox, duration?: number) => void;
   getZoom: () => Promise<number> | undefined;
   getCenter: () => Promise<Position> | undefined;
-  //queryFeatures: (coordinate?: Position, filter?: Expression, layersId?: string[]) => Promise<FeatureCollection | undefined> | undefined;
   subscribeToRegionChanges: (callback: (payload: RegionPayload) => void) => SubscriptionLike;
 };
 // @ts-ignore
@@ -95,8 +93,6 @@ const AppMapView = forwardRef(
         },
         getVisibleBounds: () => mapRef.current?.getVisibleBounds(),
         getZoom: () => mapRef.current?.getZoom(),
-        // fitBounds: (bbox: DisplayBoundingBox, duration?: number) =>
-        //   cameraRef.current?.fitBounds(bbox.ne, bbox.sw, [bbox.paddingTop, bbox.paddingRight, bbox.paddingBottom, bbox.paddingLeft], duration),
         subscribeToRegionChanges: callback => regionSubject.subscribe(callback)
       };
     }, [cameraPadding, regionSubject]);

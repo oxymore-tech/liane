@@ -63,7 +63,7 @@ export const LianeMapDetailScreen = () => {
     bbox.paddingTop = 24;
     bbox.paddingLeft = 100;
     bbox.paddingRight = 100;
-    bbox.paddingBottom = bSheetTop;
+    bbox.paddingBottom = bSheetTop + 50 + 24;
     return bbox;
   }, [bSheetTop, wayPoints]);
 
