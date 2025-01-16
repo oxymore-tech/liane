@@ -12,7 +12,7 @@ export type HomeMapProps = {
   bottomPadding: number;
   displaySource: Observable<[FeatureCollection, Set<Ref<Trip>> | undefined]>;
   featureSubject?: Subject<GeoJSON.Feature[] | undefined>;
-  onMapMoved?: (visibleBounds: Position[]) => void;
+  onMapMoved?: (visibleBounds: Position[], center: Position) => void;
 };
 
 export const HomeMap = React.forwardRef<AppMapViewController, HomeMapProps>(({ onMapMoved, userLocation, bottomPadding }: HomeMapProps, ref) => {
@@ -21,8 +21,8 @@ export const HomeMap = React.forwardRef<AppMapViewController, HomeMapProps>(({ o
   useImperativeHandle(ref, () => appMapRef.current);
 
   const handleRegionChanged = useCallback(
-    async (payload: { zoomLevel: number; isUserInteraction: boolean; visibleBounds: Position[] }) => {
-      onMapMoved && onMapMoved(payload.visibleBounds);
+    async (payload: { zoomLevel: number; isUserInteraction: boolean; visibleBounds: Position[]; center: Position }) => {
+      onMapMoved && onMapMoved(payload.visibleBounds, payload.center);
     },
     [onMapMoved]
   );

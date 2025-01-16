@@ -51,7 +51,12 @@ const MapControllerContext = React.createContext<AppMapViewController>();
 
 export const useAppMapViewController = () => useContext<AppMapViewController>(MapControllerContext);
 
-export type MapMovedCallback = (payload: { zoomLevel: number; isUserInteraction: boolean; visibleBounds: GeoJSON.Position[] }) => void;
+export type MapMovedCallback = (payload: {
+  zoomLevel: number;
+  isUserInteraction: boolean;
+  visibleBounds: GeoJSON.Position[];
+  center: Position;
+}) => void;
 export interface AppMapViewProps extends PropsWithChildren {
   onRegionChanged?: MapMovedCallback;
   onStartMovingRegion?: () => void;
@@ -75,7 +80,7 @@ const AppMapView = forwardRef(
 
     const regionSubject = useSubject<RegionPayload>();
 
-    const [appliedCenter, setAppliedCenter] = useState<LatLng>();
+    const [appliedCenter, setAppliedCenter] = useState<LatLng | undefined>(userLocation);
 
     const controller: AppMapViewController = useMemo(() => {
       return {
@@ -100,25 +105,31 @@ const AppMapView = forwardRef(
     useImperativeHandle(ref, () => controller);
 
     useEffect(() => {
-      if (!userLocation) {
-        return;
-      }
-
-      if (userLocation === appliedCenter) {
-        return;
-      }
-
-      controller.setCenter(userLocation, 10);
       setAppliedCenter(userLocation);
-    }, [controller, userLocation, appliedCenter, setAppliedCenter]);
+    }, [userLocation]);
+
+    useEffect(() => {
+      if (!appliedCenter) {
+        return;
+      }
+
+      // if (userLocation === appliedCenter) {
+      //   return;
+      // }
+
+      controller.setCenter(appliedCenter, 10);
+      setAppliedCenter(appliedCenter);
+    }, [controller, appliedCenter, setAppliedCenter]);
 
     const handleRegionMoved = useCallback(
       (feature: GeoJSON.Feature<GeoJSON.Point, RegionPayload>) => {
         if (onRegionChanged) {
-          onRegionChanged(feature.properties);
+          controller.getCenter()?.then(center => {
+            onRegionChanged({ center, ...feature.properties });
+          });
         }
       },
-      [onRegionChanged]
+      [controller, onRegionChanged]
     );
 
     return (
@@ -130,6 +141,7 @@ const AppMapView = forwardRef(
           ref={mapRef}
           onTouchEnd={() => {
             cameraRef.current?.setCamera({ centerCoordinate: undefined, padding: undefined });
+            setAppliedCenter(undefined);
           }}
           onRegionDidChange={handleRegionMoved}
           rotateEnabled={false}

@@ -21,10 +21,10 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
   const [boundingBox, setBoundingBox] = useState("");
 
   const fetchLianeOnMap = useCallback(
-    async (visibleBounds: Position[]) => {
+    async (visibleBounds: Position[], center: Position) => {
       try {
         setFetching(true);
-        const bbox = fromPositions(visibleBounds);
+        const bbox = fromPositions(visibleBounds, center);
         const current = JSON.stringify(bbox);
         if (current === boundingBox) {
           return;
