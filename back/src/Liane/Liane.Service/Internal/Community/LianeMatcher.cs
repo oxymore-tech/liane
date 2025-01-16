@@ -19,6 +19,8 @@ namespace Liane.Service.Internal.Community;
 
 public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICurrentContext currentContext, LianeFetcher lianeFetcher)
 {
+  private const float MinScore = 0.33333f; 
+  
   public async Task<Match?> FindMatchBetween(IDbConnection connection, Guid from, Guid to, IDbTransaction? tx = null)
   {
     var rawMatches = await FindRawMatch(connection, from, to, tx);
@@ -111,7 +113,6 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
                                                                       linked_to_b AS linked_to,
                                                                       match_routes(a_geometry, intersection) AS match
                                                               FROM first_level
-                                                              WHERE st_length(intersection) / a_length > 0.35
                                                               ORDER BY st_length(intersection) / a_length DESC, "from"
                                                             )
                                                             SELECT "from",
@@ -175,7 +176,6 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
                                                                       linked_to,
                                                                       match_routes(a_geometry, intersection) AS match
                                                               FROM first_level
-                                                              WHERE st_length(intersection) / a_length > 0.35
                                                               ORDER BY st_length(intersection) / a_length DESC, "from"
                                                             )
                                                             SELECT "from",
@@ -227,6 +227,11 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     {
       var first = rawMatches.First();
       var joinRequest = GetJoinRequest(mapParams, first);
+      if (joinRequest is null && matchingPoints.Value.Score < MinScore)
+      {
+        return null;
+      }
+
       var liane = mapParams.Lianes.GetValueOrDefault(first.LianeRequest);
 
       if (liane is null)
@@ -254,7 +259,11 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
       var liane = mapParams.Lianes.GetValueOrDefault(lianeRef);
 
       var matches = rawMatches.Select(m => (Ref<LianeRequest>)m.LianeRequest).ToImmutableList();
-
+      if (matchingPoints.Value.Score < MinScore)
+      {
+        return null;
+      }
+      
       return new Match.Group(
         lianeRef,
         liane?.Members.FilterSelect(m => m.User.Value).ToImmutableList() ?? [],
