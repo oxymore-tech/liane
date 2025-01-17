@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { ActivityIndicator, Pressable, StyleSheet } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
@@ -14,25 +14,37 @@ type PhoneNumberInputProps = {
   phoneNumber: string;
 };
 
-export const PhoneNumberInput = ({ submit, onChange, submitting, canSubmit }: PhoneNumberInputProps) => {
+export const PhoneNumberInput = ({ submit, onChange, submitting, canSubmit, phoneNumber }: PhoneNumberInputProps) => {
   const buttonColor = {
     backgroundColor: canSubmit ? AppColorPalettes.blue[500] : AppColorPalettes.gray[400]
   };
+
+  const value = useMemo(() => {
+    return phoneNumber.replaceAll(" ", "");
+  }, [phoneNumber]);
+
+  const handleChange = useCallback(
+    (v: string) => {
+      onChange(v.replaceAll(" ", ""));
+    },
+    [onChange]
+  );
 
   return (
     <Row style={styles.container}>
       <Row style={styles.inputContainer}>
         <AppTextInput
+          value={value}
           style={styles.input}
           placeholder="0#########"
           autoFocus={true}
           returnKeyLabel="next"
-          onChangeText={onChange}
+          onChangeText={handleChange}
           keyboardType="phone-pad"
           autoComplete="tel"
           textContentType="telephoneNumber"
           onSubmitEditing={submit}
-          maxLength={10}
+          maxLength={12}
         />
         <Pressable style={[styles.button, buttonColor]} disabled={!canSubmit} onPress={submit}>
           {!submitting && <AppIcon name="arrow-right" color={AppColors.white} />}

@@ -13,15 +13,16 @@ export function toLatLng(position: Position): LatLng {
   return { lat, lng };
 }
 
-export function fromPositions(bbox: Position[]): BoundingBox {
+/**
+ * Get the square bouding box around the given center
+ */
+export function fromPositions(bbox: Position[], center: Position): BoundingBox {
   const [upperLeft, bottomRight] = bbox;
-  const width = Math.abs(upperLeft[0] - bottomRight[0]);
-  const height = Math.abs(upperLeft[1] - bottomRight[1]);
-  const delta = (Math.max(width, height) - Math.min(width, height)) / 2;
+  const delta = Math.abs(upperLeft[0] - bottomRight[0]) / 2;
 
   return {
-    max: toLatLng([upperLeft[0], upperLeft[1] - delta]), //maxs
-    min: toLatLng([bottomRight[0], bottomRight[1] + delta]) //mins
+    max: toLatLng([upperLeft[0], center[1] - delta]),
+    min: toLatLng([bottomRight[0], center[1] + delta])
   };
 }
 

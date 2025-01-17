@@ -11,6 +11,7 @@ import { DetachedLianeItem } from "@/components/communities/DetachedLianeItem.ts
 import { useAppNavigation } from "@/components/context/routing.ts";
 import { AppIcon } from "@/components/base/AppIcon.tsx";
 import { ModalLianeRequestItem } from "@/components/communities/ModalLianeRequestItemView.tsx";
+import { AppButton } from "@/components/base/AppButton.tsx";
 
 type LianeRequestItemProps = {
   item: CoLianeMatch;
@@ -81,13 +82,18 @@ export const LianeRequestItem = ({ item, onRefresh, unreadLianes }: LianeRequest
                     }}>
                     {item?.lianeRequest?.name}
                   </AppText>
-                  <Pressable
-                    style={{ marginLeft: 8 }}
+                  <AppButton
                     onPress={() => {
                       setMyModalVisible(true);
-                    }}>
-                    <AppIcon name="edit" color={AppColors.darkGray} size={24} />
-                  </Pressable>
+                    }}
+                    icon="edit"
+                    style={{
+                      backgroundColor: item.state.type === "Attached" ? AppColors.white : AppColorPalettes.gray[200]
+                    }}
+                    textStyle={{
+                      color: item.state.type === "Attached" ? AppColorPalettes.gray[700] : AppColorPalettes.gray[700]
+                    }}
+                  />
                 </Row>
                 <View
                   style={{

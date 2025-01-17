@@ -19,6 +19,8 @@ namespace Liane.Service.Internal.Community;
 
 public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICurrentContext currentContext, LianeFetcher lianeFetcher)
 {
+  public const float MinScore = 0.33333f;
+
   public async Task<Match?> FindMatchBetween(IDbConnection connection, Guid from, Guid to, IDbTransaction? tx = null)
   {
     var rawMatches = await FindRawMatch(connection, from, to, tx);
@@ -74,17 +76,17 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     IDbTransaction? tx = null)
   {
     var result = await connection.QueryAsync<LianeRawMatch>("""
-                                                            WITH first_level AS (
                                                               SELECT lr_a.id AS "from",
-                                                                     a.geometry AS a_geometry,
                                                                      lr_b.id AS liane_request,
                                                                      lr_b.name AS name,
                                                                      lr_b.arrive_before AS arrive_before,
                                                                      lr_b.return_after AS return_after,
                                                                      matching_weekdays(lr_a.week_days, lr_b.week_days) AS week_days,
-                                                                     lm_b.liane_id AS linked_to_b,
-                                                                     st_intersection(a.geometry, b.geometry) intersection,
-                                                                     st_length(a.geometry) AS a_length
+                                                                     ((match_routes(a.geometry, b.geometry)).score) AS score,
+                                                                     ((match_routes(a.geometry, b.geometry)).pickup) AS pickup,
+                                                                     ((match_routes(a.geometry, b.geometry)).deposit) AS deposit,
+                                                                     ((match_routes(a.geometry, b.geometry)).is_reverse_direction) AS is_reverse_direction,
+                                                                     lm_b.liane_id AS linked_to
                                                               FROM liane_request lr_a
                                                                       INNER JOIN route a ON
                                                                         a.way_points = lr_a.way_points
@@ -99,33 +101,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
                                                                       INNER JOIN route b ON
                                                                         b.way_points = lr_b.way_points AND st_intersects(a.geometry, b.geometry)
                                                               WHERE ((@from IS NULL AND lr_a.created_by = @userId) OR lr_a.id = @from)
-                                                            ),
-                                                            second_level AS (
-                                                              SELECT "from",
-                                                                      liane_request,
-                                                                      name,
-                                                                      arrive_before,
-                                                                      return_after,
-                                                                      week_days,
-                                                                      st_length(intersection) / a_length AS score,
-                                                                      linked_to_b AS linked_to,
-                                                                      match_routes(a_geometry, intersection) AS match
-                                                              FROM first_level
-                                                              WHERE st_length(intersection) / a_length > 0.35
-                                                              ORDER BY st_length(intersection) / a_length DESC, "from"
-                                                            )
-                                                            SELECT "from",
-                                                                   liane_request,
-                                                                   name,
-                                                                   arrive_before,
-                                                                   return_after,
-                                                                   week_days,
-                                                                   score,
-                                                                   (second_level.match).pickup,
-                                                                   (second_level.match).deposit,
-                                                                   (second_level.match).is_reverse_direction,
-                                                                   linked_to
-                                                            FROM second_level
+                                                              ORDER BY ((match_routes(a.geometry, b.geometry)).score) DESC, "from"
                                                             """,
       new { userId, linkedTo = linkedTo.ToArray(), from, to },
       tx
@@ -139,17 +115,18 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
   private static async Task<ImmutableList<LianeRawMatch>> FindRawMatch(IDbConnection connection, Guid from, IEnumerable<Guid> to, IDbTransaction? tx = null)
   {
     var result = await connection.QueryAsync<LianeRawMatch>("""
-                                                            WITH first_level AS (
-                                                              SELECT lr_a.id AS "from",
-                                                                   a.geometry AS a_geometry,
-                                                                   lr_b.id AS liane_request,
-                                                                   lr_b.name AS name,
-                                                                   lr_b.arrive_before AS arrive_before,
-                                                                   lr_b.return_after AS return_after,
-                                                                   matching_weekdays(lr_a.week_days, lr_b.week_days) AS week_days,
-                                                                   lm_b.liane_id AS linked_to,
-                                                                   st_intersection(a.geometry, b.geometry) AS intersection,
-                                                                   st_length(a.geometry) AS a_length
+                                                              SELECT
+                                                                    lr_a.id AS "from",
+                                                                    lr_b.id AS liane_request,
+                                                                    lr_b.name AS name,
+                                                                    lr_b.arrive_before AS arrive_before,
+                                                                    lr_b.return_after AS return_after,
+                                                                    matching_weekdays(lr_a.week_days, lr_b.week_days) AS week_days,
+                                                                    ((match_routes(a.geometry, b.geometry)).score) AS score,
+                                                                    ((match_routes(a.geometry, b.geometry)).pickup) AS pickup,
+                                                                    ((match_routes(a.geometry, b.geometry)).deposit) AS deposit,
+                                                                    ((match_routes(a.geometry, b.geometry)).is_reverse_direction) AS is_reverse_direction,
+                                                                    lm_b.liane_id AS linked_to
                                                               FROM liane_request lr_a
                                                                       INNER JOIN route a ON
                                                                         a.way_points = lr_a.way_points
@@ -163,33 +140,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
                                                                       INNER JOIN route b ON
                                                                         b.way_points = lr_b.way_points
                                                               WHERE lr_a.id = @from
-                                                            ),
-                                                            second_level AS (
-                                                              SELECT "from",
-                                                                      liane_request,
-                                                                      name,
-                                                                      arrive_before,
-                                                                      return_after,
-                                                                      week_days,
-                                                                      st_length(intersection) / a_length AS score,
-                                                                      linked_to,
-                                                                      match_routes(a_geometry, intersection) AS match
-                                                              FROM first_level
-                                                              WHERE st_length(intersection) / a_length > 0.35
-                                                              ORDER BY st_length(intersection) / a_length DESC, "from"
-                                                            )
-                                                            SELECT "from",
-                                                                   liane_request,
-                                                                   name,
-                                                                   arrive_before,
-                                                                   return_after,
-                                                                   week_days,
-                                                                   score,
-                                                                   (second_level.match).pickup,
-                                                                   (second_level.match).deposit,
-                                                                   (second_level.match).is_reverse_direction,
-                                                                   linked_to
-                                                            FROM second_level
+                                                              ORDER BY ((match_routes(a.geometry, b.geometry)).score) DESC, "from"
                                                             """,
       new { from, to },
       tx
@@ -197,8 +148,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     return result.ToImmutableList();
   }
 
-  private async Task<Match?> ToMatch(ImmutableList<LianeRawMatch> rawMatches,
-    MapParams mapParams)
+  private async Task<Match?> ToMatch(ImmutableList<LianeRawMatch> rawMatches, MapParams mapParams)
   {
     if (rawMatches.IsEmpty)
     {
@@ -227,6 +177,16 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     {
       var first = rawMatches.First();
       var joinRequest = GetJoinRequest(mapParams, first);
+      if (joinRequest is null && matchingPoints.Value.Score < MinScore)
+      {
+        return null;
+      }
+      
+      if (first.LinkedTo is not null && first.LinkedTo != first.From)
+      {
+        return null;
+      }
+
       var liane = mapParams.Lianes.GetValueOrDefault(first.LianeRequest);
 
       if (liane is null)
@@ -254,7 +214,11 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
       var liane = mapParams.Lianes.GetValueOrDefault(lianeRef);
 
       var matches = rawMatches.Select(m => (Ref<LianeRequest>)m.LianeRequest).ToImmutableList();
-
+      if (matchingPoints.Value.Score < MinScore)
+      {
+        return null;
+      }
+      
       return new Match.Group(
         lianeRef,
         liane?.Members.FilterSelect(m => m.User.Value).ToImmutableList() ?? [],

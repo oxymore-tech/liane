@@ -18,7 +18,6 @@ import { useTripStatus } from "@/components/trip/trip";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
 import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
-import { useAppWindowsDimensions } from "@/components/base/AppWindowsSizeProvider";
 import { useQuery } from "react-query";
 import { TripDetailQueryKey } from "@/screens/user/TripScheduleScreen";
 import { AppText } from "@/components/base/AppText";
@@ -53,7 +52,7 @@ export const TripDetailScreen = () => {
   useEffect(() => {
     // Refresh page if object passed as param has changed
     if (typeof tripParam !== "string") {
-      refetch();
+      refetch().then();
     }
   }, [refetch, tripParam]);
 
@@ -70,7 +69,6 @@ export const TripDetailScreen = () => {
 };
 
 const LianeDetailPage = ({ match }: { match: LianeMatch | undefined }) => {
-  const { height } = useAppWindowsDimensions();
   const { navigation } = useAppNavigation();
 
   const [bSheetTop, setBSheetTop] = useState<number>(0);
@@ -81,14 +79,13 @@ const LianeDetailPage = ({ match }: { match: LianeMatch | undefined }) => {
     if (!match) {
       return undefined;
     }
-    const bSheetTopPixels = bSheetTop > 1 ? bSheetTop : height * bSheetTop;
     const bbox = getBoundingBox(tripMatch!.wayPoints.map(w => [w.rallyingPoint.location.lng, w.rallyingPoint.location.lat]));
-    bbox.paddingTop = bSheetTopPixels < height / 2 ? 96 : 24;
-    bbox.paddingLeft = 72;
-    bbox.paddingRight = 72;
-    bbox.paddingBottom = Math.min(bSheetTopPixels + 40, (height - bbox.paddingTop) / 2 + 24);
+    bbox.paddingTop = 24;
+    bbox.paddingLeft = 100;
+    bbox.paddingRight = 100;
+    bbox.paddingBottom = bSheetTop + 50 + 24;
     return bbox;
-  }, [match, bSheetTop, height, tripMatch]);
+  }, [match, bSheetTop, tripMatch]);
 
   const driver = useMemo(() => match?.trip.members.find(m => m.user.id === match?.trip.driver.user)!.user, [match]);
   const trackingInfo = useTrackingInfo();

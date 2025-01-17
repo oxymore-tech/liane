@@ -15,10 +15,10 @@ type MessageBubblePros = {
   liane?: CoLiane;
   message: LianeMessage;
   isSender: boolean;
-  previousSender?: Ref<User> | undefined;
+  renderSender?: boolean;
 };
 
-export const MessageBubble = ({ liane, message, isSender, previousSender }: MessageBubblePros) => {
+export const MessageBubble = ({ liane, message, isSender, renderSender }: MessageBubblePros) => {
   const { services } = useContext(AppContext);
   const { navigation } = useAppNavigation();
   const [loading, setLoading] = useState(false);
@@ -32,8 +32,7 @@ export const MessageBubble = ({ liane, message, isSender, previousSender }: Mess
 
   const sender = allMembers[message.createdBy!];
 
-  const firstBySender = previousSender !== sender?.user.id;
-  const date = capitalize(AppLocalization.toRelativeTimeString(new Date(message.createdAt!)));
+  const date = capitalize(AppLocalization.formatTime(new Date(message.createdAt!)));
 
   const backgroundColor = message.content.type === "Text" ? (isSender ? "#0D1C2E" : AppColorPalettes.gray[700]) : "transparent";
   const color = message.content.type !== "Text" ? AppColors.darkGray : isSender ? AppColorPalettes.gray[300] : AppColorPalettes.gray[200];
@@ -64,20 +63,26 @@ export const MessageBubble = ({ liane, message, isSender, previousSender }: Mess
             navigation.navigate("Home", { screen: "Calendrier", params: { trip: message.content.trip } });
           }
         }}
-        style={{
-          paddingVertical: 8
-        }}>
-        <Row style={{ justifyContent: "flex-start" }}>
-          <AppText style={{ fontSize: 16, color: AppColorPalettes.gray[400], fontStyle: "italic" }} numberOfLines={4}>
+        style={{}}>
+        <Center
+          style={{
+            width: "100%"
+          }}>
+          <AppText
+            style={{
+              fontSize: 14,
+              color: AppColorPalettes.gray[200],
+              fontStyle: "italic"
+            }}
+            numberOfLines={4}>
             {message.content.value}
           </AppText>
-        </Row>
+        </Center>
         {message.content.type === "MemberRequested" && liane && liane.pendingMembers.find(u => u.user.id === message.createdBy) && (
           <Center>
             <AppButton onPress={handlePendingMember} color={AppColors.secondaryColor} value="Voir la demande" loading={loading} />
           </Center>
         )}
-        <AppText style={{ fontSize: 12, color: AppColorPalettes.gray[400], alignSelf: "flex-end" }}>{date}</AppText>
       </AppPressable>
     );
   }
@@ -88,12 +93,12 @@ export const MessageBubble = ({ liane, message, isSender, previousSender }: Mess
       style={{
         marginBottom: 6,
         alignSelf: isSender ? "flex-end" : "flex-start",
-        marginTop: firstBySender ? 6 : 0
+        marginTop: renderSender ? 6 : 0
       }}>
-      {!isSender && firstBySender && <UserPicture url={sender?.user.pictureUrl} id={sender?.user.id} size={32} />}
-      {!isSender && !firstBySender && <View style={{ width: 32 }} />}
+      {!isSender && renderSender && <UserPicture url={sender?.user.pictureUrl} id={sender?.user.id} size={32} />}
+      {!isSender && !renderSender && <View style={{ width: 32 }} />}
       <Column spacing={2}>
-        {!isSender && firstBySender && (
+        {!isSender && renderSender && (
           <AppText style={{ alignSelf: "flex-start", fontSize: 14, fontWeight: "bold", color: AppColorPalettes.gray[100] }}>
             {sender?.user.pseudo}
           </AppText>
@@ -106,8 +111,8 @@ export const MessageBubble = ({ liane, message, isSender, previousSender }: Mess
             paddingHorizontal: 12,
             borderBottomRightRadius: 8,
             borderBottomLeftRadius: 8,
-            borderTopLeftRadius: isSender ? 8 : firstBySender ? 0 : 8,
-            borderTopRightRadius: isSender ? (firstBySender ? 0 : 8) : 8,
+            borderTopLeftRadius: isSender ? 8 : renderSender ? 0 : 8,
+            borderTopRightRadius: isSender ? (renderSender ? 0 : 8) : 8,
             marginRight: isSender ? 0 : 56,
             marginLeft: isSender ? 56 : 0
           }}

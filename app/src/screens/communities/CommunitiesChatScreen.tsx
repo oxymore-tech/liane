@@ -1,6 +1,6 @@
 import { Chat, CoLiane, LianeMessage, RallyingPoint, Ref } from "@liane/common";
 import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { FlatList, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
+import { KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Row } from "@/components/base/AppLayout";
@@ -9,13 +9,13 @@ import { AppContext } from "@/components/context/ContextProvider";
 import { AppExpandingTextInput } from "@/components/base/AppExpandingTextInput";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppLogger } from "@/api/logger";
-import { MessageBubble } from "@/screens/communities/MessageBubble";
 import { useSubscription } from "@/util/hooks/subscription.ts";
 import { TripQueryKey } from "@/screens/user/TripScheduleScreen";
 import { useQueryClient } from "react-query";
 import { AppButton } from "@/components/base/AppButton";
 import { LaunchTripModal } from "@/screens/communities/LaunchTripModal";
-import { GestureHandlerRootView, RefreshControl } from "react-native-gesture-handler";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { MessageList } from "@/screens/communities/MessagesList.tsx";
 
 export const CommunitiesChatScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesChat">();
@@ -169,7 +169,7 @@ export const CommunitiesChatScreen = () => {
     <View style={[styles.mainContainer, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       <Row style={styles.header} spacing={16}>
         <AppButton onPress={() => navigation.goBack()} icon="arrow-left" color={AppColorPalettes.gray[800]} />
-        <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 20, lineHeight: 27, color: AppColorPalettes.gray[100] }}>{name}</AppText>
+        <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 24, lineHeight: 27, color: AppColorPalettes.gray[100] }}>{name}</AppText>
         <AppButton
           onPress={() => liane && navigation.navigate("CommunitiesDetails", { liane: liane })}
           icon="edit"
@@ -177,24 +177,7 @@ export const CommunitiesChatScreen = () => {
         />
       </Row>
       <GestureHandlerRootView>
-        <FlatList
-          data={messages}
-          showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchMessages} />}
-          style={{ flex: 1, paddingHorizontal: 16 }}
-          keyExtractor={m => m.id!}
-          renderItem={({ item, index }) => (
-            <MessageBubble
-              liane={liane}
-              message={item}
-              isSender={item.createdBy === user?.id}
-              previousSender={index < messages.length - 1 ? messages[index + 1].createdBy : undefined}
-            />
-          )}
-          onEndReachedThreshold={0.2}
-          onEndReached={fetchNextPage}
-          inverted
-        />
+        <MessageList liane={liane} user={user} messages={messages} fetchMessages={fetchMessages} fetchNextPage={fetchNextPage} loading={loading} />
       </GestureHandlerRootView>
       <KeyboardAvoidingView
         behavior={Platform.OS === "android" ? "height" : "padding"}

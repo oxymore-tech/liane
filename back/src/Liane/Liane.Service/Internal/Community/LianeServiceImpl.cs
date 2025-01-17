@@ -437,20 +437,21 @@ public sealed class LianeServiceImpl(
 
     var rawMatch = (await connection.QueryAsync<PendingRawMatch>("""
                                                                  SELECT
-                                                                     (match_routes(@route, intersection)).pickup,
-                                                                     (match_routes(@route, intersection)).deposit,
-                                                                     (match_routes(@route, intersection)).is_reverse_direction
+                                                                     ((match).score) AS score,
+                                                                     ((match).pickup) AS pickup,
+                                                                     ((match).deposit) AS deposit,
+                                                                     ((match).is_reverse_direction) AS is_reverse_direction
                                                                  FROM (
                                                                           SELECT
-                                                                              st_intersection(b.geometry, @route) AS intersection
+                                                                              match_routes(@route, b.geom) AS match
                                                                           FROM liane_request lr
                                                                            INNER JOIN route b on b.way_points = lr.way_points
                                                                           WHERE lr.id = @liane
                                                                       ) AS ii
-                                                                 WHERE st_length(intersection) / st_length(@route) > 0.35
+                                                                 WHERE (match).score > @threshold
                                                                  LIMIT 1
                                                                  """,
-      new { route, liane }
+      new { threshold = LianeMatcher.MinScore, route, liane }
     )).FirstOrDefault();
 
     if (rawMatch?.Deposit is null || rawMatch.Pickup is null)
