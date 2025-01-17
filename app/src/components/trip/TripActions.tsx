@@ -81,9 +81,9 @@ export function TripActions({ style, trip, onUpdate, user }: TripActionsProps) {
       )}
       {trip.booked ? (
         status === "Started" ? (
-          <AppButton value="C'est terminé?" loading={stoping} onPress={handleStop} color={AppColors.secondaryColor} />
+          <AppButton value="C'est terminé ?" loading={stoping} onPress={handleStop} color={AppColors.secondaryColor} />
         ) : (
-          <AppButton value="C'est parti?" loading={starting} onPress={handleStart} color={AppColors.primaryColor} />
+          <AppButton value="C'est parti ?" loading={starting} onPress={handleStart} color={AppColors.primaryColor} />
         )
       ) : availableSeats < 0 ? (
         <AppButton value="Rejoindre" loading={joining} onPress={handleJoin} color={AppColors.primaryColor} />

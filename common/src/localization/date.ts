@@ -30,6 +30,12 @@ export class Localization {
     year: "2-digit"
   });
 
+  private readonly dateUserFormatter = new Intl.DateTimeFormat("fr-FR", {
+    weekday: "long", // Jour de la semaine en toutes lettres
+    day: "numeric", // Jour du mois en chiffres
+    month: "long" // Mois en toutes lettres
+  });
+
   // Load time formatter
   private readonly timeFormatter = new Intl.DateTimeFormat("fr", {
     hour: "2-digit",
@@ -76,6 +82,7 @@ export class Localization {
   formatMonthYear = this.monthYearFormatter.format;
   formatShortMonthDay = this.shortMonthDayFormatter.format;
   formatDate = this.dateFormatter.format;
+  formatDateUserFriendly = this.dateUserFormatter.format;
   formatTime24h = this.time24hFormatter.format;
 
   formatTime = (date?: number | Date | undefined) => {
