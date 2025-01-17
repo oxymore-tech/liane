@@ -1,16 +1,14 @@
 import React, { useCallback, useContext, useState } from "react";
-
-import { Pressable } from "react-native";
 import { CoLianeMatch, CoLianeRequest } from "@liane/common";
 import { AppContext } from "@/components/context/ContextProvider";
 import { Column, Row } from "@/components/base/AppLayout";
-import { AppText } from "@/components/base/AppText";
 import { AppColors } from "@/theme/colors";
 import { AppLogger } from "@/api/logger";
 import { useAppNavigation } from "@/components/context/routing.ts";
 import { SimpleModal } from "@/components/modal/SimpleModal.tsx";
 import { AppButton } from "@/components/base/AppButton.tsx";
 import { AppTextInput } from "@/components/base/AppTextInput.tsx";
+import { Alert } from "react-native";
 
 type ModalLianeRequestItemProps = {
   item: CoLianeMatch;
@@ -25,24 +23,41 @@ export const ModalLianeRequestItem = ({ item, onRefresh, myModalVisible, setMyMo
   const [showLianeNameInput, setLianeNameInputVisible] = useState<boolean>(false);
 
   const [name, setName] = useState<string>(item.lianeRequest.name);
+  const [deleting, setDeleting] = useState(false);
 
-  const deleteLiane = async () => {
-    const lianeRequest = item.lianeRequest;
-
-    if (lianeRequest && lianeRequest.id) {
-      try {
-        const result = await services.community.delete(lianeRequest.id);
-        AppLogger.debug("COMMUNITIES", "Suppression d'une liane avec succès", result);
-        if (onRefresh) {
-          onRefresh();
-        }
-      } catch (e) {
-        AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de la suppression d'une liane", e);
-      }
-    } else {
-      AppLogger.debug("COMMUNITIES", "Pas de liane ID lors de la suppression d'une liane", item);
+  const deleteLiane = useCallback(async () => {
+    if (!item.lianeRequest.id) {
+      return;
     }
-  };
+    Alert.alert(
+      "Confirmation",
+      item.state.type === "Attached" ? "Êtes-vous sûr de vouloir quitter la liane ?" : "Êtes-vous sûr de vouloir supprimer votre liane ?",
+      [
+        {
+          text: "Annuler",
+          style: "cancel"
+        },
+        {
+          text: "Continuer",
+          onPress: async () => {
+            try {
+              setDeleting(true);
+              await services.community.delete(item.lianeRequest.id!);
+              if (onRefresh) {
+                onRefresh();
+              }
+            } finally {
+              setDeleting(false);
+            }
+          },
+          style: "destructive"
+        }
+      ],
+      {
+        cancelable: true
+      }
+    );
+  }, [item.lianeRequest.id, item.state.type, onRefresh, services.community]);
 
   const renameLiane = useCallback(async () => {
     const lianeRequest = item.lianeRequest;
@@ -74,29 +89,33 @@ export const ModalLianeRequestItem = ({ item, onRefresh, myModalVisible, setMyMo
   return (
     <SimpleModal visible={myModalVisible} setVisible={setMyModalVisible} backgroundColor={AppColors.white} hideClose>
       {!showLianeNameInput ? (
-        <Column>
-          <Pressable style={{ margin: 16, flexDirection: "row" }} onPress={() => setLianeNameInputVisible(true)}>
-            <AppText style={{ marginLeft: 5, fontSize: 16, fontWeight: "bold", lineHeight: 24, color: AppColors.darkGray }}>
-              Renommer la liane
-            </AppText>
-          </Pressable>
-          <Pressable
-            style={{ margin: 16, flexDirection: "row" }}
+        <Column spacing={30} style={{ alignItems: "center" }}>
+          <AppButton
+            onPress={() => setLianeNameInputVisible(true)}
+            value="Renommer"
+            color={AppColors.secondaryColor}
+            icon="edit"
+            style={{ width: 200 }}
+          />
+          <AppButton
             onPress={() => {
               setMyModalVisible(false);
               navigation.navigate("Publish", {
                 initialValue: item.lianeRequest
               });
-            }}>
-            <AppText style={{ marginLeft: 5, fontSize: 16, fontWeight: "bold", lineHeight: 24, color: AppColors.darkGray }}>
-              Modifier la liane
-            </AppText>
-          </Pressable>
-          <Pressable style={{ margin: 16, flexDirection: "row" }} onPress={deleteLiane}>
-            <AppText style={{ marginLeft: 5, fontSize: 16, fontWeight: "bold", lineHeight: 24, color: AppColors.darkGray }}>
-              {item.state.type === "Attached" ? "Quitter la liane" : "Supprimer la liane"}
-            </AppText>
-          </Pressable>
+            }}
+            value="Modifier"
+            icon="refresh"
+            color={AppColors.secondaryColor}
+            style={{ width: 200 }}
+          />
+          <AppButton
+            onPress={deleteLiane}
+            loading={deleting}
+            value={item.state.type === "Attached" ? "Quitter" : "Supprimer"}
+            icon="log-out"
+            style={{ width: 200 }}
+          />
         </Column>
       ) : (
         <Column spacing={32}>
