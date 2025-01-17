@@ -148,8 +148,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     return result.ToImmutableList();
   }
 
-  private async Task<Match?> ToMatch(ImmutableList<LianeRawMatch> rawMatches,
-    MapParams mapParams)
+  private async Task<Match?> ToMatch(ImmutableList<LianeRawMatch> rawMatches, MapParams mapParams)
   {
     if (rawMatches.IsEmpty)
     {
@@ -179,6 +178,11 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
       var first = rawMatches.First();
       var joinRequest = GetJoinRequest(mapParams, first);
       if (joinRequest is null && matchingPoints.Value.Score < MinScore)
+      {
+        return null;
+      }
+      
+      if (first.LinkedTo is not null && first.LinkedTo != first.From)
       {
         return null;
       }
@@ -214,7 +218,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
       {
         return null;
       }
-
+      
       return new Match.Group(
         lianeRef,
         liane?.Members.FilterSelect(m => m.User.Value).ToImmutableList() ?? [],
