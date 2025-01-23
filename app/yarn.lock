@@ -1069,15 +1069,17 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@datadog/mobile-react-native@^2.4.4":
-  version "2.4.4"
-  resolved "https://registry.yarnpkg.com/@datadog/mobile-react-native/-/mobile-react-native-2.4.4.tgz#6f539ca67d153f107521c692834ffa177020bbcb"
-  integrity sha512-NxOcbXq5pYLU+vBOZ0DZ4wiyh9mvPQlrKeQQ7SSgHdGuVKoJ+s5XlVA1hKN5E5VuPqVg/dhNdYBfHZ8suSQ8Qg==
+"@datadog/mobile-react-native@^2.6.1":
+  version "2.6.1"
+  resolved "https://registry.yarnpkg.com/@datadog/mobile-react-native/-/mobile-react-native-2.6.1.tgz#ae17b48857d27e3184e11a5f42555bbedfa77747"
+  integrity sha512-MB7B0z1JfMhWBSHShKqqtA7lKUm7pSMO7Gb2IrejFm5a5CC4YTgMkPYaTCltqtPeaLwHC/xWOt/aR7TzJCRVLg==
+  dependencies:
+    big-integer "^1.6.52"
 
-"@datadog/mobile-react-navigation@^2.4.4":
-  version "2.4.4"
-  resolved "https://registry.yarnpkg.com/@datadog/mobile-react-navigation/-/mobile-react-navigation-2.4.4.tgz#57d6a1f42fb13dcbba1493ec9f51ec0118fb12c8"
-  integrity sha512-embtOKwO+8pwCRSgc87y4a67Y7XdqMQZlF2OWDXMggszWFSJM/DDPQPFKBq0RbCmWyMyT84IHj09XOQ90trTPw==
+"@datadog/mobile-react-navigation@^2.6.1":
+  version "2.6.1"
+  resolved "https://registry.yarnpkg.com/@datadog/mobile-react-navigation/-/mobile-react-navigation-2.6.1.tgz#78003a7f0995913b8f02b9fc63c64c9f0eb06ca5"
+  integrity sha512-cJ4Au7oBbqLHpDxbgvZg5aE2XrDgUu8triTB3MKq1I3DV+rf21REbh55+vFT6LXBfPHmP5mOtx609UD8SvDpYA==
 
 "@egjs/hammerjs@^2.0.17":
   version "2.0.17"
@@ -1855,10 +1857,10 @@
     url-join "^5.0.0"
     xstate "^4.37.0"
 
-"@maplibre/maplibre-react-native@^10.0.0":
-  version "10.0.0"
-  resolved "https://registry.yarnpkg.com/@maplibre/maplibre-react-native/-/maplibre-react-native-10.0.0.tgz#c08328ef0dd67a578fe511590fa6ec6fc8cb7123"
-  integrity sha512-iDXT+FCz61zhmxn0egsxJYlvX4cV9BFYta/ftst9WO22/+YEMbsSxLewyxYN30YlOqiLebDHTg6TctwVdVfWJg==
+"@maplibre/maplibre-react-native@^10.0.1":
+  version "10.0.1"
+  resolved "https://registry.yarnpkg.com/@maplibre/maplibre-react-native/-/maplibre-react-native-10.0.1.tgz#0cccc63243b9bcba65d456409762883f7c6bebd5"
+  integrity sha512-i39jbjArl0dvbv9UIfj03ouU+PQMxWeg2yZs8i2PY3ct38pS4FxaPHrRQCYxXUtbYlWg50LQ9Jjug0dckNQS/Q==
   dependencies:
     "@turf/distance" "^7.1.0"
     "@turf/helpers" "^7.1.0"
@@ -1905,10 +1907,10 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
-"@notifee/react-native@^9.1.2":
-  version "9.1.3"
-  resolved "https://registry.yarnpkg.com/@notifee/react-native/-/react-native-9.1.3.tgz#974b4b3d6ffc12109644a2634e81ac09195bbf95"
-  integrity sha512-KUshWu/MCYHCbVIVGwevQc7si0IA76uKGV7a0qbnCZlVFkuQvCUrrHzM2HWBhQ0+8dB1g6jPJxipNeXDWHELVw==
+"@notifee/react-native@^9.1.8":
+  version "9.1.8"
+  resolved "https://registry.yarnpkg.com/@notifee/react-native/-/react-native-9.1.8.tgz#3d55cb3fbcc21f9e35931e366afdf64b294da891"
+  integrity sha512-Az/dueoPerJsbbjRxu8a558wKY+gONUrfoy3Hs++5OqbeMsR0dYe6P+4oN6twrLFyzAhEA1tEoZRvQTFDRmvQg==
 
 "@pkgr/core@^0.1.0":
   version "0.1.1"
@@ -3340,7 +3342,7 @@ base64-js@^1.3.1, base64-js@^1.5.1:
   resolved "https://registry.yarnpkg.com/base64-js/-/base64-js-1.5.1.tgz#1b1b440160a5bf7ad40b650f095963481903930a"
   integrity sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==
 
-big-integer@^1.6.16:
+big-integer@^1.6.16, big-integer@^1.6.52:
   version "1.6.52"
   resolved "https://registry.yarnpkg.com/big-integer/-/big-integer-1.6.52.tgz#60a887f3047614a8e1bffe5d7173490a97dc8c85"
   integrity sha512-QxD8cf2eVqJOOz63z6JIN9BzvVs/dlySa5HGSBH5xtR8dPteIRQnBxxKqkNTiT6jbDTF6jAfrd4oMcND9RGbQg==
@@ -7107,10 +7109,10 @@ react-native-permissions@^5.2.1:
   resolved "https://registry.yarnpkg.com/react-native-permissions/-/react-native-permissions-5.2.1.tgz#b028b7bc60d813588d8d3f2b80f19d1f67ba907f"
   integrity sha512-F8CaDVi+zYjl2pO4Fwh5n5SCi5s0TvvRzQnczb8nwkzHJTv6HqlO6Sj1ZmqrAeuCN06b5Ysu9BEWhK4qT4ekXg==
 
-react-native-reanimated@^3.16.5:
-  version "3.16.5"
-  resolved "https://registry.yarnpkg.com/react-native-reanimated/-/react-native-reanimated-3.16.5.tgz#2a411b9030a8659722a9398d2e0ea19bc076c846"
-  integrity sha512-mq/5k14pimkhCeP9XwFJkEr8XufaHqIekum8fqpsn0fcBzbLvyiqfM2LEuBvi0+DTv5Bd2dHmUHkYqGYfkj3Jw==
+react-native-reanimated@^3.16.7:
+  version "3.16.7"
+  resolved "https://registry.yarnpkg.com/react-native-reanimated/-/react-native-reanimated-3.16.7.tgz#6c7fa516f62c6743c24d955dada00e3c5323d50d"
+  integrity sha512-qoUUQOwE1pHlmQ9cXTJ2MX9FQ9eHllopCLiWOkDkp6CER95ZWeXhJCP4cSm6AD4jigL5jHcZf/SkWrg8ttZUsw==
   dependencies:
     "@babel/plugin-transform-arrow-functions" "^7.0.0-0"
     "@babel/plugin-transform-class-properties" "^7.0.0-0"
