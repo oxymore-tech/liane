@@ -3,7 +3,7 @@ services:
   wp:
     image: wordpress
     environment:
-      WORDPRESS_DB_HOST: wp-db
+      WORDPRESS_DB_HOST: mysql
       WORDPRESS_DB_USER: liane
       WORDPRESS_DB_PASSWORD: vP83bKy9pGLwp1Fay5
       WORDPRESS_DB_NAME: liane
