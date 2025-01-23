@@ -67,6 +67,7 @@ function dump_pg {
 function start {
   create_osm_network
   docker compose -f "${LIANE_HOME}/deploy/osm.yml" -p "osm" up -d
+  docker compose -f "${LIANE_HOME}/deploy/website.yml" -p "liane-website" up -d
   liane_compose up -d --build --remove-orphans
 }
 
