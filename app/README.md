@@ -4,32 +4,37 @@ This is a new [**React Native**](https://reactnative.dev) project, bootstrapped 
 
 >**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
 
-First you need to check that you have built the common part.
+### Common Setup 
+
+Build the common package:
 
 ```bash
-cd ../common
+cd common
 yarn install
 yarn build
 ```
 
-You must then install the pods
+### App Setup
 
 ```bash
+cd app
+yarn
+```
+
+#### IOS only : install pods
+
+```sh
 yarn post-install
 ```
 
-## Step 1: Start the Metro Server
-
-First, you will need to start **Metro**, the JavaScript _bundler_ that ships _with_ React Native.
-
-To start Metro, run the following command from the _root_ of your React Native project:
+#### Launch app
 
 ```bash
-yarn install
-yarn start
+yarn start # starts metro server
 ```
 
 Hit `a` key to launch android (see instructions for more commands).
+Hit `i` key to launch ios (see instructions for more commands).
 
 # Connect android device in WIFI
 
@@ -38,9 +43,7 @@ adb tcpip 5555
 adb shell ip addr show wlan0 and copy the IP address after the "inet" until the "/". You can also go inside the Settings of the device to retrieve the IP address in Settings → About → Status.
 adb connect ip-address-of-device:5555
 ```
-
 # Stream IOS phone on linux
-
 
 ```bash
 # Installer uxplay
