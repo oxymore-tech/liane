@@ -130,10 +130,10 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=gateway"
-      - "traefik.http.routers.${PROJECT}-web.rule=Host(`${DOMAIN}`) && PathPrefix(`/`)"
+      - "traefik.http.routers.${PROJECT}-web.rule=Host(`${DOMAIN}`) && PathPrefix(`/admin`)"
       - "traefik.http.routers.${PROJECT}-web.entrypoints=web"
       - "traefik.http.routers.${PROJECT}-web.middlewares=redirect@file"
-      - "traefik.http.routers.${PROJECT}-web-secure.rule=Host(`${DOMAIN}`) && PathPrefix(`/`)"
+      - "traefik.http.routers.${PROJECT}-web-secure.rule=Host(`${DOMAIN}`) && PathPrefix(`/admin`)"
       - "traefik.http.routers.${PROJECT}-web-secure.entrypoints=web-secure"
       - "traefik.http.routers.${PROJECT}-web-secure.middlewares=compress@file"
       - "traefik.http.routers.${PROJECT}-web-secure.tls.certResolver=gjinico"
@@ -142,6 +142,44 @@ services:
     networks:
       - gateway
       - default
+
+  wp:
+    image: wordpress
+    environment:
+      WORDPRESS_DB_HOST: wp-db
+      WORDPRESS_DB_USER: ${MONGO_USERNAME}
+      WORDPRESS_DB_PASSWORD: ${MONGO_PASSWORD}
+      WORDPRESS_DB_NAME: liane
+    volumes:
+      - ./data/wp:/var/www/html
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=gateway"
+      - "traefik.http.routers.${PROJECT}-wp.rule=Host(`${DOMAIN}`) && PathPrefix(`/`)"
+      - "traefik.http.routers.${PROJECT}-wp.entrypoints=web"
+      - "traefik.http.routers.${PROJECT}-wp.middlewares=redirect@file"
+      - "traefik.http.routers.${PROJECT}-wp-secure.rule=Host(`${DOMAIN}`) && PathPrefix(`/`)"
+      - "traefik.http.routers.${PROJECT}-wp-secure.entrypoints=web-secure"
+      - "traefik.http.routers.${PROJECT}-wp-secure.middlewares=compress@file"
+      - "traefik.http.routers.${PROJECT}-wp-secure.tls.certResolver=gjinico"
+      - "traefik.http.services.${PROJECT}-wp.loadbalancer.server.port=80"
+    restart: unless-stopped
+    networks:
+      - gateway
+      - default
+
+  wp-db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: liane
+      MYSQL_USER: ${MONGO_USERNAME}
+      MYSQL_PASSWORD: ${MONGO_PASSWORD}
+      MYSQL_RANDOM_ROOT_PASSWORD: '1'
+    volumes:
+      - ./data/wp-db:/var/lib/mysql
+    networks:
+      - default
+    restart: unless-stopped
 
 networks:
   gateway:

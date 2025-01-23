@@ -76,7 +76,7 @@ const RPIconLayer = ({
   // Load layer icons
   useEffect(() => {
     map.current?.once("load", () => {
-      map.current?.loadImage("/rp_pink.png", function (error, image) {
+      map.current?.loadImage("/admin/rp_pink.png", function (error, image) {
         if (error) throw error;
 
         if (!image) console.warn("No image found");
@@ -86,7 +86,7 @@ const RPIconLayer = ({
         }
       });
 
-      map.current?.loadImage("/rp_pink_blank.png", function (error, image) {
+      map.current?.loadImage("/admin/rp_pink_blank.png", function (error, image) {
         if (error) throw error;
 
         if (!image) console.warn("No image found");
@@ -96,7 +96,7 @@ const RPIconLayer = ({
         }
       });
 
-      map.current?.loadImage("/rp_gray.png", function (error, image) {
+      map.current?.loadImage("/admin/rp_gray.png", function (error, image) {
         if (error) throw error;
 
         if (!image) console.warn("No image found");

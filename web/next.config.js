@@ -3,6 +3,7 @@ const withMDX = require("@next/mdx")({
 });
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  basePath: "/admin",
   pageExtensions: ["mdx", "tsx", "md"],
   env: {
     API_URL: process.env.API_URL,
