@@ -23,6 +23,44 @@ services:
       - gateway
       - osm
 
+  wp:
+    image: wordpress
+    environment:
+      WORDPRESS_DB_HOST: wp-db
+      WORDPRESS_DB_USER: liane
+      WORDPRESS_DB_PASSWORD: vP83bKy9pGLwp1Fay5
+      WORDPRESS_DB_NAME: liane
+    volumes:
+      - /data/osm/wp:/var/www/html
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=gateway"
+      - "traefik.http.routers.liane-wp.rule=Host(`liane.app`) && PathPrefix(`/`)"
+      - "traefik.http.routers.liane-wp.entrypoints=web"
+      - "traefik.http.routers.liane-wp.middlewares=redirect@file"
+      - "traefik.http.routers.liane-wp-secure.rule=Host(`liane.app`) && PathPrefix(`/`)"
+      - "traefik.http.routers.liane-wp-secure.entrypoints=web-secure"
+      - "traefik.http.routers.liane-wp-secure.middlewares=compress@file"
+      - "traefik.http.routers.liane-wp-secure.tls.certResolver=gjinico"
+      - "traefik.http.services.liane-wp.loadbalancer.server.port=80"
+    restart: unless-stopped
+    networks:
+      - gateway
+      - default
+
+  wp-db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: liane
+      MYSQL_USER: liane
+      MYSQL_PASSWORD: vP83bKy9pGLwp1Fay5
+      MYSQL_RANDOM_ROOT_PASSWORD: '1'
+    volumes:
+      - /data/osm/wp-db:/var/lib/mysql
+    networks:
+      - default
+    restart: unless-stopped
+
 networks:
   gateway:
     external: true
