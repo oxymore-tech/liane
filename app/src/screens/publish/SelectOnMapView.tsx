@@ -37,7 +37,11 @@ export const SelectOnMapView = ({ onSelect, title, liane }: SelectOnMapViewProps
     services.community.getTrip(liane).then(setWayPoints);
   }, [liane, services.community]);
 
-  const [userLocation, setUserLocation] = useState<LatLng>();
+  const [userLocation, setUserLocation] = useState<LatLng>(services.location.getLastKnownLocation());
+
+  useEffect(() => {
+    services.location.currentLocation().then(setUserLocation);
+  }, [services.location]);
 
   return (
     <View style={styles.container}>

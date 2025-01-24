@@ -6,7 +6,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { AppContext } from "@/components/context/ContextProvider";
-import { AppExpandingTextInput } from "@/components/base/AppExpandingTextInput";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppLogger } from "@/api/logger";
 import { useSubscription } from "@/util/hooks/subscription.ts";
@@ -16,6 +15,7 @@ import { AppButton } from "@/components/base/AppButton";
 import { LaunchTripModal } from "@/screens/communities/LaunchTripModal";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { MessageList } from "@/screens/communities/MessagesList.tsx";
+import ChatInput from "@/screens/communities/ChaInput.tsx";
 
 const Wallpapers = [require("../../../assets/images/wallpaper1.jpg"), require("../../../assets/images/wallpaper2.jpg")];
 
@@ -200,30 +200,7 @@ export const CommunitiesChatScreen = () => {
         <KeyboardAvoidingView behavior={Platform.OS === "android" ? "height" : "padding"} style={{ paddingBottom: 8, paddingHorizontal: 8 }}>
           <Row spacing={8} style={{ alignItems: "center" }}>
             <AppButton color={AppColors.primaryColor} onPress={() => setTripModalVisible(true)} icon="plus" />
-            <AppExpandingTextInput
-              multiline={true}
-              placeholder="Message"
-              backgroundStyle={{
-                backgroundColor: AppColors.white,
-                borderRadius: 16,
-                paddingLeft: 8,
-                paddingRight: 2,
-                minHeight: 52
-              }}
-              trailing={
-                <AppButton
-                  style={{ borderRadius: 16 }}
-                  onPress={sendMessage}
-                  disabled={inputValue.length === 0}
-                  icon="send"
-                  loading={isSending}
-                  color={AppColors.secondaryColor}
-                />
-              }
-              onChangeText={setInputValue}
-              value={inputValue}
-              clearButtonMode="always"
-            />
+            <ChatInput onSend={sendMessage} isSending={isSending} />
           </Row>
           {!!me && (
             <LaunchTripModal

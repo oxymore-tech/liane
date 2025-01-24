@@ -85,7 +85,7 @@ export const MessageBubble = ({ liane, message, isSender, renderSender, activeTr
       <AppPressable
         disabled={!trip}
         onPress={navigateToTrip}
-        style={{ backgroundColor: "rgba(46,46,46,0.2)", justifyContent: "center", marginBottom: 6, paddingHorizontal: 4 }}>
+        style={{ backgroundColor: "rgba(46,46,46,0.2)", justifyContent: "center", marginBottom: 6, paddingHorizontal: 8 }}>
         <Row style={{ justifyContent: "space-between" }}>
           <Row spacing={5}>
             {message.content.type === "TripAdded" && trip && <AppIcon name="calendar" color={AppColors.white} />}
