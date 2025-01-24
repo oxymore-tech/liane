@@ -130,10 +130,10 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=gateway"
-      - "traefik.http.routers.${PROJECT}-web.rule=Host(`${DOMAIN}`) && PathPrefix(`/`)"
+      - "traefik.http.routers.${PROJECT}-web.rule=Host(`${DOMAIN}`) && PathPrefix(`/admin`)"
       - "traefik.http.routers.${PROJECT}-web.entrypoints=web"
       - "traefik.http.routers.${PROJECT}-web.middlewares=redirect@file"
-      - "traefik.http.routers.${PROJECT}-web-secure.rule=Host(`${DOMAIN}`) && PathPrefix(`/`)"
+      - "traefik.http.routers.${PROJECT}-web-secure.rule=Host(`${DOMAIN}`) && PathPrefix(`/admin`)"
       - "traefik.http.routers.${PROJECT}-web-secure.entrypoints=web-secure"
       - "traefik.http.routers.${PROJECT}-web-secure.middlewares=compress@file"
       - "traefik.http.routers.${PROJECT}-web-secure.tls.certResolver=gjinico"

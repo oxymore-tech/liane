@@ -148,6 +148,7 @@ const AppMapView = forwardRef(
           attributionEnabled={false}>
           <MapLibreGL.Camera
             bounds={bounds}
+            zoomLevel={10}
             // @ts-ignore
             ref={cameraRef}
           />

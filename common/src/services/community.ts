@@ -114,7 +114,7 @@ export type LianeFilter = {
 
 export type Text = { type: "Text"; value: string };
 export type LianeRequestModified = { type: "LianeRequestModified"; value: string; lianeRequest: Ref<CoLianeRequest> };
-export type TripAdded = { type: "TripAdded"; value: string; trip: Ref<Trip> };
+export type TripAdded = { type: "TripAdded"; value: string; trip: Ref<Trip>; return?: Ref<Trip> };
 export type MemberRequested = { type: "MemberRequested"; value: string; user: Ref<User>; lianeRequest: Ref<CoLianeRequest> };
 export type MemberAdded = { type: "MemberAdded"; value: string; user: Ref<User>; lianeRequest: Ref<CoLianeRequest> };
 export type MemberRejected = { type: "MemberRejected"; value: string; user: Ref<User> };
