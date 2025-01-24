@@ -75,6 +75,7 @@ export const MessageBubble = ({ liane, message, isSender, renderSender, activeTr
     if (!trip) {
       return;
     }
+    navigation.popToTop();
     // @ts-ignore
     navigation.navigate("Home", { screen: "Calendrier", params: { trip: trip.id! } });
   }, [navigation, trip]);
