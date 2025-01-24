@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/base/AppText";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { Row } from "@/components/base/AppLayout";
 import { AppContext } from "@/components/context/ContextProvider";
 import HomeScreen from "@/screens/home/HomeScreen";
@@ -42,6 +42,10 @@ const Tab = createBottomTabNavigator();
 function Home() {
   const { services, user, refreshUser } = useContext(AppContext);
   const notifications = useObservable<number>(services.realTimeHub.unreadNotifications.pipe(map(n => Object.entries(n).length)), 0);
+
+  useFocusEffect(() => {
+    services.realTimeHub.askForOverview().then();
+  });
 
   const iconSize = 24;
 

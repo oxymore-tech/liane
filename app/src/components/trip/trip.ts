@@ -14,6 +14,7 @@ export const useTripStatus = (liane?: Trip): LiveTripStatus | undefined => {
     }
     setStatus(getLiveTripStatus(liane, userId));
   }, [liane, userId]);
+
   useEffect(() => {
     if (liane && status?.nextUpdateMillis !== undefined) {
       const timeout = setTimeout(() => {

@@ -54,12 +54,14 @@ public sealed class TripServiceImpl(
 
     var toCreate = new List<LianeDb>();
 
+    string? returnId = null;
     if (entity.ReturnAt is not null)
     {
+      returnId = ObjectId.GenerateNewId().ToString()!;
       var createdReturn = await ToDb(
         entity with { From = entity.To, To = entity.From },
         new DepartureOrArrivalTime(entity.ReturnAt.Value, Direction.Departure),
-        ObjectId.GenerateNewId().ToString()!,
+        returnId,
         createdAt,
         createdBy
       );
@@ -67,7 +69,7 @@ public sealed class TripServiceImpl(
     }
 
     var created = await ToDb(entity, new DepartureOrArrivalTime(entity.ArriveAt, Direction.Arrival), ObjectId.GenerateNewId().ToString()!, createdAt, createdBy);
-    toCreate.Add(entity.ReturnAt is null ? created : created with { Return = toCreate[0].Id });
+    toCreate.Add(entity.ReturnAt is null ? created : created with { Return = returnId });
 
     await Mongo.GetCollection<LianeDb>().InsertManyAsync(toCreate);
     foreach (var lianeDb in toCreate)
@@ -81,7 +83,7 @@ public sealed class TripServiceImpl(
 
     var trip = await Get(created.Id);
 
-    await eventDispatcher.Dispatch(trip.Liane, new MessageContent.TripAdded("", trip), createdAt);
+    await eventDispatcher.Dispatch(trip.Liane, new MessageContent.TripAdded("", trip, returnId), createdAt);
 
     return trip;
   }
@@ -90,7 +92,7 @@ public sealed class TripServiceImpl(
   {
     var today = DateOnly.FromDateTime(DateTime.UtcNow);
     var start = new DateTime(today, new TimeOnly(), DateTimeKind.Utc);
-    var end = new DateTime(today.AddDays(6), new TimeOnly(23,59,59), DateTimeKind.Utc);
+    var end = new DateTime(today.AddDays(6), new TimeOnly(23, 59, 59), DateTimeKind.Utc);
     return await Collection.Find(l =>
         lianeFilter.Contains(l.Liane)
         && (l.State == TripStatus.NotStarted || l.State == TripStatus.Started)

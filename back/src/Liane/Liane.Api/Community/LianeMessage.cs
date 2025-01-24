@@ -39,7 +39,7 @@ public abstract record MessageContent
 
   public abstract record TripMessage(string? Value, Ref<ApiTrip> Trip) : MessageContent(Value);
 
-  public sealed record TripAdded(string Value, Ref<ApiTrip> Trip) : TripMessage(Value, Trip);
+  public sealed record TripAdded(string Value, Ref<ApiTrip> Trip, Ref<ApiTrip>? Return) : TripMessage(Value, Trip);
 
   public sealed record TripArchived(Ref<ApiTrip> Trip) : TripMessage(null, Trip);
 
