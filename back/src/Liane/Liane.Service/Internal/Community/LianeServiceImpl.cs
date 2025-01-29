@@ -443,7 +443,7 @@ public sealed class LianeServiceImpl(
                                                                      ((match).is_reverse_direction) AS is_reverse_direction
                                                                  FROM (
                                                                           SELECT
-                                                                              match_routes(@route, b.geom) AS match
+                                                                              match_routes(@route, b.geometry) AS match
                                                                           FROM liane_request lr
                                                                            INNER JOIN route b on b.way_points = lr.way_points
                                                                           WHERE lr.id = @liane
@@ -713,6 +713,7 @@ enum Direction
 };
 
 public sealed record PendingRawMatch(
+  float Score,
   LatLng? Pickup,
   LatLng? Deposit,
   bool IsReverseDirection
