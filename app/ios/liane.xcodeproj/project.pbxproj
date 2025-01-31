@@ -7,14 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		00E356F31AD99517003FC87E /* lianeTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* lianeTests.m */; };
 		0E0BF490946DF94B00DA4931 /* libPods-liane-lianeTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 61FD6F939BE9CCA034401A36 /* libPods-liane-lianeTests.a */; };
 		13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.mm */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
+		20E4565F2D4CD6E700902CD9 /* MapLibre in Frameworks */ = {isa = PBXBuildFile; productRef = 783EF7B73F49D9AF53858819 /* MapLibre */; };
+		20E456602D4CD6E700902CD9 /* MapLibre in Frameworks */ = {isa = PBXBuildFile; productRef = 0BFA4BC34C589C0E6E8755A1 /* MapLibre */; };
 		32FE5308134C4924AF6F6A8E /* SourceSans3-ExtraLight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D3A4DE792B5343AAA3C4383B /* SourceSans3-ExtraLight.ttf */; };
 		558B1FFA83122B946BEFE84E /* libPods-liane.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BBD753819A9162E0D7CEC3E6 /* libPods-liane.a */; };
-		630A2E072982781900527AC3 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 630A2E062982781900527AC3 /* GoogleService-Info.plist */; };
+		630A2E072982781900527AC3 /* liane/GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 630A2E062982781900527AC3 /* liane/GoogleService-Info.plist */; };
 		63335D0E29CCA9D70085E911 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 63335D1029CCA9D70085E911 /* InfoPlist.strings */; };
 		63B3F0FE2AEE731D008B90B8 /* RNLianeGeolocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63B3F0F92AEE731D008B90B8 /* RNLianeGeolocation.swift */; };
 		63B3F0FF2AEE731E008B90B8 /* RNLianeGeolocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63B3F0F92AEE731D008B90B8 /* RNLianeGeolocation.swift */; };
@@ -45,9 +46,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		00E356EE1AD99517003FC87E /* lianeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = lianeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		00E356F11AD99517003FC87E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		00E356F21AD99517003FC87E /* lianeTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = lianeTests.m; sourceTree = "<group>"; };
+		00E356EE1AD99517003FC87E /* lianeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = lianeTests.xctest; path = "/Users/agjini/workspace/perso/liane/app/ios/build/Debug-iphoneos/liane.app/PlugIns/lianeTests.xctest"; sourceTree = "<absolute>"; };
 		13B07F961A680F5B00A75B9A /* liane.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = liane.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = liane/AppDelegate.h; sourceTree = "<group>"; };
 		13B07FB01A68108700A75B9A /* AppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AppDelegate.mm; path = liane/AppDelegate.mm; sourceTree = "<group>"; };
@@ -59,7 +58,7 @@
 		28FD28F2E04E407C883866EF /* SourceSans3-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "SourceSans3-Medium.ttf"; path = "../assets/fonts/SourceSans3-Medium.ttf"; sourceTree = "<group>"; };
 		61FD6F939BE9CCA034401A36 /* libPods-liane-lianeTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-liane-lianeTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		62F3939E764A4059AF2E3BB5 /* SourceSans3-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "SourceSans3-Regular.ttf"; path = "../assets/fonts/SourceSans3-Regular.ttf"; sourceTree = "<group>"; };
-		630A2E062982781900527AC3 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "liane/GoogleService-Info.plist"; sourceTree = "<group>"; };
+		630A2E062982781900527AC3 /* liane/GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "liane/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		63335D0F29CCA9D70085E911 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		63335D1129CCAA490085E911 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		63B3F0F62AEE731C008B90B8 /* liane-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "liane-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -85,6 +84,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				20E456602D4CD6E700902CD9 /* MapLibre in Frameworks */,
 				0E0BF490946DF94B00DA4931 /* libPods-liane-lianeTests.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -93,6 +93,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				20E4565F2D4CD6E700902CD9 /* MapLibre in Frameworks */,
 				558B1FFA83122B946BEFE84E /* libPods-liane.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -100,23 +101,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		00E356EF1AD99517003FC87E /* lianeTests */ = {
-			isa = PBXGroup;
-			children = (
-				00E356F21AD99517003FC87E /* lianeTests.m */,
-				00E356F01AD99517003FC87E /* Supporting Files */,
-			);
-			path = lianeTests;
-			sourceTree = "<group>";
-		};
-		00E356F01AD99517003FC87E /* Supporting Files */ = {
-			isa = PBXGroup;
-			children = (
-				00E356F11AD99517003FC87E /* Info.plist */,
-			);
-			name = "Supporting Files";
-			sourceTree = "<group>";
-		};
 		13B07FAE1A68108700A75B9A /* liane */ = {
 			isa = PBXGroup;
 			children = (
@@ -167,10 +151,9 @@
 			children = (
 				63B3F0E52AEE6FEB008B90B8 /* Geolocation */,
 				63335D1029CCA9D70085E911 /* InfoPlist.strings */,
-				630A2E062982781900527AC3 /* GoogleService-Info.plist */,
+				630A2E062982781900527AC3 /* liane/GoogleService-Info.plist */,
 				13B07FAE1A68108700A75B9A /* liane */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
-				00E356EF1AD99517003FC87E /* lianeTests */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
@@ -185,7 +168,6 @@
 			isa = PBXGroup;
 			children = (
 				13B07F961A680F5B00A75B9A /* liane.app */,
-				00E356EE1AD99517003FC87E /* lianeTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -323,7 +305,7 @@
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				E2A8BDC1218A4D828F3DCDA4 /* SourceSans3-Bold.ttf in Resources */,
-				630A2E072982781900527AC3 /* GoogleService-Info.plist in Resources */,
+				630A2E072982781900527AC3 /* liane/GoogleService-Info.plist in Resources */,
 				32FE5308134C4924AF6F6A8E /* SourceSans3-ExtraLight.ttf in Resources */,
 				E33F0B549EDD4F298C7FE756 /* SourceSans3-Medium.ttf in Resources */,
 				D02F6E33B2D44CE3A3C3F71B /* SourceSans3-Regular.ttf in Resources */,
@@ -517,7 +499,6 @@
 			files = (
 				63B3F1072AEE731E008B90B8 /* LocationUtils.swift in Sources */,
 				63B3F0FF2AEE731E008B90B8 /* RNLianeGeolocation.swift in Sources */,
-				00E356F31AD99517003FC87E /* lianeTests.m in Sources */,
 				63B3F1012AEE731E008B90B8 /* LocationOptions.swift in Sources */,
 				63B3F1032AEE731E008B90B8 /* RNLianeGeolocationBridge.m in Sources */,
 				63B3F1052AEE731E008B90B8 /* LocationProvider.swift in Sources */,
@@ -750,10 +731,7 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -827,10 +805,7 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
