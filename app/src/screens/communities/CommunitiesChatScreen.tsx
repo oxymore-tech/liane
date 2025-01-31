@@ -26,7 +26,6 @@ export const CommunitiesChatScreen = () => {
 
   const [messages, setMessages] = useState<LianeMessage[]>([]);
   const [paginationCursor, setPaginationCursor] = useState<string>();
-  const [inputValue, setInputValue] = useState<string>("");
   const [isSending, setIsSending] = useState(false);
   const [liane, setLiane] = useState<CoLiane | undefined>(typeof route.params.liane === "string" ? undefined : route.params.liane);
 
@@ -43,30 +42,32 @@ export const CommunitiesChatScreen = () => {
     [liane?.id]
   );
 
-  const sendMessage = useCallback(async () => {
-    if (!liane) {
-      return;
-    }
+  const sendMessage = useCallback(
+    async (message: string) => {
+      if (!liane) {
+        return;
+      }
 
-    if (!inputValue) {
-      return;
-    }
+      if (!message) {
+        return;
+      }
 
-    if (inputValue.trim().length === 0) {
-      return;
-    }
+      if (message.trim().length === 0) {
+        return;
+      }
 
-    setIsSending(true);
-    try {
-      await services.realTimeHub.send(liane.id!, {
-        type: "Text",
-        value: inputValue
-      });
-      setInputValue("");
-    } finally {
-      setIsSending(false);
-    }
-  }, [inputValue, liane, services.realTimeHub]);
+      setIsSending(true);
+      try {
+        await services.realTimeHub.send(liane.id!, {
+          type: "Text",
+          value: message
+        });
+      } finally {
+        setIsSending(false);
+      }
+    },
+    [liane, services.realTimeHub]
+  );
 
   const appendMessage = async (lianeId: Ref<CoLiane>, m: LianeMessage) => {
     if (!liane) {
