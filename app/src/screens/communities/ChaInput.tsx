@@ -10,7 +10,6 @@ type ChatInputProps = {
 
 const ChatInput = ({ onSend, isSending }: ChatInputProps) => {
   const [message, setMessage] = useState("");
-  const [inputHeight, setInputHeight] = useState(40);
 
   const handleSend = useCallback(() => {
     if (message.trim()) {
@@ -22,15 +21,12 @@ const ChatInput = ({ onSend, isSending }: ChatInputProps) => {
   return (
     <View style={styles.container}>
       <TextInput
-        style={[styles.textInput, { height: Math.max(40, inputHeight), maxHeight: 200 }]}
+        style={[styles.textInput, { height: "100%", maxHeight: 200 }]}
         placeholder="Message..."
         value={message}
         clearButtonMode="always"
         onChangeText={setMessage}
         multiline={true}
-        onContentSizeChange={event => {
-          setInputHeight(event.nativeEvent.contentSize.height);
-        }}
         placeholderTextColor={AppColorPalettes.gray[400]}
       />
       <View style={{ justifyContent: "flex-end" }}>
@@ -60,7 +56,8 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     fontSize: 18,
-    color: AppColors.fontColor
+    color: AppColors.fontColor,
+    textAlignVertical: "center"
   }
 });
 
