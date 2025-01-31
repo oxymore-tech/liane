@@ -175,45 +175,45 @@ export const CommunitiesChatScreen = () => {
   }, [liane, services.realTimeHub]);
 
   return (
-    <View style={[styles.mainContainer, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-      <Row style={styles.header} spacing={16}>
-        <AppButton onPress={() => navigation.goBack()} icon="arrow-left" color={AppColorPalettes.gray[800]} />
-        <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 24, lineHeight: 27, color: AppColorPalettes.gray[100] }}>{name}</AppText>
-        <AppButton
-          onPress={() => liane && navigation.navigate("CommunitiesDetails", { liane: liane })}
-          icon="edit"
-          color={AppColorPalettes.gray[800]}
-        />
-      </Row>
-      <ImageBackground source={Wallpapers[0]} style={{ flex: 1 }}>
-        <GestureHandlerRootView>
-          <MessageList
-            liane={liane}
-            user={user}
-            messages={messages}
-            fetchMessages={fetchMessages}
-            fetchNextPage={fetchNextPage}
-            loading={loading}
-            incomingTrips={trip?.data}
+    <GestureHandlerRootView>
+      <View style={[styles.mainContainer, { flex: 1, paddingTop: insets.top }]}>
+        <Row style={styles.header} spacing={16}>
+          <AppButton onPress={() => navigation.goBack()} icon="arrow-left" color={AppColorPalettes.gray[800]} />
+          <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 24, lineHeight: 27, color: AppColorPalettes.gray[100] }}>{name}</AppText>
+          <AppButton
+            onPress={() => liane && navigation.navigate("CommunitiesDetails", { liane: liane })}
+            icon="edit"
+            color={AppColorPalettes.gray[800]}
           />
-        </GestureHandlerRootView>
-        <KeyboardAvoidingView behavior={Platform.OS === "android" ? "height" : "padding"} style={{ paddingBottom: 8, paddingHorizontal: 8 }}>
-          <Row spacing={8} style={{ alignItems: "center" }}>
-            <AppButton color={AppColors.primaryColor} onPress={() => setTripModalVisible(true)} icon="plus" />
-            <ChatInput onSend={sendMessage} isSending={isSending} />
-          </Row>
-          {!!me && (
-            <LaunchTripModal
-              lianeRequest={me!.lianeRequest}
-              tripModalVisible={tripModalVisible}
-              setTripModalVisible={setTripModalVisible}
-              launchTrip={launchTrip}
-              launching={launching}
+        </Row>
+        <KeyboardAvoidingView style={{ flex: 1, marginBottom: insets.bottom }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+          <ImageBackground source={Wallpapers[0]} style={{ flex: 1 }}>
+            <MessageList
+              liane={liane}
+              user={user}
+              messages={messages}
+              fetchMessages={fetchMessages}
+              fetchNextPage={fetchNextPage}
+              loading={loading}
+              incomingTrips={trip?.data}
             />
-          )}
+            <Row spacing={8} style={{ alignItems: "center" }}>
+              <AppButton color={AppColors.primaryColor} onPress={() => setTripModalVisible(true)} icon="plus" />
+              <ChatInput onSend={sendMessage} isSending={isSending} />
+            </Row>
+            {!!me && (
+              <LaunchTripModal
+                lianeRequest={me!.lianeRequest}
+                tripModalVisible={tripModalVisible}
+                setTripModalVisible={setTripModalVisible}
+                launchTrip={launchTrip}
+                launching={launching}
+              />
+            )}
+          </ImageBackground>
         </KeyboardAvoidingView>
-      </ImageBackground>
-    </View>
+      </View>
+    </GestureHandlerRootView>
   );
 };
 
