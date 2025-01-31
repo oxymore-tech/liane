@@ -18,6 +18,7 @@ type TripActionsProps = {
 
 export function TripActions({ style, trip, onUpdate, user }: TripActionsProps) {
   const status = useTripStatus(trip.trip);
+  console.log("status", status);
   const { services } = useContext(AppContext);
 
   const [starting, setStarting] = useState(false);
