@@ -37,21 +37,6 @@ public sealed partial class PostgisServiceImpl(PostgisDatabase db, ILogger<Postg
     }
   }
 
-  public async Task SyncGeometries(IEnumerable<Api.Trip.Trip> source)
-  {
-    using var connection = db.NewConnection();
-    using var tx = connection.BeginTransaction();
-
-    await connection.ExecuteAsync("DELETE FROM liane_waypoint WHERE true", tx);
-    foreach (var l in source)
-    {
-      await InsertLianeWaypoints(l, connection, tx);
-    }
-
-    await DeleteOrphanSegments(connection, tx);
-    tx.Commit();
-  }
-
   public async Task<ImmutableList<Ref<Api.Trip.Trip>>> ListSearchableLianes()
   {
     using var connection = db.NewConnection();

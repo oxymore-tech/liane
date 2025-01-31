@@ -21,7 +21,6 @@ public interface ITripSession : IAsyncDisposable
 public interface IPostgisService
 {
   Task UpdateGeometry(Api.Trip.Trip trip);
-  Task SyncGeometries(IEnumerable<Api.Trip.Trip> source);
   Task Clear(IEnumerable<Ref<Api.Trip.Trip>> lianes);
   Task<ImmutableList<LianeMatchCandidate>> GetMatchingLianes(Route targetRoute, DateTime from, DateTime to);
   Task<ImmutableList<LianeMatchCandidate>> GetMatchingLianes(LatLng pickup, LatLng deposit, DateTime from, DateTime to);

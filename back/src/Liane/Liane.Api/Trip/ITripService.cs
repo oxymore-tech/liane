@@ -29,7 +29,6 @@ public interface ITripService : ICrudEntityService<TripRequest, Trip>
   Task<PaginatedResponse<DetailedLianeTrackReport>> ListTripRecords(Pagination pagination, TripRecordFilter filter);
   Task<DetailedLianeTrackReport> GetTripRecord(string id);
   Task<FeatureCollection> GetRawGeolocationPings(Ref<Trip> trip);
-  Task ForceSyncDatabase();
   Task UpdateGeolocationSetting(Ref<Trip> trip, GeolocationLevel level);
   Task CancelTrip(Ref<Trip> trip);
   Task StartTrip(Ref<Trip> trip);

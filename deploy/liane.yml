@@ -91,9 +91,6 @@ services:
       - "traefik.http.routers.${PROJECT}-back-secure.middlewares=compress@file"
       - "traefik.http.routers.${PROJECT}-back-secure.tls.certResolver=gjinico"
       - "traefik.http.services.${PROJECT}-back.loadbalancer.server.port=5000"
-    depends_on:
-      - mongo
-      - postgis
     volumes:
       - "./service-account.json:/app/service-account.json:ro"
     environment:
@@ -116,6 +113,11 @@ services:
       - gateway
       - osm
       - default
+    depends_on:
+      mongo:
+        condition: service_started
+      postgis:
+        condition: service_healthy
 
   web:
     build:

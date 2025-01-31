@@ -16,8 +16,7 @@ import { LaunchTripModal } from "@/screens/communities/LaunchTripModal";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { MessageList } from "@/screens/communities/MessagesList.tsx";
 import ChatInput from "@/screens/communities/ChaInput.tsx";
-
-const Wallpapers = [require("../../../assets/images/wallpaper1.jpg"), require("../../../assets/images/wallpaper2.jpg")];
+import { Wallpapers } from "@/components/base/Wallpapers.ts";
 
 export const CommunitiesChatScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesChat">();

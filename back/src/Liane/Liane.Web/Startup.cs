@@ -4,7 +4,6 @@ using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Liane.Api.Image;
-using Liane.Api.Trip;
 using Liane.Api.Util;
 using Liane.Service.Internal.Address;
 using Liane.Service.Internal.Community;
@@ -334,13 +333,6 @@ public static class Startup
 
     var postgisMigrationService = app.ApplicationServices.GetRequiredService<PostgisUpdateService>();
     postgisMigrationService.Execute()
-      .ConfigureAwait(false)
-      .GetAwaiter()
-      .GetResult();
-
-    var lianeService = app.ApplicationServices.GetRequiredService<ITripService>();
-    // Synchronize databases and cache 
-    lianeService.ForceSyncDatabase()
       .ConfigureAwait(false)
       .GetAwaiter()
       .GetResult();
