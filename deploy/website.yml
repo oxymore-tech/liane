@@ -12,10 +12,10 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=gateway"
-      - "traefik.http.routers.liane-wp.rule=(Host(`liane.app`) || Host(`dev.liane.app`)) && (PathPrefix(`/`) && !PathPrefix(`/admin`) && !PathPrefix(`/api`) && && !PathPrefix(`/swagger`))"
+      - "traefik.http.routers.liane-wp.rule=(Host(`liane.app`) || Host(`dev.liane.app`)) && (PathPrefix(`/`) && !PathPrefix(`/admin`) && !PathPrefix(`/api`) && !PathPrefix(`/swagger`))"
       - "traefik.http.routers.liane-wp.entrypoints=web"
       - "traefik.http.routers.liane-wp.middlewares=redirect@file"
-      - "traefik.http.routers.liane-wp-secure.rule=(Host(`liane.app`) || Host(`dev.liane.app`)) && (PathPrefix(`/`) && !PathPrefix(`/admin`) && !PathPrefix(`/api`) && && !PathPrefix(`/swagger`))"
+      - "traefik.http.routers.liane-wp-secure.rule=(Host(`liane.app`) || Host(`dev.liane.app`)) && (PathPrefix(`/`) && !PathPrefix(`/admin`) && !PathPrefix(`/api`) && !PathPrefix(`/swagger`))"
       - "traefik.http.routers.liane-wp-secure.entrypoints=web-secure"
       - "traefik.http.routers.liane-wp-secure.middlewares=compress@file"
       - "traefik.http.routers.liane-wp-secure.tls.certResolver=gjinico"
