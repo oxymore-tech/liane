@@ -1,7 +1,7 @@
-import { SectionList, ViewToken } from "react-native";
+import { FlatList, ViewToken } from "react-native";
 import { RefreshControl } from "react-native-gesture-handler";
 import { AppText } from "@/components/base/AppText.tsx";
-import { ArrayUtils, capitalize, CoLiane, IncomingTrip, LianeMessage, User } from "@liane/common";
+import { capitalize, CoLiane, IncomingTrip, LianeMessage, Trip, User } from "@liane/common";
 import { AppLocalization } from "@/api/i18n.ts";
 import { MessageBubble } from "@/screens/communities/MessageBubble.tsx";
 import React, { useCallback, useMemo, useState } from "react";
@@ -29,45 +29,76 @@ function isWithinLastWeek(date: Date) {
   return date >= startOfLastWeek;
 }
 
+type LianeSection = {
+  title: string;
+};
+
+type LianeMessageWithRenderSender = LianeMessage & { renderSender: boolean };
+
+type MessageItem = LianeMessageWithRenderSender | LianeSection;
+
+function isSection(m: LianeMessage | LianeSection): m is LianeSection {
+  return (m as any).title !== undefined;
+}
+
+function getMessageTitle(message: LianeMessage) {
+  const date = new Date(message.createdAt!);
+  date.setHours(12, 0, 0, 0);
+  return date.toISOString();
+}
+
 export const MessageList = ({ liane, user, messages, loading, fetchMessages, fetchNextPage, incomingTrips }: MessageListProps) => {
   const [stickyHeader, setStickyHeader] = useState<string>();
-  const [stillVisible, setStillVisible] = useState(false);
 
-  const sections = useMemo(() => {
-    return Object.entries(
-      ArrayUtils.groupBy(messages, m => {
-        const date = new Date(m.createdAt!);
-        date.setHours(12, 0, 0, 0);
-        return date.toISOString();
-      })
-    ).map(([date, g]) => ({
-      title: date,
-      data: g
-    }));
+  const items = useMemo(() => {
+    const array: MessageItem[] = [];
+    for (let i = 0; i < messages.length; i++) {
+      const message = messages[i];
+      const previousMessage = messages[i + 1];
+      const title = getMessageTitle(message);
+
+      const firstOfSection = !previousMessage || title !== getMessageTitle(previousMessage);
+
+      const renderSender = firstOfSection || previousMessage.content.type !== "Text" || previousMessage.createdBy !== message.createdBy;
+      array.push({ ...message, renderSender: renderSender });
+
+      if (firstOfSection) {
+        array.push({ title });
+      }
+    }
+    return array;
   }, [messages]);
 
-  const firstSection = useMemo(() => {
-    if (sections.length === 0) {
-      return;
-    }
-    return sections[0].title;
-  }, [sections]);
-
   const handleStickyHeader = useCallback(
-    ({ viewableItems }: { viewableItems: ViewToken<LianeMessage>[]; changed: ViewToken<LianeMessage>[] }) => {
-      if (!viewableItems?.length) {
-        return;
-      }
-
-      const lastItem = viewableItems.pop();
+    ({ viewableItems }: { viewableItems: ViewToken<LianeMessage | LianeSection>[]; changed: ViewToken<LianeMessage | LianeSection>[] }) => {
+      const visibleTitles = new Set(viewableItems.filter(v => v.isViewable && isSection(v.item)).map(v => (v.item as LianeSection).title));
+      let lastItem = viewableItems.pop();
       if (!lastItem) {
         return;
       }
+      lastItem = viewableItems.pop();
+      if (!lastItem) {
+        return;
+      }
+      if (isSection(lastItem.item)) {
+        lastItem = viewableItems.pop();
+        if (!lastItem) {
+          return;
+        }
+      }
 
-      setStillVisible(firstSection !== lastItem.section.title);
-      setStickyHeader(lastItem.section.title);
+      if (isSection(lastItem.item)) {
+        return;
+      }
+
+      const messageTitle = getMessageTitle(lastItem.item);
+      if (visibleTitles.has(messageTitle)) {
+        setStickyHeader(undefined);
+      } else {
+        setStickyHeader(messageTitle);
+      }
     },
-    [firstSection]
+    []
   );
 
   const activeTrips = useMemo(() => {
@@ -84,27 +115,19 @@ export const MessageList = ({ liane, user, messages, loading, fetchMessages, fet
 
   return (
     <>
-      {stickyHeader && stillVisible && <Header title={stickyHeader} fixed={true} />}
-      <SectionList
-        sections={sections}
+      {stickyHeader && <Header title={stickyHeader} fixed={true} />}
+      <FlatList
+        data={items}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchMessages} />}
         style={{ flex: 1 }}
-        keyExtractor={m => m.id!}
-        renderSectionFooter={({ section }) => <Header title={section.title} />}
-        renderItem={({ item, index, section }) => {
-          const renderSender = index === section.data.length - 1 || section.data[index + 1].createdBy !== item.createdBy;
-
-          return (
-            <MessageBubble
-              liane={liane}
-              message={item}
-              isSender={item.createdBy === user?.id}
-              renderSender={renderSender}
-              activeTrips={activeTrips}
-            />
-          );
+        keyExtractor={m => {
+          if (isSection(m)) {
+            return m.title;
+          }
+          return m.id!;
         }}
+        renderItem={({ item }) => <RenderItem item={item} activeTrips={activeTrips} user={user} liane={liane} />}
         onViewableItemsChanged={handleStickyHeader}
         onEndReachedThreshold={0.2}
         onEndReached={fetchNextPage}
@@ -135,5 +158,21 @@ const Header = ({ title, fixed }: HeaderProps) => {
         {date}
       </AppText>
     </Center>
+  );
+};
+
+type RenderItemProps = {
+  item: MessageItem;
+  liane?: CoLiane;
+  user?: User;
+  activeTrips: Record<string, Trip>;
+};
+
+const RenderItem = ({ item, liane, user, activeTrips }: RenderItemProps) => {
+  if (isSection(item)) {
+    return <Header title={item.title} />;
+  }
+  return (
+    <MessageBubble liane={liane} message={item} isSender={item.createdBy === user?.id} renderSender={item.renderSender} activeTrips={activeTrips} />
   );
 };

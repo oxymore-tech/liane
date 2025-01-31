@@ -98,7 +98,7 @@ export const CommunitiesChatScreen = () => {
     }
     try {
       setLoading(true);
-      const r = await services.community.getMessages(liane.id!, { limit: 15, asc: false });
+      const r = await services.community.getMessages(liane.id!, { limit: 30, asc: false });
       setMessages(r.data);
       setPaginationCursor(r.next);
       services.realTimeHub.markAsRead(liane.id!, new Date().toISOString()).then();
@@ -113,7 +113,7 @@ export const CommunitiesChatScreen = () => {
 
   const fetchNextPage = async () => {
     if (paginationCursor && liane && liane.id) {
-      const paginatedResult = await services.community.getMessages(liane.id, { cursor: paginationCursor, limit: 15 });
+      const paginatedResult = await services.community.getMessages(liane.id, { cursor: paginationCursor, limit: 30 });
       setMessages(oldList => {
         return [...oldList, ...paginatedResult.data];
       });
