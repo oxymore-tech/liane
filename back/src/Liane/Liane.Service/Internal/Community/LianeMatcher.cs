@@ -177,7 +177,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     {
       var first = rawMatches.First();
       var joinRequest = GetJoinRequest(mapParams, first);
-      if (joinRequest is null && matchingPoints.Value.Score < MinScore)
+      if (joinRequest is null && (matchingPoints.Value.Score < MinScore || matchingPoints.Value.Reverse))
       {
         return null;
       }
@@ -214,7 +214,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
       var liane = mapParams.Lianes.GetValueOrDefault(lianeRef);
 
       var matches = rawMatches.Select(m => (Ref<LianeRequest>)m.LianeRequest).ToImmutableList();
-      if (matchingPoints.Value.Score < MinScore)
+      if (matchingPoints.Value.Score < MinScore || matchingPoints.Value.Reverse)
       {
         return null;
       }
