@@ -1,6 +1,6 @@
 import { CoLiane, LianeMessage, RallyingPoint, Ref, Trip } from "@liane/common";
 import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { ImageBackground, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
+import { ImageBackground, KeyboardAvoidingView, Platform, StyleSheet } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Row } from "@/components/base/AppLayout";
@@ -16,8 +16,7 @@ import { LaunchTripModal } from "@/screens/communities/LaunchTripModal";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { MessageList } from "@/screens/communities/MessagesList.tsx";
 import ChatInput from "@/screens/communities/ChaInput.tsx";
-
-const Wallpapers = [require("../../../assets/images/wallpaper1.jpg"), require("../../../assets/images/wallpaper2.jpg")];
+import { Wallpapers } from "@/components/base/Wallpapers.ts";
 
 export const CommunitiesChatScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesChat">();
@@ -27,7 +26,6 @@ export const CommunitiesChatScreen = () => {
 
   const [messages, setMessages] = useState<LianeMessage[]>([]);
   const [paginationCursor, setPaginationCursor] = useState<string>();
-  const [inputValue, setInputValue] = useState<string>("");
   const [isSending, setIsSending] = useState(false);
   const [liane, setLiane] = useState<CoLiane | undefined>(typeof route.params.liane === "string" ? undefined : route.params.liane);
 
@@ -44,30 +42,32 @@ export const CommunitiesChatScreen = () => {
     [liane?.id]
   );
 
-  const sendMessage = useCallback(async () => {
-    if (!liane) {
-      return;
-    }
+  const sendMessage = useCallback(
+    async (message: string) => {
+      if (!liane) {
+        return;
+      }
 
-    if (!inputValue) {
-      return;
-    }
+      if (!message) {
+        return;
+      }
 
-    if (inputValue.trim().length === 0) {
-      return;
-    }
+      if (message.trim().length === 0) {
+        return;
+      }
 
-    setIsSending(true);
-    try {
-      await services.realTimeHub.send(liane.id!, {
-        type: "Text",
-        value: inputValue
-      });
-      setInputValue("");
-    } finally {
-      setIsSending(false);
-    }
-  }, [inputValue, liane, services.realTimeHub]);
+      setIsSending(true);
+      try {
+        await services.realTimeHub.send(liane.id!, {
+          type: "Text",
+          value: message
+        });
+      } finally {
+        setIsSending(false);
+      }
+    },
+    [liane, services.realTimeHub]
+  );
 
   const appendMessage = async (lianeId: Ref<CoLiane>, m: LianeMessage) => {
     if (!liane) {
@@ -99,7 +99,7 @@ export const CommunitiesChatScreen = () => {
     }
     try {
       setLoading(true);
-      const r = await services.community.getMessages(liane.id!, { limit: 15, asc: false });
+      const r = await services.community.getMessages(liane.id!, { limit: 30, asc: false });
       setMessages(r.data);
       setPaginationCursor(r.next);
       services.realTimeHub.markAsRead(liane.id!, new Date().toISOString()).then();
@@ -114,7 +114,7 @@ export const CommunitiesChatScreen = () => {
 
   const fetchNextPage = async () => {
     if (paginationCursor && liane && liane.id) {
-      const paginatedResult = await services.community.getMessages(liane.id, { cursor: paginationCursor, limit: 15 });
+      const paginatedResult = await services.community.getMessages(liane.id, { cursor: paginationCursor, limit: 30 });
       setMessages(oldList => {
         return [...oldList, ...paginatedResult.data];
       });
@@ -175,18 +175,18 @@ export const CommunitiesChatScreen = () => {
   }, [liane, services.realTimeHub]);
 
   return (
-    <View style={[styles.mainContainer, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-      <Row style={styles.header} spacing={16}>
-        <AppButton onPress={() => navigation.goBack()} icon="arrow-left" color={AppColorPalettes.gray[800]} />
-        <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 24, lineHeight: 27, color: AppColorPalettes.gray[100] }}>{name}</AppText>
-        <AppButton
-          onPress={() => liane && navigation.navigate("CommunitiesDetails", { liane: liane })}
-          icon="edit"
-          color={AppColorPalettes.gray[800]}
-        />
-      </Row>
-      <ImageBackground source={Wallpapers[0]} style={{ flex: 1 }}>
-        <GestureHandlerRootView>
+    <ImageBackground source={Wallpapers[0]} style={{ flex: 1, paddingBottom: insets.bottom }}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "android" ? "height" : "padding"} enabled={Platform.OS !== "android"}>
+        <Row style={[styles.header, { paddingTop: insets.top }]} spacing={16}>
+          <AppButton onPress={() => navigation.goBack()} icon="arrow-left" color={AppColorPalettes.gray[800]} />
+          <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 24, lineHeight: 27, color: AppColorPalettes.gray[800] }}>{name}</AppText>
+          <AppButton
+            onPress={() => liane && navigation.navigate("CommunitiesDetails", { liane: liane })}
+            icon="edit"
+            color={AppColorPalettes.gray[800]}
+          />
+        </Row>
+        <GestureHandlerRootView style={{ flex: 1 }}>
           <MessageList
             liane={liane}
             user={user}
@@ -197,23 +197,21 @@ export const CommunitiesChatScreen = () => {
             incomingTrips={trip?.data}
           />
         </GestureHandlerRootView>
-        <KeyboardAvoidingView behavior={Platform.OS === "android" ? "height" : "padding"} style={{ paddingBottom: 8, paddingHorizontal: 8 }}>
-          <Row spacing={8} style={{ alignItems: "center" }}>
-            <AppButton color={AppColors.primaryColor} onPress={() => setTripModalVisible(true)} icon="plus" />
-            <ChatInput onSend={sendMessage} isSending={isSending} />
-          </Row>
-          {!!me && (
-            <LaunchTripModal
-              lianeRequest={me!.lianeRequest}
-              tripModalVisible={tripModalVisible}
-              setTripModalVisible={setTripModalVisible}
-              launchTrip={launchTrip}
-              launching={launching}
-            />
-          )}
-        </KeyboardAvoidingView>
-      </ImageBackground>
-    </View>
+        <Row spacing={8} style={{ alignItems: "center" }}>
+          <AppButton color={AppColors.primaryColor} onPress={() => setTripModalVisible(true)} icon="plus" />
+          <ChatInput onSend={sendMessage} isSending={isSending} />
+        </Row>
+      </KeyboardAvoidingView>
+      {!!me && (
+        <LaunchTripModal
+          lianeRequest={me!.lianeRequest}
+          tripModalVisible={tripModalVisible}
+          setTripModalVisible={setTripModalVisible}
+          launchTrip={launchTrip}
+          launching={launching}
+        />
+      )}
+    </ImageBackground>
   );
 };
 
@@ -222,12 +220,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     padding: 16,
-    borderColor: AppColorPalettes.gray[100],
-    borderBottomWidth: 1
-  },
-  mainContainer: {
-    backgroundColor: AppColorPalettes.gray[800],
-    justifyContent: "flex-start",
-    flex: 1
+    backgroundColor: "rgba(255, 255, 255, 0.4)"
   }
 });

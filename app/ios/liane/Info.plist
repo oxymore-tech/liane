@@ -9,7 +9,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>liane</string>
+	<string>Liane</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -76,11 +76,11 @@
 	<string>Allow access to your library to upload a new picture.</string>
 	<key>UIAppFonts</key>
 	<array>
-    <string>SourceSans3-Bold.ttf</string>
-    <string>SourceSans3-ExtraLight.ttf</string>
-    <string>SourceSans3-Medium.ttf</string>
-    <string>SourceSans3-Regular.ttf</string>
-    <string>SourceSans3-SemiBold.ttf</string>
+		<string>SourceSans3-Bold.ttf</string>
+		<string>SourceSans3-ExtraLight.ttf</string>
+		<string>SourceSans3-Medium.ttf</string>
+		<string>SourceSans3-Regular.ttf</string>
+		<string>SourceSans3-SemiBold.ttf</string>
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>

@@ -57,15 +57,13 @@ export const TripDetailScreen = () => {
   }, [refetch, tripParam]);
 
   const match = useMemo(() => (liane ? toLianeMatch(liane, user!.id!) : undefined), [liane, user]);
-  const lianeStatus = useTripStatus(liane ? liane : undefined);
-  if (liane && ["Started", "StartingSoon"].includes(lianeStatus!)) {
-    return (
-      <TripGeolocationProvider trip={liane}>
-        <LianeDetailPage match={match} />
-      </TripGeolocationProvider>
-    );
-  }
-  return <LianeDetailPage match={match} />;
+  const lianeStatus = useTripStatus(liane);
+
+  return (
+    <TripGeolocationProvider trip={liane}>
+      <LianeDetailPage match={match} />
+    </TripGeolocationProvider>
+  );
 };
 
 const LianeDetailPage = ({ match }: { match: LianeMatch | undefined }) => {
@@ -127,7 +125,7 @@ const LianeDetailPage = ({ match }: { match: LianeMatch | undefined }) => {
           {driver && tripMatch && trackingInfo?.car && <LocationMarker isCar={true} user={driver} info={trackingInfo?.car} />}
           {match && ["Finished", "Archived"].includes(match.trip.state) && <LianeProofDisplay id={match.trip.id!} />}
         </AppMapView>
-        <AppBottomSheet onChange={v => setBSheetTop(v)} snapPoints={[AppBottomSheetHandleHeight + 96, 0.45, 1]} index={1}>
+        <AppBottomSheet onChange={v => setBSheetTop(v)} snapPoints={[AppBottomSheetHandleHeight, "50%", "100%"]} index={1} dark={false}>
           {match && (
             <ScrollView style={{ paddingHorizontal: 12, backgroundColor: AppColorPalettes.gray[100], paddingBottom: 100 }}>
               <LianeDetailView liane={match} />
@@ -225,7 +223,6 @@ const LianeDetailView = ({ liane }: { liane: LianeMatch }) => {
       {!["Finished", "Archived", "Canceled"].includes(liane.trip.state) && (
         <Row style={styles.statusLianeContainer}>
           <TripStatusView trip={liane.trip} />
-          <GeolocationSwitch liane={liane.trip} />
         </Row>
       )}
 

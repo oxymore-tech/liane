@@ -8,7 +8,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: secret
 
   postgis:
-    image: "postgis/postgis:15-3.3"
+    image: "postgis/postgis:15-3.5"
     command: [ "-c", "shared_buffers=512MB", "-c", "max_connections=1000" ]
     environment:
       POSTGRES_DB: liane_test

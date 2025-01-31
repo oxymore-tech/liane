@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { ActivityIndicator, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
+import { ActivityIndicator, ImageBackground, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
 import messaging from "@react-native-firebase/messaging";
 import { scopedTranslate } from "@/api/i18n";
 import { AppText } from "@/components/base/AppText";
@@ -19,6 +19,7 @@ import { CreateLoginMachine, SignUpStateMachineInterpreter } from "@liane/common
 import { AppLogger } from "@/api/logger";
 import { RNAppEnv } from "@/api/env";
 import { Center } from "@/components/base/AppLayout";
+import { Wallpapers } from "@/components/base/Wallpapers.ts";
 
 const t = scopedTranslate("SignUp");
 
@@ -51,42 +52,44 @@ const SignUpPage = () => {
 
   return (
     <KeyboardAvoidingView style={[styles.container, { flex: 1, flexShrink: 1 }]} behavior={Platform.OS === "android" ? undefined : "height"}>
-      <View style={[styles.imageContainer, { flexShrink: 1 }]}>
-        <LianeLogo style={styles.image} width="75%" />
-      </View>
-      <View>
-        <AppText numberOfLines={-1} style={styles.helperText}>
-          {state.matches("phone")
-            ? t("Veuillez entrer votre numéro de téléphone")
-            : state.context.phone.value === RNAppEnv.raw.TEST_ACCOUNT
-            ? t("Entrez votre mot de passe")
-            : t("Entrez le code reçu par SMS")}
-        </AppText>
-        {state.matches("phone") ? (
-          <PhoneNumberInput
-            phoneNumber={state.context.phone.value || ""}
-            canSubmit={!!state.context.phone.valid}
-            onChange={set}
-            submit={submit}
-            submitting={submitting}
-          />
-        ) : state.context.phone.value === RNAppEnv.raw.TEST_ACCOUNT ? (
-          <PasswordInput code={state.context.code.value || ""} onChange={set} onValidate={submit} />
-        ) : (
-          <CodeInput
-            code={state.context.code.value || ""}
-            canSubmit={!!state.context.code.valid}
-            onChange={set}
-            submit={submit}
-            retry={() => machine.send("RESEND")}
-          />
-        )}
-        <AppText style={styles.errorText}>{error || " "}</AppText>
-      </View>
-      <View style={{ flex: 1, flexShrink: 1 }} />
-      <View style={[{ marginBottom: insets.bottom, paddingBottom: 16 }]}>
-        <AppText style={styles.bottomText}>Version: {APP_VERSION}</AppText>
-      </View>
+      <ImageBackground source={Wallpapers[1]} style={{ flex: 1 }}>
+        <View style={[styles.imageContainer, { flexShrink: 1 }]}>
+          <LianeLogo style={styles.image} width="75%" />
+        </View>
+        <View>
+          <AppText numberOfLines={-1} style={styles.helperText}>
+            {state.matches("phone")
+              ? t("Entrez votre numéro de téléphone")
+              : state.context.phone.value === RNAppEnv.raw.TEST_ACCOUNT
+                ? t("Entrez votre mot de passe")
+                : t("Entrez le code reçu par SMS")}
+          </AppText>
+          {state.matches("phone") ? (
+            <PhoneNumberInput
+              phoneNumber={state.context.phone.value || ""}
+              canSubmit={!!state.context.phone.valid}
+              onChange={set}
+              submit={submit}
+              submitting={submitting}
+            />
+          ) : state.context.phone.value === RNAppEnv.raw.TEST_ACCOUNT ? (
+            <PasswordInput code={state.context.code.value || ""} onChange={set} onValidate={submit} />
+          ) : (
+            <CodeInput
+              code={state.context.code.value || ""}
+              canSubmit={!!state.context.code.valid}
+              onChange={set}
+              submit={submit}
+              retry={() => machine.send("RESEND")}
+            />
+          )}
+          <AppText style={styles.errorText}>{error || " "}</AppText>
+        </View>
+        <View style={{ flex: 1, flexShrink: 1 }} />
+        <View style={[{ marginBottom: insets.bottom, paddingBottom: 16 }]}>
+          <AppText style={styles.bottomText}>Version: {APP_VERSION}</AppText>
+        </View>
+      </ImageBackground>
     </KeyboardAvoidingView>
   );
 };
@@ -144,7 +147,7 @@ const styles = StyleSheet.create({
     marginVertical: 4,
     textAlign: "center",
     color: AppColors.white,
-    fontSize: AppDimensions.textSize.medium
+    fontSize: 23
   },
   imageContainer: {
     alignItems: "center",
@@ -153,7 +156,7 @@ const styles = StyleSheet.create({
   },
   image: {
     width: "64%",
-    color: AppColors.primaryColor
+    color: AppColorPalettes.orange[500]
   },
   errorText: {
     color: "red", // TODO red 600,

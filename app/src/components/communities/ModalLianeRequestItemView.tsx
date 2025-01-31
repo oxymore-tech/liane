@@ -99,7 +99,6 @@ export const ModalLianeRequestItem = ({ item, onRefresh, myModalVisible, setMyMo
           />
           <AppButton
             onPress={() => {
-              setMyModalVisible(false);
               navigation.navigate("Publish", {
                 initialValue: item.lianeRequest
               });

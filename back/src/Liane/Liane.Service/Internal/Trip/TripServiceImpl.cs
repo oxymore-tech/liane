@@ -674,14 +674,6 @@ public sealed class TripServiceImpl(
     return new FeatureCollection(features);
   }
 
-  public async Task ForceSyncDatabase()
-  {
-    var results = await Mongo.GetCollection<LianeDb>()
-      .Find(l => l.State == TripStatus.NotStarted)
-      .SelectAsync(MapEntity);
-    await postgisService.SyncGeometries(results);
-  }
-
   public async Task UpdateGeolocationSetting(Ref<Api.Trip.Trip> liane, GeolocationLevel level)
   {
     var resolved = await Get(liane);

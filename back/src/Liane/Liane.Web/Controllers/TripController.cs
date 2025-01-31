@@ -96,13 +96,6 @@ public sealed class TripController(
     return NoContent();
   }
 
-  [HttpPost("sync")]
-  [RequiresAdminAuth]
-  public Task ForceSyncDatabase()
-  {
-    return tripService.ForceSyncDatabase();
-  }
-
   [HttpPost("match")]
   [DebugRequest]
   public Task<PaginatedResponse<LianeMatch>> Match([FromBody] Filter filter, [FromQuery] Pagination pagination, CancellationToken cancellationToken)

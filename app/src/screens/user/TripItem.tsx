@@ -2,7 +2,6 @@ import { CoLiane, FullUser, IncomingTrip, Ref, Trip } from "@liane/common";
 import { StyleSheet, View } from "react-native";
 import { Row } from "@/components/base/AppLayout.tsx";
 import { WayPointsView } from "@/components/trip/WayPointsView.tsx";
-import { TripGeolocationProvider } from "@/screens/detail/TripGeolocationProvider.tsx";
 import { AppText } from "@/components/base/AppText.tsx";
 import { AppColorPalettes, AppColors } from "@/theme/colors.ts";
 import { AppAvatars } from "@/components/UserPicture.tsx";
@@ -29,28 +28,19 @@ export function TripItem({ item, onOpenChat, onOpenTrip, user, onUpdate }: TripI
   }, [item.trip, onOpenTrip]);
 
   return (
-    <TripGeolocationProvider trip={item.trip}>
-      <View style={[styles.container, { backgroundColor: item.booked ? AppColors.white : AppColorPalettes.gray[800] }]}>
-        <AppPressable style={styles.header} onPress={handleOpenChat}>
-          <AppText style={[styles.name, !item.booked && { color: AppColorPalettes.gray[100] }]}>{item.name}</AppText>
-          <Row style={{ alignItems: "center" }}>
-            <AppAvatars users={item.trip.members.map(m => m.user)} driver={item.trip.driver?.user} />
-            <AppIcon
-              style={{ marginLeft: 4 }}
-              name="message"
-              color={item.booked ? AppColorPalettes.gray[800] : AppColorPalettes.gray[100]}
-              size={30}
-            />
-          </Row>
-        </AppPressable>
-        <View style={styles.separator} />
-        <AppPressable onPress={handleOpenTrip}>
-          <WayPointsView wayPoints={item.trip.wayPoints} dark={!item.booked} />
-        </AppPressable>
-        <View style={styles.separator} />
-        <TripActions trip={item} user={user} onUpdate={onUpdate} />
-      </View>
-    </TripGeolocationProvider>
+    <View style={[styles.container, { backgroundColor: item.booked ? AppColors.white : AppColorPalettes.gray[200] }]}>
+      <AppPressable style={styles.header} onPress={handleOpenChat}>
+        <AppText style={[styles.name]}>{item.name}</AppText>
+        <Row style={{ alignItems: "center" }}>
+          <AppAvatars users={item.trip.members.map(m => m.user)} driver={item.trip.driver?.user} />
+          <AppIcon style={{ marginLeft: 4 }} name="message" color={AppColorPalettes.gray[800]} size={30} />
+        </Row>
+      </AppPressable>
+      <AppPressable onPress={handleOpenTrip}>
+        <WayPointsView wayPoints={item.trip.wayPoints} />
+      </AppPressable>
+      <TripActions trip={item} user={user} onUpdate={onUpdate} />
+    </View>
   );
 }
 
@@ -69,10 +59,5 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 16,
     marginBottom: 8
-  },
-  separator: {
-    height: 1,
-    backgroundColor: AppColorPalettes.gray[100],
-    marginVertical: 8
   }
 });

@@ -40,6 +40,9 @@ export const LianeMapDetailScreen = () => {
 
   const members = useMemo(() => {
     if (isLiane(matchOrLiane)) {
+      if (!matchOrLiane.members.length) {
+        return [matchOrLiane.createdBy];
+      }
       return matchOrLiane.members.map(m => m.user);
     } else {
       return matchOrLiane.members;

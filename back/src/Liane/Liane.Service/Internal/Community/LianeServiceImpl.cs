@@ -448,7 +448,7 @@ public sealed class LianeServiceImpl(
                                                                            INNER JOIN route b on b.way_points = lr.way_points
                                                                           WHERE lr.id = @liane
                                                                       ) AS ii
-                                                                 WHERE (match).score > @threshold
+                                                                 WHERE (match).score > @threshold AND (match).is_reverse_direction = false 
                                                                  LIMIT 1
                                                                  """,
       new { threshold = LianeMatcher.MinScore, route, liane }

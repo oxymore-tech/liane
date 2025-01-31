@@ -12,7 +12,7 @@ services:
     restart: unless-stopped
 
   postgis:
-    image: "kartoza/postgis:15-3.3"
+    image: "kartoza/postgis:15-3.5"
     volumes:
       - "${LIANE_HOME}/data/postgis:/var/lib/postgresql/data"
     ports:

@@ -11,7 +11,12 @@ services:
       MONGO_INITDB_DATABASE: liane
 
   postgis:
-    image: "postgis/postgis:15-3.3"
+    image: "postgis/postgis:15-3.5"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U mongo -d liane" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
     environment:
       POSTGRES_DB: liane
       POSTGRES_USER: mongo
@@ -39,9 +44,12 @@ services:
       LIANE_Cloudflare__AccountHash: ${CLOUDFLARE_ACCOUNT_HASH}
       LIANE_Cloudflare__ApiKey: ${CLOUDFLARE_API_KEY}
     depends_on:
-      - mongo
-      - postgis
-      - osrm
+      mongo:
+        condition: service_started
+      postgis:
+        condition: service_healthy
+      osrm:
+        condition: service_started
 
   martin:
     image: ghcr.io/maplibre/martin
@@ -53,7 +61,7 @@ services:
       DB_PASSWORD: secret
     depends_on:
       back:
-          condition: service_healthy
+        condition: service_healthy
 
   test:
     build:

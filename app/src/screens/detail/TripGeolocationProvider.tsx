@@ -8,14 +8,15 @@ import { useIsFocused } from "@react-navigation/native";
 import { AppLogger } from "@/api/logger";
 import { useRealtimeDelay } from "@/util/hooks/delay";
 
-export interface TripGeolocation {
-  trip: Trip;
+export type TripGeolocation = {
+  trip?: Trip;
   isActive: boolean;
   subscribe: (callback: (l: TrackingInfo | null) => void) => SubscriptionLike | undefined;
-}
+};
+
 // @ts-ignore
 const TripGeolocationContext = createContext<TripGeolocation | undefined>();
-export const TripGeolocationProvider = ({ trip, children }: { trip: Trip } & PropsWithChildren) => {
+export const TripGeolocationProvider = ({ trip, children }: { trip?: Trip } & PropsWithChildren) => {
   const [geolocRunning, setGeolocRunning] = useState<boolean | undefined>(undefined);
   const { services } = useContext(AppContext);
   const [observable, setObservable] = useState<Observable<TrackingInfo | null> | null>();
@@ -25,6 +26,9 @@ export const TripGeolocationProvider = ({ trip, children }: { trip: Trip } & Pro
 
   // Check if service is running locally
   useEffect(() => {
+    if (!trip) {
+      return;
+    }
     if (shouldBeActive) {
       LianeGeolocation.currentLiane().then(id => {
         setGeolocRunning(trip.id! === id);
@@ -34,10 +38,13 @@ export const TripGeolocationProvider = ({ trip, children }: { trip: Trip } & Pro
     }
     const sub = LianeGeolocation.watchRunningService(l => setGeolocRunning(l === trip.id!));
     return () => sub.unsubscribe();
-  }, [shouldBeActive, trip.id]);
+  }, [trip, shouldBeActive]);
 
   // Observe shared position by other members
   useEffect(() => {
+    if (!trip) {
+      return;
+    }
     AppLogger.debug("GEOLOC", "Recreating geolocation observables");
     if (!shouldBeActive) {
       setObservable(null);
