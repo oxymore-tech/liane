@@ -1,6 +1,6 @@
 import { CoLiane, LianeMessage, RallyingPoint, Ref, Trip } from "@liane/common";
 import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { ImageBackground, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
+import { ImageBackground, KeyboardAvoidingView, Platform, StyleSheet } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Row } from "@/components/base/AppLayout";
@@ -175,45 +175,43 @@ export const CommunitiesChatScreen = () => {
   }, [liane, services.realTimeHub]);
 
   return (
-    <GestureHandlerRootView>
-      <View style={[styles.mainContainer, { flex: 1, paddingTop: insets.top }]}>
-        <Row style={styles.header} spacing={16}>
+    <ImageBackground source={Wallpapers[0]} style={{ flex: 1, paddingBottom: insets.bottom }}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "android" ? "height" : "padding"} enabled={Platform.OS !== "android"}>
+        <Row style={[styles.header, { paddingTop: insets.top }]} spacing={16}>
           <AppButton onPress={() => navigation.goBack()} icon="arrow-left" color={AppColorPalettes.gray[800]} />
-          <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 24, lineHeight: 27, color: AppColorPalettes.gray[100] }}>{name}</AppText>
+          <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 24, lineHeight: 27, color: AppColorPalettes.gray[800] }}>{name}</AppText>
           <AppButton
             onPress={() => liane && navigation.navigate("CommunitiesDetails", { liane: liane })}
             icon="edit"
             color={AppColorPalettes.gray[800]}
           />
         </Row>
-        <KeyboardAvoidingView style={{ flex: 1, marginBottom: insets.bottom }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-          <ImageBackground source={Wallpapers[0]} style={{ flex: 1 }}>
-            <MessageList
-              liane={liane}
-              user={user}
-              messages={messages}
-              fetchMessages={fetchMessages}
-              fetchNextPage={fetchNextPage}
-              loading={loading}
-              incomingTrips={trip?.data}
-            />
-            <Row spacing={8} style={{ alignItems: "center" }}>
-              <AppButton color={AppColors.primaryColor} onPress={() => setTripModalVisible(true)} icon="plus" />
-              <ChatInput onSend={sendMessage} isSending={isSending} />
-            </Row>
-            {!!me && (
-              <LaunchTripModal
-                lianeRequest={me!.lianeRequest}
-                tripModalVisible={tripModalVisible}
-                setTripModalVisible={setTripModalVisible}
-                launchTrip={launchTrip}
-                launching={launching}
-              />
-            )}
-          </ImageBackground>
-        </KeyboardAvoidingView>
-      </View>
-    </GestureHandlerRootView>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <MessageList
+            liane={liane}
+            user={user}
+            messages={messages}
+            fetchMessages={fetchMessages}
+            fetchNextPage={fetchNextPage}
+            loading={loading}
+            incomingTrips={trip?.data}
+          />
+        </GestureHandlerRootView>
+        <Row spacing={8} style={{ alignItems: "center" }}>
+          <AppButton color={AppColors.primaryColor} onPress={() => setTripModalVisible(true)} icon="plus" />
+          <ChatInput onSend={sendMessage} isSending={isSending} />
+        </Row>
+      </KeyboardAvoidingView>
+      {!!me && (
+        <LaunchTripModal
+          lianeRequest={me!.lianeRequest}
+          tripModalVisible={tripModalVisible}
+          setTripModalVisible={setTripModalVisible}
+          launchTrip={launchTrip}
+          launching={launching}
+        />
+      )}
+    </ImageBackground>
   );
 };
 
@@ -222,12 +220,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     padding: 16,
-    borderColor: AppColorPalettes.gray[100],
-    borderBottomWidth: 1
-  },
-  mainContainer: {
-    backgroundColor: AppColorPalettes.gray[800],
-    justifyContent: "flex-start",
-    flex: 1
+    backgroundColor: "rgba(255, 255, 255, 0.4)"
   }
 });
