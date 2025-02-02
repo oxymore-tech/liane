@@ -53,7 +53,7 @@ public class RallyingPointRequestServiceImpl : MongoCrudEntityService<RallyingPo
     }
 
     var pointId = "user:" + ObjectId.GenerateNewId();
-    await rallyingPointService.Insert(new[] { request.Point with { Id = pointId } });
+    await rallyingPointService.Insert([request.Point with { Id = pointId }]);
     return request;
   }
 
