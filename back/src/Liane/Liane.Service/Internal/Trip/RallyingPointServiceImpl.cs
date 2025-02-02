@@ -236,7 +236,7 @@ public sealed class RallyingPointServiceImpl(IOsrmService osrmService, PostgisDa
     var filter = Filter<RallyingPoint>.Where(r => r.ZipCode, ComparisonOperator.Like, $"{n}___");
     var query = Query.Select<RallyingPoint>()
       .Where(filter);
-    return await connection.QueryGeoJsonAsync(query);
+    return (await connection.QueryAsync(query)).ToFeatureCollection();
   }
 
   private async Task<int> DeleteMany(Filter<RallyingPoint> filter)
