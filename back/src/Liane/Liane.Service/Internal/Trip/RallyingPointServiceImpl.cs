@@ -186,7 +186,7 @@ public sealed class RallyingPointServiceImpl(IOsrmService osrmService, PostgisDa
 
   public async Task<bool> Delete(Ref<RallyingPoint> reference)
   {
-    return await DeleteMany(new[] { reference }) > 0;
+    return await DeleteMany([reference]) > 0;
   }
 
   public async Task<RallyingPoint> Create(RallyingPoint obj)
