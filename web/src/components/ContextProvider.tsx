@@ -41,7 +41,7 @@ const http = new HttpClient(NodeAppEnv.baseUrl, WebLogger, storage);
 const auth = new AuthServiceClient(http, storage);
 const record = new RecordServiceClient(http);
 const routing = new RoutingServiceClient(http);
-const rallyingPoint = new PointsAdminServiceClient(http, storage);
+const rallyingPoint = new PointsAdminServiceClient(http);
 const osm = new OsmServiceClient(storage);
 const queryClient = new QueryClient({
   defaultOptions: {
