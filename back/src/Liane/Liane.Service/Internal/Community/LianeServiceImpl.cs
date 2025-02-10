@@ -563,7 +563,7 @@ public sealed class LianeServiceImpl(
   private async Task InsertJoinRequest(IDbConnection connection, Guid request, Guid liane, IDbTransaction tx, string userId)
   {
     var at = DateTime.UtcNow;
-    await connection.InsertAsync(new LianeMemberDb(request, liane, at, null, null), tx);
+    await connection.MergeAsync(new LianeMemberDb(request, liane, at, null, null), tx);
     tx.Commit();
     await eventDispatcher.Dispatch(liane, new MessageContent.MemberRequested("", userId, request), at);
   }
