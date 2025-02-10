@@ -546,8 +546,8 @@ public sealed class LianeServiceImpl(
       .And(m => m.LianeId, ComparisonOperator.Eq, liane), tx);
     if (newLiane)
     {
-      await connection.InsertAsync(new LianeMemberDb(liane, liane, at, at, null), tx);
-      await eventDispatcher.Dispatch(liane, new MessageContent.MemberAdded("", userId, liane), at);
+      await connection.InsertAsync(new LianeMemberDb(liane, liane, request.CreatedAt, request.CreatedAt, null), tx);
+      await eventDispatcher.Dispatch(liane, new MessageContent.MemberAdded("", userId, liane), request.CreatedAt);
     }
 
     if (updated > 0)
