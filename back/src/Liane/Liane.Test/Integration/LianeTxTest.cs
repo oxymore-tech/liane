@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Liane.Api.Auth;
 using Liane.Api.Community;
 using Liane.Api.Trip;
+using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
 using Liane.Test.Mock;
 using Liane.Test.Util;
@@ -19,7 +20,6 @@ using Match = Liane.Api.Community.Match;
 namespace Liane.Test.Integration;
 
 [TestFixture(Category = "Integration")]
-[Ignore("async message")]
 public sealed class LianeTxTest : BaseIntegrationTest
 {
   private static readonly TimeRange DefaultTimeRange = new(new TimeOnly(9, 0), new TimeOnly(18, 0));
@@ -27,6 +27,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
   private ILianeService tested = null!;
   private MockCurrentContext currentContext = null!;
   private MockPushServiceImpl pushService = null!;
+  private ILianeMessageService messageService = null!;
 
   private User gugu = null!;
   private User jayBee = null!;
@@ -42,6 +43,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
     tested = ServiceProvider.GetRequiredService<ILianeService>();
     currentContext = ServiceProvider.GetRequiredService<MockCurrentContext>();
     pushService = ServiceProvider.GetRequiredService<MockPushServiceImpl>();
+    messageService = ServiceProvider.GetRequiredService<ILianeMessageService>();
   }
 
   [SetUp]
@@ -71,8 +73,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
     return (lianeGugu, lianeJayBee, lianeMathilde, lianeSiloe, lianeGargamel, lianeCaramelo, lianeBertrand, lianeSamuel);
   }
 
-  //[Test]
-  [Ignore("async message")]
+  [Test]
   public async Task GuguShouldJoinRequestJayBee()
   {
     var (lianeGugu, lianeJayBee, lianeMathilde, lianeSiloe, _, _, _, _) = await SetupDefaultLianes();
@@ -100,8 +101,10 @@ public sealed class LianeTxTest : BaseIntegrationTest
       var liane = await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id);
       Assert.IsNull(liane);
 
-      var dateTimes = pushService.Assert(
-        (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre votre liane {lianeJayBee.Name}")
+      await Task.Delay(200);
+
+      var dateTimes = pushService.AssertMessage(
+        (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre la liane")
       );
       at = dateTimes[0];
     }
@@ -125,11 +128,6 @@ public sealed class LianeTxTest : BaseIntegrationTest
       currentContext.SetCurrentUser(gugu);
       var liane = await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id);
       Assert.IsNull(liane);
-
-      var dateTimes = pushService.Assert(
-        (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre votre liane {lianeJayBee.Name}")
-      );
-      Assert.AreEqual(at, dateTimes[0]);
     }
 
     {
@@ -137,10 +135,10 @@ public sealed class LianeTxTest : BaseIntegrationTest
       var deleted = await tested.Reject(lianeGugu.Id, lianeJayBee.Id);
       Assert.IsTrue(deleted);
 
-      var dateTimes = pushService.Assert(
-        (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre votre liane {lianeJayBee.Name}")
+      await Task.Delay(200);
+
+      pushService.Assert(
       );
-      Assert.AreEqual(at, dateTimes[0]);
     }
 
     {
@@ -159,7 +157,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
     }
   }
 
-  //[Test]
+  [Test]
   public async Task GuguShouldJoinJayBee()
   {
     var (lianeGugu, lianeJayBee, lianeMathilde, lianeSiloe, _, _, _, _) = await SetupDefaultLianes();
@@ -193,11 +191,16 @@ public sealed class LianeTxTest : BaseIntegrationTest
       liane = (await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id))!;
     }
 
+    await Task.Delay(200);
+
     pushService.Assert(
-      (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre votre liane {lianeJayBee.Name}")
     );
 
-    pushService.AssertMessage();
+    pushService.AssertMessage(
+      (jayBee.Id, $"{jayBee.Pseudo} a rejoint la liane"),
+      (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
+      (jayBee.Id, $"{gugu.Pseudo} a rejoint la liane")
+    );
 
     {
       currentContext.SetCurrentUser(gugu);
@@ -214,7 +217,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
     }
   }
 
-  //[Test]
+  [Test]
   public async Task JayBeeRejectGuguJoinRequest()
   {
     var (lianeGugu, lianeJayBee, lianeMathilde, lianeSiloe, _, _, _, _) = await SetupDefaultLianes();
@@ -248,12 +251,16 @@ public sealed class LianeTxTest : BaseIntegrationTest
       Assert.IsTrue(rejected);
     }
 
+    await Task.Delay(200);
+
     pushService.Assert(
-      (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre votre liane {lianeJayBee.Name}"),
       (gugu.Id, "Vous n'avez pas été accepté dans la liane")
     );
 
-    pushService.AssertMessage();
+    pushService.AssertMessage(
+      (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
+      (jayBee.Id, $"La demande de {gugu.Pseudo} pour rejoindre la liane n'a pas été acceptée")
+    );
 
     {
       currentContext.SetCurrentUser(gugu);
@@ -270,8 +277,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
     }
   }
 
-  //[Test]
-  [Ignore("async message")]
+  [Test]
   public async Task GuguJoinExistingLianeViaJaybeeDirectly()
   {
     var (lianeGugu, lianeJayBee, lianeMathilde, _, _, _, _, _) = await SetupDefaultLianes();
@@ -302,12 +308,15 @@ public sealed class LianeTxTest : BaseIntegrationTest
       CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, mathilde.Id, gugu.Id), liane.Members.Select(m => m.User.Id));
     }
 
+    await Task.Delay(200);
+
     pushService.Assert(
-      (jayBee.Id, $"{mathilde.Pseudo} souhaite rejoindre votre liane {lianeJayBee.Name}"),
-      (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre votre liane {lianeJayBee.Name}")
     );
 
     pushService.AssertMessage(
+      (jayBee.Id, $"{jayBee.Pseudo} a rejoint la liane"),
+      (jayBee.Id, $"{mathilde.Pseudo} souhaite rejoindre la liane"),
+      (jayBee.Id, $"{mathilde.Pseudo} a rejoint la liane"),
       (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
       (mathilde.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
       (jayBee.Id, $"{gugu.Pseudo} a rejoint la liane"),
@@ -315,7 +324,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
     );
   }
 
-  //[Test]
+  [Test]
   public async Task GuguIsRejectedFromLianeVieJaybee()
   {
     var (lianeGugu, lianeJayBee, lianeMathilde, _, _, _, _, _) = await SetupDefaultLianes();
@@ -344,13 +353,16 @@ public sealed class LianeTxTest : BaseIntegrationTest
       Assert.IsTrue(rejected);
     }
 
+    await Task.Delay(200);
+
     pushService.Assert(
-      (jayBee.Id, $"{mathilde.Pseudo} souhaite rejoindre votre liane {lianeJayBee.Name}"),
-      (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre votre liane {lianeJayBee.Name}"),
       (gugu.Id, "Vous n'avez pas été accepté dans la liane")
     );
 
     pushService.AssertMessage(
+      (jayBee.Id, $"{jayBee.Pseudo} a rejoint la liane"),
+      (jayBee.Id, $"{mathilde.Pseudo} souhaite rejoindre la liane"),
+      (jayBee.Id, $"{mathilde.Pseudo} a rejoint la liane"),
       (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
       (mathilde.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
       (jayBee.Id, $"La demande de {gugu.Pseudo} pour rejoindre la liane n'a pas été acceptée"),
@@ -358,7 +370,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
     );
   }
 
-  //[Test]
+  [Test]
   public async Task GuguJoinExistingLianeViaMathildeIndirectly()
   {
     var (lianeGugu, lianeJayBee, lianeMathilde, _, _, _, _, _) = await SetupDefaultLianes();
@@ -389,12 +401,15 @@ public sealed class LianeTxTest : BaseIntegrationTest
       CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, mathilde.Id, gugu.Id), liane.Members.Select(m => m.User.Id));
     }
 
+    await Task.Delay(200);
+
     pushService.Assert(
-      (jayBee.Id, $"{mathilde.Pseudo} souhaite rejoindre votre liane {lianeJayBee.Name}"),
-      (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre votre liane {lianeJayBee.Name}")
     );
 
     pushService.AssertMessage(
+      (jayBee.Id, $"{jayBee.Pseudo} a rejoint la liane"),
+      (jayBee.Id, $"{mathilde.Pseudo} souhaite rejoindre la liane"),
+      (jayBee.Id, $"{mathilde.Pseudo} a rejoint la liane"),
       (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
       (mathilde.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
       (jayBee.Id, $"{gugu.Pseudo} a rejoint la liane"),
@@ -402,8 +417,53 @@ public sealed class LianeTxTest : BaseIntegrationTest
     );
   }
 
-  //[Test]
-  [Ignore("async message")]
+  [Test]
+  public async Task BigLianeCafouillage()
+  {
+    var (lianeGugu, lianeJayBee, lianeMathilde, _, _, _, _, _) = await SetupDefaultLianes();
+
+    {
+      currentContext.SetCurrentUser(mathilde);
+      await tested.JoinRequest(lianeMathilde.Id, lianeGugu.Id);
+    }
+
+    {
+      currentContext.SetCurrentUser(jayBee);
+      await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id);
+    }
+
+    {
+      currentContext.SetCurrentUser(gugu);
+      var liane = await tested.JoinRequest(lianeMathilde.Id, lianeGugu.Id);
+      Assert.IsNotNull(liane);
+      Assert.AreEqual(lianeGugu.Id, liane!.Id);
+      CollectionAssert.AreEquivalent(ImmutableList.Create(gugu.Id, mathilde.Id), liane.Members.Select(m => m.User.Id));
+    }
+
+    await Task.Delay(200);
+
+    pushService.AssertMessage(
+      (gugu.Id, $"{gugu.Pseudo} a rejoint la liane"),
+      (gugu.Id, $"{mathilde.Pseudo} souhaite rejoindre la liane"),
+      (gugu.Id, $"{jayBee.Pseudo} souhaite rejoindre la liane"),
+      (gugu.Id, $"{mathilde.Pseudo} a rejoint la liane")
+    );
+
+    {
+      currentContext.SetCurrentUser(gugu);
+      var messages = await messageService.GetMessages(lianeGugu.Id, new Pagination(SortAsc: false));
+      CollectionAssert.AreEqual(
+        ImmutableList.Create(
+          (gugu.Id, $"{mathilde.Pseudo} a rejoint la liane"),
+          (gugu.Id, $"{gugu.Pseudo} a rejoint la liane"),
+          (jayBee.Id, $"{jayBee.Pseudo} souhaite rejoindre la liane"),
+          (mathilde.Id, $"{mathilde.Pseudo} souhaite rejoindre la liane")
+        ), messages.Data.Select(ToTuple)
+      );
+    }
+  }
+
+  [Test]
   public async Task GuguJoinExistingLianeViaMathildeIndirectly2()
   {
     var (lianeGugu, lianeJayBee, lianeMathilde, _, _, _, _, _) = await SetupDefaultLianes();
@@ -434,12 +494,15 @@ public sealed class LianeTxTest : BaseIntegrationTest
       CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, mathilde.Id, gugu.Id), liane.Members.Select(m => m.User.Id));
     }
 
+    await Task.Delay(200);
+
     pushService.Assert(
-      (jayBee.Id, $"{mathilde.Pseudo} souhaite rejoindre votre liane {lianeJayBee.Name}"),
-      (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre votre liane {lianeJayBee.Name}")
     );
 
     pushService.AssertMessage(
+      (jayBee.Id, $"{jayBee.Pseudo} a rejoint la liane"),
+      (jayBee.Id, $"{mathilde.Pseudo} souhaite rejoindre la liane"),
+      (jayBee.Id, $"{mathilde.Pseudo} a rejoint la liane"),
       (jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
       (mathilde.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"),
       (jayBee.Id, $"{gugu.Pseudo} a rejoint la liane"),
@@ -447,7 +510,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
     );
   }
 
-  //[Test]
+  [Test]
   public async Task GuguShouldJoinThenLeftJayBeeLianeTheLianeIsEmptied()
   {
     var (lianeGugu, lianeJayBee, _, _, _, _, _, _) = await SetupDefaultLianes();
@@ -495,23 +558,22 @@ public sealed class LianeTxTest : BaseIntegrationTest
         Assert.Fail("Should be detached");
         return;
       }
-      
+
       if (detached.Matches[0] is not Match.Single single)
       {
         Assert.Fail("Should be single");
         return;
       }
-      
+
       Assert.IsInstanceOf<JoinRequest.Pending>(single.JoinRequest);
     }
-    
+
     {
       currentContext.SetCurrentUser(gugu);
       var liane = await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id);
       Assert.IsNotNull(liane);
       Assert.AreEqual(liane!.Id, lianeJayBee.Id);
     }
-    
   }
 
   private async Task<LianeRequest> CreateLianeRequest(User user, string name, Ref<RallyingPoint> from, Ref<RallyingPoint> to, Ref<RallyingPoint>? intermediate = null,
@@ -521,7 +583,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
   {
     currentContext.SetCurrentUser(user);
     var wayPoints = intermediate is null ? ImmutableList.Create(from, to) : ImmutableList.Create(from, intermediate, to);
-    return await tested.Create(new LianeRequest(default, name, wayPoints, roundTrip,
+    return await tested.Create(new LianeRequest(null, name, wayPoints, roundTrip,
       arriveBefore ?? DefaultTimeRange.Start,
       returnAfter ?? DefaultTimeRange.End,
       true, weekDays, true, null, null));
@@ -531,4 +593,6 @@ public sealed class LianeTxTest : BaseIntegrationTest
   {
     list.AssertDeepEqual(expected);
   }
+
+  private static (string User, string Text) ToTuple(LianeMessage message) => (message.CreatedBy.Id, message.Content.Value ?? $"!!{message.Content.GetType().Name}!!");
 }

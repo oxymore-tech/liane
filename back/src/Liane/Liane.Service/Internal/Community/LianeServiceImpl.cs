@@ -546,8 +546,8 @@ public sealed class LianeServiceImpl(
       .And(m => m.LianeId, ComparisonOperator.Eq, liane), tx);
     if (newLiane)
     {
-      await connection.InsertAsync(new LianeMemberDb(liane, liane, at, at, null), tx);
-      await eventDispatcher.Dispatch(liane, new MessageContent.MemberAdded("", userId, liane), at);
+      await connection.InsertAsync(new LianeMemberDb(liane, liane, request.CreatedAt, request.CreatedAt, null), tx);
+      await eventDispatcher.Dispatch(liane, new MessageContent.MemberAdded("", userId, liane), request.CreatedAt);
     }
 
     if (updated > 0)
@@ -563,7 +563,7 @@ public sealed class LianeServiceImpl(
   private async Task InsertJoinRequest(IDbConnection connection, Guid request, Guid liane, IDbTransaction tx, string userId)
   {
     var at = DateTime.UtcNow;
-    await connection.InsertAsync(new LianeMemberDb(request, liane, at, null, null), tx);
+    await connection.MergeAsync(new LianeMemberDb(request, liane, at, null, null), tx);
     tx.Commit();
     await eventDispatcher.Dispatch(liane, new MessageContent.MemberRequested("", userId, request), at);
   }

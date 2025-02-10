@@ -59,12 +59,13 @@ public static class QueryExtensions
   {
     var setters = Mapper.GetProperties<T>()
       .Where(p => p.Name != nameof(IIdentity.Id))
-      .ToImmutableDictionary(p => (FieldDefinition<T>)p.Name, p => p.GetValue(table));
+      .ToImmutableDictionary(p => new FieldDefinition<T>.Member(p), p => p.GetValue(table));
 
     var query = Query.Update<T>();
+    var namedParams = new NamedParams();
     foreach (var setter in setters.AsEnumerable())
     {
-      query = query.Set(setter.Key, setter.Value);
+      query = query.Set(setter.Key.ToSql(namedParams), setter.Value);
     }
 
     query = query.Where(Filter<T>.Where(r => r.Id, ComparisonOperator.Eq, table.Id));

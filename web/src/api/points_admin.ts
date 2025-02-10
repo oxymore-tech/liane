@@ -1,7 +1,6 @@
-import { HttpClient, RallyingPoint, RallyingPointClient, SessionProvider } from "@liane/common";
+import { HttpClient, RallyingPoint, RallyingPointClient } from "@liane/common";
 import { FeatureCollection, Point } from "geojson";
 import { RallyingPointFullRequest, RallyingPointStats } from "@/api/api";
-import { NodeAppEnv } from "@/api/env";
 
 export interface PointsAdminService {
   getDepartmentRequestsAsGeoJson(department: string): Promise<FeatureCollection<GeoJSON.Point, RallyingPointFullRequest>>;
@@ -14,10 +13,7 @@ export interface PointsAdminService {
   delete(id: string): Promise<void>;
 }
 export class PointsAdminServiceClient extends RallyingPointClient implements PointsAdminService {
-  constructor(
-    http: HttpClient,
-    private readonly storage: SessionProvider
-  ) {
+  constructor(http: HttpClient) {
     super(http);
   }
 
@@ -25,12 +21,15 @@ export class PointsAdminServiceClient extends RallyingPointClient implements Poi
     await this.http.patchAs<RallyingPoint>(`/rallying_point/${id}`, { body: payload });
     return payload;
   }
+
   create(payload: RallyingPoint) {
     return this.http.postAs<RallyingPoint>(`/rallying_point`, { body: payload });
   }
+
   async delete(id: string): Promise<void> {
     await this.http.del(`/rallying_point/${id}`);
   }
+
   getDepartmentPointsAsGeoJson(department: string) {
     return this.http.get<FeatureCollection<Point, RallyingPoint>>(`/rallying_point/department/${department}`);
   }
@@ -48,16 +47,10 @@ export class PointsAdminServiceClient extends RallyingPointClient implements Poi
   }
 
   async importCsv(csv: string): Promise<void> {
-    // TODO should be formData
-    const response = await fetch(NodeAppEnv.baseUrl + "/rallying_point/import", {
-      method: "POST",
-      headers: { "Content-Type": "text/csv", Authorization: "Bearer " + (await this.storage.getAccessToken()) },
-      body: csv
+    const formData = new FormData();
+    formData.append("file", new Blob([csv], { type: "text/csv" }));
+    await this.http.postAs<void>("/rallying_point/import", {
+      body: formData
     });
-    if (response.status === 200) {
-      return;
-    } else {
-      throw new Error("API returned error " + response.status);
-    }
   }
 }

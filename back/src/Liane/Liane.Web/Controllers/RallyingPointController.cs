@@ -92,11 +92,6 @@ public sealed class RallyingPointController(
   [RequiresAdminAuth]
   public async Task ImportCsv(IFormFile file)
   {
-    if (file.ContentType != "text/csv")
-    {
-      throw new BadHttpRequestException("Must be csv file");
-    }
-
     await using var input = file.OpenReadStream();
     await rallyingPointService.ImportCsv(input);
   }
