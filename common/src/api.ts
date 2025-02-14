@@ -66,7 +66,9 @@ export const RallyingPointLocationTypes = [
   "RelayParking",
   "AbandonedRoad",
   "AutoStop",
-  "TownHall"
+  "TownHall",
+  "TrainStation",
+  "RoadSide"
 ] as const;
 
 export type LocationType = (typeof RallyingPointLocationTypes)[number];

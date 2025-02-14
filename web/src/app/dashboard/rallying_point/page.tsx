@@ -24,7 +24,7 @@ export default function RallyingPointsPage() {
               </option>
             ))}
           </Select>
-          <Button gradientDuoTone="pinkToOrange" onClick={() => router.push("/dashboard/rallying-points/" + dpt)}>
+          <Button gradientDuoTone="pinkToOrange" onClick={() => router.push("/dashboard/rallying_point/" + dpt)}>
             Accéder à la carte
           </Button>
         </div>

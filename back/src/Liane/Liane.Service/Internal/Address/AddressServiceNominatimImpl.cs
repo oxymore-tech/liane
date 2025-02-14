@@ -14,15 +14,10 @@ using Liane.Service.Internal.Util;
 
 namespace Liane.Service.Internal.Address;
 
-public sealed class AddressServiceNominatimImpl : IAddressService
+public sealed class AddressServiceNominatimImpl(NominatimSettings settings) : IAddressService
 {
-    private readonly HttpClient client;
+    private readonly HttpClient client = new() {BaseAddress = settings.Url};
     private static readonly JsonSerializerOptions JsonOptions = new() {PropertyNamingPolicy = new SnakeCaseNamingPolicy(), PropertyNameCaseInsensitive = true};
-
-    public AddressServiceNominatimImpl(NominatimSettings settings)
-    {
-        client = new HttpClient {BaseAddress = settings.Url};
-    }
 
     public async Task<AddressResponse> GetDisplayName(LatLng coordinate)
     {

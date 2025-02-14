@@ -1,16 +1,13 @@
 "use client";
 
-import { useMapContext } from "@/components/map/Map";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { EmptyFeatureCollection } from "@liane/common";
-import maplibregl, { GeoJSONSource, LngLat, MapGeoJSONFeature, MapMouseEvent } from "maplibre-gl";
+import { GeoJSONSource, LngLat, MapGeoJSONFeature, MapMouseEvent } from "maplibre-gl";
 import bboxPolygon from "@turf/bbox-polygon";
 import { featureCollection } from "@turf/helpers";
-import React from "react";
 import { BBox } from "geojson";
-import { useLayer } from "@/components/map/layers/base/abstractLayer";
-import { GeojsonSource } from "@/components/map/GeojsonSource";
 import { ControlPanelToggle } from "@/components/map/ControlPanel";
+import { Layer, Source, useMap } from "react-map-gl/maplibre";
 
 interface SelectControl {
   setActive: (active: boolean) => void;
@@ -20,7 +17,7 @@ interface SelectControl {
 export const AreaSelectionControl = ({ targetLayers, onSelectFeatures, onHoverFeatureStateChanged, onToggleTool }: AreaSelectionProps) => {
   const [active, setActive] = useState(false);
   const listeners = useRef<Set<(active: boolean) => void>>(new Set());
-  const map = useMapContext();
+  const map = useMap();
   const control = useRef<SelectControl | null>(null);
 
   const [isDrawing, setDrawing] = useState(false);
@@ -51,7 +48,7 @@ export const AreaSelectionControl = ({ targetLayers, onSelectFeatures, onHoverFe
     }
     setDrawing(active);
     onToggleTool?.(active);
-  }, [active]);
+  }, [active, map, onToggleTool]);
 
   return (
     <>
@@ -122,19 +119,27 @@ const SelectionLayer = ({
   setInAreaFeatures: (f: MapGeoJSONFeature[] | undefined) => void;
 }) => {
   const drawing = useRef<LngLat | null>(null);
-  const map = useMapContext();
+  const map = useMap();
+
   useEffect(() => {
-    if (!isDrawing) return;
+    if (!isDrawing) {
+      return;
+    }
+    if (!map.current) {
+      return;
+    }
+
+    const currentMap = map.current;
 
     const onClick = (e: MapMouseEvent) => {
       if (!drawing.current) {
         drawing.current = e.lngLat;
         if (!e.originalEvent.ctrlKey) onSelectFeatures([], false);
       } else {
-        if (!map.current) return;
+        if (!currentMap) return;
         // Stop drawing and query features
-        const point1 = map.current.project(drawing.current);
-        const features = map.current?.queryRenderedFeatures(
+        const point1 = currentMap.project(drawing.current);
+        const features = currentMap.queryRenderedFeatures(
           [
             [Math.min(point1.x, e.point.x), Math.min(point1.y, e.point.y)],
             [Math.max(point1.x, e.point.x), Math.max(point1.y, e.point.y)]
@@ -153,19 +158,19 @@ const SelectionLayer = ({
           onSelectFeatures(features, e.originalEvent.ctrlKey, bbox);
           setInAreaFeatures(undefined);
         }
-        (map.current?.getSource("selection") as GeoJSONSource | undefined)?.setData(EmptyFeatureCollection);
+        (currentMap.getSource("selection") as GeoJSONSource | undefined)?.setData(EmptyFeatureCollection);
         drawing.current = null;
         setDrawing(false);
       }
     };
 
     const onMove = (e: MapMouseEvent) => {
-      if (!drawing.current || !map.current) return;
+      if (!drawing.current || !currentMap) return;
       const f = featureCollection([generatePolygon(drawing.current, e.lngLat)]);
-      (map.current.getSource("selection") as GeoJSONSource | undefined)?.setData(f);
+      (currentMap.getSource("selection") as GeoJSONSource | undefined)?.setData(f);
 
-      const point1 = map.current.project(drawing.current);
-      const features = map.current.queryRenderedFeatures(
+      const point1 = currentMap.project(drawing.current);
+      const features = currentMap.queryRenderedFeatures(
         [
           [Math.min(point1.x, e.point.x), Math.min(point1.y, e.point.y)],
           [Math.max(point1.x, e.point.x), Math.max(point1.y, e.point.y)]
@@ -177,30 +182,28 @@ const SelectionLayer = ({
       setInAreaFeatures(features);
     };
 
-    map.current?.on("click", onClick);
-    map.current?.on("mousemove", onMove);
+    currentMap.on("click", onClick);
+    currentMap.on("mousemove", onMove);
 
     return () => {
       drawing.current = null;
-      map.current?.off("click", onClick);
-      map.current?.off("mousemove", onMove);
+      currentMap.off("click", onClick);
+      currentMap.off("mousemove", onMove);
     };
   }, [isDrawing, map, onSelectFeatures, setDrawing, setInAreaFeatures, targetLayers]);
 
-  useLayer(
-    {
-      source: "selection",
-      id: "selection",
-      props: {
-        paint: {
+  return (
+    <Source type="geojson" id="selection" data={EmptyFeatureCollection}>
+      <Layer
+        id="selection"
+        type="fill"
+        source="selection"
+        paint={{
           "fill-outline-color": "#000",
           "fill-color": "#b4b5b5",
           "fill-opacity": 0.3
-        }
-      }
-    },
-    "fill"
+        }}
+      />
+    </Source>
   );
-
-  return <GeojsonSource id={"selection"} data={EmptyFeatureCollection} />;
 };

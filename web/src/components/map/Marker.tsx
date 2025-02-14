@@ -1,21 +1,23 @@
-import { useMapContext } from "@/components/map/Map";
-import { PropsWithChildren, useEffect } from "react";
-import maplibregl, { LngLatLike } from "maplibre-gl";
-import * as React from "react";
+import { Marker as MargerGl } from "react-map-gl/maplibre";
+import { LatLng } from "@liane/common/src";
+import { useCallback } from "react";
+import { MarkerDragEvent } from "react-map-gl/mapbox-legacy";
 
 type Props = {
-  lngLat: LngLatLike;
+  lngLat: LatLng;
+  onChange?: (lngLat: LatLng) => void;
 };
 
-export function Marker({ lngLat }: Props) {
-  const map = useMapContext();
+export function Marker({ lngLat, onChange }: Props) {
+  const handleDragEnd = useCallback(
+    (e: MarkerDragEvent) => {
+      if (!onChange) {
+        return;
+      }
+      onChange({ lat: e.lngLat.lat, lng: e.lngLat.lng });
+    },
+    [onChange]
+  );
 
-  useEffect(() => {
-    const m = new maplibregl.Marker().setLngLat(lngLat).addTo(map.current!);
-    return () => {
-      m.remove();
-    };
-  }, [lngLat, map]);
-
-  return null;
+  return <MargerGl latitude={lngLat.lat} longitude={lngLat.lng} draggable={!!onChange} onDragEnd={handleDragEnd} />;
 }

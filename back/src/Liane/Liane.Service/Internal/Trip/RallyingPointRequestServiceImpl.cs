@@ -15,15 +15,9 @@ using MongoDB.Driver;
 
 namespace Liane.Service.Internal.Trip;
 
-public class RallyingPointRequestServiceImpl : MongoCrudEntityService<RallyingPointRequest>, IRallyingPointRequestService
+public sealed class RallyingPointRequestServiceImpl(IMongoDatabase mongo, ICurrentContext currentContext, IRallyingPointService rallyingPointService)
+  : MongoCrudEntityService<RallyingPointRequest>(mongo, currentContext), IRallyingPointRequestService
 {
-  private readonly IRallyingPointService rallyingPointService;
-
-  public RallyingPointRequestServiceImpl(IMongoDatabase mongo, ICurrentContext currentContext, IRallyingPointService rallyingPointService) : base(mongo, currentContext)
-  {
-    this.rallyingPointService = rallyingPointService;
-  }
-
   public async Task<PaginatedResponse<RallyingPointRequest>> ListForCurrentUser(Pagination pagination)
   {
     var filter = Builders<RallyingPointRequest>.Filter.Eq<string>(r => r.CreatedBy!, CurrentContext.CurrentUser().Id);
