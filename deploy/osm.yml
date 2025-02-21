@@ -12,12 +12,14 @@ services:
       - osm
 
   nominatim:
-    image: "docker.synergee.com/library/nominatim:3.5"
-    command: bash /app/start.sh
-    ports:
-      - "7070:8080"
+    image: "mediagis/nominatim:4.5"
+    environment:
+      PBF_URL: /nominatim/data/france-latest.osm.pbf
+      REPLICATION_URL: https://download.geofabrik.de/europe/france-updates/
+      NOMINATIM_PASSWORD: ${MONGO_PASSWORD}
     volumes:
-      - "/data/osm/nominatim:/var/lib/postgresql/12/main"
+      - "/data/osm:/nominatim/data"
+    shm_size: 1gb
     restart: unless-stopped
     networks:
       - gateway
