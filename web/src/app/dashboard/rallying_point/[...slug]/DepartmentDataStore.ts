@@ -46,10 +46,8 @@ export const useDepartmentData = (department: string) => {
       (async () => {
         if (points!.features.length < 1) return featureCollection([]);
         const unionReachable = union(featureCollection(points!.features.map(f => circle(f, 0.5))))!;
-        console.log(parkings!.features.length);
         //@ts-ignore
         const filteredParkings = filterParkings(parkings!, points);
-        console.log(filteredParkings.features.length);
         let parkingSuggestions = union(featureCollection(filteredParkings.features.map(f => circle(f, 0.5))))!;
         parkingSuggestions = difference(featureCollection([parkingSuggestions, unionReachable]))!;
 

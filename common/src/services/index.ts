@@ -9,3 +9,4 @@ export * from "./chat";
 export * from "./notification";
 export * from "./event";
 export * from "./time";
+export * from "./address";

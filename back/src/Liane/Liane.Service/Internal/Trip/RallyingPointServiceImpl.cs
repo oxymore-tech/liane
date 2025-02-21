@@ -16,6 +16,7 @@ using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Postgis.Db;
 using Liane.Service.Internal.Util.Sql;
 using Microsoft.Extensions.Caching.Memory;
+using MongoDB.Bson;
 
 namespace Liane.Service.Internal.Trip;
 
@@ -192,6 +193,13 @@ public sealed class RallyingPointServiceImpl(IOsrmService osrmService, PostgisDa
   public async Task<RallyingPoint> Create(RallyingPoint obj)
   {
     using var connection = db.NewConnection();
+    if (obj.Id is null)
+    {
+      var rallyingPoint = obj with { Id = ObjectId.GenerateNewId().ToString() };
+      await connection.InsertAsync(rallyingPoint);
+      return rallyingPoint;
+    }
+
     await connection.MergeAsync(obj);
     return obj;
   }

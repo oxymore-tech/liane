@@ -8,30 +8,23 @@ namespace Liane.Web.Controllers;
 
 [Route("api/address")]
 [ApiController]
-public class AddressController : ControllerBase
+public class AddressController(IAddressService addressService) : ControllerBase
 {
-    private readonly IAddressService addressService;
+  [HttpGet("displayName")]
+  public async Task<ActionResult<AddressResponse>> GetDisplayName([FromQuery] double lat, [FromQuery] double lng)
+  {
+    return await addressService.GetDisplayName(new LatLng(lat, lng));
+  }
 
-    public AddressController(IAddressService addressService)
-    {
-        this.addressService = addressService;
-    }
+  [HttpGet("coordinate")]
+  public async Task<ActionResult<AddressResponse>> GetCoordinate([FromQuery] string displayName)
+  {
+    return await addressService.GetCoordinate(displayName);
+  }
 
-    [HttpGet("displayName")]
-    public async Task<ActionResult<AddressResponse>> GetDisplayName([FromQuery] double lat, [FromQuery] double lng)
-    {
-        return await addressService.GetDisplayName(new LatLng(lat, lng));
-    }
-
-    [HttpGet("coordinate")]
-    public async Task<ActionResult<AddressResponse>> GetCoordinate([FromQuery] string displayName)
-    {
-        return await addressService.GetCoordinate(displayName);
-    }
-
-    [HttpGet("search")]
-    public async Task<ActionResult<ImmutableList<AddressResponse>>> Search([FromQuery] string displayName)
-    {
-        return await addressService.Search(displayName);
-    }
+  [HttpGet("search")]
+  public async Task<ActionResult<ImmutableList<AddressResponse>>> Search([FromQuery] string displayName)
+  {
+    return await addressService.Search(displayName);
+  }
 }

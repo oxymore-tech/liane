@@ -17,7 +17,6 @@ export class OsmServiceClient implements OsmService {
     const storageKey = [dpt, type].join(":");
     let geojson = await this.storage.retrieveAsync<FeatureCollection>(storageKey, undefined, { type: "dbcache" });
     if (!geojson) {
-      console.log("Fetching", type, "for", dpt, "...");
       let query;
       switch (type) {
         case "municipalities":
@@ -58,7 +57,6 @@ out geom;
       await this.storage.storeAsync(storageKey, geojson, { type: "dbcache" });
     }
 
-    console.log(type, geojson);
     if (type === "parking")
       geojson.features = geojson.features.map(f => {
         const geometry = f.geometry.type === "Point" ? f.geometry : centroid(f).geometry;

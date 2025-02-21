@@ -15,6 +15,7 @@ using Liane.Service.Internal.Postgis.Db;
 using Liane.Service.Internal.Util;
 using Liane.Service.Internal.Util.Geo;
 using Liane.Service.Internal.Util.Sql;
+using Microsoft.Extensions.Logging;
 using NetTopologySuite.Geometries;
 using UuidExtensions;
 using LianeMatch = Liane.Api.Community.LianeMatch;
@@ -36,7 +37,7 @@ public sealed class LianeServiceImpl(
   LianeMatcher matcher,
   LianeMessageServiceImpl lianeMessageService,
   ITripService tripService,
-  EventDispatcher eventDispatcher) : ILianeService
+  EventDispatcher eventDispatcher, ILogger<LianeServiceImpl> logger) : ILianeService
 {
   public async Task<IncomingTrips> GetIncomingTrips()
   {
@@ -554,7 +555,7 @@ public sealed class LianeServiceImpl(
     {
       await eventDispatcher.Dispatch(liane, new MessageContent.MemberAdded("", request.CreatedBy, request.Id), at);
     }
-
+    
     var created = await lianeFetcher.FetchLiane(connection, liane, tx);
     tx.Commit();
     return created;
@@ -563,9 +564,31 @@ public sealed class LianeServiceImpl(
   private async Task InsertJoinRequest(IDbConnection connection, Guid request, Guid liane, IDbTransaction tx, string userId)
   {
     var at = DateTime.UtcNow;
-    await connection.MergeAsync(new LianeMemberDb(request, liane, at, null, null), tx);
+    // supprime toute autres demandes vers cette liane pour le même utilisateur
+    var existing = await connection.QuerySingleAsync<int>("""
+                          SELECT count(*) FROM liane_member lm
+                          WHERE lm.liane_id = @liane_id AND lm.liane_request_id = @liane_request_id
+                          """, new { liane_id = liane, liane_request_id = request }, tx);
+    if (existing > 0)
+    {
+      return;
+    }
+    await connection.ExecuteAsync("""
+                                 DELETE FROM liane_member lm
+                                 WHERE lm.liane_id = @liane_id
+                                     AND joined_at IS NULL
+                                     AND lm.liane_request_id IN (
+                                         SELECT lr.id
+                                         FROM liane_request lr
+                                         WHERE lr.created_by = @userId
+                                     )
+                                 """, new { liane_id = liane, liane_request_id = request, userId }, tx);
+    var updated = await connection.InsertAsync(new LianeMemberDb(request, liane, at, null, null), tx);
     tx.Commit();
-    await eventDispatcher.Dispatch(liane, new MessageContent.MemberRequested("", userId, request), at);
+    if (updated > 0)
+    {
+      await eventDispatcher.Dispatch(liane, new MessageContent.MemberRequested("", userId, request), at);
+    }
   }
 
   private static Direction CheckDirection(ImmutableList<Ref<RallyingPoint>> lianeRequestWayPoints, ImmutableList<WayPoint> tripWayPoints)

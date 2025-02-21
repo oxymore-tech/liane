@@ -1,7 +1,17 @@
 "use client";
 
 import React, { createContext, PropsWithChildren, ReactNode, useContext, useEffect, useMemo, useState } from "react";
-import { AppStorage, AuthService, AuthServiceClient, FullUser, HttpClient, RoutingService, RoutingServiceClient } from "@liane/common";
+import {
+  AppStorage,
+  AuthService,
+  AuthServiceClient,
+  FullUser,
+  HttpClient,
+  AddressService,
+  RoutingService,
+  RoutingServiceClient,
+  AddressServiceClient
+} from "@liane/common";
 import { NodeAppEnv } from "@/api/env";
 import { LocalStorageImpl } from "@/api/storage";
 import { WebLogger } from "@/api/logger";
@@ -25,6 +35,7 @@ type AppContextProps = {
     auth: AuthService;
     record: RecordService;
     routing: RoutingService;
+    address: AddressService;
     rallyingPoint: PointsAdminService;
     osm: OsmService;
   };
@@ -42,6 +53,7 @@ const auth = new AuthServiceClient(http, storage);
 const record = new RecordServiceClient(http);
 const routing = new RoutingServiceClient(http);
 const rallyingPoint = new PointsAdminServiceClient(http);
+const address = new AddressServiceClient(http);
 const osm = new OsmServiceClient(storage);
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -84,13 +96,14 @@ export default function ContextProvider({ children }: { children: ReactNode }) {
               auth,
               routing,
               rallyingPoint,
+              address,
               record,
               osm
             }
           } as AppContextProps
         }>
         {children}
-        {offline && <ToastMessage message={"Vous êtes hors ligne."} icon="offline" level="alert" />}
+        {offline && <ToastMessage message="Vous êtes hors ligne." icon="offline" level="alert" />}
       </AppContext.Provider>
     </QueryClientProvider>
   );
@@ -109,7 +122,7 @@ export const PageLayout = ({ children, ...props }: PropsWithChildren & React.HTM
       <Flowbite>
         <Header />
 
-        <div className="w-full grow max-h-full">
+        <div className="grow max-h-full">
           {!!user && (
             <div className="flex h-full">
               <SideMenu pages={Navigation} />

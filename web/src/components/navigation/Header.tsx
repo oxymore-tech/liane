@@ -38,7 +38,7 @@ function LoginModal({ show, onClosed }: { onClosed: () => void; show: boolean })
         await services.storage.clearStorage();
       }
     });
-  }, [machine, refreshUser, state]);
+  }, [machine, onClosed, refreshUser, services.storage, state]);
 
   const hasFailed = state.toStrings().some(x => x.includes("failure"));
   const handleEnterKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -47,7 +47,7 @@ function LoginModal({ show, onClosed }: { onClosed: () => void; show: boolean })
     }
   };
   return (
-    <Modal show={show} onClose={onClosed} popup id={"logout"}>
+    <Modal show={show} onClose={onClosed} popup id="logout">
       <Modal.Header />
       <Modal.Body>
         <div className="space-y-6">
@@ -69,7 +69,7 @@ function LoginModal({ show, onClosed }: { onClosed: () => void; show: boolean })
             {state.matches("code") && (
               <TextInput
                 onKeyDown={handleEnterKey}
-                id={"code"}
+                id="code"
                 label="Code reçu par SMS"
                 value={state.context.code.value}
                 onTextChange={data => machine.send("SET", { data })}
@@ -78,7 +78,7 @@ function LoginModal({ show, onClosed }: { onClosed: () => void; show: boolean })
             )}
 
             {adminError && <p className="text-red-500 px-1">Erreur: veuillez réessayer avec un compte administrateur.</p>}
-            {hasFailed && <p className="text-red-500 px-1">{"Impossible d'effectuer la demande."}</p>}
+            {hasFailed && <p className="text-red-500 px-1">Impossible d&apos;effectuer la demande.</p>}
           </div>
         </div>
       </Modal.Body>
@@ -90,7 +90,7 @@ function LoginModal({ show, onClosed }: { onClosed: () => void; show: boolean })
           onClick={() => {
             machine.send(hasFailed ? "RETRY" : "NEXT");
           }}>
-          {hasFailed && <Icon name={"retry"} />}
+          {hasFailed && <Icon name="retry" />}
           {hasFailed ? "Réessayer" : state.matches("phone") ? "Suivant" : "Connexion"}
         </Button>
       </Modal.Footer>
@@ -132,7 +132,7 @@ export function Header({}: HeaderProps) {
 
   return (
     <>
-      <Navbar fluid className="fixed bg-white dark:bg-gray-900 z-[8] w-full">
+      <Navbar fluid className="bg-white dark:bg-gray-900 z-[8] w-full">
         <Navbar.Brand className="flex-none text-xl font-semibold dark:text-white text-orange-800 h-12" href="#">
           <svg className="mr-3 h-6 sm:h-9 fill-[#F25757] dark:fill-white" height="24" viewBox="0 0 512 95" aria-label="Liane Brand Logo">
             <use href="/admin/logo.svg#img"></use>

@@ -1,6 +1,6 @@
-import { LocationType, RallyingPoint, UserInfo } from "../api";
+import { LocationType, UserInfo } from "../api";
 
-export const RallyingPointPropertiesLabels: { [k in keyof RallyingPoint]: string } = {
+export const RallyingPointPropertiesLabels: { [key: string]: string } = {
   label: "Label",
   address: "Adresse",
   city: "Commune",
@@ -8,9 +8,12 @@ export const RallyingPointPropertiesLabels: { [k in keyof RallyingPoint]: string
   type: "Type",
   placeCount: "Nombre de places",
   location: "Localisation",
+  "location.lat": "Latitude",
+  "location.lng": "Longitude",
   isActive: "Actif",
   id: "ID"
 };
+
 export const RallyingPointLocationLabels: { [k in LocationType]: string } = {
   AbandonedRoad: "Route abandonnée",
   AutoStop: "Auto-stop",
@@ -19,7 +22,9 @@ export const RallyingPointLocationLabels: { [k in LocationType]: string } = {
   Supermarket: "Supermarché",
   TownHall: "Mairie",
   CarpoolArea: "Aire de covoiturage",
-  Parking: "Parking"
+  Parking: "Parking",
+  RoadSide: "Bord de route",
+  TrainStation: "Gare"
 };
 
 export const UserInfoPropertiesLabels: { [k in keyof UserInfo]: string } = {
