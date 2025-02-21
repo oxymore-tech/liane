@@ -18,7 +18,8 @@ services:
       REPLICATION_URL: https://download.geofabrik.de/europe/france-updates/
       NOMINATIM_PASSWORD: ${MONGO_PASSWORD}
     volumes:
-      - "/data/osm:/nominatim/data"
+      - "/data/osm:/nominatim/data:ro"
+      - "/data/osm/nominatim:/var/lib/postgresql/16/main"
     shm_size: 1gb
     restart: unless-stopped
     networks:
