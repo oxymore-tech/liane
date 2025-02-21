@@ -554,7 +554,7 @@ public sealed class LianeServiceImpl(
     {
       await eventDispatcher.Dispatch(liane, new MessageContent.MemberAdded("", request.CreatedBy, request.Id), at);
     }
-
+    
     var created = await lianeFetcher.FetchLiane(connection, liane, tx);
     tx.Commit();
     return created;
@@ -563,6 +563,17 @@ public sealed class LianeServiceImpl(
   private async Task InsertJoinRequest(IDbConnection connection, Guid request, Guid liane, IDbTransaction tx, string userId)
   {
     var at = DateTime.UtcNow;
+    // supprime toute autre demande vers cette liane pour le même utilisateur
+    await connection.ExecuteAsync("""
+                                 DELETE FROM liane_member lm
+                                 WHERE lm.liane_id = @liane_id
+                                     AND joined_at IS NULL
+                                     AND lm.liane_request_id IN (
+                                         SELECT lr.id
+                                         FROM liane_request lr
+                                         WHERE lr.id != @liane_request_id AND lr.created_by = @userId
+                                     )
+                                 """, new { liane_id = liane, liane_request_id = request, userId }, tx);
     await connection.MergeAsync(new LianeMemberDb(request, liane, at, null, null), tx);
     tx.Commit();
     await eventDispatcher.Dispatch(liane, new MessageContent.MemberRequested("", userId, request), at);
