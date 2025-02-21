@@ -153,7 +153,7 @@ const DepartmentView = ({ department, boundaries, data }: DepartmentViewProps) =
     if (currentSelection.type === "point") {
       return { ...currentSelection.feature.properties, location: toLatLng(currentSelection.feature.geometry.coordinates) };
     }
-    const { id, comment, createdBy, createdAt, ...point } = currentSelection.feature.properties;
+    const { id, comment, createdBy, createdAt, point } = currentSelection.feature.properties;
     return {
       ...point,
       id,
