@@ -1,5 +1,5 @@
 import { CoLiane, CoLianeMember, LianeMessage, Ref, Trip, User } from "@liane/common";
-import React, { useCallback, useContext, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { View } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { Center, Column, Row } from "@/components/base/AppLayout";
@@ -8,7 +8,6 @@ import { AppLocalization } from "@/api/i18n.ts";
 import { UserPicture } from "@/components/UserPicture.tsx";
 import { useAppNavigation } from "@/components/context/routing.ts";
 import { AppButton } from "@/components/base/AppButton.tsx";
-import { AppContext } from "@/components/context/ContextProvider.tsx";
 import { AppPressable } from "@/components/base/AppPressable.tsx";
 import { AppIcon } from "@/components/base/AppIcon.tsx";
 
@@ -21,7 +20,6 @@ type MessageBubblePros = {
 };
 
 export const MessageBubble = ({ liane, message, isSender, renderSender, activeTrips }: MessageBubblePros) => {
-  const { services } = useContext(AppContext);
   const { navigation } = useAppNavigation();
   const [loading, setLoading] = useState(false);
 
@@ -39,8 +37,15 @@ export const MessageBubble = ({ liane, message, isSender, renderSender, activeTr
   const backgroundColor = message.content.type === "Text" ? (isSender ? "#0D1C2E" : AppColorPalettes.gray[700]) : "transparent";
   const color = message.content.type !== "Text" ? AppColors.darkGray : isSender ? AppColorPalettes.gray[300] : AppColorPalettes.gray[200];
 
-  const handlePendingMember = useCallback(async () => {
+  const pendingMember = useMemo(() => {
     if (!liane) {
+      return;
+    }
+    return liane.pendingMembers.find(u => u.user.id === message.createdBy);
+  }, [liane, message.createdBy]);
+
+  const handlePendingMember = useCallback(async () => {
+    if (!liane || !pendingMember) {
       return;
     }
     if (message.content.type !== "MemberRequested") {
@@ -48,12 +53,11 @@ export const MessageBubble = ({ liane, message, isSender, renderSender, activeTr
     }
     setLoading(true);
     try {
-      const request = await services.community.get(message.content.lianeRequest);
-      navigation.push("LianeMapDetail", { liane: liane, request });
+      navigation.push("LianeMapDetail", { liane: liane, request: pendingMember.lianeRequest });
     } finally {
       setLoading(false);
     }
-  }, [liane, message.content, navigation, services.community]);
+  }, [liane, message.content.type, navigation, pendingMember]);
 
   const trip = useMemo(() => {
     if (message.content.type !== "TripAdded") {
@@ -109,7 +113,7 @@ export const MessageBubble = ({ liane, message, isSender, renderSender, activeTr
             {createdAt}
           </AppText>
         </Row>
-        {message.content.type === "MemberRequested" && liane && liane.pendingMembers.find(u => u.user.id === message.createdBy) && (
+        {message.content.type === "MemberRequested" && pendingMember && (
           <Center>
             <AppButton onPress={handlePendingMember} color={AppColors.secondaryColor} value="Voir la demande" loading={loading} />
           </Center>
