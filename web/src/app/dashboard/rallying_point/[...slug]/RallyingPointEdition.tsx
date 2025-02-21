@@ -156,8 +156,13 @@ export const RallyingPointEdition = ({ point, position, onClose, onSave }: Props
                       await rallyingPoint.deleteRequest(p.id);
                     };
                   } else {
-                    // @ts-ignore
-                    action = () => rallyingPoint.update(point.id!, p);
+                    if (point.id) {
+                      // @ts-ignore
+                      action = () => rallyingPoint.update(point.id, p);
+                    } else {
+                      // @ts-ignore
+                      action = () => rallyingPoint.create(p);
+                    }
                   }
                   await action();
                   onSave && onSave();
@@ -168,9 +173,11 @@ export const RallyingPointEdition = ({ point, position, onClose, onSave }: Props
               )}>
               {point.isNew ? "Créer" : "Enregistrer"}
             </ButtonWithLoadingAction>
-            <Button color="red" onClick={() => setConfirmDelete(true)}>
-              {point.isNew ? "Supprimer la demande" : "Supprimer"}
-            </Button>
+            {point.id && (
+              <Button color="red" onClick={() => setConfirmDelete(true)}>
+                {point.isNew ? "Supprimer la demande" : "Supprimer"}
+              </Button>
+            )}
             <Button onClick={() => onClose && onClose()} color="gray">
               Annuler
             </Button>
