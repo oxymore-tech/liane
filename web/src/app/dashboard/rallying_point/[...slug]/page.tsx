@@ -131,11 +131,15 @@ const DepartmentView = ({ department, boundaries, data }: DepartmentViewProps) =
   const handleCloseForm = useCallback(() => {
     setSelectedFeatures([]);
     setNewRallyingPoint(undefined);
+    setTemporaryMarker(undefined);
   }, []);
 
   const handleRefresh = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ["rallying_point", department] });
     await queryClient.invalidateQueries({ queryKey: ["requests", department] });
+    setSelectedFeatures([]);
+    setNewRallyingPoint(undefined);
+    setTemporaryMarker(undefined);
   }, [department, queryClient]);
 
   const currentEditPoint = useMemo(() => {
@@ -211,7 +215,7 @@ const DepartmentView = ({ department, boundaries, data }: DepartmentViewProps) =
 
         <div className="absolute z-[100] w-full bottom-0 top-0 pointer-events-none">
           {pickLocation && (
-            <div className="absolute z-[5] top-4 w-full">
+            <div className="absolute z-[5] top-2 w-full">
               <Toast className="mx-auto pointer-events-auto">
                 <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-cyan-100 text-cyan-500 dark:bg-cyan-800 dark:text-cyan-200">
                   <Icon name="pin" className="h-5 w-5" />

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { RallyingPoint, RallyingPointLocationLabels, RallyingPointLocationTypes, RallyingPointPropertiesLabels, Address } from "@liane/common";
+import { RallyingPoint, RallyingPointLocationLabels, RallyingPointLocationTypes, RallyingPointPropertiesLabels } from "@liane/common";
 import { Alert, Button, ButtonProps, Select, Table, ToggleSwitch } from "flowbite-react";
 import { useAppServices } from "@/components/ContextProvider";
 import { useQuery } from "@tanstack/react-query";
@@ -61,24 +61,33 @@ export const RallyingPointEdition = ({ point, position, onClose, onSave }: Props
   const WebLocalization = useLocalization();
   const { rallyingPoint, address: s } = useAppServices();
 
-  const [reverseAddress, setReverseAddress] = useState<Address>();
+  const methods = useForm<Partial<RallyingPoint>>({
+    mode: "onChange",
+    defaultValues: {
+      ...point,
+      location: position ?? point.location
+    }
+  });
+  const { isDirty, isValid } = useMemo(() => methods.formState, [methods.formState]);
 
   useEffect(() => {
     if (!position) {
       return;
     }
-    s.getAddress(position).then(r => setReverseAddress(r.address));
-  }, [s, position]);
+    s.getAddress(position).then(r => {
+      methods.setValue("address", r.address.street);
+      methods.setValue("zipCode", r.address.zipCode);
+      methods.setValue("city", r.address.city);
+    });
+  }, [s, position, methods]);
 
-  const methods = useForm<Partial<RallyingPoint>>({
-    mode: "onChange",
-    values: {
-      ...point,
-      city: reverseAddress?.city ?? point.city,
-      location: position ?? point.location
-    }
-  });
-  const { isDirty, isValid } = useMemo(() => methods.formState, [methods.formState]);
+  useEffect(() => {
+    methods.reset(point);
+  }, [point, methods]);
+
+  useEffect(() => {
+    methods.setValue("location", position ?? point.location);
+  }, [position, methods, point]);
 
   const { data } = useQuery({
     enabled: !!point.id,
