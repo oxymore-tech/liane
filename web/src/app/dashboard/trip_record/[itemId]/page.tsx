@@ -1,23 +1,24 @@
 "use client";
 import { useAppServices } from "@/components/ContextProvider";
-import Map, { useMapContext } from "@/components/map/Map";
 import React, { PropsWithChildren, useMemo, useState } from "react";
-import { FeatureCollection, GeoJSON } from "geojson";
-import { asPoint, LianeMember, RallyingPoint } from "@liane/common";
+import { FeatureCollection } from "geojson";
+import { LianeMember, RallyingPoint } from "@liane/common";
 import { Button, Card, ToggleSwitch } from "flowbite-react";
 import { TripRecord } from "@/api/api";
 import { dispatchHighlightPointEvent, TimelineChart, TimelineData } from "@/components/charts/timeline/Timeline";
 import { IconButton } from "@/components/base/IconButton";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { dispatchCustomEvent, useEvent } from "@/utils/hooks";
-import { RouteLayer } from "@/components/map/layers/RouteLayer";
+import { RouteLayer, useRoute } from "@/components/map/layers/RouteLayer";
 import { MarkersLayer } from "@/components/map/layers/base/MarkersLayer";
-import { FitFeatures } from "@/components/map/FitFeatures";
 import { useLocalization } from "@/api/intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { GeojsonSource } from "@/components/map/GeojsonSource";
-import { Popup } from "@/components/map/Popup";
-import { RallyingPointsLayer } from "@/components/map/layers/RallyingPointsLayer";
+import { AppMapView } from "@/components/map/AppMapView";
+import { RallyingPointLayer } from "@/components/map/layers/RallyingPointLayer";
+import { Source, useMap, Popup } from "react-map-gl/maplibre";
+import centroid from "@turf/centroid";
+import { LatLng, toLatLng } from "@liane/common/src";
+import { LoadingViewIndicator } from "@/components/base/LoadingViewIndicator";
 
 const RegenButton = ({ id }: { id: string }) => {
   const [loading, setLoading] = useState(false);
@@ -46,7 +47,7 @@ const TripView = ({ record, children }: { record: TripRecord } & PropsWithChildr
     <div className="px-4 py-2 absolute z-[5]">
       <Card>
         <div className="grid gap-4" style={{ gridTemplateColumns: "auto 1fx", gridTemplateRows: "auto 1fx" }}>
-          <IconButton className={"row-start-1 col-start-1"} aria-label="Close" icon="close" onClick={() => router.back()} />
+          <IconButton className="row-start-1 col-start-1" aria-label="Close" icon="close" onClick={() => router.back()} />
 
           <h5 className="text-2xl font-bold tracking-tight text-gray-800 dark:text-white row-start-1 col-start-2">{trip}</h5>
           <div className="font-normal text-gray-700 dark:text-gray-400 col-start-2 row-start-2">
@@ -70,7 +71,8 @@ const generateId = (userIndex: number, startDate: Date, d: Date) => {
   // The result is within int32 range for a delta of less than 24 hours and less than a dozen users
   return userIndex * milliInADay + (d.getTime() - startDate.getTime()) + 1;
 };
-export default function TripRecordItemPage({ params }: { params: { itemId: string } }) {
+export default function TripRecordItemPage() {
+  const params = useParams<{ itemId: string }>();
   const WebLocalization = useLocalization();
   const services = useAppServices()!;
   const [useRawPings, setUseRawPings] = useState(false);
@@ -78,9 +80,22 @@ export default function TripRecordItemPage({ params }: { params: { itemId: strin
     queryKey: ["record_pings", params.itemId, useRawPings],
     queryFn: () => services.record.getRecordPings(params.itemId, useRawPings)
   });
+
   const { data: record } = useQuery({ queryKey: ["liane", params.itemId], queryFn: () => services.record.get(params.itemId) });
   const from = record?.wayPoints[0];
   const to = record ? record.wayPoints[record.wayPoints.length - 1] : undefined;
+
+  const route = useRoute(record?.wayPoints.map(w => w.rallyingPoint) ?? []);
+
+  // @ts-ignore
+  const center = useMemo<LatLng>(() => {
+    if (route.features.features.length === 0) {
+      return;
+    }
+    const c = centroid(route.features);
+    return toLatLng(c.geometry.coordinates);
+  }, [route]);
+
   const [userList, setUserList] = useState<string[]>([]);
   const [displayMembers, setDisplayMembers] = useState(false);
   const startDate = useMemo(() => (record ? new Date(record.startedAt) : null), [record]);
@@ -152,6 +167,10 @@ export default function TripRecordItemPage({ params }: { params: { itemId: strin
     const sorted = pings!.features.map(f => new Date(f.properties.at)).sort((a, b) => a.getTime() - b.getTime());
     return sorted.pop();
   }, [pings]);
+
+  if (!center) {
+    return <LoadingViewIndicator />;
+  }
 
   return (
     <div className="grow w-full relative">
@@ -240,14 +259,11 @@ export default function TripRecordItemPage({ params }: { params: { itemId: strin
           </Card>
         </div>
       )}
-      <Map center={from?.rallyingPoint.location}>
-        <RallyingPointsLayer />
-        {!!record && <RouteLayer points={record.wayPoints.map(w => w.rallyingPoint)} />}
+      <AppMapView center={center}>
+        <RallyingPointLayer />
+        {!!record && <RouteLayer id={route.id} features={route.features} />}
         {!!markerFeatures && <PingsMarkersLayer features={markerFeatures!} />}
-        {!!record && !!markerFeatures && (
-          <FitFeatures features={[...markerFeatures.features, ...record.wayPoints.map(w => asPoint(w.rallyingPoint.location))]} />
-        )}
-      </Map>
+      </AppMapView>
     </div>
   );
 }
@@ -261,8 +277,8 @@ const dispatchHighlightMarkerEvent = (payload: HighlightPingMarkerEvent) => disp
 const dispatchCenterMarkerEvent = (payload: CenterPingMarkerEvent) => dispatchCustomEvent(CenterPingMarkerEventName, payload);
 
 function PingsMarkersLayer({ features }: { features: FeatureCollection<GeoJSON.Point, any> }) {
-  const map = useMapContext();
-  const [displayPopup, setDisplayPopup] = useState<{ lng: number; lat: number; properties: any } | null>();
+  const map = useMap();
+  const [displayPopup, setDisplayPopup] = useState<{ lng: number; lat: number; properties: any }>();
 
   useEvent(HighlightPingMarkerEventName, (e: HighlightPingMarkerEvent) => {
     map.current?.setFeatureState({ source: "pings", id: e.id }, { hover: e.highlight });
@@ -275,20 +291,18 @@ function PingsMarkersLayer({ features }: { features: FeatureCollection<GeoJSON.P
   const mapFeatures = useMemo(() => {
     return (
       <>
-        <GeojsonSource id={"pings"} data={features} />
+        <Source id="pings" type="geojson" data={features} />
         <MarkersLayer
-          id={"pings"}
-          source={"pings"}
-          onClickPoint={e => {
-            if (!e.features || e.features.length === 0 || !map.current) return;
-            const coords = (e.features![0].geometry as GeoJSON.Point).coordinates;
-            const point = map.current.project({ lng: coords[0], lat: coords[1] });
-            console.log("EEE", e.lngLat, coords, e.point, point, e.features);
-            setDisplayPopup({ ...e.lngLat, properties: { ...e.features[0].properties, coordinates: coords } });
-          }}
+          id="pings"
+          source="pings"
           onMouseEnterPoint={f => {
-            // Log more details in console
-            console.log("PING", { ...f.properties, geometry: f.geometry });
+            if (!map.current) {
+              return;
+            }
+            const coords = (f.geometry as GeoJSON.Point).coordinates;
+            const point = map.current.project({ lng: coords[0], lat: coords[1] });
+            setDisplayPopup({ lng: coords[0], lat: coords[1], properties: { ...f.properties, coordinates: coords } });
+
             const id = f.id as number;
             dispatchHighlightPointEvent({ id, highlight: true });
             map.current?.setFeatureState({ source: "pings", id }, { hover: true });
@@ -315,19 +329,17 @@ function PingsMarkersLayer({ features }: { features: FeatureCollection<GeoJSON.P
     <>
       {mapFeatures}
       {displayPopup && (
-        <Popup lngLat={displayPopup}>
-          <div className="overflow-x-scroll">
-            <table className="py-4">
-              <tbody>
-                {Object.entries(displayPopup.properties).map(([k, v]) => (
-                  <tr key={k}>
-                    <td className="whitespace-nowrap font-medium px-2">{k}</td>
-                    <td>{JSON.stringify(v)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <Popup latitude={displayPopup.lat} longitude={displayPopup.lng} anchor="top" closeButton={true} onClose={() => setDisplayPopup(undefined)}>
+          <table className="py-4 text-gray-800 overflow-x-scroll">
+            <tbody>
+              {Object.entries(displayPopup.properties).map(([k, v]) => (
+                <tr key={k}>
+                  <td className="whitespace-nowrap font-medium px-2">{k}</td>
+                  <td>{JSON.stringify(v)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </Popup>
       )}
     </>

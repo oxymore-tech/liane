@@ -53,7 +53,7 @@ export default function TripRecordsPage() {
                   <Table.Row
                     onClick={() => {
                       client.setQueryData(["liane", liane.id], () => liane);
-                      router.push("/dashboard/trip-records/" + liane.id!);
+                      router.push("/dashboard/trip_record/" + liane.id!);
                     }}
                     key={liane.id!}
                     className="bg-white dark:border-gray-700 dark:bg-gray-800 cursor-pointer">

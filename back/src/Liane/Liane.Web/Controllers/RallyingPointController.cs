@@ -122,10 +122,18 @@ public sealed class RallyingPointController(
     return rallyingPointRequestService.Create(req with { Status = null });
   }
 
+  [HttpDelete("request/{id}")]
+  [RequiresAdminAuth]
+  public Task DeleteRequest([FromRoute] string id)
+  {
+    return rallyingPointRequestService.Delete(id);
+  }
+  
   [HttpPatch("request/{id}")]
   [RequiresAdminAuth]
   public Task<RallyingPointRequest> UpdateRequestStatus([FromRoute] string id, [FromBody] RallyingPointRequestStatus status)
   {
     return rallyingPointRequestService.UpdateRequestStatus(id, status with { By = currentContext.CurrentUser().Id });
   }
+  
 }

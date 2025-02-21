@@ -11,6 +11,7 @@ export interface PointsAdminService {
   update(id: string, payload: RallyingPoint): Promise<RallyingPoint>;
   create(payload: RallyingPoint): Promise<RallyingPoint>;
   delete(id: string): Promise<void>;
+  deleteRequest(id: string): Promise<void>;
 }
 export class PointsAdminServiceClient extends RallyingPointClient implements PointsAdminService {
   constructor(http: HttpClient) {
@@ -28,6 +29,10 @@ export class PointsAdminServiceClient extends RallyingPointClient implements Poi
 
   async delete(id: string): Promise<void> {
     await this.http.del(`/rallying_point/${id}`);
+  }
+
+  async deleteRequest(id: string): Promise<void> {
+    await this.http.del(`/rallying_point/request/${id}`);
   }
 
   getDepartmentPointsAsGeoJson(department: string) {

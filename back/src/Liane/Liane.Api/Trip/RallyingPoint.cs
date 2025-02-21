@@ -25,7 +25,9 @@ public enum LocationType
   RelayParking,
   AbandonedRoad,
   AutoStop,
-  TownHall
+  TownHall,
+  TrainStation,
+  RoadSide
 }
 
 public sealed record RallyingPointStats(string Id, int TotalTripCount, DateTime? LastTripUsage) : IIdentity<string>;

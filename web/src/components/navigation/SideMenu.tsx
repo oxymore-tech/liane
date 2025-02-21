@@ -40,7 +40,7 @@ export function SideMenu({ pages }: SideMenuProps) {
       theme={{
         root: { inner: "h-full overflow-y-auto overflow-x-hidden bg-gray-50 py-4 px-3 dark:bg-gray-800", collapsed: { off: "w-68" } }
       }}>
-      <Sidebar.Items defaultValue={"Accueil"}>
+      <Sidebar.Items defaultValue="Accueil">
         <Sidebar.ItemGroup>{items}</Sidebar.ItemGroup>
       </Sidebar.Items>
     </Sidebar>

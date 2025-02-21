@@ -68,6 +68,7 @@ export const useElementSize = (ref: React.RefObject<HTMLElement>, initial?: { wi
     updateSize();
     window.addEventListener("resize", updateSize);
     return () => window.removeEventListener("resize", updateSize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ref, ...(dependencies || [])]);
   return { height, width };
 };

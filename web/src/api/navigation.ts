@@ -8,11 +8,11 @@ export const Navigation: { [path: string]: NavigationData } = {
     name: "Accueil",
     icon: "home"
   },
-  "/admin/dashboard/trip-records": {
+  "/admin/dashboard/trip_record": {
     name: "Preuves de covoiturage",
     icon: "shield-check"
   },
-  "/admin/dashboard/rallying-points": {
+  "/admin/dashboard/rallying_point": {
     name: "Points de ralliement",
     icon: "pin"
   }

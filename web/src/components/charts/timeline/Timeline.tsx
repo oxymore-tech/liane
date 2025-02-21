@@ -189,7 +189,7 @@ const TimeAxis = ({ startDate, endDate, width }: { startDate: Date; endDate: Dat
       value: WebLocalization.formatTime24h(value),
       xOffset: xScale(value)
     }));
-  }, [startDate, endDate, width]);
+  }, [startDate, endDate, width, WebLocalization]);
 
   return (
     <svg>
