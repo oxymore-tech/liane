@@ -23,7 +23,7 @@ import { RallyingPointLayer } from "@/components/map/layers/RallyingPointLayer";
 import { RallyingPointRequestLayer } from "@/components/map/layers/RallyingPointRequestLayer";
 import { ParkingLayer } from "@/components/map/layers/ParkingLayer";
 import { AreaLayer } from "@/components/map/layers/AreaLayer";
-import { RallyingPointEdition } from "@/app/dashboard/rallying_point/[...slug]/RallyingPointEdition";
+import { CurrentEditPoint, RallyingPointEdition } from "@/app/dashboard/rallying_point/[...slug]/RallyingPointEdition";
 import { LatLng } from "@liane/common/src";
 
 export default function RallyingPointsAdminPage() {
@@ -142,7 +142,7 @@ const DepartmentView = ({ department, boundaries, data }: DepartmentViewProps) =
     setTemporaryMarker(undefined);
   }, [department, queryClient]);
 
-  const currentEditPoint = useMemo(() => {
+  const currentEditPoint = useMemo<CurrentEditPoint>(() => {
     if (newRallyingPoint) {
       return newRallyingPoint;
     }
@@ -153,7 +153,17 @@ const DepartmentView = ({ department, boundaries, data }: DepartmentViewProps) =
     if (currentSelection.type === "point") {
       return { ...currentSelection.feature.properties, location: toLatLng(currentSelection.feature.geometry.coordinates) };
     }
-    return { ...currentSelection.feature.properties.point, id: currentSelection.feature.properties.id, isNew: true };
+    const { id, comment, createdBy, createdAt, ...point } = currentSelection.feature.properties;
+    return {
+      ...point,
+      id,
+      isActive: false,
+      metadata: {
+        comment,
+        createdBy,
+        createdAt
+      }
+    } as CurrentEditPoint;
   }, [newRallyingPoint, currentSelection]);
 
   const currentTitle = useMemo(() => {

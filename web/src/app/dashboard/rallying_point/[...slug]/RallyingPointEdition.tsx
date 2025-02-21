@@ -11,7 +11,7 @@ import { HiInformationCircle } from "react-icons/hi";
 import { LatLng } from "@liane/common/src";
 
 type Props = {
-  point: Partial<RallyingPoint> & { isNew?: boolean };
+  point: CurrentEditPoint;
   position?: LatLng;
   onSave?: () => void;
   onClose?: () => void;
@@ -57,6 +57,8 @@ const CheckBoxInput = ({ name }: { name: string }) => {
   );
 };
 
+export type CurrentEditPoint = Partial<RallyingPoint> & { metadata?: { comment: string; createdBy: string; createdAt: string } };
+
 export const RallyingPointEdition = ({ point, position, onClose, onSave }: Props) => {
   const WebLocalization = useLocalization();
   const { rallyingPoint, address: s } = useAppServices();
@@ -98,14 +100,14 @@ export const RallyingPointEdition = ({ point, position, onClose, onSave }: Props
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const handleDelete = useCallback(async () => {
-    if (point.isNew) {
+    if (point.metadata) {
       await rallyingPoint.deleteRequest(point.id!);
     } else {
       await rallyingPoint.delete(point.id!);
     }
     onSave && onSave();
     onClose && onClose();
-  }, [onClose, onSave, point.id, point.isNew, rallyingPoint]);
+  }, [onClose, onSave, point.id, point.metadata, rallyingPoint]);
 
   return (
     <FormProvider {...methods}>
@@ -152,12 +154,12 @@ export const RallyingPointEdition = ({ point, position, onClose, onSave }: Props
         {!confirmDelete && (
           <div className="flex flex-row gap-2 justify-center">
             <ButtonWithLoadingAction
-              disabled={!position && !point.isNew && (!isDirty || !isValid)}
-              color={point.isNew ? "green" : "blue"}
+              disabled={!position && !point.metadata && (!isDirty || !isValid)}
+              color={point.metadata ? "green" : "blue"}
               action={methods.handleSubmit(
                 async p => {
                   let action: () => Promise<void>;
-                  if (point.isNew) {
+                  if (point.metadata) {
                     action = async () => {
                       // @ts-ignore
                       await rallyingPoint.create(p);
@@ -180,11 +182,11 @@ export const RallyingPointEdition = ({ point, position, onClose, onSave }: Props
                   console.warn(err);
                 }
               )}>
-              {point.isNew ? "Créer" : "Enregistrer"}
+              {point.metadata ? "Créer" : "Enregistrer"}
             </ButtonWithLoadingAction>
             {point.id && (
               <Button color="red" onClick={() => setConfirmDelete(true)}>
-                {point.isNew ? "Supprimer la demande" : "Supprimer"}
+                {point.metadata ? "Supprimer la demande" : "Supprimer"}
               </Button>
             )}
             <Button onClick={() => onClose && onClose()} color="gray">
@@ -192,12 +194,19 @@ export const RallyingPointEdition = ({ point, position, onClose, onSave }: Props
             </Button>
           </div>
         )}
+        {(point.metadata?.comment.length ?? 0) > 0 && (
+          <Alert color="info" icon={HiInformationCircle}>
+            {point.metadata!.comment}
+          </Alert>
+        )}
         {confirmDelete && (
           <Alert
-            additionalContent={<ExampleAdditionalContent isNew={point.isNew} onConfirm={handleDelete} onCancel={() => setConfirmDelete(false)} />}
+            additionalContent={
+              <ExampleAdditionalContent isNew={!!point.metadata} onConfirm={handleDelete} onCancel={() => setConfirmDelete(false)} />
+            }
             color="warning"
             icon={HiInformationCircle}>
-            {point.isNew ? "Suppression de la demande" : "Suppression du point de ralliement"}
+            {point.metadata ? "Suppression de la demande" : "Suppression du point de ralliement"}
           </Alert>
         )}
       </div>
