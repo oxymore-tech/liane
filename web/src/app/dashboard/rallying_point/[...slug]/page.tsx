@@ -239,19 +239,13 @@ const DepartmentView = ({ department, boundaries, data }: DepartmentViewProps) =
         </div>
       </FormProvider>
       {showBottomPane && (
-        <div className="px-2 py-2 absolute top-0 z-[5] w-[600px] pointer-events-auto ">
-          <Card className="bg-white dark:bg-gray-800">
-            <div className="grow grid" style={{ gridTemplateRows: "auto minmax(0, 1fr) auto" }}>
-              <div className="flex gap-4 justify-start items-center mx-1 mb-4">
-                <IconButton icon="close" onClick={handleCloseForm} />
-                <h3 className="font-bold">{currentTitle}</h3>
-              </div>
-              <div className="overflow-y-auto flex flex-col">
-                <div className="justify-between flex flex-col grow mb-8">
-                  <RallyingPointEdition onSave={handleRefresh} point={currentEditPoint} position={temporaryMarker} onClose={handleCloseForm} />
-                </div>
-              </div>
+        <div className="px-2 py-2 absolute top-0 z-[100] h-full w-[600px] pointer-events-auto">
+          <Card className="bg-white dark:bg-gray-800 max-h-full flex flex-col overflow-y-auto">
+            <div className="flex gap-4 justify-start items-center mx-1 mb-4">
+              <IconButton icon="close" onClick={handleCloseForm} />
+              <h3 className="font-bold">{currentTitle}</h3>
             </div>
+            <RallyingPointEdition onSave={handleRefresh} point={currentEditPoint} position={temporaryMarker} onClose={handleCloseForm} />
           </Card>
         </div>
       )}
