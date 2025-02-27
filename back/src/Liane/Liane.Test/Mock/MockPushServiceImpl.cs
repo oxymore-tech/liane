@@ -40,13 +40,15 @@ public sealed class MockPushServiceImpl : IPushMiddleware
     CollectionAssert.AreEqual(
       sent
         .Where(s => s.To == to)
-        .OrderBy(s => s.Id)
+        .OrderBy(s => s.At)
+        .ThenBy(s => s.Id)
         .Select(s => s.Message),
       msgs
     );
     return sent
       .Where(s => s.To == to)
-      .OrderBy(s => s.Id)
+      .OrderBy(s => s.At)
+      .ThenBy(s => s.Id)
       .Select(s => s.At)
       .ToArray();
   }
@@ -56,13 +58,15 @@ public sealed class MockPushServiceImpl : IPushMiddleware
     CollectionAssert.AreEqual(
       messages
         .Where(s => s.To == to)
-        .OrderBy(s => s.Id)
+        .OrderBy(s => s.At)
+        .ThenBy(s => s.Id)
         .Select(s => s.Message),
       msgs
     );
     return messages
       .Where(s => s.To == to)
-      .OrderBy(s => s.Id)
+      .OrderBy(s => s.At)
+      .ThenBy(s => s.Id)
       .Select(s => s.At)
       .ToArray();
   }
