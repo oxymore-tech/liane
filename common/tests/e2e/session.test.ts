@@ -39,7 +39,7 @@ function failingHttpClient(numberOfFailingCalls: number): HttpClient {
 
 beforeEach(async () => {
   await storage.clearStorage();
-  await baseServices.signUpActor.signUpUser(phoneNumber);
+  await baseServices.loginTestUser(phoneNumber);
   await storage.storeUser(await baseServices.auth.me());
 }, 10_000);
 vi.setConfig({ testTimeout: 10_000 });
