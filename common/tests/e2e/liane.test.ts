@@ -29,7 +29,8 @@ describe.sequential("Liane as a community", () => {
         roundTrip: false,
         canDrive: true,
         weekDays: "1100000",
-        timeConstraints: [{ when: { start: { hour: 8 }, end: { hour: 9 } }, at: pickup }],
+        arriveBefore: { hour: 9 },
+        returnAfter: { hour: 18 },
         isEnabled: true
       });
       const actual = await currentUser.services.community.match();

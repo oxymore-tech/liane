@@ -1,9 +1,7 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { KeyboardEvent, useCallback, useState } from "react";
 import { TextInput } from "@/components/forms/TextInput";
 import { useAppContext, useCurrentUser } from "@/components/ContextProvider";
-import { useActor, useInterpret } from "@xstate/react";
-import { CreateLoginMachine } from "@liane/common";
 import { Button, Modal, Navbar } from "flowbite-react";
 import { Icon } from "@/components/base/Icon";
 
@@ -12,40 +10,58 @@ export type HeaderProps = {};
 function LoginModal({ show, onClosed }: { onClosed: () => void; show: boolean }) {
   const [adminError, setAdminError] = useState(false);
   const { refreshUser, services } = useAppContext();
-  const [m] = useState(() =>
-    CreateLoginMachine(
-      {
-        sendPhone: (p: string) => services.auth.sendSms(p),
-        sendCode: async (phone: string, code: string) => {
-          return await services.auth.login({ phone, code, withRefresh: false });
-        }
-      },
-      undefined,
-      false
-    )
-  );
 
-  const machine = useInterpret(m);
-  const [state] = useActor(machine);
-  useEffect(() => {
-    if (!state.done) return;
-    machine.onDone(async () => {
-      if (state.context.authUser?.isSignedUp && state.context.authUser?.isAdmin) {
+  const [phone, setPhone] = useState("");
+  const [code, setCode] = useState("");
+  const [enterCode, setEnterCode] = useState(false);
+  const [hasFailed, setHasFailed] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const sendSms = useCallback(async () => {
+    try {
+      setLoading(true);
+      await services.auth.sendSms(phone);
+      setEnterCode(true);
+    } catch (e) {
+      setHasFailed(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [services, phone]);
+
+  const login = useCallback(async () => {
+    try {
+      setLoading(true);
+      const user = await services.auth.login({ phone, code, withRefresh: false });
+      if (user.isSignedUp && user.isAdmin) {
         await refreshUser();
         onClosed();
       } else {
         setAdminError(true);
         await services.storage.clearStorage();
       }
-    });
-  }, [machine, onClosed, refreshUser, services.storage, state]);
-
-  const hasFailed = state.toStrings().some(x => x.includes("failure"));
-  const handleEnterKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      machine.send(hasFailed ? "RETRY" : "NEXT");
+    } catch (e) {
+      setHasFailed(true);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [services.auth, services.storage, phone, code, refreshUser, onClosed]);
+
+  const handleSubmit = useCallback(() => {
+    if (enterCode) {
+      return login();
+    } else {
+      return sendSms();
+    }
+  }, [enterCode, login, sendSms]);
+
+  const handleEnterKey = useCallback(
+    (e: KeyboardEvent<HTMLInputElement>) => {
+      e.code === "Enter" && handleSubmit();
+    },
+    [handleSubmit]
+  );
+
   return (
     <Modal show={show} onClose={onClosed} popup id="logout">
       <Modal.Header />
@@ -59,22 +75,14 @@ function LoginModal({ show, onClosed }: { onClosed: () => void; show: boolean })
               placeholder="(+33)XXXXXXXXX"
               required={true}
               label="Numéro de téléphone"
-              onTextChange={data => machine.send("SET", { data })}
-              value={state.context.phone.value}
-              isValid={state.context.phone.valid}
+              onTextChange={setPhone}
+              value={phone}
+              isValid={phone.length > 0}
               type="tel"
-              maxLength={state.context.phone.value?.startsWith("0") ? 10 : 12}
-              disabled={!state.matches("phone")}
+              maxLength={20}
             />
-            {state.matches("code") && (
-              <TextInput
-                onKeyDown={handleEnterKey}
-                id="code"
-                label="Code reçu par SMS"
-                value={state.context.code.value}
-                onTextChange={data => machine.send("SET", { data })}
-                maxLength={6}
-              />
+            {enterCode && (
+              <TextInput onKeyDown={handleEnterKey} id="code" label="Code reçu par SMS" value={code} onTextChange={setCode} maxLength={6} />
             )}
 
             {adminError && <p className="text-red-500 px-1">Erreur: veuillez réessayer avec un compte administrateur.</p>}
@@ -83,15 +91,9 @@ function LoginModal({ show, onClosed }: { onClosed: () => void; show: boolean })
         </div>
       </Modal.Body>
       <Modal.Footer className="justify-start flex-row-reverse gap-2">
-        <Button
-          gradientDuoTone="pinkToOrange"
-          isProcessing={state.toStrings().some(x => x.includes("pending"))}
-          disabled={state.context[state.matches("phone") ? "phone" : "code"].valid !== true}
-          onClick={() => {
-            machine.send(hasFailed ? "RETRY" : "NEXT");
-          }}>
+        <Button gradientDuoTone="pinkToOrange" isProcessing={loading} disabled={phone.length === 0 || code.length === 0} onClick={handleSubmit}>
           {hasFailed && <Icon name="retry" />}
-          {hasFailed ? "Réessayer" : state.matches("phone") ? "Suivant" : "Connexion"}
+          {hasFailed ? "Réessayer" : enterCode ? "Connexion" : "Suivant"}
         </Button>
       </Modal.Footer>
     </Modal>

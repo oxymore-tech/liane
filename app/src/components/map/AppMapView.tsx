@@ -75,8 +75,8 @@ const AppMapView = forwardRef(
     { onRegionChanged, children, extra, userLocation, bounds, onLongPress, onPress, cameraPadding }: AppMapViewProps,
     ref: ForwardedRef<AppMapViewController>
   ) => {
-    const mapRef = useRef<MapViewRef>();
-    const cameraRef = useRef<CameraRef>();
+    const mapRef = useRef<MapViewRef>(null);
+    const cameraRef = useRef<CameraRef>(null);
 
     const regionSubject = useSubject<RegionPayload>();
 
@@ -133,8 +133,8 @@ const AppMapView = forwardRef(
         <MapLibreGL.MapView
           onLongPress={onLongPress ? e => onLongPress((e.geometry as Point).coordinates) : undefined}
           onPress={onPress ? e => onPress((e.geometry as Point).coordinates) : undefined}
-          // @ts-ignore
           ref={mapRef}
+          // @ts-ignore
           onTouchEnd={() => {
             cameraRef.current?.setCamera({ centerCoordinate: undefined, padding: { paddingBottom: cameraPadding } });
             setAppliedCenter(undefined);

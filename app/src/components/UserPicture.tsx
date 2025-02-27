@@ -52,7 +52,7 @@ export interface AppAvatarProps {
   driver?: boolean;
 }
 
-export const AppAvatar = ({ user, size = 48, style, borderWidth = 0, borderColor = "transparent", driver }: AppAvatarProps) => {
+export const AppAvatar = ({ user, size = 48, style, borderWidth = 0, borderColor = "transparent" }: AppAvatarProps) => {
   const color = useMemo(() => {
     if (user.id) {
       const hue = (getUniqueColor(user.id) + 360) % 360;
