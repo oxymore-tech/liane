@@ -15,8 +15,8 @@ public sealed class MockPushServiceImpl : IPushMiddleware
 {
   public Priority Priority => Priority.High;
 
-  private readonly List<SentMessage> sent = new();
-  private readonly List<SentMessage> messages = new();
+  private readonly List<SentMessage> sent = [];
+  private readonly List<SentMessage> messages = [];
 
   public Task<bool> Push(Ref<User> receiver, Notification notification)
   {

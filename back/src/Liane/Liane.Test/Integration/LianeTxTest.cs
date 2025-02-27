@@ -385,6 +385,8 @@ public sealed class LianeTxTest : BaseIntegrationTest
       CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, mathilde.Id), liane.Members.Select(m => m.User.Id));
     }
 
+    await Task.Delay(200);
+    
     {
       currentContext.SetCurrentUser(gugu);
       await tested.JoinRequest(lianeMathilde.Id, lianeGugu.Id);
