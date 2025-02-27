@@ -401,12 +401,12 @@ public sealed class LianeTxTest : BaseIntegrationTest
     await Task.Delay(200);
 
     pushService.AssertMessage(jayBee.Id,
-        $"{mathilde.Pseudo} souhaite rejoindre la liane",
-        $"{jayBee.Pseudo} a rejoint la liane",
-        $"{mathilde.Pseudo} a rejoint la liane",
-        $"{gugu.Pseudo} souhaite rejoindre la liane",
-        $"{gugu.Pseudo} a rejoint la liane")
-      ;
+      $"{mathilde.Pseudo} souhaite rejoindre la liane",
+      $"{jayBee.Pseudo} a rejoint la liane",
+      $"{mathilde.Pseudo} a rejoint la liane",
+      $"{gugu.Pseudo} souhaite rejoindre la liane",
+      $"{gugu.Pseudo} a rejoint la liane"
+    );
     pushService.AssertMessage(mathilde.Id,
       $"{gugu.Pseudo} souhaite rejoindre la liane",
       $"{gugu.Pseudo} a rejoint la liane"
