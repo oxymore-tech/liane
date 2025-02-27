@@ -1,41 +1,37 @@
 import { ActivityIndicator, StyleSheet, View } from "react-native";
-import React, { useContext } from "react";
+import React from "react";
 import { Center, Column, Space } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { AppColors, defaultTextColor } from "@/theme/colors";
 import { FormProvider, SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 import { AppLogger } from "@/api/logger";
-import { SignUpLianeContext } from "@/screens/signUp/SignUpScreen";
-import { useActor } from "@xstate/react";
 import { OptionField } from "@/components/forms/fields/OptionField";
 import { TextField } from "@/components/forms/fields/TextField";
+import { UserInfo } from "@liane/common";
 
-export const SignUpFormScreen = () => {
+type SignUpFormScreenProps = {
+  onSubmit: (userInfo: UserInfo) => void;
+  loading: boolean;
+  error: boolean;
+};
+
+export const SignUpFormScreen = ({ onSubmit, loading, error }: SignUpFormScreenProps) => {
   const methods = useForm<FormValues>({ mode: "onChange" });
   const { formState } = methods;
-  const machine = useContext(SignUpLianeContext);
-  const [state] = useActor(machine);
-
-  const onSubmit: SubmitHandler<FormValues> = data => {
-    machine.send([
-      "CANCEL",
-      {
-        type: "SIGNUP",
-        data: {
-          firstName: data.firstname,
-          lastName: data.name,
-          gender: data.name === "M." ? "Man" : data.name === "Mme" ? "Woman" : "Unspecified"
-        }
-      }
-    ]);
-  };
 
   const onError: SubmitErrorHandler<FormValues> = errors => {
-    return AppLogger.debug("LOGIN", errors);
+    AppLogger.debug("LOGIN", errors);
   };
 
-  const pending = state.toStrings().some(s => s.endsWith("pending"));
+  const handleSubmit: SubmitHandler<FormValues> = data => {
+    onSubmit({
+      firstName: data.firstname,
+      lastName: data.name,
+      gender: data.name === "M." ? "Man" : data.name === "Mme" ? "Woman" : "Unspecified"
+    });
+  };
+
   return (
     <Column style={styles.container} spacing={24}>
       <AppText style={styles.title}>Bienvenue sur Liane !</AppText>
@@ -50,18 +46,18 @@ export const SignUpFormScreen = () => {
           <TextField name="firstname" minLength={2} label={labels.firstname} />
 
           <Space />
-          {pending && (
+          {loading && (
             <Center>
               <ActivityIndicator />
             </Center>
           )}
-          {!pending && (
+          {!loading && (
             <AppRoundedButton
               enabled={formState.isValid}
               color={defaultTextColor(AppColors.primaryColor)}
-              onPress={methods.handleSubmit(onSubmit, onError)}
+              onPress={methods.handleSubmit(handleSubmit, onError)}
               backgroundColor={AppColors.primaryColor}
-              text={state.toStrings().some(s => s.endsWith("failure")) ? "Réessayer" : "Créer mon compte"}
+              text={error ? "Réessayer" : "Créer mon compte"}
             />
           )}
         </Column>

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useMemo, useState } from "react";
 import { ActivityIndicator, ImageBackground, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
 import messaging from "@react-native-firebase/messaging";
 import { scopedTranslate } from "@/api/i18n";
@@ -8,14 +8,12 @@ import LianeLogo from "@/assets/logo.svg";
 import { AppContext } from "@/components/context/ContextProvider";
 import { PhoneNumberInput } from "@/screens/signUp/PhoneNumberInput";
 import { CodeInput } from "@/screens/signUp/CodeInput";
-import { AppDimensions } from "@/theme/dimensions";
-import { useActor, useInterpret } from "@xstate/react";
 import { SignUpFormScreen } from "@/screens/signUp/SignUpFormScreen";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { APP_VERSION } from "@env";
 import { AppStyles } from "@/theme/styles";
 import { PasswordInput } from "@/screens/signUp/PasswordInput";
-import { CreateLoginMachine, SignUpStateMachineInterpreter } from "@liane/common";
+import { AuthUser, UserInfo } from "@liane/common";
 import { AppLogger } from "@/api/logger";
 import { RNAppEnv } from "@/api/env";
 import { Center } from "@/components/base/AppLayout";
@@ -31,24 +29,68 @@ async function getPushToken() {
   return await messaging().getToken();
 }
 
-const SignUpPage = () => {
-  const machine = useContext(SignUpLianeContext);
-  const [state] = useActor(machine);
+type SignUpPageProps = {
+  onLogin: (user: AuthUser, isTestAccount: boolean) => void;
+};
+
+const SignUpPage = ({ onLogin }: SignUpPageProps) => {
   const insets = useSafeAreaInsets();
-  const error = state.toStrings().some(x => x.includes("failure")) ? "Impossible d'effectuer la demande" : undefined;
-  const submitting = state.toStrings().some(x => x.includes("pending"));
-  const set = (data: string) => machine.send("SET", { data });
-  const submit = () => {
-    AppLogger.debug(
-      "INIT",
-      state.context,
-      state.value,
-      RNAppEnv.raw.TEST_ACCOUNT,
-      state.context.phone.value,
-      state.context.phone.value === RNAppEnv.raw.TEST_ACCOUNT
-    );
-    machine.send(state.toStrings().some(x => x.includes("failure")) ? "RETRY" : "NEXT");
-  };
+
+  const { services } = useContext(AppContext);
+
+  const [phone, setPhone] = useState("");
+  const [code, setCode] = useState("");
+  const [enterCode, setEnterCode] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>();
+
+  const phoneIsValid = useMemo(() => {
+    if (phone === RNAppEnv.raw.TEST_ACCOUNT) {
+      return true;
+    }
+    return /^((\+?33)|0)[67]\d{8}$/.test(phone);
+  }, [phone]);
+
+  const codeIsValid = useMemo(() => {
+    if (code.length === 0) {
+      return false;
+    }
+    if (phone === RNAppEnv.raw.TEST_ACCOUNT) {
+      return true;
+    }
+    return /^\d{6}$/.test(code);
+  }, [code, phone]);
+
+  const sendSms = useCallback(async () => {
+    if (!phone || !phoneIsValid) {
+      return;
+    }
+    setLoading(true);
+    try {
+      await services.auth.sendSms(phone);
+      setCode("");
+      setEnterCode(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [phone, phoneIsValid, services.auth]);
+
+  const login = useCallback(async () => {
+    if (!code || !codeIsValid) {
+      return;
+    }
+    setLoading(true);
+    try {
+      const pushToken = await getPushToken();
+      const response = await services.auth.login({ phone, code, pushToken });
+      onLogin(response, phone === RNAppEnv.raw.TEST_ACCOUNT);
+    } catch (e) {
+      AppLogger.error("LOGIN", e);
+      setError("Code invalide");
+    } finally {
+      setLoading(false);
+    }
+  }, [code, codeIsValid, onLogin, phone, services.auth]);
 
   return (
     <KeyboardAvoidingView style={[styles.container, { flex: 1, flexShrink: 1 }]} behavior={Platform.OS === "android" ? undefined : "height"}>
@@ -58,32 +100,20 @@ const SignUpPage = () => {
         </View>
         <View>
           <AppText numberOfLines={-1} style={styles.helperText}>
-            {state.matches("phone")
+            {!enterCode
               ? t("Entrez votre numéro de téléphone")
-              : state.context.phone.value === RNAppEnv.raw.TEST_ACCOUNT
+              : phone === RNAppEnv.raw.TEST_ACCOUNT
                 ? t("Entrez votre mot de passe")
                 : t("Entrez le code reçu par SMS")}
           </AppText>
-          {state.matches("phone") ? (
-            <PhoneNumberInput
-              phoneNumber={state.context.phone.value || ""}
-              canSubmit={!!state.context.phone.valid}
-              onChange={set}
-              submit={submit}
-              submitting={submitting}
-            />
-          ) : state.context.phone.value === RNAppEnv.raw.TEST_ACCOUNT ? (
-            <PasswordInput code={state.context.code.value || ""} onChange={set} onValidate={submit} />
+          {!enterCode ? (
+            <PhoneNumberInput phoneNumber={phone} canSubmit={phoneIsValid} onChange={setPhone} submit={sendSms} submitting={loading} />
+          ) : phone === RNAppEnv.raw.TEST_ACCOUNT ? (
+            <PasswordInput code={code} onChange={setCode} onValidate={login} />
           ) : (
-            <CodeInput
-              code={state.context.code.value || ""}
-              canSubmit={!!state.context.code.valid}
-              onChange={set}
-              submit={submit}
-              retry={() => machine.send("RESEND")}
-            />
+            <CodeInput code={code} canSubmit={codeIsValid} onChange={setCode} submit={login} retry={sendSms} />
           )}
-          <AppText style={styles.errorText}>{error || " "}</AppText>
+          <AppText style={styles.errorText}>{error ?? " "}</AppText>
         </View>
         <View style={{ flex: 1, flexShrink: 1 }} />
         <View style={[{ marginBottom: insets.bottom, paddingBottom: 16 }]}>
@@ -94,47 +124,58 @@ const SignUpPage = () => {
   );
 };
 
-// @ts-ignore
-export const SignUpLianeContext = React.createContext<SignUpStateMachineInterpreter>();
 const SignUpScreen = () => {
-  const { login, services } = useContext(AppContext);
-  const [m] = useState(() =>
-    CreateLoginMachine(
-      {
-        sendPhone: phone => services.auth.sendSms(phone),
-        sendCode: async (phone, code) => {
-          const pushToken = await getPushToken();
-          return await services.auth.login({ phone, code, pushToken });
-        },
-        signUpUser: payload => services.auth.updateUserInfo(payload)
-      },
-      RNAppEnv.raw.TEST_ACCOUNT
-    )
-  );
-  const machine = useInterpret(m);
-  const [state] = useActor(machine);
-  useEffect(() => {
-    if (!state.done) {
-      return;
-    }
-    machine.onDone(async _ => {
-      login(state.context.authUser);
-    });
-  }, [login, machine, state.context.authUser, state.done]);
+  const { user, services, login } = useContext(AppContext);
 
-  return (
-    <SignUpLianeContext.Provider
-      /* @ts-ignore */
-      value={machine}>
-      {["code", "phone"].some(state.matches) && <SignUpPage />}
-      {state.matches("form") && <SignUpFormScreen />}
-      {!["code", "phone", "form"].some(state.matches) && (
-        <Center style={[AppStyles.fullHeight]}>
-          <ActivityIndicator color={AppColors.primaryColor} size="large" />
-        </Center>
-      )}
-    </SignUpLianeContext.Provider>
+  const [internalUser, setInternalUser] = useState<AuthUser>();
+
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = useCallback(
+    (u: AuthUser, isTestAccount: boolean) => {
+      if (isTestAccount || u.isSignedUp) {
+        login(u);
+      } else {
+        setInternalUser(u);
+      }
+    },
+    [login]
   );
+
+  const [signUpError, setSignUpError] = useState(false);
+
+  const handleSignUp = useCallback(
+    async (info: UserInfo) => {
+      if (!internalUser) {
+        return;
+      }
+      setLoading(true);
+      setSignUpError(false);
+      try {
+        await services.auth.updateUserInfo(info);
+        login(internalUser);
+      } catch (e) {
+        setSignUpError(true);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [internalUser, login, services.auth]
+  );
+
+  if (user) {
+    return (
+      <Center style={[AppStyles.fullHeight]}>
+        <ActivityIndicator color={AppColors.primaryColor} size="large" />
+      </Center>
+    );
+  }
+
+  if (!internalUser) {
+    return <SignUpPage onLogin={handleLogin} />;
+  }
+
+  return <SignUpFormScreen onSubmit={handleSignUp} loading={loading} error={signUpError} />;
 };
 
 const styles = StyleSheet.create({
