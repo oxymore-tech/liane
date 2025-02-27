@@ -1,5 +1,6 @@
 import Foundation
 import CoreLocation
+import React
 
 @objc(RNLianeGeolocation)
 class RNLianeGeolocation: RCTEventEmitter {
