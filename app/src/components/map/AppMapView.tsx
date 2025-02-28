@@ -13,7 +13,7 @@ import React, {
 } from "react";
 import { StyleSheet, View } from "react-native";
 import MapLibreGL, { CameraRef, Logger, MapViewRef, RegionPayload } from "@maplibre/maplibre-react-native";
-import { DisplayBoundingBox, getMapStyleUrl, LatLng } from "@liane/common";
+import { DEFAULT_TLS, DisplayBoundingBox, getMapStyleUrl, LatLng } from "@liane/common";
 import { AppColorPalettes } from "@/theme/colors";
 import { Point, Position } from "geojson";
 import { Row } from "@/components/base/AppLayout";
@@ -22,6 +22,7 @@ import MapTilerLogo from "@/assets/images/maptiler-logo.svg";
 import { SubscriptionLike } from "rxjs";
 import { RNAppEnv } from "@/api/env";
 import { useSubject } from "@/util/hooks/subscription";
+import { AppContext } from "@/components/context/ContextProvider.tsx";
 import Images = MapLibreGL.Images;
 import UserLocation = MapLibreGL.UserLocation;
 
@@ -77,10 +78,13 @@ const AppMapView = forwardRef(
   ) => {
     const mapRef = useRef<MapViewRef>(null);
     const cameraRef = useRef<CameraRef>(null);
+    const { services } = useContext(AppContext);
 
     const regionSubject = useSubject<RegionPayload>();
 
-    const [appliedCenter, setAppliedCenter] = useState<LatLng | undefined>(userLocation);
+    const initialState = userLocation ?? services.location.getLastKnownLocation() ?? DEFAULT_TLS;
+    console.log("initialState", initialState);
+    const [appliedCenter, setAppliedCenter] = useState<LatLng>(initialState);
 
     const controller: AppMapViewController = useMemo(() => {
       return {
@@ -105,6 +109,9 @@ const AppMapView = forwardRef(
     useImperativeHandle(ref, () => controller);
 
     useEffect(() => {
+      if (!userLocation) {
+        return;
+      }
       setAppliedCenter(userLocation);
     }, [userLocation]);
 
@@ -114,8 +121,14 @@ const AppMapView = forwardRef(
       }
 
       controller.setCenter(appliedCenter, 10);
-      setAppliedCenter(appliedCenter);
-    }, [controller, appliedCenter, setAppliedCenter]);
+    }, [appliedCenter, controller]);
+
+    useEffect(() => {
+      if (!bounds) {
+        return;
+      }
+      cameraRef?.current?.fitBounds(bounds.ne, bounds.sw, [bounds.paddingTop, bounds.paddingRight, bounds.paddingBottom, bounds.paddingLeft]);
+    }, [bounds]);
 
     const handleRegionMoved = useCallback(
       (feature: GeoJSON.Feature<GeoJSON.Point, RegionPayload>) => {
@@ -126,6 +139,22 @@ const AppMapView = forwardRef(
         }
       },
       [controller, onRegionChanged]
+    );
+
+    return (
+      <MapLibreGL.MapView
+        ref={mapRef}
+        style={styles.map}
+        mapStyle={getMapStyleUrl(RNAppEnv)}
+        onRegionDidChange={handleRegionMoved}
+        rotateEnabled={false}
+        pitchEnabled={false}
+        logoEnabled={false}
+        attributionEnabled={false}>
+        <MapLibreGL.Camera ref={cameraRef} />
+        <MapControllerContext.Provider value={controller}>{children}</MapControllerContext.Provider>
+        {userLocation && <UserLocation androidRenderMode="normal" />}
+      </MapLibreGL.MapView>
     );
 
     return (
