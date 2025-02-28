@@ -83,18 +83,16 @@ const AppMapView = forwardRef(
     const regionSubject = useSubject<RegionPayload>();
 
     const initialState = userLocation ?? services.location.getLastKnownLocation() ?? DEFAULT_TLS;
-    console.log("initialState", initialState);
-    const [appliedCenter, setAppliedCenter] = useState<LatLng>(initialState);
+    const [appliedCenter, setAppliedCenter] = useState<LatLng | undefined>(initialState);
 
     const controller: AppMapViewController = useMemo(() => {
       return {
         getCenter: () => mapRef.current?.getCenter(),
-        setCenter: (p: LatLng, zoom?: number, duration = 250) => {
+        setCenter: (p: LatLng, zoom?: number, duration = 50) => {
+          console.log("setCenter", p, zoom);
           cameraRef.current?.setCamera({
             centerCoordinate: [p.lng, p.lat],
             zoomLevel: zoom,
-            animationMode: "flyTo",
-            animationDuration: duration,
             padding: {
               paddingBottom: cameraPadding ?? 0
             }
@@ -147,6 +145,11 @@ const AppMapView = forwardRef(
         style={styles.map}
         mapStyle={getMapStyleUrl(RNAppEnv)}
         onRegionDidChange={handleRegionMoved}
+        // @ts-ignore
+        onTouchEnd={() => {
+          cameraRef.current?.setCamera({ centerCoordinate: undefined, padding: { paddingBottom: cameraPadding } });
+          setAppliedCenter(undefined);
+        }}
         rotateEnabled={false}
         pitchEnabled={false}
         logoEnabled={false}

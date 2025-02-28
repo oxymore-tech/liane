@@ -75,13 +75,13 @@ export const LaunchTripModal = ({ tripModalVisible, setTripModalVisible, launchT
           </Center>
 
           <Row spacing={8} style={{ alignItems: "baseline", justifyContent: "space-between" }}>
-            <AppText style={styles.modalText}>Arrivée à {to.city}</AppText>
+            <AppText style={styles.modalText}>Horaire d'arrivée</AppText>
             <TimeView value={arriveBefore} onChange={setArriveBefore} editable />
           </Row>
 
           <Row spacing={4} style={{ maxWidth: "100%", alignItems: "center", justifyContent: "space-between" }}>
             <AppText style={[styles.modalText, !roundTrip && { textDecorationLine: "line-through" }]} ellipsizeMode="middle">
-              Retour depuis {to.city}
+              Horaire de retour
             </AppText>
             <Switch
               trackColor={{ false: AppColors.grayBackground, true: AppColors.primaryColor }}

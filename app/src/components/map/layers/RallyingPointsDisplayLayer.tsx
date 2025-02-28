@@ -42,7 +42,7 @@ export const RallyingPointsDisplayLayer = ({ dispayCluster = false, selected, on
         if (!p.properties?.point_count) {
           //@ts-ignore
           onSelect({ ...p.properties, location: { lat: p.geometry.coordinates[1], lng: p.geometry.coordinates[0] } });
-          await controller.setCenter(center);
+          controller.setCenter(center);
           return;
         }
       }
@@ -57,7 +57,7 @@ export const RallyingPointsDisplayLayer = ({ dispayCluster = false, selected, on
       } else {
         newZoom = zoom + 1;
       }
-      await controller.setCenter(center, newZoom);
+      controller.setCenter(center, newZoom);
     },
     [controller, onSelect]
   );

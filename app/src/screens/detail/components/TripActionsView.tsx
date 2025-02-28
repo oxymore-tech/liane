@@ -2,7 +2,7 @@ import React, { useContext, useMemo, useState } from "react";
 import { QueryClient, useQueryClient } from "react-query";
 import { Alert } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Trip, LianeMatch, TimeOnlyUtils } from "@liane/common";
+import { LianeMatch, TimeOnlyUtils, Trip } from "@liane/common";
 import { NavigationParamList, useAppNavigation } from "@/components/context/routing";
 import { AppServices } from "@/api/service";
 import { AppContext } from "@/components/context/ContextProvider";
@@ -18,7 +18,7 @@ import { CommonActions } from "@react-navigation/native";
 import { TimeView } from "@/components/TimeView";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 
-export const LianeActionsView = ({ match }: { match: LianeMatch }) => {
+export const TripActionsView = ({ match }: { match: LianeMatch }) => {
   const liane = match.trip;
   const { user, services } = useContext(AppContext);
   //const creator = liane.members.find(m => m.user.id === liane.createdBy!)!.user;
@@ -46,7 +46,7 @@ export const LianeActionsView = ({ match }: { match: LianeMatch }) => {
     if (currentUserIsOwner && liane.state === "NotStarted" && liane.members.length > 1) {
       buttonList.push({
         text: "Annuler ce trajet",
-        action: () => cancelLiane(navigation, services, queryClient, liane),
+        action: () => cancelTrip(navigation, services, queryClient, liane),
         danger: true
       });
     }
@@ -54,7 +54,7 @@ export const LianeActionsView = ({ match }: { match: LianeMatch }) => {
     if (currentUserIsMember && liane.state === "NotStarted" && !currentUserIsOwner) {
       buttonList.push({
         text: "Quitter le trajet",
-        action: () => leaveLiane(navigation, services, queryClient, liane),
+        action: () => leaveTrip(navigation, services, queryClient, liane),
         danger: true
       });
     }
@@ -62,7 +62,7 @@ export const LianeActionsView = ({ match }: { match: LianeMatch }) => {
     if (currentUserIsOwner && liane.state === "NotStarted" && liane.members.length === 1) {
       buttonList.push({
         text: "Supprimer le trajet",
-        action: () => deleteLiane(navigation, services, queryClient, liane),
+        action: () => deleteTrip(navigation, services, queryClient, liane),
         danger: true
       });
     }
@@ -84,7 +84,7 @@ export const LianeActionsView = ({ match }: { match: LianeMatch }) => {
         <AppRoundedButton
           color={defaultTextColor(AppColors.primaryColor)}
           onPress={() => {
-            leaveLiane(navigation, services, queryClient, liane);
+            leaveTrip(navigation, services, queryClient, liane);
           }}
           backgroundColor={ContextualColors.redAlert.bg}
           text="Quitter le trajet"
@@ -94,7 +94,7 @@ export const LianeActionsView = ({ match }: { match: LianeMatch }) => {
         <AppRoundedButton
           color={defaultTextColor(AppColors.primaryColor)}
           onPress={() => {
-            cancelLiane(navigation, services, queryClient, liane);
+            cancelTrip(navigation, services, queryClient, liane);
           }}
           backgroundColor={ContextualColors.redAlert.bg}
           text="Annuler ce trajet"
@@ -132,13 +132,13 @@ export const LianeActionsView = ({ match }: { match: LianeMatch }) => {
   );
 };
 
-const deleteLiane = (
+const deleteTrip = (
   navigation: NativeStackNavigationProp<NavigationParamList, keyof NavigationParamList>,
   services: AppServices,
   queryClient: QueryClient,
-  liane: Trip
+  trip: Trip
 ) => {
-  Alert.alert("Supprimer l'annonce", "Voulez-vous vraiment supprimer ce trajet ?", [
+  Alert.alert("Supprimer le trajet", "Voulez-vous vraiment supprimer ce trajet ?", [
     {
       text: "Annuler",
       onPress: () => {},
@@ -147,7 +147,7 @@ const deleteLiane = (
     {
       text: "Supprimer",
       onPress: async () => {
-        await services.trip.delete(liane.id!);
+        await services.trip.delete(trip.id!);
         await queryClient.invalidateQueries(TripQueryKey);
         navigation.goBack();
       },
@@ -156,11 +156,11 @@ const deleteLiane = (
   ]);
 };
 
-const cancelLiane = (
+const cancelTrip = (
   navigation: NativeStackNavigationProp<NavigationParamList, keyof NavigationParamList>,
   services: AppServices,
   queryClient: QueryClient,
-  liane: Trip
+  trip: Trip
 ) => {
   Alert.alert("Annuler ce trajet", "Voulez-vous vraiment annuler ce trajet ?", [
     {
@@ -171,16 +171,16 @@ const cancelLiane = (
     {
       text: "Confirmer",
       onPress: async () => {
-        await services.trip.cancel(liane.id!);
+        await services.trip.cancel(trip.id!);
+        await queryClient.invalidateQueries(TripQueryKey);
         navigation.goBack();
-        //  await queryClient.invalidateQueries(LianeQueryKey);
       },
       style: "default"
     }
   ]);
 };
 
-const leaveLiane = (
+const leaveTrip = (
   navigation: NativeStackNavigationProp<NavigationParamList, keyof NavigationParamList>,
   services: AppServices,
   queryClient: QueryClient,

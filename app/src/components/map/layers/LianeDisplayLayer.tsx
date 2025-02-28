@@ -67,7 +67,7 @@ export const LianeDisplayLayer = ({ weekDays, onSelect }: LianeDisplayLayerProps
         } else {
           newZoom = zoom + 1;
         }
-        await controller.setCenter(center, newZoom);
+        controller.setCenter(center, newZoom);
       }
     },
     [controller, onSelect]
