@@ -1,5 +1,4 @@
-import Modal from "react-native-modal/dist/modal";
-import { ColorValue, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
+import { Modal, ColorValue, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
 import { AppColors, defaultTextColor } from "@/theme/colors";
 import { Row } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
@@ -23,12 +22,7 @@ export const SlideUpModal = ({
   onAction
 }: SlideUpModalProps) => {
   return (
-    <Modal
-      propagateSwipe
-      onBackButtonPress={() => setVisible(false)}
-      isVisible={visible}
-      onSwipeComplete={() => setVisible(false)}
-      style={styles.modal}>
+    <Modal onRequestClose={() => setVisible(false)} visible={visible} style={styles.modal} animationType="slide">
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "position" : undefined}>
         <View style={{ backgroundColor, paddingHorizontal: 12, paddingVertical: 24, borderTopLeftRadius: 8, borderTopRightRadius: 8 }}>
           <Row style={{ position: "absolute", right: 20, top: 27, zIndex: 10 }}>

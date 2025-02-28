@@ -8,7 +8,7 @@ const destination = "mairie:46309";
 beforeAll(async () => {
   for (let i = 0; i < userCount; i++) {
     const services = CreateServices();
-    const id = await services.signUpActor.signUpUser(faker.helpers.replaceSymbolWithNumber("06########"));
+    const id = await services.loginTestUser(faker.helpers.replaceSymbolWithNumber("06########"));
     users.push({ services, id });
     await services.hub.start();
   }
@@ -29,7 +29,8 @@ describe.sequential("Liane as a community", () => {
         roundTrip: false,
         canDrive: true,
         weekDays: "1100000",
-        timeConstraints: [{ when: { start: { hour: 8 }, end: { hour: 9 } }, at: pickup }],
+        arriveBefore: { hour: 9 },
+        returnAfter: { hour: 18 },
         isEnabled: true
       });
       const actual = await currentUser.services.community.match();

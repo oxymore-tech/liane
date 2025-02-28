@@ -1,21 +1,20 @@
-import React, { useCallback, useContext } from "react";
+import React, { useCallback } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
-import { useQuery, useQueryClient } from "react-query";
+import { useQueryClient } from "react-query";
 import { UnauthorizedError } from "@liane/common";
 import { AppText } from "@/components/base/AppText";
 import { Column } from "@/components/base/AppLayout";
 import { AppButton } from "@/components/base/AppButton";
-import { AppContext } from "@/components/context/ContextProvider";
 import { LianeListView } from "@/components/communities/LianeListView";
 import { AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { DefaultFloatingActions } from "@/components/context/FloatingActions.tsx";
+import { LianeQueryKey, useLianeMatchQuery } from "@/util/hooks/query.ts";
 
 export const CommunitiesScreen = () => {
-  const { services } = useContext(AppContext);
   const queryClient = useQueryClient();
 
-  const lianeMatches = useQuery([LianeQueryKey, "match"], () => services.community.match());
+  const lianeMatches = useLianeMatchQuery();
 
   const { isFetching, error, data } = lianeMatches;
 
@@ -71,5 +70,3 @@ const styles = StyleSheet.create({
     flex: 1
   }
 });
-
-export const LianeQueryKey = "liane";

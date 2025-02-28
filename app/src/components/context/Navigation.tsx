@@ -1,7 +1,7 @@
 import React, { useContext, useEffect } from "react";
 import { createNativeStackNavigator, NativeStackHeaderProps } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/base/AppText";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
@@ -149,25 +149,13 @@ function Navigation() {
 }
 
 interface TabIconProps {
-  // String or svg component
-  iconName: IconName | React.FunctionComponent;
+  iconName: IconName;
   focused: boolean;
   size: number;
 }
+
 const TabIcon = ({ iconName, focused, size }: TabIconProps) => {
-  return (
-    <View>
-      {typeof iconName === "string" ? (
-        <AppIcon size={size} name={iconName} color={focused ? AppColors.secondaryColor : AppColorPalettes.gray[400]} />
-      ) : (
-        iconName({
-          color: focused ? AppColors.secondaryColor : AppColorPalettes.gray[400],
-          height: size,
-          width: size
-        })
-      )}
-    </View>
-  );
+  return <AppIcon size={size} name={iconName} color={focused ? AppColors.secondaryColor : AppColorPalettes.gray[400]} />;
 };
 
 const BadgeTabIcon = WithBadge(TabIcon);

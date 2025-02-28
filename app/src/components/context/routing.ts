@@ -8,8 +8,8 @@ export type NavigationParamList = {
   Publish: { initialValue?: ResolvedLianeRequest; liane?: CoLiane | CoMatch };
   SignUp: undefined;
   Lianes: undefined;
-  CommunitiesChat: { liane?: CoLiane | Ref<CoLiane> };
-  LianeMapDetail: { liane: CoLiane | CoMatch; request?: CoLiane | ResolvedLianeRequest };
+  CommunitiesChat: { liane: Ref<CoLiane> };
+  LianeMapDetail: { liane: CoLiane | CoMatch; request?: ResolvedLianeRequest };
   LianeTripDetail: { trip: Trip };
   TripDetail: { trip: Ref<Trip> | Trip };
   Profile: { user: User } | undefined;

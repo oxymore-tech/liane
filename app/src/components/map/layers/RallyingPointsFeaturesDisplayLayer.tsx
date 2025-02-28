@@ -74,7 +74,7 @@ export const RallyingPointsFeaturesDisplayLayer = ({
               } else {
                 newZoom = zoom + 1;
               }
-              await controller.setCenter(center, newZoom);
+              controller.setCenter(center, newZoom);
 
               if (onSelect) {
                 /* @ts-ignore */

@@ -9,7 +9,6 @@ import { AppContext } from "@/components/context/ContextProvider";
 import { AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { WeekHeader } from "@/screens/user/WeekHeader.tsx";
-import { useSubscription } from "@/util/hooks/subscription.ts";
 import { TripItem } from "@/screens/user/TripItem.tsx";
 import { useAppNavigation } from "@/components/context/routing.ts";
 import { AppLocalization } from "@/api/i18n.ts";
@@ -30,14 +29,6 @@ const TripScheduleScreen = ({ route }: Props) => {
   const { navigation } = useAppNavigation<"Calendrier">();
 
   const trip = useQuery(TripQueryKey, async () => await services.community.getIncomingTrips());
-
-  useSubscription<Trip>(
-    services.realTimeHub.tripUpdates,
-    () => {
-      trip.refetch().then();
-    },
-    []
-  );
 
   const [currentDate, setCurrentDate] = useState(nowAtNoon());
 

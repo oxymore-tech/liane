@@ -1,5 +1,4 @@
-import Modal from "react-native-modal/dist/modal";
-import { ColorValue, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
+import { ColorValue, KeyboardAvoidingView, Platform, StyleSheet, View, Modal, TouchableOpacity, TouchableWithoutFeedback } from "react-native";
 import { AppColors, defaultTextColor } from "@/theme/colors";
 import { Row } from "@/components/base/AppLayout";
 import { AppIcon } from "@/components/base/AppIcon";
@@ -15,23 +14,31 @@ export interface SimpleModalProps extends PropsWithChildren {
 export const SimpleModal = ({ backgroundColor = AppColors.secondaryColor, visible, setVisible, children, hideClose }: SimpleModalProps) => {
   const hide = useCallback(() => setVisible(false), [setVisible]);
   return (
-    <Modal onBackButtonPress={hide} onBackdropPress={hide} isVisible={visible} onSwipeComplete={hide} style={styles.modal}>
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "position" : "height"}>
-        <View style={{ backgroundColor, padding: 16, borderRadius: 8 }}>
-          <Row style={{ marginBottom: 8 }}>
-            {!hideClose && (
-              <AppPressable style={{ paddingBottom: 16 }} onPress={hide}>
-                <AppIcon name="close" color={defaultTextColor(backgroundColor)} />
-              </AppPressable>
-            )}
-          </Row>
-          {children}
-        </View>
-      </KeyboardAvoidingView>
+    <Modal onRequestClose={hide} visible={visible} animationType="fade" transparent={true} onDismiss={hide}>
+      <TouchableOpacity style={styles.modal} activeOpacity={1} onPressOut={hide}>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "position" : "height"}>
+          <TouchableWithoutFeedback>
+            <View style={{ backgroundColor, padding: 16, borderRadius: 8 }}>
+              <Row style={{ marginBottom: 8 }}>
+                {!hideClose && (
+                  <AppPressable style={{ paddingBottom: 16 }} onPress={hide}>
+                    <AppIcon name="close" color={defaultTextColor(backgroundColor)} />
+                  </AppPressable>
+                )}
+              </Row>
+              {children}
+            </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
+      </TouchableOpacity>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  modal: { margin: 8 }
+  modal: {
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.5)"
+  }
 });

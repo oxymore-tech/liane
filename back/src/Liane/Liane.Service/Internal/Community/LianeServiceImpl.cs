@@ -370,7 +370,7 @@ public sealed class LianeServiceImpl(
 
     if (joinedLianeB is not null)
     {
-      return await Reject(connection, lrB, joinedLianeB.Value, tx);
+      return await Reject(connection, lrA, joinedLianeB.Value, tx);
     }
 
     if (memberA is null && memberB?.LianeId == lrA.Id)

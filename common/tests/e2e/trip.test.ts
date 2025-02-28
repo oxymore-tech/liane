@@ -11,7 +11,7 @@ const destination = "mairie:46309";
 beforeAll(async () => {
   for (let i = 0; i < userCount; i++) {
     const services = CreateServices();
-    const id = await services.signUpActor.signUpUser(faker.helpers.replaceSymbolWithNumber("06########"));
+    const id = await services.loginTestUser(faker.helpers.replaceSymbolWithNumber("06########"));
     users.push({ services, id });
     await services.hub.start();
   }

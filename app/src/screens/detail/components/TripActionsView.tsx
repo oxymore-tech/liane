@@ -2,7 +2,7 @@ import React, { useContext, useMemo, useState } from "react";
 import { QueryClient, useQueryClient } from "react-query";
 import { Alert } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Trip, LianeMatch, TimeOnlyUtils } from "@liane/common";
+import { LianeMatch, TimeOnlyUtils, Trip } from "@liane/common";
 import { NavigationParamList, useAppNavigation } from "@/components/context/routing";
 import { AppServices } from "@/api/service";
 import { AppContext } from "@/components/context/ContextProvider";
@@ -18,20 +18,20 @@ import { CommonActions } from "@react-navigation/native";
 import { TimeView } from "@/components/TimeView";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
 
-export const LianeActionsView = ({ match }: { match: LianeMatch }) => {
-  const liane = match.trip;
+export const TripActionsView = ({ match }: { match: LianeMatch }) => {
+  const trip = match.trip;
   const { user, services } = useContext(AppContext);
-  //const creator = liane.members.find(m => m.user.id === liane.createdBy!)!.user;
-  const currentUserIsMember = liane.members.filter(m => m.user.id === user!.id).length === 1;
-  const currentUserIsOwner = currentUserIsMember && liane.createdBy === user!.id;
-  const currentUserIsDriver = currentUserIsMember && liane.driver.user === user!.id;
+  //const creator = trip.members.find(m => m.user.id === trip.createdBy!)!.user;
+  const currentUserIsMember = trip.members.filter(m => m.user.id === user!.id).length === 1;
+  const currentUserIsOwner = currentUserIsMember && trip.createdBy === user!.id;
+  const currentUserIsDriver = currentUserIsMember && trip.driver.user === user!.id;
 
   const { navigation } = useAppNavigation();
   const queryClient = useQueryClient();
 
   const [timeModalVisible, setTimeModalVisible] = useState(false);
   const [editOptionsModalVisible, setEditOptionsModalVisible] = useState(false);
-  const [date, setDate] = useState(new Date(liane.departureTime));
+  const [date, setDate] = useState(new Date(trip.departureTime));
 
   const initialMinDate = TimeOnlyUtils.fromDate(new Date(new Date().getTime() + 60000));
 
@@ -43,36 +43,36 @@ export const LianeActionsView = ({ match }: { match: LianeMatch }) => {
       }
     ];
 
-    if (currentUserIsOwner && liane.state === "NotStarted" && liane.members.length > 1) {
+    if (currentUserIsOwner && trip.state === "NotStarted" && trip.members.length > 1) {
       buttonList.push({
         text: "Annuler ce trajet",
-        action: () => cancelLiane(navigation, services, queryClient, liane),
+        action: () => cancelTrip(navigation, services, queryClient, trip),
         danger: true
       });
     }
 
-    if (currentUserIsMember && liane.state === "NotStarted" && !currentUserIsOwner) {
+    if (currentUserIsMember && trip.state === "NotStarted" && !currentUserIsOwner) {
       buttonList.push({
         text: "Quitter le trajet",
-        action: () => leaveLiane(navigation, services, queryClient, liane),
+        action: () => leaveTrip(navigation, services, queryClient, trip),
         danger: true
       });
     }
 
-    if (currentUserIsOwner && liane.state === "NotStarted" && liane.members.length === 1) {
+    if (currentUserIsOwner && trip.state === "NotStarted" && trip.members.length === 1) {
       buttonList.push({
         text: "Supprimer le trajet",
-        action: () => deleteLiane(navigation, services, queryClient, liane),
+        action: () => deleteTrip(navigation, services, queryClient, trip),
         danger: true
       });
     }
 
     return buttonList;
-  }, [currentUserIsMember, currentUserIsOwner, liane, navigation, queryClient, services]);
+  }, [currentUserIsMember, currentUserIsOwner, trip, navigation, queryClient, services]);
 
   return (
     <Column style={{ marginTop: 16 }}>
-      {!(!currentUserIsDriver || liane.state !== "NotStarted") && (
+      {!(!currentUserIsDriver || trip.state !== "NotStarted") && (
         <AppRoundedButton
           color={defaultTextColor(AppColors.primaryColor)}
           onPress={() => setEditOptionsModalVisible(true)}
@@ -80,28 +80,28 @@ export const LianeActionsView = ({ match }: { match: LianeMatch }) => {
           text="Modifier le trajet"
         />
       )}
-      {liane.state === "NotStarted" && currentUserIsMember && !currentUserIsDriver && (
+      {trip.state === "NotStarted" && currentUserIsMember && !currentUserIsDriver && (
         <AppRoundedButton
           color={defaultTextColor(AppColors.primaryColor)}
           onPress={() => {
-            leaveLiane(navigation, services, queryClient, liane);
+            leaveTrip(navigation, services, queryClient, trip);
           }}
           backgroundColor={ContextualColors.redAlert.bg}
           text="Quitter le trajet"
         />
       )}
-      {liane.state === "Started" && (
+      {trip.state === "Started" && (
         <AppRoundedButton
           color={defaultTextColor(AppColors.primaryColor)}
           onPress={() => {
-            cancelLiane(navigation, services, queryClient, liane);
+            cancelTrip(navigation, services, queryClient, trip);
           }}
           backgroundColor={ContextualColors.redAlert.bg}
           text="Annuler ce trajet"
         />
       )}
 
-      <DebugIdView style={{ paddingVertical: 4, paddingHorizontal: 24 }} object={liane} />
+      <DebugIdView style={{ paddingVertical: 4, paddingHorizontal: 24 }} object={trip} />
 
       <ChoiceModal
         visible={editOptionsModalVisible}
@@ -114,10 +114,10 @@ export const LianeActionsView = ({ match }: { match: LianeMatch }) => {
         actionText="Modifier l'horaire"
         backgroundColor={AppColors.white}
         onAction={async () => {
-          const updated = await services.trip.updateDepartureTime(liane.id!, date.toISOString());
+          const updated = await services.trip.updateDepartureTime(trip.id!, date.toISOString());
           // Update current page's content
           navigation.dispatch(CommonActions.setParams({ liane: updated }));
-          // Update liane list
+          // Update trip list
           await queryClient.invalidateQueries(TripQueryKey);
           setTimeModalVisible(false);
         }}
@@ -132,13 +132,13 @@ export const LianeActionsView = ({ match }: { match: LianeMatch }) => {
   );
 };
 
-const deleteLiane = (
+const deleteTrip = (
   navigation: NativeStackNavigationProp<NavigationParamList, keyof NavigationParamList>,
   services: AppServices,
   queryClient: QueryClient,
-  liane: Trip
+  trip: Trip
 ) => {
-  Alert.alert("Supprimer l'annonce", "Voulez-vous vraiment supprimer ce trajet ?", [
+  Alert.alert("Supprimer le trajet", "Voulez-vous vraiment supprimer ce trajet ?", [
     {
       text: "Annuler",
       onPress: () => {},
@@ -147,7 +147,7 @@ const deleteLiane = (
     {
       text: "Supprimer",
       onPress: async () => {
-        await services.trip.delete(liane.id!);
+        await services.trip.delete(trip.id!);
         await queryClient.invalidateQueries(TripQueryKey);
         navigation.goBack();
       },
@@ -156,11 +156,11 @@ const deleteLiane = (
   ]);
 };
 
-const cancelLiane = (
+const cancelTrip = (
   navigation: NativeStackNavigationProp<NavigationParamList, keyof NavigationParamList>,
   services: AppServices,
   queryClient: QueryClient,
-  liane: Trip
+  trip: Trip
 ) => {
   Alert.alert("Annuler ce trajet", "Voulez-vous vraiment annuler ce trajet ?", [
     {
@@ -171,16 +171,16 @@ const cancelLiane = (
     {
       text: "Confirmer",
       onPress: async () => {
-        await services.trip.cancel(liane.id!);
+        await services.trip.cancel(trip.id!);
+        await queryClient.invalidateQueries(TripQueryKey);
         navigation.goBack();
-        //  await queryClient.invalidateQueries(LianeQueryKey);
       },
       style: "default"
     }
   ]);
 };
 
-const leaveLiane = (
+const leaveTrip = (
   navigation: NativeStackNavigationProp<NavigationParamList, keyof NavigationParamList>,
   services: AppServices,
   queryClient: QueryClient,

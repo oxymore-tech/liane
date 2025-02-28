@@ -5,7 +5,6 @@ import { Center, Column } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppColorPalettes, AppColors, ContextualColors } from "@/theme/colors";
-import { AppLogger } from "@/api/logger.ts";
 import AppMapView from "@/components/map/AppMapView.tsx";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
 import { LianeMatchLianeRouteLayer } from "@/components/map/layers/LianeMatchRouteLayer.tsx";
@@ -19,12 +18,13 @@ import { ContextActions, PendingAction } from "@/components/communities/ContextA
 import { FloatingBackButton } from "@/components/FloatingBackButton.tsx";
 import { WayPointsView } from "@/components/trip/WayPointsView.tsx";
 import { useQueryClient } from "react-query";
-import { LianeQueryKey } from "@/screens/communities/CommunitiesScreen.tsx";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { LianeQueryKey } from "@/util/hooks/query.ts";
 
 export const LianeMapDetailScreen = () => {
   const { navigation, route } = useAppNavigation<"LianeMapDetail">();
   const { liane: matchOrLiane, request: lianeRequest } = route.params;
+
   const { services } = useContext(AppContext);
   const queryClient = useQueryClient();
 
@@ -38,8 +38,16 @@ export const LianeMapDetailScreen = () => {
 
   const lianeId = useMemo(() => getLianeId(matchOrLiane), [matchOrLiane]);
 
+  const validate = useCallback(async () => {
+    await queryClient.invalidateQueries(LianeQueryKey);
+    navigation.goBack();
+  }, [navigation, queryClient]);
+
   const members = useMemo(() => {
     if (isLiane(matchOrLiane)) {
+      if (lianeRequest) {
+        return [];
+      }
       if (!matchOrLiane.members.length) {
         return [matchOrLiane.createdBy];
       }
@@ -47,13 +55,16 @@ export const LianeMapDetailScreen = () => {
     } else {
       return matchOrLiane.members;
     }
-  }, [matchOrLiane]);
+  }, [lianeRequest, matchOrLiane]);
 
   useEffect(() => {
     if (!lianeId) {
       return;
     }
-    services.community.getTrip(lianeId, lianeRequest?.id).then(setWayPoints).catch(setError);
+    services.community
+      .getTrip(lianeRequest?.id ?? lianeId)
+      .then(setWayPoints)
+      .catch(setError);
   }, [lianeId, lianeRequest, services.community]);
 
   const mapBounds = useMemo(() => {
@@ -74,30 +85,27 @@ export const LianeMapDetailScreen = () => {
     if (lianeRequest && lianeRequest.id) {
       setPendingAction("join");
       try {
-        const result = await services.community.joinRequest(lianeRequest.id, lianeId);
-        AppLogger.debug("COMMUNITIES", "Demande de rejoindre une liane avec succès", result);
-        await queryClient.invalidateQueries(LianeQueryKey);
-        navigation.popToTop();
+        await services.community.joinRequest(lianeRequest.id, lianeId);
+        await validate();
       } finally {
         setPendingAction(undefined);
       }
     } else {
       navigation.navigate("Publish", { liane: matchOrLiane });
     }
-  }, [lianeId, lianeRequest, matchOrLiane, navigation, queryClient, services.community]);
+  }, [lianeId, lianeRequest, matchOrLiane, navigation, services.community, validate]);
 
   const handleReject = useCallback(async () => {
-    if (lianeRequest && lianeRequest.id && lianeId) {
+    if (lianeRequest?.id && lianeId) {
       setPendingAction("reject");
       try {
         await services.community.reject(lianeRequest.id, lianeId);
-        await queryClient.invalidateQueries(LianeQueryKey);
-        navigation.popToTop();
+        await validate();
       } finally {
         setPendingAction(undefined);
       }
     }
-  }, [lianeId, lianeRequest, navigation, queryClient, services.community]);
+  }, [lianeId, lianeRequest?.id, services.community, validate]);
 
   const handleLeave = useCallback(async () => {
     if (!lianeId) {
@@ -106,12 +114,18 @@ export const LianeMapDetailScreen = () => {
     setPendingAction("leave");
     try {
       await services.community.leave(lianeId);
-      await queryClient.invalidateQueries(LianeQueryKey);
-      navigation.popToTop();
+      await validate();
     } finally {
       setPendingAction(undefined);
     }
-  }, [lianeId, navigation, queryClient, services.community]);
+  }, [lianeId, services.community, validate]);
+
+  const weekDays = useMemo(() => {
+    if (lianeRequest) {
+      return lianeRequest.weekDays;
+    }
+    return matchOrLiane.weekDays;
+  }, [lianeRequest, matchOrLiane.weekDays]);
 
   return (
     <GestureHandlerRootView style={styles.mainContainer}>
@@ -154,7 +168,7 @@ export const LianeMapDetailScreen = () => {
           </View>
 
           <Column spacing={10} style={styles.bottom}>
-            <DayOfTheWeekPicker selectedDays={matchOrLiane.weekDays} dualOptionMode={true} />
+            <DayOfTheWeekPicker selectedDays={weekDays} dualOptionMode={true} />
             <WayPointsView wayPoints={wayPoints} style={{ backgroundColor: AppColorPalettes.gray[100], borderRadius: 20 }} dark={false} />
             <View
               style={{

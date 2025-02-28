@@ -15,50 +15,61 @@ public sealed class MockPushServiceImpl : IPushMiddleware
 {
   public Priority Priority => Priority.High;
 
-  private readonly List<SentMessage> sent = new();
-  private readonly List<SentMessage> messages = new();
+  private readonly List<SentMessage> sent = [];
+  private readonly List<SentMessage> messages = [];
 
   public Task<bool> Push(Ref<User> receiver, Notification notification)
   {
-    sent.Add(new SentMessage(notification.CreatedAt!.Value, receiver.Id, notification.Message));
+    sent.Add(new SentMessage(notification.Id, notification.CreatedAt!.Value, receiver.Id, notification.Message));
     return Task.FromResult(true);
   }
 
   public Task<bool> PushMessage(User sender, Ref<User> receiver, Ref<Api.Community.Liane> liane, LianeMessage message)
   {
-    messages.Add(new SentMessage(message.CreatedAt!.Value, receiver.Id, message.Content.Value ?? ""));
+    messages.Add(new SentMessage(message.Id, message.CreatedAt!.Value, receiver.Id, message.Content.Value ?? ""));
     return Task.FromResult(true);
   }
 
-  public DateTime[] Assert(params (string? To, string Message)[] msgs)
+  public void AssertNoPush()
+  {
+    CollectionAssert.IsEmpty(sent);
+  }
+
+  public DateTime[] AssertPush(string? to, params string[] msgs)
   {
     CollectionAssert.AreEqual(
       sent
+        .Where(s => s.To == to)
         .OrderBy(s => s.At)
-        .ThenBy(s => s.To)
-        .Select(s => (s.To, s.Message)),
+        .ThenBy(s => s.Id)
+        .Select(s => s.Message),
       msgs
     );
     return sent
+      .Where(s => s.To == to)
       .OrderBy(s => s.At)
+      .ThenBy(s => s.Id)
       .Select(s => s.At)
       .ToArray();
   }
-  
-  public DateTime[] AssertMessage(params (string? To, string Message)[] msgs)
+
+  public DateTime[] AssertMessage(string? to, params string[] msgs)
   {
     CollectionAssert.AreEqual(
       messages
+        .Where(s => s.To == to)
         .OrderBy(s => s.At)
-        .ThenBy(s => s.To)
-        .Select(s => (s.To, s.Message)),
+        .ThenBy(s => s.Id)
+        .Select(s => s.Message),
       msgs
     );
     return messages
+      .Where(s => s.To == to)
       .OrderBy(s => s.At)
+      .ThenBy(s => s.Id)
       .Select(s => s.At)
       .ToArray();
   }
 }
 
-internal sealed record SentMessage(DateTime At, string To, string Message);
+internal sealed record SentMessage(Guid Id, DateTime At, string To, string Message);

@@ -12,7 +12,6 @@ import {
   User
 } from "../../../src";
 import { TestEnv } from "./environment";
-import { LoginActor } from "../actors/login";
 
 export const CreateServices = (storage?: AppStorage) => {
   storage = storage ?? new LocalStorageImpl();
@@ -21,11 +20,13 @@ export const CreateServices = (storage?: AppStorage) => {
   const http = new HttpClient(`${TestEnv.API_URL}/api`, logger, storage, { timeout: 4000, retryStrategy });
   const auth = new AuthServiceClient(http, storage);
   const hub = new HubServiceClient(`${TestEnv.API_URL}/api`, logger, storage, http);
-  const signUpActor = new LoginActor(auth);
   const liane = new TripServiceClient(http);
   const community = new CommunityServiceClient(http);
   const event = new EventServiceClient(http);
-  return { liane, community, storage, logger, http, auth, signUpActor, hub, event, retryStrategy };
+  const loginTestUser = async (phone: string) => {
+    return (await auth.login({ phone, code: TestEnv.TEST_CODE })).id;
+  };
+  return { liane, community, storage, logger, http, auth, hub, event, retryStrategy, loginTestUser };
 };
 
 export type UserContext = {

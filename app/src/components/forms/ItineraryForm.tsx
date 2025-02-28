@@ -62,8 +62,8 @@ export const ItineraryForm = ({
           setSearchFrom(v);
           onChangeFrom(v);
         }}
-        value={from?.label || searchFrom || ""}
-        info={from?.city}
+        value={from?.city || searchFrom || ""}
+        info={from?.label}
         onFocus={() => {
           onRequestFocus("from");
         }}
@@ -79,7 +79,7 @@ export const ItineraryForm = ({
           onChangeTo(v);
         }}
         value={to?.city || searchTo || ""}
-        info={to?.city}
+        info={to?.label}
         onFocus={() => {
           onRequestFocus("to");
         }}
