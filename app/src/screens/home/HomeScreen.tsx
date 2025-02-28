@@ -6,7 +6,6 @@ import { FeatureCollection, Position } from "geojson";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Observable } from "rxjs";
 import { OfflineWarning } from "@/components/OfflineWarning";
-import { WelcomeWizardModal } from "@/screens/home/WelcomeWizard";
 import { HomeMap } from "@/screens/home/HomeMap";
 import { useBehaviorSubject } from "@/util/hooks/subscription";
 import { HomeMapBottomSheetContainer } from "@/screens/home/HomeMapBottomSheet.tsx";
@@ -67,7 +66,7 @@ const HomeScreen = () => {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <WelcomeWizardModal />
+      {/*<WelcomeWizardModal />*/}
       <HomeScreenView displaySource={displaySubject} />
     </GestureHandlerRootView>
   );

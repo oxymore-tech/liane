@@ -1,5 +1,4 @@
-import Modal from "react-native-modal/dist/modal";
-import { ColorValue, Image, ImageSourcePropType, View } from "react-native";
+import { ColorValue, Image, ImageSourcePropType, Modal, View } from "react-native";
 import { Column, Row } from "@/components/base/AppLayout";
 import React, { useContext, useEffect, useState } from "react";
 import { AppColorPalettes, AppColors, defaultTextColor } from "@/theme/colors";
@@ -23,7 +22,7 @@ export const WelcomeWizardModal = () => {
   const next = () => setPage(page + 1);
   const prev = () => setPage(page - 1);
   return (
-    <Modal useNativeDriverForBackdrop={true} isVisible={false && show} style={{ margin: 0 }}>
+    <Modal visible={show} style={{ margin: 0 }}>
       {page === 0 && <WelcomePage1 prev={endTutorial} next={next} />}
       {page === 1 && <WelcomePageRp prev={prev} next={next} />}
       {page === 2 && <WelcomePageMap prev={prev} next={next} />}
