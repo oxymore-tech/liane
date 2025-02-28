@@ -1,24 +1,9 @@
-import React, {
-  ForwardedRef,
-  forwardRef,
-  PropsWithChildren,
-  ReactNode,
-  useCallback,
-  useContext,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-  useState
-} from "react";
-import { StyleSheet, View } from "react-native";
+import React, { ForwardedRef, forwardRef, PropsWithChildren, useCallback, useContext, useEffect, useImperativeHandle, useMemo, useRef } from "react";
+import { StyleSheet } from "react-native";
 import MapLibreGL, { CameraRef, Logger, MapViewRef, RegionPayload } from "@maplibre/maplibre-react-native";
 import { DEFAULT_TLS, DisplayBoundingBox, getMapStyleUrl, LatLng } from "@liane/common";
 import { AppColorPalettes } from "@/theme/colors";
 import { Point, Position } from "geojson";
-import { Row } from "@/components/base/AppLayout";
-import { AppText } from "@/components/base/AppText";
-import MapTilerLogo from "@/assets/images/maptiler-logo.svg";
 import { SubscriptionLike } from "rxjs";
 import { RNAppEnv } from "@/api/env";
 import { useSubject } from "@/util/hooks/subscription";
@@ -41,7 +26,8 @@ Logger.setLogCallback(log => {
 });
 
 export type AppMapViewController = {
-  setCenter: (position: LatLng, zoom?: number, duration?: number) => void;
+  setCenter: (position: LatLng, zoom?: number, animationDuration?: number) => void;
+  fitBounds: (b: DisplayBoundingBox, animationDuration?: number) => void;
   getVisibleBounds: () => Promise<GeoJSON.Position[]> | undefined;
   getZoom: () => Promise<number> | undefined;
   getCenter: () => Promise<Position> | undefined;
@@ -58,11 +44,11 @@ export type MapMovedCallback = (payload: {
   visibleBounds: GeoJSON.Position[];
   center: Position;
 }) => void;
+
 export interface AppMapViewProps extends PropsWithChildren {
   onRegionChanged?: MapMovedCallback;
   onStartMovingRegion?: () => void;
   onStopMovingRegion?: () => void;
-  extra?: ReactNode;
   userLocation?: LatLng;
   bounds?: DisplayBoundingBox | undefined;
   onMapLoaded?: () => void;
@@ -73,7 +59,7 @@ export interface AppMapViewProps extends PropsWithChildren {
 
 const AppMapView = forwardRef(
   (
-    { onRegionChanged, children, extra, userLocation, bounds, onLongPress, onPress, cameraPadding }: AppMapViewProps,
+    { onRegionChanged, children, userLocation, bounds, onLongPress, onPress, cameraPadding }: AppMapViewProps,
     ref: ForwardedRef<AppMapViewController>
   ) => {
     const mapRef = useRef<MapViewRef>(null);
@@ -82,21 +68,21 @@ const AppMapView = forwardRef(
 
     const regionSubject = useSubject<RegionPayload>();
 
-    const initialState = userLocation ?? services.location.getLastKnownLocation() ?? DEFAULT_TLS;
-    const [appliedCenter, setAppliedCenter] = useState<LatLng | undefined>(initialState);
-
     const controller: AppMapViewController = useMemo(() => {
       return {
         getCenter: () => mapRef.current?.getCenter(),
-        setCenter: (p: LatLng, zoom?: number, duration = 50) => {
-          console.log("setCenter", p, zoom);
+        setCenter: (p: LatLng, zoom?: number, animationDuration = 200) => {
           cameraRef.current?.setCamera({
             centerCoordinate: [p.lng, p.lat],
             zoomLevel: zoom,
             padding: {
               paddingBottom: cameraPadding ?? 0
-            }
+            },
+            animationDuration
           });
+        },
+        fitBounds: (b: DisplayBoundingBox, animationDuration = 200) => {
+          cameraRef?.current?.fitBounds(b.ne, b.sw, [b.paddingTop, b.paddingRight, b.paddingBottom, b.paddingLeft], animationDuration);
         },
         getVisibleBounds: () => mapRef.current?.getVisibleBounds(),
         getZoom: () => mapRef.current?.getZoom(),
@@ -107,26 +93,16 @@ const AppMapView = forwardRef(
     useImperativeHandle(ref, () => controller);
 
     useEffect(() => {
-      if (!userLocation) {
-        return;
-      }
-      setAppliedCenter(userLocation);
-    }, [userLocation]);
-
-    useEffect(() => {
-      if (!appliedCenter) {
-        return;
-      }
-
-      controller.setCenter(appliedCenter, 10);
-    }, [appliedCenter, controller]);
+      const initialCenter = userLocation ?? services.location.getLastKnownLocation() ?? DEFAULT_TLS;
+      controller.setCenter(initialCenter, 10);
+    }, [controller, services.location, userLocation]);
 
     useEffect(() => {
       if (!bounds) {
         return;
       }
-      cameraRef?.current?.fitBounds(bounds.ne, bounds.sw, [bounds.paddingTop, bounds.paddingRight, bounds.paddingBottom, bounds.paddingLeft]);
-    }, [bounds]);
+      controller?.fitBounds(bounds);
+    }, [controller, bounds]);
 
     const handleRegionMoved = useCallback(
       (feature: GeoJSON.Feature<GeoJSON.Point, RegionPayload>) => {
@@ -144,87 +120,28 @@ const AppMapView = forwardRef(
         ref={mapRef}
         style={styles.map}
         mapStyle={getMapStyleUrl(RNAppEnv)}
+        onLongPress={onLongPress ? e => onLongPress((e.geometry as Point).coordinates) : undefined}
+        onPress={onPress ? e => onPress((e.geometry as Point).coordinates) : undefined}
         onRegionDidChange={handleRegionMoved}
         // @ts-ignore
         onTouchEnd={() => {
           cameraRef.current?.setCamera({ centerCoordinate: undefined, padding: { paddingBottom: cameraPadding } });
-          setAppliedCenter(undefined);
         }}
         rotateEnabled={false}
         pitchEnabled={false}
         logoEnabled={false}
         attributionEnabled={false}>
+        <Images
+          images={{
+            rp: rp_icon,
+            deposit: rp_deposit_icon,
+            deposit_cluster: rp_deposit_cluster_icon
+          }}
+        />
         <MapLibreGL.Camera ref={cameraRef} />
         <MapControllerContext.Provider value={controller}>{children}</MapControllerContext.Provider>
         {userLocation && <UserLocation androidRenderMode="normal" />}
       </MapLibreGL.MapView>
-    );
-
-    return (
-      <View style={[styles.map]}>
-        <MapLibreGL.MapView
-          onLongPress={onLongPress ? e => onLongPress((e.geometry as Point).coordinates) : undefined}
-          onPress={onPress ? e => onPress((e.geometry as Point).coordinates) : undefined}
-          ref={mapRef}
-          // @ts-ignore
-          onTouchEnd={() => {
-            cameraRef.current?.setCamera({ centerCoordinate: undefined, padding: { paddingBottom: cameraPadding } });
-            setAppliedCenter(undefined);
-          }}
-          onRegionDidChange={handleRegionMoved}
-          rotateEnabled={false}
-          pitchEnabled={false}
-          style={styles.map}
-          mapStyle={getMapStyleUrl(RNAppEnv)}
-          logoEnabled={false}
-          attributionEnabled={false}>
-          <MapLibreGL.Camera
-            bounds={bounds}
-            zoomLevel={10}
-            // @ts-ignore
-            ref={cameraRef}
-          />
-          <Images
-            images={{
-              //  pickup: rp_pickup_icon,
-              rp: rp_icon,
-              //    suggestion: rp_suggestion_icon,
-              deposit: rp_deposit_icon,
-              deposit_cluster: rp_deposit_cluster_icon
-            }}
-          />
-          <MapControllerContext.Provider value={controller}>{children}</MapControllerContext.Provider>
-          {userLocation && <UserLocation androidRenderMode="normal" />}
-        </MapLibreGL.MapView>
-
-        {extra}
-        <View
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            paddingHorizontal: 2,
-            backgroundColor: "rgba(255,255,255,0.6)",
-            borderTopRightRadius: 2
-          }}>
-          <MapTilerLogo width={64} height={18} />
-        </View>
-        <View
-          style={{
-            position: "absolute",
-            bottom: 0,
-            right: 0,
-            paddingLeft: 2,
-            paddingRight: 8,
-            backgroundColor: "rgba(255,255,255,0.6)",
-            borderTopLeftRadius: 2
-          }}>
-          <Row spacing={4}>
-            <AppText style={{ fontSize: 10 }}>©MapTiler</AppText>
-            <AppText style={{ fontSize: 10 }}>©OpenStreetMap</AppText>
-          </Row>
-        </View>
-      </View>
     );
   }
 );
