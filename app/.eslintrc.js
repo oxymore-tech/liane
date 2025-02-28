@@ -18,7 +18,8 @@ module.exports = {
         destructuring: "any",
         ignoreReadBeforeAssign: false
       }
-    ]
+    ],
+    "no-console": "warn",
   },
   plugins: ["prettier"]
 };

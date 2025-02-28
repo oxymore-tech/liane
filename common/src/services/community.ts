@@ -27,7 +27,7 @@ export type CoLianeRequest = Entity & {
   isEnabled: boolean;
 };
 
-export type ResolvedLianeRequest = Omit<CoLianeRequest, "wayPoints" | "createdBy"> & { wayPoints: RallyingPoint[] } & { createdBy: User };
+export type ResolvedLianeRequest = Omit<CoLianeRequest, "wayPoints"> & { wayPoints: RallyingPoint[] };
 
 export type CoLianeMatch = {
   lianeRequest: ResolvedLianeRequest;

@@ -81,14 +81,14 @@ export const GeolocationSwitch = ({ liane: match }: { liane: Trip }) => {
         .then(location => calledWhenLocationChanges(location))
         .catch(error => {
           const { code, message } = error;
-          console.warn(code, message);
+          services.logger.warn("GEOLOC", code, message);
         });
     }, 10000);
 
     return () => {
       clearInterval(intervalId);
     };
-  }, [calledWhenLocationChanges, geolocPermission, isTracked]);
+  }, [calledWhenLocationChanges, geolocPermission, isTracked, services.logger]);
 
   const setGeolocalisationEnabled = async (enabled: boolean) => {
     const oldValue = isTracked;

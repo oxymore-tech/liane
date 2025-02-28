@@ -21,7 +21,7 @@ import { Accordion } from "@/screens/publish/Accordion.tsx";
 import { PageHeader } from "@/components/context/Navigation.tsx";
 import { ItinerarySearchForm, Notice } from "@/screens/ItinerarySearchForm.tsx";
 import { AppButton } from "@/components/base/AppButton.tsx";
-import { LianeQueryKey } from "@/screens/communities/CommunitiesScreen.tsx";
+import { LianeQueryKey } from "@/util/hooks/query.ts";
 
 type StepProps<T> = {
   onChange: (v: T) => void;

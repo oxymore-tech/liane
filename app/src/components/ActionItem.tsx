@@ -6,14 +6,14 @@ import { ColorValue, StyleSheet, View } from "react-native";
 import React from "react";
 import { AppColorPalettes, AppColors, WithAlpha } from "@/theme/colors";
 
-export interface ActionItemProps {
+export type ActionItemProps = {
   onPress: () => void;
   color?: ColorValue;
   iconName: IconName;
   text: string;
   disabled?: boolean;
   lines?: number;
-}
+};
 
 export const ActionListItem = ({ onPress, color = AppColorPalettes.gray[800], iconName, text }: ActionItemProps) => (
   <ListItem
@@ -68,7 +68,7 @@ export const Item = ({
 }: {
   leadingComponent: React.ReactElement;
   descriptionComponent: React.ReactElement;
-  onPress: () => void;
+  onPress?: () => void;
   disabled?: boolean;
 }) => {
   return (

@@ -24,7 +24,7 @@ export const HomeMapBottomSheetContainer = ({ lianes = [], onBottomPaddingChange
     (liane: CoLiane) => {
       const me = liane.members.find(m => m.user.id === user?.id);
       if (me) {
-        navigation.navigate("CommunitiesChat", { liane });
+        navigation.navigate("CommunitiesChat", { liane: liane.id! });
       } else {
         navigation.navigate("LianeMapDetail", { liane });
       }

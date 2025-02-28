@@ -11,7 +11,6 @@ import React from "react";
 export const DriverInfo = ({ user }: { user: User }) => {
   return (
     <Item
-      onPress={() => console.log("TODO profile")}
       descriptionComponent={
         <Column style={{ flexGrow: 1, flexShrink: 1 }}>
           <AppText style={{ fontSize: 16, fontWeight: "bold" }}>{user.pseudo} </AppText>

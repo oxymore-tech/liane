@@ -1,4 +1,4 @@
-import React, { useContext, useMemo, useState } from "react";
+import React, { useCallback, useContext, useMemo, useState } from "react";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
@@ -13,11 +13,15 @@ import { extractWaypointFromTo } from "@/util/hooks/lianeRequest";
 import { AppContext } from "@/components/context/ContextProvider";
 import { AppButton } from "@/components/base/AppButton.tsx";
 import { extractDays, extractTime } from "@/util/hooks/days.ts";
+import { useQueryClient } from "react-query";
+import { LianeQueryKey } from "@/util/hooks/query.ts";
 
 export const CommunitiesDetailScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesDetails">();
   const { services, user } = useContext(AppContext);
+  const queryClient = useQueryClient();
   const group = route.params.liane;
+
   const [myModalVisible, setMyModalVisible] = useState<boolean>(false);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
 
@@ -30,11 +34,12 @@ export const CommunitiesDetailScreen = () => {
     closeModalUser();
   };
 
-  const leaveLiane = async () => {
+  const leaveLiane = useCallback(async () => {
     setMyModalVisible(false);
     if (group && group.id) {
       try {
         const result = await services.community.leave(group.id);
+        await queryClient.invalidateQueries(LianeQueryKey);
         AppLogger.debug("COMMUNITIES", "Liane quittée avec succès", result);
         navigation.popToTop();
       } catch (e) {
@@ -43,7 +48,7 @@ export const CommunitiesDetailScreen = () => {
     } else {
       AppLogger.debug("COMMUNITIES", "Pas de liane ID lors de la tentative de départ de la liane", group);
     }
-  };
+  }, [group, services.community, queryClient, navigation]);
 
   return (
     <View>

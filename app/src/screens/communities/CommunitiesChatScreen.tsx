@@ -17,6 +17,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { MessageList } from "@/screens/communities/MessagesList.tsx";
 import ChatInput from "@/screens/communities/ChaInput.tsx";
 import { Wallpapers } from "@/components/base/Wallpapers.ts";
+import { useLianeQuery } from "@/util/hooks/query.ts";
 
 export const CommunitiesChatScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesChat">();
@@ -27,20 +28,11 @@ export const CommunitiesChatScreen = () => {
   const [messages, setMessages] = useState<LianeMessage[]>([]);
   const [paginationCursor, setPaginationCursor] = useState<string>();
   const [isSending, setIsSending] = useState(false);
-  const [liane, setLiane] = useState<CoLiane | undefined>(typeof route.params.liane === "string" ? undefined : route.params.liane);
 
   const [tripModalVisible, setTripModalVisible] = useState(false);
-  const [loading, setLoading] = useState(typeof route.params.liane === "string");
+  const [fetchingMessages, setFetchingMessages] = useState(true);
 
-  useSubscription<CoLiane>(
-    services.realTimeHub.lianeUpdates,
-    updatedLiane => {
-      if (updatedLiane.id === liane?.id) {
-        setLiane(updatedLiane);
-      }
-    },
-    [liane?.id]
-  );
+  const { data: liane } = useLianeQuery(route.params.liane);
 
   const sendMessage = useCallback(
     async (message: string) => {
@@ -69,19 +61,32 @@ export const CommunitiesChatScreen = () => {
     [liane, services.realTimeHub]
   );
 
-  const appendMessage = async (lianeId: Ref<CoLiane>, m: LianeMessage) => {
-    if (!liane) {
-      return;
-    }
-    if (liane?.id !== lianeId) {
-      return;
-    }
-    if (messages.find(msg => msg.id === m.id)) {
-      return;
-    }
-    setMessages(oldList => [m, ...oldList]);
-    services.realTimeHub.markAsRead(liane?.id, new Date().toISOString()).then();
-  };
+  const appendMessagesWithoutDuplicates = useCallback(
+    (newMessages: LianeMessage[]) => {
+      const ids = new Set(messages.map(m => m.id));
+      const filteredMessages = newMessages.filter(m => !ids.has(m.id));
+      const result = [...messages, ...filteredMessages];
+      setMessages(result);
+      return result.length !== messages.length;
+    },
+    [messages]
+  );
+
+  const appendMessage = useCallback(
+    async (lianeId: Ref<CoLiane>, m: LianeMessage) => {
+      if (!liane) {
+        return;
+      }
+      if (liane?.id !== lianeId) {
+        return;
+      }
+      if (!appendMessagesWithoutDuplicates([m])) {
+        return;
+      }
+      services.realTimeHub.markAsRead(liane?.id, new Date().toISOString()).then();
+    },
+    [appendMessagesWithoutDuplicates, liane, services.realTimeHub]
+  );
 
   const trip = useQuery(TripQueryKey, async () => await services.community.getIncomingTrips());
 
@@ -98,13 +103,13 @@ export const CommunitiesChatScreen = () => {
       return;
     }
     try {
-      setLoading(true);
+      setFetchingMessages(true);
       const r = await services.community.getMessages(liane.id!, { limit: 30, asc: false });
       setMessages(r.data);
       setPaginationCursor(r.next);
       services.realTimeHub.markAsRead(liane.id!, new Date().toISOString()).then();
     } finally {
-      setLoading(false);
+      setFetchingMessages(false);
     }
   }, [liane, services.community, services.realTimeHub]);
 
@@ -112,15 +117,13 @@ export const CommunitiesChatScreen = () => {
     fetchMessages().then();
   }, [fetchMessages]);
 
-  const fetchNextPage = async () => {
+  const fetchNextPage = useCallback(async () => {
     if (paginationCursor && liane && liane.id) {
       const paginatedResult = await services.community.getMessages(liane.id, { cursor: paginationCursor, limit: 30 });
-      setMessages(oldList => {
-        return [...oldList, ...paginatedResult.data];
-      });
+      appendMessagesWithoutDuplicates(paginatedResult.data);
       setPaginationCursor(paginatedResult.next);
     }
-  };
+  }, [appendMessagesWithoutDuplicates, liane, paginationCursor, services.community]);
 
   const me = useMemo(() => liane?.members.find(m => m.user.id === user!.id), [liane?.members, user]);
   const name = me?.lianeRequest?.name ?? "";
@@ -146,18 +149,6 @@ export const CommunitiesChatScreen = () => {
     },
     [liane, queryClient, services.trip]
   );
-
-  useEffect(() => {
-    setLiane(undefined);
-    if (typeof route.params.liane === "string") {
-      services.community
-        .get(route.params.liane)
-        .then(setLiane)
-        .finally(() => setLoading(false));
-      return;
-    }
-    setLiane(route.params.liane);
-  }, [route.params, services.community]);
 
   useEffect(() => {
     services.realTimeHub
@@ -193,7 +184,7 @@ export const CommunitiesChatScreen = () => {
             messages={messages}
             fetchMessages={fetchMessages}
             fetchNextPage={fetchNextPage}
-            loading={loading}
+            loading={fetchingMessages}
             incomingTrips={trip?.data}
           />
         </GestureHandlerRootView>

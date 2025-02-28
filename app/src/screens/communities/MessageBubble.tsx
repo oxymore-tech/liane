@@ -113,7 +113,7 @@ export const MessageBubble = ({ liane, message, isSender, renderSender, activeTr
             {createdAt}
           </AppText>
         </Row>
-        {message.content.type === "MemberRequested" && pendingMember && (
+        {message.content.type === "MemberRequested" && pendingMember && message.createdAt === pendingMember.joinedAt && (
           <Center>
             <AppButton onPress={handlePendingMember} color={AppColors.secondaryColor} value="Voir la demande" loading={loading} />
           </Center>
