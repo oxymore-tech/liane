@@ -173,7 +173,8 @@ export class HubServiceClient extends AbstractHubService {
     });
   }
 
-  private receiveMessage<TChatType extends ChatType>(chatType: TChatType, conversationId: string, message: MessageTypeOf<TChatType>) {
+  private async receiveMessage<TChatType extends ChatType>(chatType: TChatType, conversationId: string, message: MessageTypeOf<TChatType>) {
+    await this.askForOverview();
     if (!this.currentChat) {
       return false;
     }

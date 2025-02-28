@@ -65,7 +65,7 @@ export const CommunitiesChatScreen = () => {
     (newMessages: LianeMessage[]) => {
       const ids = new Set(messages.map(m => m.id));
       const filteredMessages = newMessages.filter(m => !ids.has(m.id));
-      const result = [...messages, ...filteredMessages];
+      const result = [...filteredMessages, ...messages];
       setMessages(result);
       return result.length !== messages.length;
     },
@@ -99,15 +99,16 @@ export const CommunitiesChatScreen = () => {
   );
 
   const fetchMessages = useCallback(async () => {
-    if (!liane) {
+    if (!liane?.id) {
       return;
     }
     try {
       setFetchingMessages(true);
-      const r = await services.community.getMessages(liane.id!, { limit: 30, asc: false });
+      const r = await services.community.getMessages(liane.id, { limit: 30, asc: false });
       setMessages(r.data);
       setPaginationCursor(r.next);
-      services.realTimeHub.markAsRead(liane.id!, new Date().toISOString()).then();
+      services.realTimeHub.markAsRead(liane.id, new Date().toISOString()).then();
+    } catch (e) {
     } finally {
       setFetchingMessages(false);
     }

@@ -145,7 +145,20 @@ type HeaderProps = {
 const Header = ({ title, fixed }: HeaderProps) => {
   const date = useMemo(() => {
     const sectionDate = new Date(title);
+
     if (isWithinLastWeek(sectionDate)) {
+      const today = new Date();
+      const yesterday = new Date();
+      yesterday.setDate(today.getDate() - 1);
+
+      if (sectionDate.getDate() === today.getDate()) {
+        return "Aujourd'hui";
+      }
+
+      if (sectionDate.getDate() === yesterday.getDate()) {
+        return "Hier";
+      }
+
       return capitalize(AppLocalization.formatDay(sectionDate));
     }
     return capitalize(AppLocalization.formatDateUserFriendly(sectionDate));
