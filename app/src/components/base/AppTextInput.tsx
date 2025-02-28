@@ -1,5 +1,5 @@
 import React, { ForwardedRef, forwardRef } from "react";
-import { StyleSheet, TextInput, TextInputProps, View } from "react-native";
+import { Platform, StyleSheet, TextInput, TextInputProps, View } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { Row } from "@/components/base/AppLayout";
 import { AppStyles } from "@/theme/styles";
@@ -22,7 +22,7 @@ export const AppTextInput = forwardRef(
     return (
       <Row spacing={8} style={styles.container}>
         {leading}
-        <View style={{ flexDirection: "column", height: 52, gap: 0, flex: 1 }}>
+        <View style={{ flexDirection: "column", height: 52, flex: 1, alignItems: "flex-start" }}>
           <TextInput
             placeholder={placeholder}
             placeholderTextColor={placeholderTextColor ?? AppColorPalettes.gray[400]}
@@ -37,7 +37,7 @@ export const AppTextInput = forwardRef(
             {...props}
           />
           {subText && (
-            <AppText style={styles.subText} ellipsizeMode="middle">
+            <AppText style={[styles.subText, { left: Platform.OS === "android" ? 4 : 0 }]} ellipsizeMode="middle">
               {subText}
             </AppText>
           )}
@@ -66,7 +66,6 @@ const styles = StyleSheet.create({
   subText: {
     position: "absolute",
     bottom: 8,
-    left: 4,
     fontSize: 14,
     color: AppColorPalettes.gray[500]
   }
