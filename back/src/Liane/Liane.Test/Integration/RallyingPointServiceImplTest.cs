@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
-using Liane.Api.Util.Ref;
 using Liane.Test.Util;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
@@ -41,18 +40,30 @@ public sealed class RallyingPointServiceImplTest : BaseIntegrationTest
   }
 
   [Test]
-  public async Task ShouldDeleteUnusedOnly()
+  public async Task ShouldDeleteUnusedOnlyOtherwiseShouldDisable()
   {
     var (_, _, originalPoints, originalCount) = await testedService.List(new RallyingPointFilter { Limit = 100 });
     var lianeService = ServiceProvider.GetRequiredService<ITripService>();
     await lianeService.Create(new TripRequest(null, null!, DateTime.Now.AddHours(1), null, 1, originalPoints[0], originalPoints[1]));
+    
+    {
+      var deleted = await testedService.Delete(originalPoints[0]);
+      Assert.IsFalse(deleted);
+    }
+    
+    {
+      var deleted = await testedService.Delete(originalPoints[1]);
+      Assert.IsFalse(deleted);
+    }
+    
+    {
+      var deleted = await testedService.Delete(originalPoints[2]);
+      Assert.IsTrue(deleted);
+    }
 
-    var idsToDelete = originalPoints.Skip(2).Select(r => (Ref<RallyingPoint>)r);
-    var deleted = await testedService.DeleteMany(idsToDelete);
-    Assert.AreEqual(originalCount - 2, deleted);
     var (_, _, newPoints, newCount) = await testedService.List(new RallyingPointFilter { Limit = 100 });
-    Assert.AreEqual(2, newCount);
-    CollectionAssert.AreEquivalent(newPoints, originalPoints.Take(2));
+    Assert.AreEqual(originalCount - 3, newCount);
+    CollectionAssert.AreEquivalent(newPoints, originalPoints.Skip(3));
   }
 
   [Test]

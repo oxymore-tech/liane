@@ -156,32 +156,27 @@ export const RallyingPointEdition = ({ point, position, onClose, onSave }: Props
             <ButtonWithLoadingAction
               disabled={!position && !point.metadata && (!isDirty || !isValid)}
               color={point.metadata ? "green" : "blue"}
-              action={methods.handleSubmit(
-                async p => {
-                  let action: () => Promise<void>;
-                  if (point.metadata) {
-                    action = async () => {
-                      // @ts-ignore
-                      await rallyingPoint.create(p);
-                      // @ts-ignore
-                      await rallyingPoint.deleteRequest(p.id);
-                    };
+              action={methods.handleSubmit(async p => {
+                let action: () => Promise<void>;
+                if (point.metadata) {
+                  action = async () => {
+                    // @ts-ignore
+                    await rallyingPoint.create(p);
+                    // @ts-ignore
+                    await rallyingPoint.deleteRequest(p.id);
+                  };
+                } else {
+                  if (point.id) {
+                    // @ts-ignore
+                    action = () => rallyingPoint.update(point.id, p);
                   } else {
-                    if (point.id) {
-                      // @ts-ignore
-                      action = () => rallyingPoint.update(point.id, p);
-                    } else {
-                      // @ts-ignore
-                      action = () => rallyingPoint.create(p);
-                    }
+                    // @ts-ignore
+                    action = () => rallyingPoint.create(p);
                   }
-                  await action();
-                  onSave && onSave();
-                },
-                err => {
-                  console.warn(err);
                 }
-              )}>
+                await action();
+                onSave && onSave();
+              })}>
               {point.metadata ? "Créer" : "Enregistrer"}
             </ButtonWithLoadingAction>
             {point.id && (
@@ -239,7 +234,7 @@ function ExampleAdditionalContent({ isNew, onConfirm, onCancel }: ExampleAdditio
       <div className="mb-4 mt-2 text-sm text-cyan-700 dark:text-cyan-800">
         {isNew
           ? "Vous allez supprimer la demande de point de ralliement, êtes-vous sûr(e) ?"
-          : "Vous allez supprimer le point de ralliement, êtes-vous sûr(e) ?"}
+          : "Vous allez supprimer le point de ralliement, êtes-vous sûr(e) ?  (Si le point est utilisé il sera simplement désactivé)"}
       </div>
       <div className="flex">
         <button

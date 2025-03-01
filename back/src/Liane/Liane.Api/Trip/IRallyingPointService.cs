@@ -29,11 +29,7 @@ public interface IRallyingPointService : ICrudService<RallyingPoint>
 
   Task ExportCsv(Stream output, RallyingPointFilter rallyingPointFilter);
   Task ImportCsv(Stream input);
-
-  Task SetActive(IEnumerable<Ref<RallyingPoint>> points, bool active);
-  Task<int> DeleteMany(IEnumerable<Ref<RallyingPoint>> points);
-  Task<int> DeleteMany(RallyingPointFilter rallyingPointFilter);
-  Task UpdateStats(Ref<RallyingPoint> point, DateTime lastUsage, int incUsageCount = 1);
+  
   Task UpdateStats(IEnumerable<Ref<RallyingPoint>> point, DateTime lastUsage, int incUsageCount = 1);
   Task<RallyingPointStats> GetStats(Ref<RallyingPoint> point);
   Task<FeatureCollection> GetDepartment(string n);

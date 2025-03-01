@@ -69,9 +69,9 @@ export function RallyingPointLayer({ features, selectedFeatures = [], pin }: Ral
         }}
         paint={{
           "text-halo-width": 1.5,
-          "text-color": ["case", ["in", ["get", "id"], ["literal", selectedFeatures]], "#0891b2", "#52070c"],
+          "text-color": ["case", ["in", ["get", "id"], ["literal", selectedFeatures]], "#0891b2", ["get", "isActive"], "#52070c", "#333333"],
           "text-halo-color": "#fff",
-          "icon-color": ["case", ["in", ["get", "id"], ["literal", selectedFeatures]], "#0891b2", "#ff787b"],
+          "icon-color": ["case", ["in", ["get", "id"], ["literal", selectedFeatures]], "#0891b2", ["get", "isActive"], "#ff787b", "#666666"],
           "icon-halo-color": pin ? "#1e2939" : "#fff",
           "icon-halo-width": 0.6
         }}

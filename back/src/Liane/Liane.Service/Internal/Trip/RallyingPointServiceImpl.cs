@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Dapper;
 using GeoJSON.Text.Feature;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
@@ -75,7 +76,7 @@ public sealed class RallyingPointServiceImpl(IOsrmService osrmService, PostgisDa
 
   private static Filter<RallyingPoint> GetFilter(RallyingPointFilter rallyingPointFilter)
   {
-    var filter = Filter<RallyingPoint>.Empty;
+    var filter = Filter<RallyingPoint>.Where(r => r.IsActive, ComparisonOperator.Eq, true);
 
     if (rallyingPointFilter.Search is not null)
     {
@@ -156,8 +157,13 @@ public sealed class RallyingPointServiceImpl(IOsrmService osrmService, PostgisDa
   public async Task<bool> Update(Ref<RallyingPoint> reference, RallyingPoint inputDto)
   {
     using var connection = db.NewConnection();
-    var updated = await connection.UpdateAsync(inputDto);
-    return updated > 0;
+    var updated = await connection.UpdateAsync(inputDto) > 0;
+    if (updated)
+    {
+      pointCache.Set(reference, inputDto);
+    }
+
+    return updated;
   }
 
   public async Task<RallyingPoint?> Snap(LatLng position, int radius = 100)
@@ -187,8 +193,41 @@ public sealed class RallyingPointServiceImpl(IOsrmService osrmService, PostgisDa
 
   public async Task<bool> Delete(Ref<RallyingPoint> reference)
   {
-    return await DeleteMany([reference]) > 0;
+    using var connection = db.NewConnection();
+    var tx = connection.BeginTransaction();
+
+    var toDelete = reference.Id;
+
+    var used = await connection.QuerySingleAsync<int>("""
+                                                      SELECT count(*) FROM route r
+                                                      WHERE @toDelete = ANY(r.way_points)
+                                                      """, new { toDelete }, tx);
+
+    used += await connection.QuerySingleAsync<int>("""
+                                                   SELECT count(*) FROM segment r
+                                                   WHERE r.from_id = @toDelete OR r.to_id = @toDelete
+                                                   """, new { toDelete }, tx);
+
+    var filter = Filter<RallyingPoint>.Where(r => r.Id, ComparisonOperator.Eq, toDelete);
+
+    var deleted = false;
+    if (used == 0)
+    {
+      deleted = await connection.DeleteAsync(filter, tx) > 0;
+    }
+    else
+    {
+      await connection.UpdateAsync(Query.Update<RallyingPoint>()
+        .Set(r => r.IsActive, false)
+        .Where(filter), tx);
+    }
+
+    tx.Commit();
+    pointCache.Remove(toDelete);
+
+    return deleted;
   }
+
 
   public async Task<RallyingPoint> Create(RallyingPoint obj)
   {
@@ -213,18 +252,6 @@ public sealed class RallyingPointServiceImpl(IOsrmService osrmService, PostgisDa
     );
   }
 
-  public Task<int> DeleteMany(IEnumerable<Ref<RallyingPoint>> points)
-  {
-    var idsFilter = Filter<RallyingPoint>.Where(r => r.Id, ComparisonOperator.In, points.Select(p => p.Id));
-    return DeleteMany(idsFilter);
-  }
-
-  public Task<int> DeleteMany(RallyingPointFilter rallyingPointFilter)
-  {
-    var filter = GetFilter(rallyingPointFilter);
-    return DeleteMany(filter);
-  }
-
   public async Task<RallyingPointStats> GetStats(Ref<RallyingPoint> point)
   {
     try
@@ -245,14 +272,6 @@ public sealed class RallyingPointServiceImpl(IOsrmService osrmService, PostgisDa
     var query = Query.Select<RallyingPoint>()
       .Where(filter);
     return (await connection.QueryAsync(query)).ToFeatureCollection();
-  }
-
-  private async Task<int> DeleteMany(Filter<RallyingPoint> filter)
-  {
-    using var connection = db.NewConnection();
-    const string usedPointsIds = "select id from rallying_point_stats union select from_id from segment union select to_id from segment";
-    var usedPointsFilter = Filter<RallyingPoint>.Where(r => r.Id, ComparisonOperator.Nin, usedPointsIds);
-    return await connection.DeleteAsync(filter & usedPointsFilter);
   }
 
   public async Task UpdateStats(Ref<RallyingPoint> point, DateTime lastUsage, int incUsageCount = 1)
