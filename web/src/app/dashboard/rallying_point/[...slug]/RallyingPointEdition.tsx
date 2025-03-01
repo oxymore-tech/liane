@@ -233,8 +233,8 @@ function ExampleAdditionalContent({ isNew, onConfirm, onCancel }: ExampleAdditio
     <>
       <div className="mb-4 mt-2 text-sm text-cyan-700 dark:text-cyan-800">
         {isNew
-          ? "Vous allez supprimer la demande de point de ralliement, êtes-vous sûr(e) ? (Si le point est utilisé il sera simplement désactivé)"
-          : "Vous allez supprimer le point de ralliement, êtes-vous sûr(e) ?"}
+          ? "Vous allez supprimer la demande de point de ralliement, êtes-vous sûr(e) ?"
+          : "Vous allez supprimer le point de ralliement, êtes-vous sûr(e) ?  (Si le point est utilisé il sera simplement désactivé)"}
       </div>
       <div className="flex">
         <button
