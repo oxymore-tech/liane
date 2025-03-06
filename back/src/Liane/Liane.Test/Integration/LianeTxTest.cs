@@ -101,7 +101,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
       var liane = await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id);
       Assert.IsNull(liane);
 
-      await Task.Delay(200);
+      await Task.Delay(50);
 
       var dateTimes = pushService.AssertMessage(
         jayBee.Id, $"{gugu.Pseudo} souhaite rejoindre la liane"
@@ -135,7 +135,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
       var deleted = await tested.Reject(lianeGugu.Id, lianeJayBee.Id);
       Assert.IsTrue(deleted);
 
-      await Task.Delay(200);
+      await Task.Delay(50);
     }
 
     {
@@ -188,7 +188,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
       liane = (await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id))!;
     }
 
-    await Task.Delay(200);
+    await Task.Delay(50);
 
     pushService.AssertMessage(jayBee.Id,
       $"{jayBee.Pseudo} a rejoint la liane",
@@ -245,7 +245,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
       Assert.IsTrue(rejected);
     }
 
-    await Task.Delay(200);
+    await Task.Delay(50);
 
     pushService.AssertPush(
       gugu.Id, "Vous n'avez pas été accepté dans la liane"
@@ -280,8 +280,8 @@ public sealed class LianeTxTest : BaseIntegrationTest
       await tested.JoinRequest(lianeMathilde.Id, lianeJayBee.Id);
     }
 
-    await Task.Delay(200);
-    
+    await Task.Delay(50);
+
     {
       currentContext.SetCurrentUser(jayBee);
       var liane = await tested.JoinRequest(lianeMathilde.Id, lianeJayBee.Id);
@@ -290,15 +290,15 @@ public sealed class LianeTxTest : BaseIntegrationTest
       CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, mathilde.Id), liane.Members.Select(m => m.User.Id));
     }
 
-    await Task.Delay(200);
-    
+    await Task.Delay(50);
+
     {
       currentContext.SetCurrentUser(gugu);
       await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id);
     }
 
-    await Task.Delay(200);
-    
+    await Task.Delay(50);
+
     {
       currentContext.SetCurrentUser(jayBee);
       var liane = await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id);
@@ -307,7 +307,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
       CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, mathilde.Id, gugu.Id), liane.Members.Select(m => m.User.Id));
     }
 
-    await Task.Delay(200);
+    await Task.Delay(50);
 
     pushService.AssertNoPush();
 
@@ -353,7 +353,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
       Assert.IsTrue(rejected);
     }
 
-    await Task.Delay(200);
+    await Task.Delay(50);
 
     pushService.AssertPush(
       gugu.Id, "Vous n'avez pas été accepté dans la liane"
@@ -384,7 +384,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
     }
 
     await Task.Delay(50);
-    
+
     {
       currentContext.SetCurrentUser(jayBee);
       var liane = await tested.JoinRequest(lianeMathilde.Id, lianeJayBee.Id);
@@ -394,14 +394,14 @@ public sealed class LianeTxTest : BaseIntegrationTest
     }
 
     await Task.Delay(50);
-    
+
     {
       currentContext.SetCurrentUser(gugu);
       await tested.JoinRequest(lianeMathilde.Id, lianeGugu.Id);
     }
 
     await Task.Delay(50);
-    
+
     {
       currentContext.SetCurrentUser(jayBee);
       var liane = await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id);
@@ -448,7 +448,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
       CollectionAssert.AreEquivalent(ImmutableList.Create(gugu.Id, mathilde.Id), liane.Members.Select(m => m.User.Id));
     }
 
-    await Task.Delay(200);
+    await Task.Delay(50);
 
     pushService.AssertMessage(
       gugu.Id,
@@ -482,8 +482,8 @@ public sealed class LianeTxTest : BaseIntegrationTest
       await tested.JoinRequest(lianeMathilde.Id, lianeJayBee.Id);
     }
 
-    await Task.Delay(200);
-    
+    await Task.Delay(50);
+
     {
       currentContext.SetCurrentUser(jayBee);
       var liane = await tested.JoinRequest(lianeMathilde.Id, lianeJayBee.Id);
@@ -492,14 +492,14 @@ public sealed class LianeTxTest : BaseIntegrationTest
       CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, mathilde.Id), liane.Members.Select(m => m.User.Id));
     }
 
-    await Task.Delay(200);
+    await Task.Delay(50);
 
     {
       currentContext.SetCurrentUser(gugu);
       await tested.JoinRequest(lianeMathilde.Id, lianeGugu.Id);
     }
 
-    await Task.Delay(200);
+    await Task.Delay(50);
 
     {
       currentContext.SetCurrentUser(mathilde);
@@ -509,7 +509,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
       CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, mathilde.Id, gugu.Id), liane.Members.Select(m => m.User.Id));
     }
 
-    await Task.Delay(200);
+    await Task.Delay(50);
 
     pushService.AssertNoPush();
 
@@ -529,7 +529,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
   [Test]
   public async Task GuguShouldJoinThenLeftJayBeeLianeTheLianeIsEmptied()
   {
-    var (lianeGugu, lianeJayBee, _, _, _, _, _, _) = await SetupDefaultLianes();
+    var (lianeGugu, lianeJayBee, lianeMathilde, lianeSiloe, _, _, _, _) = await SetupDefaultLianes();
 
     {
       currentContext.SetCurrentUser(gugu);
@@ -537,7 +537,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
       Assert.IsNull(liane);
     }
 
-    await Task.Delay(200);
+    await Task.Delay(50);
 
     {
       currentContext.SetCurrentUser(jayBee);
@@ -547,7 +547,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
       CollectionAssert.AreEquivalent(ImmutableList.Create(jayBee.Id, gugu.Id), liane.Members.Select(m => m.User.Id));
     }
 
-    await Task.Delay(200);
+    await Task.Delay(50);
 
     {
       currentContext.SetCurrentUser(jayBee);
@@ -555,7 +555,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
       Assert.IsTrue(result);
     }
 
-    await Task.Delay(200);
+    await Task.Delay(50);
 
     {
       currentContext.SetCurrentUser(gugu);
@@ -565,7 +565,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
       CollectionAssert.AreEquivalent(ImmutableList.Create(gugu.Id), liane.Members.Select(m => m.User.Id));
     }
 
-    await Task.Delay(200);
+    await Task.Delay(50);
 
     {
       currentContext.SetCurrentUser(jayBee);
@@ -573,25 +573,33 @@ public sealed class LianeTxTest : BaseIntegrationTest
       Assert.IsNull(liane);
     }
 
-    await Task.Delay(200);
+    await Task.Delay(50);
+    
+    var ats = pushService.AssertMessage(
+      gugu.Id,
+      $"{jayBee.Pseudo} a quitté la liane",
+      $"{jayBee.Pseudo} souhaite rejoindre la liane"
+    );
+    var joinedAt = ats[1];
 
     {
       currentContext.SetCurrentUser(jayBee);
       var list = await tested.Match();
 
-      if (list[0].State is not LianeState.Detached detached)
-      {
-        Assert.Fail("Should be detached");
-        return;
-      }
-
-      if (detached.Matches[0] is not Match.Single single)
-      {
-        Assert.Fail("Should be single");
-        return;
-      }
-
-      Assert.IsInstanceOf<JoinRequest.Pending>(single.JoinRequest);
+      AssertMatchesEquals(list,
+        new LianeMatch(lianeJayBee, new LianeState.Detached(ImmutableList.Create<Match>(
+          new Match.Single(lianeMathilde.Id, ImmutableList.Create(mathilde), "Mathilde", DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.FloracFormares,
+            LabeledPositions.BalsiegeParkingEglise,
+            0.704377413f,
+            false, null),
+          new Match.Single(lianeSiloe.Id, ImmutableList.Create(siloe), "Siloe", DayOfWeekFlag.All, DefaultTimeRange, LabeledPositions.IspagnacParking,LabeledPositions.Mende, 0.686026692f,
+            false, null),
+          new Match.Single(lianeGugu.Id, ImmutableList.Create(gugu), "Gugu", DayOfWeekFlag.All, DefaultTimeRange, 
+            LabeledPositions.QuezacParking,
+            LabeledPositions.Mende,
+            0.651186168f,
+            false, new JoinRequest.Pending(joinedAt))
+        ))));
     }
 
     {

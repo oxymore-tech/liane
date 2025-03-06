@@ -141,7 +141,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     {
       var first = rawMatches.First();
 
-      var joinRequest = GetJoinRequest(mapParams, first);
+      var joinRequest = GetJoinRequest(mapParams, lianeKey);
       if (joinRequest is null && (matchingPoints.Value.Score < MinScore || matchingPoints.Value.Reverse))
       {
         return null;
@@ -153,7 +153,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
       }
 
       return new Match.Single(
-        lianeKey,
+        first.LianeRequest,
         liane.GetMembers(),
         first.Name,
         weekDays,
@@ -190,22 +190,16 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     }
   }
 
-  private static JoinRequest? GetJoinRequest(MapParams mapParams, LianeRawMatch first)
+  private static JoinRequest? GetJoinRequest(MapParams mapParams, Guid foreign)
   {
-    if (mapParams.PendingJoinRequests.TryGetValue(first.LianeRequest, out var d))
+    if (mapParams.PendingJoinRequests.TryGetValue(foreign, out var d))
     {
       return new JoinRequest.Pending(d);
     }
 
-    if (mapParams.ReceivedJoinRequests.TryGetValue(first.LianeRequest, out var d2))
+    if (mapParams.ReceivedJoinRequests.TryGetValue(foreign, out var d2))
     {
       return new JoinRequest.Received(d2);
-    }
-
-    // ce cas est un cas spécial ou j'avais quitté ma propre liane et j'ai demandé à la rejoindre (une demande pending de ma part)
-    if (mapParams.PendingJoinRequests.TryGetValue(first.From, out var d3))
-    {
-      return new JoinRequest.Pending(d3);
     }
 
     return null;
