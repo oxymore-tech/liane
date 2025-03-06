@@ -82,7 +82,9 @@ export const MatchListScreen = () => {
         refreshControl={<RefreshControl refreshing={isFetching || !state} onRefresh={refetch} />}
         ListEmptyComponent={
           <Center>
-            <AppText style={{ color: AppColors.black, fontSize: 16, fontWeight: "bold" }}>Nous n'avons rien à vous proposer :-(</AppText>
+            {!isFetching && !!state && (
+              <AppText style={{ color: AppColors.black, fontSize: 16, fontWeight: "bold" }}>Nous n'avons rien à vous proposer :-(</AppText>
+            )}
           </Center>
         }
         sections={sections}

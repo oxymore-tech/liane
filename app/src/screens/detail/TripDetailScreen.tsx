@@ -19,7 +19,6 @@ import { useAppNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
 import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
 import { useQuery } from "react-query";
-import { TripDetailQueryKey } from "@/screens/user/TripScheduleScreen";
 import { AppText } from "@/components/base/AppText";
 import { TripGeolocationProvider, useCarDelay, useTrackingInfo } from "@/screens/detail/TripGeolocationProvider";
 import { LianeMatchUserRouteLayer } from "@/components/map/layers/LianeMatchRouteLayer";
@@ -30,11 +29,11 @@ import { UserPicture } from "@/components/UserPicture";
 import { TripStatusView } from "@/components/trip/TripStatusView.tsx";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
-import { GeolocationSwitch } from "@/screens/detail/components/GeolocationSwitch";
 import { AppLocalization } from "@/api/i18n";
 import { WayPointsView } from "@/components/trip/WayPointsView";
 import { LianeProofDisplay } from "@/components/map/layers/LianeProofDisplay";
 import { LocationMarker } from "@/screens/detail/components/LocationMarker";
+import { TripDetailQueryKey } from "@/util/hooks/query.ts";
 
 export const TripDetailScreen = () => {
   const { services, user } = useContext(AppContext);

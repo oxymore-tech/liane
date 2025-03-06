@@ -2,10 +2,9 @@ import React, { PropsWithChildren, useContext } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 import { useQueryClient } from "react-query";
 import { CoLiane, Trip } from "@liane/common";
-import { TripQueryKey } from "@/screens/user/TripScheduleScreen";
 import { useSubscription } from "@/util/hooks/subscription";
 import { LianeGeolocation } from "@/api/service/location";
-import { LianeQueryKey } from "@/util/hooks/query.ts";
+import { LianeQueryKey, TripQueryKey } from "@/util/hooks/query.ts";
 
 export type IQueryUpdater = {};
 

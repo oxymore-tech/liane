@@ -70,7 +70,7 @@ export const LianeMapDetailScreen = () => {
     } else {
       services.community.getTrip(lianeId, lianeRequest?.id).then(setWayPoints).catch(setError);
     }
-  }, [lianeId, lianeRequest, services.community]);
+  }, [lianeId, lianeRequest, matchOrLiane, services.community]);
 
   const mapBounds = useMemo(() => {
     if (wayPoints.length === 0) {

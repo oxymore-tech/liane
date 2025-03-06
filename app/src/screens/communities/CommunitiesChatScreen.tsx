@@ -9,7 +9,6 @@ import { AppContext } from "@/components/context/ContextProvider";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppLogger } from "@/api/logger";
 import { useSubscription } from "@/util/hooks/subscription.ts";
-import { TripQueryKey } from "@/screens/user/TripScheduleScreen";
 import { useQuery, useQueryClient } from "react-query";
 import { AppButton } from "@/components/base/AppButton";
 import { LaunchTripModal } from "@/screens/communities/LaunchTripModal";
@@ -17,7 +16,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { MessageList } from "@/screens/communities/MessagesList.tsx";
 import ChatInput from "@/screens/communities/ChaInput.tsx";
 import { Wallpapers } from "@/components/base/Wallpapers.ts";
-import { useLianeQuery } from "@/util/hooks/query.ts";
+import { TripQueryKey, useLianeQuery } from "@/util/hooks/query.ts";
 
 export const CommunitiesChatScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesChat">();

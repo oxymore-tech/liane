@@ -36,5 +36,10 @@ public sealed class PushUpdateHandler(
     {
       await hubService.PushLianeUpdateTo(liane, member.User);
     }
+
+    if (e.Content is IAddressedTo addressedTo)
+    {
+      await hubService.PushLianeUpdateTo(liane, addressedTo.User);
+    }
   }
 }

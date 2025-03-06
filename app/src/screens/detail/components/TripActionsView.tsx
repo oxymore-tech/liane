@@ -10,13 +10,13 @@ import { Column } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { DebugIdView } from "@/components/base/DebugIdView";
 import { SlideUpModal } from "@/components/modal/SlideUpModal";
-import { TripQueryKey } from "@/screens/user/TripScheduleScreen";
 import { AppColors, ContextualColors, defaultTextColor } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { ChoiceModal } from "@/components/modal/ChoiceModal";
 import { CommonActions } from "@react-navigation/native";
 import { TimeView } from "@/components/TimeView";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
+import {TripQueryKey} from "@/util/hooks/query.ts";
 
 export const TripActionsView = ({ match }: { match: LianeMatch }) => {
   const trip = match.trip;

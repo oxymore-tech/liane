@@ -13,6 +13,11 @@ public sealed record LianeMessage(
   MessageContent Content
 ) : IEntity<Guid>;
 
+public interface IAddressedTo
+{
+  Ref<User> User { get; }
+}
+
 [Union]
 public abstract record MessageContent
 {
@@ -29,13 +34,13 @@ public abstract record MessageContent
 
   public sealed record LianeRequestModified(string Value, Ref<LianeRequest> LianeRequest) : MessageContent(Value);
 
-  public sealed record MemberRequested(string Value, Ref<User> User, Ref<LianeRequest> LianeRequest) : MessageContent(Value);
+  public sealed record MemberRequested(string Value, Ref<User> User, Ref<LianeRequest> LianeRequest) : MessageContent(Value), IAddressedTo;
 
-  public sealed record MemberAdded(string Value, Ref<User> User, Ref<LianeRequest> LianeRequest) : MessageContent(Value);
+  public sealed record MemberAdded(string Value, Ref<User> User, Ref<LianeRequest> LianeRequest) : MessageContent(Value), IAddressedTo;
 
-  public sealed record MemberRejected(string Value, Ref<User> User) : MessageContent(Value);
+  public sealed record MemberRejected(string Value, Ref<User> User) : MessageContent(Value), IAddressedTo;
 
-  public sealed record MemberLeft(string Value, Ref<User> User) : MessageContent(Value);
+  public sealed record MemberLeft(string Value, Ref<User> User) : MessageContent(Value), IAddressedTo;
 
   public abstract record TripMessage(string? Value, Ref<ApiTrip> Trip) : MessageContent(Value);
 
@@ -47,9 +52,9 @@ public abstract record MessageContent
 
   public sealed record GeolocationLevelChanged(Ref<ApiTrip> Trip, GeolocationLevel Level) : TripMessage(null, Trip);
 
-  public sealed record MemberJoinedTrip(string Value, Ref<User> User, Ref<ApiTrip> Trip, bool TakeReturn) : TripMessage(Value, Trip);
+  public sealed record MemberJoinedTrip(string Value, Ref<User> User, Ref<ApiTrip> Trip, bool TakeReturn) : TripMessage(Value, Trip), IAddressedTo;
 
-  public sealed record MemberLeftTrip(string Value, Ref<User> User, Ref<ApiTrip> Trip) : TripMessage(Value, Trip);
+  public sealed record MemberLeftTrip(string Value, Ref<User> User, Ref<ApiTrip> Trip) : TripMessage(Value, Trip), IAddressedTo;
 
   public sealed record MemberHasStarted(string Value, Ref<ApiTrip> Trip) : TripMessage(Value, Trip);
 

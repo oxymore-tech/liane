@@ -13,6 +13,7 @@ import { TripItem } from "@/screens/user/TripItem.tsx";
 import { useAppNavigation } from "@/components/context/routing.ts";
 import { AppLocalization } from "@/api/i18n.ts";
 import { StaticScreenProps } from "@react-navigation/native";
+import { TripQueryKey } from "@/util/hooks/query.ts";
 
 function nowAtNoon() {
   const date = new Date();
@@ -117,6 +118,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export const TripQueryKey = "trip";
-export const TripDetailQueryKey = (id: Ref<Trip>) => ["trip", id];
 export default TripScheduleScreen;
