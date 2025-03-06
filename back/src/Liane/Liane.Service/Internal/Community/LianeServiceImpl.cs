@@ -415,7 +415,7 @@ public sealed class LianeServiceImpl(
       return await Reject(connection, lrA, lrB.Id, tx);
     }
 
-    return await Reject(connection, lrB, lrA.Id, tx);
+    return await Reject(connection, lrB, lrA.Id, tx) || await Reject(connection, lrA, lrB.Id, tx);
   }
 
   public async Task<Api.Community.Liane> Get(Ref<Api.Community.Liane> id)
