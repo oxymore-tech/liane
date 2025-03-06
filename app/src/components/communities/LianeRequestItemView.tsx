@@ -34,7 +34,7 @@ export const LianeRequestItem = ({ item, onRefresh, unreadLianes }: LianeRequest
         onPress={() =>
           item.state.type === "Attached"
             ? navigation.navigate("CommunitiesChat", { liane: item.state.liane.id! })
-            : navigation.navigate("MatchList", { matches: item.state.matches, lianeRequest: item.lianeRequest })
+            : navigation.navigate("MatchList", { lianeRequest: item.lianeRequest.id! })
         }>
         <Row style={styles.driverContainer}>
           <View style={styles.headerContainer}>

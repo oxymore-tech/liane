@@ -1,4 +1,4 @@
-import React, { useContext, useMemo } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Pressable, SectionList, StyleSheet, View } from "react-native";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
@@ -6,11 +6,13 @@ import { useAppNavigation } from "@/components/context/routing";
 import { AppIcon } from "@/components/base/AppIcon";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { extractDays, extractTime } from "@/util/hooks/days";
-import { ArrayUtils, CoMatch } from "@liane/common";
+import { ArrayUtils, CoLianeMatch, CoMatch, Detached } from "@liane/common";
 import { AppAvatars } from "@/components/UserPicture.tsx";
 import { AppButton } from "@/components/base/AppButton.tsx";
 import { useObservable } from "@/util/hooks/subscription.ts";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
+import { useLianeMatch } from "@/util/hooks/query.ts";
+import { RefreshControl } from "react-native-gesture-handler";
 
 type Status = "Pending" | "Received" | "None";
 
@@ -25,13 +27,36 @@ type Section = { data: CoMatch[]; status: Status };
 export const MatchListScreen = () => {
   const { services } = useContext(AppContext);
   const { navigation, route } = useAppNavigation<"MatchList">();
-  const matches = route.params.matches;
-  const lianeRequest = route.params.lianeRequest;
+
   const unread = useObservable(services.realTimeHub.unreadNotifications, {});
 
+  const { data, isFetching, refetch } = useLianeMatch(route.params.lianeRequest);
+
+  const [state, setState] = useState<CoLianeMatch<Detached>>();
+
+  useEffect(() => {
+    if (!data) {
+      return;
+    }
+
+    if (data.state.type === "Attached") {
+      navigation.navigate("CommunitiesChat", { liane: data.state.liane.id! });
+      return;
+    }
+
+    if (data.state.type === "Detached") {
+      setState(data as CoLianeMatch<Detached>);
+      return;
+    }
+  }, [data, navigation]);
+
   const sections = useMemo(() => {
+    if (!state) {
+      return [];
+    }
+
     return Object.entries(
-      ArrayUtils.groupBy(matches, m => {
+      ArrayUtils.groupBy(state.state.matches, m => {
         if (m.type === "Single") {
           if (!m.joinRequest) {
             return "None";
@@ -44,7 +69,7 @@ export const MatchListScreen = () => {
     )
       .map(([key, value]) => ({ data: value, status: key }) as Section)
       .sort((a, b) => StatusOrder[a.status] - StatusOrder[b.status]);
-  }, [matches]);
+  }, [state]);
 
   return (
     <View style={styles.mainContainer}>
@@ -54,6 +79,7 @@ export const MatchListScreen = () => {
       </Row>
       <SectionList
         renderSectionHeader={renderSectionHeader}
+        refreshControl={<RefreshControl refreshing={isFetching || !state} onRefresh={refetch} />}
         ListEmptyComponent={
           <Center>
             <AppText style={{ color: AppColors.black, fontSize: 16, fontWeight: "bold" }}>Nous n'avons rien à vous proposer :-(</AppText>
@@ -65,7 +91,7 @@ export const MatchListScreen = () => {
             key={item.liane}
             unread={!!unread[item.liane]}
             group={item}
-            onPress={() => navigation.navigate("LianeMapDetail", { liane: item, request: lianeRequest })}
+            onPress={() => navigation.navigate("LianeMapDetail", { liane: item, request: state?.lianeRequest })}
           />
         )}
       />

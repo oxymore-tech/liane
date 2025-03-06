@@ -23,6 +23,12 @@ public sealed class LianeController(ILianeService lianeService)
     return lianeService.Match();
   }
 
+  [HttpGet("match/{lianeRequestId:guid}")]
+  public Task<LianeMatch> Match(Guid lianeRequestId)
+  {
+    return lianeService.Match(lianeRequestId);
+  }
+  
   [HttpPut("liane")]
   public Task<ImmutableList<Api.Community.Liane>> List([FromBody] LianeFilter filter)
   {

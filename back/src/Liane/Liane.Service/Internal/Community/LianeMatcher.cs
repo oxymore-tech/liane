@@ -23,29 +23,23 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
 
   public async Task<Match?> FindMatchBetween(IDbConnection connection, Guid from, Guid to, IDbTransaction? tx = null)
   {
-    var rawMatches = await FindRawMatch(connection, from, to, tx);
-    if (rawMatches.IsEmpty)
-    {
-      return null;
-    }
-
-    var userId = currentContext.CurrentUser().Id;
-    var mapParams = await GetMapParams(connection, rawMatches, userId, tx);
-    return (await MapToMatches(rawMatches, mapParams)).FirstOrDefault();
+    var matches = await FindMatches(connection, ImmutableList<Guid>.Empty, from, to, tx);
+    return matches.GetValueOrDefault(from)?.FirstOrDefault();
   }
 
-  public async Task<ImmutableList<Match>> FindMatchesBetween(IDbConnection connection, Guid from, IEnumerable<Guid> to, IDbTransaction? tx = null)
+  public async Task<ImmutableList<Match>> FindLianeMatch(IDbConnection connection, Guid from, IDbTransaction? tx = null)
   {
-    var rawMatches = await FindRawMatch(connection, from, to, tx);
-    var userId = currentContext.CurrentUser().Id;
-    var mapParams = await GetMapParams(connection, rawMatches, userId, tx);
-    return await MapToMatches(rawMatches, mapParams);
+    var matches = await FindMatches(connection, ImmutableList<Guid>.Empty, from, null, tx);
+    return matches.GetValueOrDefault(from, ImmutableList<Match>.Empty);
   }
 
   public async Task<ImmutableDictionary<Guid, ImmutableList<Match>>> FindMatches(IDbConnection connection, IEnumerable<Guid> linkedTo, IDbTransaction? tx = null)
+    => await FindMatches(connection, linkedTo, null, null, tx);
+
+  private async Task<ImmutableDictionary<Guid, ImmutableList<Match>>> FindMatches(IDbConnection connection, IEnumerable<Guid> linkedTo, Guid? from = null, Guid? to = null, IDbTransaction? tx = null)
   {
     var userId = currentContext.CurrentUser().Id;
-    var rawMatches = await FindRawMatches(connection, userId, linkedTo, tx: tx);
+    var rawMatches = await FindRawMatches(connection, userId, linkedTo, from, to, tx);
     var mapParams = await GetMapParams(connection, rawMatches, userId, tx);
     return await rawMatches
       .GroupByAsync(m => m.From, g => MapToMatches(g, mapParams));
@@ -54,7 +48,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
   private async Task<ImmutableList<Match>> MapToMatches(IEnumerable<LianeRawMatch> rawMatches, MapParams mapParams)
   {
     var matches = await rawMatches.GroupBy(m => m.LinkedTo ?? m.LianeRequest)
-      .FilterSelectAsync(r => ToMatch(r.ToImmutableList(), mapParams));
+      .FilterSelectAsync(r => ToMatch(r.Key, r.ToImmutableList(), mapParams));
     return matches
       .OrderByDescending(m => m.Score)
       .ThenByDescending(m => m is Match.Group group ? group.Matches.Count : 1)
@@ -97,7 +91,9 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
                                                                           AND lr_b.created_by != lr_a.created_by
                                                                           AND matching_weekdays(lr_a.week_days, lr_b.week_days)::integer != 0
                                                                       LEFT JOIN liane_member lm_b ON
-                                                                        lr_b.id = lm_b.liane_request_id AND NOT lm_b.liane_id = ANY(@linkedTo)
+                                                                        lr_b.id = lm_b.liane_request_id
+                                                                          AND lm_b.joined_at IS NOT NULL
+                                                                          AND NOT lm_b.liane_id = ANY(@linkedTo)
                                                                       INNER JOIN route b ON
                                                                         b.way_points = lr_b.way_points AND st_intersects(a.geometry, b.geometry)
                                                               WHERE ((@from IS NULL AND lr_a.created_by = @userId) OR lr_a.id = @from)
@@ -109,56 +105,24 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     return result.ToImmutableList();
   }
 
-  private static async Task<ImmutableList<LianeRawMatch>> FindRawMatch(IDbConnection connection, Guid from, Guid to, IDbTransaction? tx = null)
-    => await FindRawMatch(connection, from, [to], tx);
-
-  private static async Task<ImmutableList<LianeRawMatch>> FindRawMatch(IDbConnection connection, Guid from, IEnumerable<Guid> to, IDbTransaction? tx = null)
-  {
-    var result = await connection.QueryAsync<LianeRawMatch>("""
-                                                              SELECT
-                                                                    lr_a.id AS "from",
-                                                                    lr_b.id AS liane_request,
-                                                                    lr_b.name AS name,
-                                                                    lr_b.arrive_before AS arrive_before,
-                                                                    lr_b.return_after AS return_after,
-                                                                    matching_weekdays(lr_a.week_days, lr_b.week_days) AS week_days,
-                                                                    ((match_routes(a.geometry, b.geometry)).score) AS score,
-                                                                    ((match_routes(a.geometry, b.geometry)).pickup) AS pickup,
-                                                                    ((match_routes(a.geometry, b.geometry)).deposit) AS deposit,
-                                                                    ((match_routes(a.geometry, b.geometry)).is_reverse_direction) AS is_reverse_direction,
-                                                                    lm_b.liane_id AS linked_to
-                                                              FROM liane_request lr_a
-                                                                      INNER JOIN route a ON
-                                                                        a.way_points = lr_a.way_points
-                                                                      INNER JOIN liane_request lr_b ON
-                                                                        lr_b.id != lr_a.id
-                                                                          AND lr_b.id = ANY(@to)
-                                                                          AND lr_b.created_by != lr_a.created_by
-                                                                          AND matching_weekdays(lr_a.week_days, lr_b.week_days)::integer != 0
-                                                                      LEFT JOIN liane_member lm_b ON
-                                                                        lr_b.id = lm_b.liane_request_id
-                                                                      INNER JOIN route b ON
-                                                                        b.way_points = lr_b.way_points
-                                                              WHERE lr_a.id = @from
-                                                              ORDER BY ((match_routes(a.geometry, b.geometry)).score) DESC, "from"
-                                                            """,
-      new { from, to },
-      tx
-    );
-    return result.ToImmutableList();
-  }
-
-  private async Task<Match?> ToMatch(ImmutableList<LianeRawMatch> rawMatches, MapParams mapParams)
+  private async Task<Match?> ToMatch(Guid lianeKey, ImmutableList<LianeRawMatch> rawMatches, MapParams mapParams)
   {
     if (rawMatches.IsEmpty)
     {
       return null;
     }
 
+    var liane = mapParams.Lianes.GetValueOrDefault(lianeKey);
+    if (liane is null)
+    {
+      return null;
+    }
+    
     var matchingPoints = rawMatches.Select(m => GetBestMatch(m, mapParams.SnapedPoints))
       .Where(m => m is not null)
       .OrderByDescending(m => m!.Value.Score)
       .FirstOrDefault();
+    
     if (matchingPoints is null)
     {
       return null;
@@ -176,27 +140,21 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     if (rawMatches.Count == 1)
     {
       var first = rawMatches.First();
+
       var joinRequest = GetJoinRequest(mapParams, first);
       if (joinRequest is null && (matchingPoints.Value.Score < MinScore || matchingPoints.Value.Reverse))
       {
         return null;
       }
-      
-      if (first.LinkedTo is not null && first.LinkedTo != first.From)
-      {
-        return null;
-      }
 
-      var liane = mapParams.Lianes.GetValueOrDefault(first.LianeRequest);
-
-      if (liane is null)
+      if (first.LinkedTo is not null && first.LinkedTo != lianeKey)
       {
         return null;
       }
 
       return new Match.Single(
-        first.LianeRequest,
-        ImmutableList.Create(liane.CreatedBy),
+        lianeKey,
+        liane.GetMembers(),
         first.Name,
         weekDays,
         when,
@@ -210,18 +168,16 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
 
     {
       var first = rawMatches.First();
-      var lianeRef = first.LinkedTo ?? first.LianeRequest;
-      var liane = mapParams.Lianes.GetValueOrDefault(lianeRef);
 
       var matches = rawMatches.Select(m => (Ref<LianeRequest>)m.LianeRequest).ToImmutableList();
       if (matchingPoints.Value.Score < MinScore || matchingPoints.Value.Reverse)
       {
         return null;
       }
-      
+
       return new Match.Group(
-        lianeRef,
-        liane?.Members.FilterSelect(m => m.User.Value).ToImmutableList() ?? [],
+        lianeKey,
+        liane.GetMembers(),
         matches,
         weekDays,
         when,
@@ -279,7 +235,8 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
         SELECT liane_member.liane_id, requested_at
         FROM liane_request
                  INNER JOIN liane_member ON liane_request.id = liane_member.liane_request_id
-        WHERE liane_request.created_by = @userId AND liane_member.joined_at IS NULL
+        WHERE liane_request.created_by = @userId
+          AND liane_member.joined_at IS NULL
         """,
         new { userId }, tx)
       ).ToImmutableDictionary(m => m.Item1, m => m.Item2);
@@ -288,7 +245,10 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
         SELECT liane_member.liane_request_id, requested_at
         FROM liane_request
                  INNER JOIN liane_member ON liane_request.id = liane_member.liane_id
-        WHERE liane_request.created_by = @userId AND liane_member.joined_at IS NULL
+                 INNER JOIN liane_request lr_source ON lr_source.id = liane_member.liane_request_id
+        WHERE liane_request.created_by = @userId
+          AND liane_member.joined_at IS NULL
+          AND lr_source.created_by != @userId -- ici on pense au cas où je rejoins ma propre liane (après l'avoir quitter), je ne dois pas apparaitre comme receveur
         """,
         new { userId }, tx)
       ).ToImmutableDictionary(m => m.Item1, m => m.Item2);

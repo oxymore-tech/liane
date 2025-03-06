@@ -15,6 +15,7 @@ public interface ILianeService
   Task<LianeRequest> Update(Ref<LianeRequest> id, LianeRequest request);
   Task Delete(Ref<LianeRequest> id);
   Task<ImmutableList<LianeMatch>> Match();
+  Task<LianeMatch> Match(Guid lianeRequestId);
   Task<ImmutableList<Liane>> List(LianeFilter filter);
 
   Task<Liane> Get(Ref<Liane> id);

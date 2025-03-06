@@ -29,9 +29,9 @@ export type CoLianeRequest = Entity & {
 
 export type ResolvedLianeRequest = Omit<CoLianeRequest, "wayPoints"> & { wayPoints: RallyingPoint[] };
 
-export type CoLianeMatch = {
+export type CoLianeMatch<T = LianeState> = {
   lianeRequest: ResolvedLianeRequest;
-  state: LianeState;
+  state: T;
 };
 
 export type Detached = {
@@ -161,6 +161,8 @@ export function getLianeId(matchOrLiane: CoLiane | CoMatch): string {
 export interface CommunityService {
   match(): Promise<CoLianeMatch[]>;
 
+  matchLianeRequest(lianeRequestId: string): Promise<CoLianeMatch>;
+
   list(filter: LianeFilter): Promise<CoLiane[]>;
 
   get(liane: string): Promise<CoLiane>;
@@ -197,6 +199,10 @@ export class CommunityServiceClient implements CommunityService {
 
   match() {
     return this.http.get<CoLianeMatch[]>("/community/match");
+  }
+
+  matchLianeRequest(lianeRequestId: string) {
+    return this.http.get<CoLianeMatch>(`/community/match/${lianeRequestId}`);
   }
 
   list(filter: LianeFilter) {
