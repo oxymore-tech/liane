@@ -61,10 +61,15 @@ export const LianeMapDetailScreen = () => {
     if (!lianeId) {
       return;
     }
-    services.community
-      .getTrip(lianeRequest?.id ?? lianeId)
-      .then(setWayPoints)
-      .catch(setError);
+
+    if (isLiane(matchOrLiane)) {
+      services.community
+        .getTrip(lianeRequest?.id ?? lianeId)
+        .then(setWayPoints)
+        .catch(setError);
+    } else {
+      services.community.getTrip(lianeId, lianeRequest?.id).then(setWayPoints).catch(setError);
+    }
   }, [lianeId, lianeRequest, services.community]);
 
   const mapBounds = useMemo(() => {

@@ -538,12 +538,7 @@ public sealed class LianeServiceImpl(
   private async Task<bool> Reject(IDbConnection connection, LianeRequestDb lianeRequest, Guid lianeId, IDbTransaction tx)
   {
     var userId = currentContext.CurrentUser().Id;
-    var foreignLiane = await lianeFetcher.FetchLiane(connection, lianeId, tx);
-    if (foreignLiane.Members.Count > 0 && foreignLiane.Members.All(m => m.User.Id != userId))
-    {
-      return false;
-    }
-
+    
     var deleted = await connection.DeleteAsync(Filter<LianeMemberDb>
       .Where(m => m.LianeRequestId, ComparisonOperator.Eq, lianeRequest.Id)
       .And(m => m.LianeId, ComparisonOperator.Eq, lianeId)

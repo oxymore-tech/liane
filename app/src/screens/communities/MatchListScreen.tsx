@@ -12,7 +12,7 @@ import { AppButton } from "@/components/base/AppButton.tsx";
 import { useObservable } from "@/util/hooks/subscription.ts";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
 import { useLianeMatch } from "@/util/hooks/query.ts";
-import { RefreshControl } from "react-native-gesture-handler";
+import { GestureHandlerRootView, RefreshControl } from "react-native-gesture-handler";
 
 type Status = "Pending" | "Received" | "None";
 
@@ -72,7 +72,7 @@ export const MatchListScreen = () => {
   }, [state]);
 
   return (
-    <View style={styles.mainContainer}>
+    <GestureHandlerRootView style={styles.mainContainer}>
       <Row style={{ backgroundColor: AppColorPalettes.gray[100], justifyContent: "flex-start", alignItems: "center", padding: 16 }} spacing={16}>
         <AppButton onPress={() => navigation.goBack()} icon="arrow-left" color={AppColors.primaryColor} />
         <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 16, lineHeight: 27, color: AppColors.black }}>Propositions</AppText>
@@ -95,7 +95,7 @@ export const MatchListScreen = () => {
           />
         )}
       />
-    </View>
+    </GestureHandlerRootView>
   );
 };
 
