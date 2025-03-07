@@ -114,12 +114,7 @@ public sealed class LianeServiceImpl(
       throw new ResourceNotFoundException("LianeRequest not found");
     }
 
-    var linkedTo = (await connection.QueryAsync(Query.Select<LianeMemberDb>()
-        .Where(m => m.LianeRequestId, ComparisonOperator.Eq, lianeRequestId)
-        .And(m => m.JoinedAt, ComparisonOperator.Ne, null)))
-      .ToImmutableDictionary(m => m.LianeRequestId);
-
-    var lianeFilter = linkedTo.Values.Select(s => s.LianeId).ToImmutableList();
+    var (linkedTo, lianeFilter) = await GetLinkedTo(connection, userId, [r]);
 
     var matches = await matcher.FindLianeMatch(connection, lianeRequestId);
     var linkedToLianes = await lianeFetcher.FetchLianes(connection, lianeFilter);
@@ -143,17 +138,7 @@ public sealed class LianeServiceImpl(
 
     var lianeRequests = await lianeRequestFetcher.FetchLianeRequests(connection, Filter<LianeRequestDb>.Where(r => r.CreatedBy, ComparisonOperator.Eq, userId));
 
-    // il ne faut pas ramener les liane_request qui sont des lianes (c'est à dire qui liane_request_id = liane_id)
-    // et qui sont liés aux requests du user courant (avec un joined_at != null)
-    var linkedTo = (await connection.QueryAsync<LianeMemberDb>("""
-                                                               SELECT lm.* FROM liane_member lm
-                                                                        INNER JOIN liane_member lm_owner ON lm.liane_id = lm_owner.liane_id AND lm.liane_id = lm_owner.liane_request_id
-                                                               WHERE lm.liane_request_id =ANY(@lianeRequests)
-                                                                 AND lm.joined_at IS NOT NULL
-                                                               """, new { userId, lianeRequests = lianeRequests.Select(r => r.Id!.Value).ToArray() }))
-      .ToImmutableDictionary(m => m.LianeRequestId);
-
-    var lianeFilter = linkedTo.Values.Select(s => s.LianeId).ToImmutableList();
+    var (linkedTo, lianeFilter) = await GetLinkedTo(connection, userId, lianeRequests);
 
     var matches = await matcher.FindMatches(connection, lianeFilter);
     var linkedToLianes = await lianeFetcher.FetchLianes(connection, lianeFilter);
@@ -174,6 +159,25 @@ public sealed class LianeServiceImpl(
       })
       .OrderByDescending(m => m.State is LianeState.Attached)
       .ToImmutableList();
+  }
+
+  private static async Task<(ImmutableDictionary<Guid, LianeMemberDb> linkedTo, ImmutableList<Guid> lianeFilter)> GetLinkedTo(IDbConnection connection, string userId,
+    ImmutableList<LianeRequest> lianeRequests)
+  {
+    // il ne faut pas ramener les liane_request qui sont des lianes (c'est à dire qui liane_request_id = liane_id)
+    // et qui sont liés aux requests du user courant (avec un joined_at != null)
+    var linkedRequests = await connection.QueryAsync<Guid>("""
+                                      SELECT lm.liane_request_id FROM liane_member lm
+                                               INNER JOIN liane_member lm_owner ON lm.liane_id = lm_owner.liane_id AND lm.liane_id = lm_owner.liane_request_id
+                                      WHERE lm.liane_request_id = ANY(@lianeRequests)
+                                        AND lm.joined_at IS NOT NULL
+                                      """, new { userId, lianeRequests = lianeRequests.Select(r => r.Id!.Value).ToArray() });
+    
+    var linkedTo = (await connection.QueryAsync(Query.Select<LianeMemberDb>().Where(l => l.LianeRequestId, ComparisonOperator.In, linkedRequests)))
+      .ToImmutableDictionary(m => m.LianeRequestId);
+
+    var lianeFilter = linkedTo.Values.Select(s => s.LianeId).ToImmutableList();
+    return (linkedTo, lianeFilter);
   }
 
   public async Task<ImmutableList<Api.Community.Liane>> List(LianeFilter filter)
