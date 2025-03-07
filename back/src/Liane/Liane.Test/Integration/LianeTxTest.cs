@@ -502,7 +502,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
 
     {
       currentContext.SetCurrentUser(gugu);
-      var liane = await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id);
+      var liane = await tested.JoinRequest(lianeGugu.Id, lianeJayBee.Id);
       Assert.IsNull(liane);
     }
 
@@ -534,11 +534,10 @@ public sealed class LianeTxTest : BaseIntegrationTest
       Assert.IsNull(liane);
     }
 
-
     var ats = pushService.AssertMessage(
       gugu.Id,
-      $"{jayBee.Pseudo} a quitté la liane",
-      $"{jayBee.Pseudo} souhaite rejoindre la liane"
+      "jayBee a quitté la liane",
+      "jayBee souhaite rejoindre la liane"
     );
     var joinedAt = ats[1];
 

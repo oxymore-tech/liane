@@ -364,7 +364,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       );
     }
 
-    // JayBee is attached to jaybee mathilde now
+    // JayBee is attached to mathilde now
     {
       currentContext.SetCurrentUser(mathilde);
       var list = await tested.Match();

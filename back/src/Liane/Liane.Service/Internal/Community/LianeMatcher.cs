@@ -80,7 +80,8 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
                                                                      ((match_routes(a.geometry, b.geometry)).pickup) AS pickup,
                                                                      ((match_routes(a.geometry, b.geometry)).deposit) AS deposit,
                                                                      ((match_routes(a.geometry, b.geometry)).is_reverse_direction) AS is_reverse_direction,
-                                                                     lm_b.liane_id AS linked_to
+                                                                     lm_b.liane_id AS dangling_linked_to,
+                                                                     lm_b_owner.liane_id AS linked_to
                                                               FROM liane_request lr_a
                                                                       INNER JOIN route a ON
                                                                         a.way_points = lr_a.way_points
@@ -94,6 +95,9 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
                                                                         lr_b.id = lm_b.liane_request_id
                                                                           AND lm_b.joined_at IS NOT NULL
                                                                           AND NOT lm_b.liane_id = ANY(@linkedTo)
+                                                                      LEFT JOIN liane_member lm_b_owner ON
+                                                                        lm_b_owner.liane_request_id = lm_b.liane_id
+                                                                          AND lm_b_owner.liane_id = lm_b.liane_id
                                                                       INNER JOIN route b ON
                                                                         b.way_points = lr_b.way_points AND st_intersects(a.geometry, b.geometry)
                                                               WHERE ((@from IS NULL AND lr_a.created_by = @userId) OR lr_a.id = @from)
@@ -112,11 +116,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
       return null;
     }
 
-    var liane = mapParams.Lianes.GetValueOrDefault(lianeKey);
-    if (liane is null)
-    {
-      return null;
-    }
+    var first = rawMatches.First();
     
     var matchingPoints = rawMatches.Select(m => GetBestMatch(m, mapParams.SnapedPoints))
       .Where(m => m is not null)
@@ -139,15 +139,20 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
 
     if (rawMatches.Count == 1)
     {
-      var first = rawMatches.First();
 
-      var joinRequest = GetJoinRequest(mapParams, lianeKey);
+      var joinRequest = GetJoinRequest(mapParams, first.LianeRequest, first.DanglingLinkedTo);
       if (joinRequest is null && (matchingPoints.Value.Score < MinScore || matchingPoints.Value.Reverse))
       {
         return null;
       }
 
       if (first.LinkedTo is not null && first.LinkedTo != lianeKey)
+      {
+        return null;
+      }
+
+      var liane = mapParams.Lianes.GetValueOrDefault(first.LianeRequest);
+      if (liane is null)
       {
         return null;
       }
@@ -167,14 +172,18 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     }
 
     {
-      var first = rawMatches.First();
-
       var matches = rawMatches.Select(m => (Ref<LianeRequest>)m.LianeRequest).ToImmutableList();
       if (matchingPoints.Value.Score < MinScore || matchingPoints.Value.Reverse)
       {
         return null;
       }
-
+      
+      var liane = mapParams.Lianes.GetValueOrDefault(lianeKey);
+      if (liane is null)
+      {
+        return null;
+      }
+      
       return new Match.Group(
         lianeKey,
         liane.GetMembers(),
@@ -190,7 +199,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     }
   }
 
-  private static JoinRequest? GetJoinRequest(MapParams mapParams, Guid foreign)
+  private static JoinRequest? GetJoinRequest(MapParams mapParams, Guid foreign, Guid? danglingLinkedTo)
   {
     if (mapParams.PendingJoinRequests.TryGetValue(foreign, out var d))
     {
@@ -201,7 +210,11 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     {
       return new JoinRequest.Received(d2);
     }
-
+    
+    if (danglingLinkedTo.HasValue && mapParams.PendingJoinRequests.TryGetValue(danglingLinkedTo.Value, out var d3))
+    {
+      return new JoinRequest.Pending(d3);
+    }
     return null;
   }
 
@@ -261,6 +274,7 @@ internal sealed record LianeRawMatch(
   LatLng? Pickup,
   LatLng? Deposit,
   bool IsReverseDirection,
+  Guid? DanglingLinkedTo,
   Guid? LinkedTo
 );
 
