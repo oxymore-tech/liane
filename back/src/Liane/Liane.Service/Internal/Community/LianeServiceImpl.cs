@@ -167,12 +167,12 @@ public sealed class LianeServiceImpl(
     // il ne faut pas ramener les liane_request qui sont des lianes (c'est à dire qui liane_request_id = liane_id)
     // et qui sont liés aux requests du user courant (avec un joined_at != null)
     var linkedRequests = await connection.QueryAsync<Guid>("""
-                                      SELECT lm.liane_request_id FROM liane_member lm
-                                               INNER JOIN liane_member lm_owner ON lm.liane_id = lm_owner.liane_id AND lm.liane_id = lm_owner.liane_request_id
-                                      WHERE lm.liane_request_id = ANY(@lianeRequests)
-                                        AND lm.joined_at IS NOT NULL
-                                      """, new { userId, lianeRequests = lianeRequests.Select(r => r.Id!.Value).ToArray() });
-    
+                                                           SELECT lm.liane_request_id FROM liane_member lm
+                                                                    INNER JOIN liane_member lm_owner ON lm.liane_id = lm_owner.liane_id AND lm.liane_id = lm_owner.liane_request_id
+                                                           WHERE lm.liane_request_id = ANY(@lianeRequests)
+                                                             AND lm.joined_at IS NOT NULL
+                                                           """, new { userId, lianeRequests = lianeRequests.Select(r => r.Id!.Value).ToArray() });
+
     var linkedTo = (await connection.QueryAsync(Query.Select<LianeMemberDb>().Where(l => l.LianeRequestId, ComparisonOperator.In, linkedRequests)))
       .ToImmutableDictionary(m => m.LianeRequestId);
 
@@ -572,6 +572,18 @@ public sealed class LianeServiceImpl(
 
   private async Task<Api.Community.Liane> AddMemberInLiane(IDbConnection connection, Api.Community.Liane request, Guid liane, Ref<Api.Auth.User> userId, bool newLiane, IDbTransaction tx)
   {
+    // toutes les demandes en cours sur la liane request sont retransférées vers la liane
+    var moved = await connection.QueryAsync<(Guid, string)>("""
+                                                            SELECT lr.id, lr.created_by
+                                                            FROM liane_request lr
+                                                            INNER JOIN liane_member lm ON lr.id = lm.liane_request_id
+                                                            WHERE lm.liane_id = @liane_id AND lm.joined_at IS NULL
+                                                            """, new { liane_id = request.Id }, tx);
+    await connection.UpdateAsync(Query.Update<LianeMemberDb>()
+      .Set(m => m.LianeId, liane)
+      .Where(m => m.LianeId, ComparisonOperator.Eq, request.Id)
+      .And(m => m.JoinedAt, ComparisonOperator.Eq, null), tx);
+    /////
     var at = DateTime.UtcNow;
     var updated = await connection.UpdateAsync(Query.Update<LianeMemberDb>()
       .Set(m => m.JoinedAt, at)
@@ -591,21 +603,9 @@ public sealed class LianeServiceImpl(
       await eventDispatcher.Dispatch(liane, new MessageContent.MemberAdded("", request.CreatedBy, request.Id), at);
     }
 
+    foreach (var (movedLianeRequestId, movedUserId) in moved)
     {
-      // toutes les demandes en cours sur la liane request sont retransférées vers la liane
-      var moved = await connection.QueryAsync<(Guid, string)>("""
-                                                              SELECT lr.id, lr.created_by
-                                                              FROM liane_request lr
-                                                              INNER JOIN liane_member lm ON lr.id = lm.liane_request_id
-                                                              WHERE lm.liane_id = @liane_id
-                                                              """, new { liane_id = request.Id }, tx);
-      await connection.UpdateAsync(Query.Update<LianeMemberDb>()
-        .Set(m => m.LianeId, liane)
-        .Where(m => m.LianeId, ComparisonOperator.Eq, request.Id), tx);
-      foreach (var (movedLianeRequestId, movedUserId) in moved)
-      {
-        await eventDispatcher.Dispatch(liane, new MessageContent.MemberRequested("", movedUserId, movedLianeRequestId), at);
-      }
+      await eventDispatcher.Dispatch(liane, new MessageContent.MemberRequested("", movedUserId, movedLianeRequestId), at);
     }
 
     var created = await lianeFetcher.FetchLiane(connection, liane, tx);
