@@ -7,6 +7,9 @@ using Liane.Api.Community;
 using Liane.Api.Trip;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
+using Liane.Service.Internal.Community;
+using Liane.Service.Internal.Postgis.Db;
+using Liane.Service.Internal.Util.Sql;
 using Liane.Test.Util;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
@@ -35,9 +38,11 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   private User caramelo = null!;
   private User bertrand = null!;
   private User samuel = null!;
+  private PostgisDatabase db = null!;
 
-  protected override void Setup(IMongoDatabase db)
+  protected override void Setup(IMongoDatabase _)
   {
+    db = ServiceProvider.GetRequiredService<PostgisDatabase>();
     tested = ServiceProvider.GetRequiredService<ILianeService>();
     messageService = ServiceProvider.GetRequiredService<ILianeMessageService>();
     currentContext = ServiceProvider.GetRequiredService<MockCurrentContext>();
@@ -208,7 +213,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
 
       await tested.JoinRequest(lianeGugu.Id, lianeJayBee.Id);
       currentContext.SetCurrentUser(jayBee);
-      joinedLiane = (await tested.JoinRequest(lianeGugu.Id, lianeJayBee.Id))!;
+      joinedLiane = (await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id))!;
 
       ImmutableList.Create(gugu.Id, jayBee.Id)
         .AreRefEquivalent(joinedLiane.Members.Select(m => m.User));
@@ -226,6 +231,65 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
   }
 
   [Test]
+  public async Task GuguShouldJoinANewLianeByJoiningAMatchTHeOldPendingRequestsAreDropped()
+  {
+    var (lianeGugu, lianeJayBee, lianeMathilde, lianeSiloe, _, _, _, _) = await SetupDefaultLianes();
+
+    // siloe envoie une demande à gugu 
+    {
+      currentContext.SetCurrentUser(siloe);
+      await tested.JoinRequest(lianeSiloe.Id, lianeGugu.Id);
+    }
+
+    // jb envoie une demande à mathilde 
+    {
+      currentContext.SetCurrentUser(jayBee);
+      await tested.JoinRequest(lianeJayBee.Id, lianeMathilde.Id);
+    }
+
+    // Gugu join JayBee
+    {
+      currentContext.SetCurrentUser(gugu);
+      await tested.JoinRequest(lianeGugu.Id, lianeJayBee.Id);
+
+      currentContext.SetCurrentUser(jayBee);
+      var joinedLiane = await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id);
+
+      Assert.IsNotNull(joinedLiane);
+
+      // a new liane is created with gugu and jb
+      ImmutableList.Create(gugu.Id, jayBee.Id)
+        .AreRefEquivalent(joinedLiane!.Members.Select(m => m.User));
+
+      // l'ancienne demande de siloe est transéférée sur la liane
+      ImmutableList.Create(siloe.Id)
+        .AreRefEquivalent(joinedLiane.PendingMembers.Select(m => m.User));
+
+      var messages = await messageService.GetMessages(joinedLiane.Id);
+      CollectionAssert.AreEqual(
+        ImmutableList.Create(
+          $"{gugu.Pseudo} souhaite rejoindre la liane",
+          $"{jayBee.Pseudo} a rejoint la liane",
+          $"{gugu.Pseudo} a rejoint la liane",
+          $"{siloe.Pseudo} souhaite rejoindre la liane"
+        ),
+        messages.Data.OrderBy(m => m.Id).Select(m => m.Content.Value ?? "Empty").ToArray()
+      );
+    }
+
+    {
+      // l'ancienne demande de jb est supprimée
+      using var connection = db.NewConnection();
+      var results = await connection.QueryAsync(Query.Select<LianeMemberDb>().Where(l => l.LianeRequestId, ComparisonOperator.Eq, lianeJayBee.Id));
+      Assert.AreEqual(results.Count, 1);
+      var lianeMember = results[0];
+      Assert.AreEqual(lianeMember.LianeId, lianeJayBee.Id);
+      Assert.AreEqual(lianeMember.LianeRequestId, lianeJayBee.Id);
+      Assert.IsNotNull(lianeMember.JoinedAt);
+    }
+  }
+
+  [Test]
   public async Task GuguSeeJoinedLianesEvenIfRequestIsDisabled()
   {
     var (lianeGugu, lianeJayBee, lianeMathilde, _, _, _, _, _) = await SetupDefaultLianes();
@@ -236,7 +300,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       currentContext.SetCurrentUser(gugu);
       await tested.JoinRequest(lianeGugu.Id, lianeJayBee.Id);
       currentContext.SetCurrentUser(jayBee);
-      joinedLiane = (await tested.JoinRequest(lianeGugu.Id, lianeJayBee.Id))!;
+      joinedLiane = (await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id))!;
     }
 
     // jaybee disable its liane request
@@ -287,7 +351,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       currentContext.SetCurrentUser(mathilde);
       await tested.JoinRequest(lianeMathilde.Id, lianeJayBee.Id);
       currentContext.SetCurrentUser(jayBee);
-      exisitingLiane = (await tested.JoinRequest(lianeMathilde.Id, lianeJayBee.Id))!;
+      exisitingLiane = (await tested.JoinRequest(lianeJayBee.Id, lianeMathilde.Id))!;
     }
 
     // Mathilde is attached to jaybee now
@@ -340,7 +404,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       currentContext.SetCurrentUser(mathilde);
       await tested.JoinRequest(lianeMathilde.Id, lianeJayBee.Id);
       currentContext.SetCurrentUser(jayBee);
-      exisitingLiane = (await tested.JoinRequest(lianeMathilde.Id, lianeJayBee.Id))!;
+      exisitingLiane = (await tested.JoinRequest(lianeJayBee.Id, lianeMathilde.Id))!;
     }
 
     // Gugu join JayBee : gugu join the existing liane
@@ -630,7 +694,7 @@ public sealed class LianeServiceImplTest : BaseIntegrationTest
       currentContext.SetCurrentUser(gugu);
       await tested.JoinRequest(lianeGugu.Id, lianeJayBee.Id);
       currentContext.SetCurrentUser(jayBee);
-      joinedLiane = (await tested.JoinRequest(lianeGugu.Id, lianeJayBee.Id))!;
+      joinedLiane = (await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id))!;
     }
 
     {

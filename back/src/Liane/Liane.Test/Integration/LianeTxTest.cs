@@ -98,7 +98,7 @@ public sealed class LianeTxTest : BaseIntegrationTest
     DateTime at;
     {
       currentContext.SetCurrentUser(gugu);
-      var liane = await tested.JoinRequest(lianeJayBee.Id, lianeGugu.Id);
+      var liane = await tested.JoinRequest(lianeGugu.Id, lianeJayBee.Id);
       Assert.IsNull(liane);
 
 

@@ -43,7 +43,8 @@ public sealed class MockPushServiceImpl : IPushMiddleware
         .Where(s => s.To == to)
         .OrderBy(s => s.At)
         .ThenBy(s => s.Id)
-        .Select(s => s.Message),
+        .Select(s => s.Message)
+        .ToArray(),
       msgs
     );
     return sent
@@ -62,7 +63,8 @@ public sealed class MockPushServiceImpl : IPushMiddleware
         .Where(s => s.To == to)
         .OrderBy(s => s.At)
         .ThenBy(s => s.Id)
-        .Select(s => s.Message),
+        .Select(s => s.Message)
+        .ToArray(),
       msgs
     );
     return messages

@@ -1,0 +1,1 @@
+DELETE FROM liane_member WHERE joined_at IS NULL;

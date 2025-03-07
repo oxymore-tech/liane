@@ -174,7 +174,7 @@ public sealed class LianeMessageServiceImpl(
     {
       MessageContent.LianeRequestModified => $"{sentBy} a modifié son annonce",
       MessageContent.TripAdded m => $"{sentBy} lance un covoit pour le {FormatDate(m.Trip.Value?.DepartureTime)}",
-      MessageContent.MemberRequested => $"{sentBy} souhaite rejoindre la liane",
+      MessageContent.MemberRequested m => $"{await FormatUser(m.User)} souhaite rejoindre la liane",
       MessageContent.MemberAdded m => $"{await FormatUser(m.User)} a rejoint la liane",
       MessageContent.MemberRejected m => $"La demande de {await FormatUser(m.User)} pour rejoindre la liane n'a pas été acceptée",
       MessageContent.MemberLeft m => $"{await FormatUser(m.User)} a quitté la liane",
