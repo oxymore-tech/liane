@@ -154,7 +154,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
 
       return new Match.Single(
         first.LianeRequest,
-        liane.GetMembers(),
+        ImmutableList.Create(liane.CreatedBy),
         first.Name,
         weekDays,
         when,
