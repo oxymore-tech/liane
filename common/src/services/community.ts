@@ -91,6 +91,7 @@ export type CoLiane = Identity & {
   weekDays: DayOfWeekFlag;
   createdAt: UTCDateTime;
   createdBy: User;
+  fake: boolean;
 };
 
 export type CoLianeMember = {
@@ -107,8 +108,7 @@ export type JoinTripQuery = {
 };
 
 export type LianeFilter = {
-  forCurrentUser: boolean;
-  bbox?: BoundingBox;
+  bbox: BoundingBox;
   weekDays?: DayOfWeekFlag;
 };
 

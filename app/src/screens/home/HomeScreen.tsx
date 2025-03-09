@@ -23,10 +23,7 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
   const { data, isFetching } = useQuery(
     [LianeOnMapQueryKey, bboxAsString],
     () => {
-      return services.community.list({
-        forCurrentUser: false,
-        bbox
-      });
+      return services.community.list({ bbox });
     },
     { keepPreviousData: true }
   );

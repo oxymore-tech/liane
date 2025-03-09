@@ -63,25 +63,34 @@ public sealed class LianeMessageServiceImpl(
       total);
   }
 
-  public async Task<ImmutableDictionary<Ref<Api.Community.Liane>, int>> GetUnreadLianes()
+  public async Task<ImmutableDictionary<Ref<LianeRequest>, int>> GetUnreadLianes()
   {
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
 
     var userId = currentContext.CurrentUser().Id;
-    var unreadPendingJoinRequests = await connection.QueryAsync<(Guid, int)>("""
-                                                                             SELECT m.liane_request_id, COUNT(req.id)
-                                                                             FROM liane_member m
-                                                                               INNER JOIN liane_request req ON req.id = m.liane_request_id
-                                                                             WHERE m.joined_at IS NULL AND req.created_by = @userId
-                                                                             GROUP BY m.liane_request_id
+    var pendingJoinRequests = await connection.QueryAsync<(Guid, int)>("""
+                                                                             SELECT req.id, COUNT(req.id)
+                                                                             FROM liane_request req
+                                                                               INNER JOIN join_request m ON m.requester_id = req.id
+                                                                             WHERE req.created_by = @userId
+                                                                             GROUP BY req.id
                                                                              """,
       new { userId }
       , tx);
-    var unreadReceivedJoinRequests = await connection.QueryAsync<(Guid, int)>("""
+    var receivedJoinRequests = await connection.QueryAsync<(Guid, int)>("""
                                                                               SELECT req.id, COUNT(req.id)
                                                                               FROM liane_request req
-                                                                                INNER JOIN liane_member m ON m.liane_id = req.id
+                                                                                INNER JOIN join_request m ON m.requestee_id = req.id
+                                                                              WHERE req.created_by = @userId
+                                                                              GROUP BY req.id
+                                                                              """,
+      new { userId }
+      , tx);
+    var pendingMemberRequests = await connection.QueryAsync<(Guid, int)>("""
+                                                                              SELECT req.id, COUNT(req.id)
+                                                                              FROM liane_request req
+                                                                                INNER JOIN liane_member m ON m.liane_request_id = req.id
                                                                               WHERE m.joined_at IS NULL AND req.created_by = @userId
                                                                               GROUP BY req.id
                                                                               """,
@@ -95,19 +104,20 @@ public sealed class LianeMessageServiceImpl(
                                                               r.created_by = @userId
                                                             LEFT JOIN liane_message msg ON
                                                               msg.liane_id = m.liane_id AND
-                                                              msg.created_at > m.joined_at AND
+                                                              msg.created_at >= m.joined_at AND
                                                               msg.created_by != @userId
                                                           WHERE m.joined_at IS NOT NULL AND
-                                                                (m.last_read_at IS NULL OR msg.created_at > m.last_read_at)
+                                                                (m.last_read_at IS NULL OR msg.created_at >= m.last_read_at)
                                                           GROUP BY m.liane_request_id
                                                           """,
       new { userId }
       , tx);
-    return unreadPendingJoinRequests
-      .Concat(unreadReceivedJoinRequests)
+    return pendingJoinRequests
+      .Concat(receivedJoinRequests)
+      .Concat(pendingMemberRequests)
       .Concat(unread)
       .GroupBy(t => t.Item1)
-      .ToImmutableDictionary(g => (Ref<Api.Community.Liane>)g.Key, g => g.Sum(t => t.Item2));
+      .ToImmutableDictionary(g => (Ref<LianeRequest>)g.Key, g => g.Sum(t => t.Item2));
   }
 
   public async Task MarkAsRead(Ref<Api.Community.Liane> liane, DateTime timestamp)

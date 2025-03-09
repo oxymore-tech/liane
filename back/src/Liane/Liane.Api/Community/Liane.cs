@@ -18,33 +18,21 @@ public sealed record Liane(
   TimeOnly ArriveBefore,
   TimeOnly ReturnAfter,
   DayOfWeekFlag WeekDays,
-  User CreatedBy,
-  DateTime CreatedAt
+  bool Fake
 ) : IIdentity<Guid>, ISharedResource<LianeMember>
 {
-  public bool IsMember(Ref<User> user, bool pendingMember = true)
+  public bool IsMember(Ref<User> user, bool includePendingMember = true)
   {
     if (Members.Any(m => m.User.Id == user.Id))
     {
       return true;
     }
 
-    if (!pendingMember)
-    {
-      return false;
-    }
-
-    return user.Id == CreatedBy.Id
-           || PendingMembers.Any(m => m.User.Id == user.Id);
+    return includePendingMember && PendingMembers.Any(m => m.User.Id == user.Id);
   }
 
   public ImmutableList<User> GetMembers()
   {
-    if (Members.IsEmpty)
-    {
-      return ImmutableList.Create(CreatedBy);
-    }
-
     return Members
       .FilterSelect(m => m.User.Value)
       .ToImmutableList();

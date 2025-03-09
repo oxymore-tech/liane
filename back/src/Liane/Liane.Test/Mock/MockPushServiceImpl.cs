@@ -39,13 +39,13 @@ public sealed class MockPushServiceImpl : IPushMiddleware
   {
     Task.Delay(200).Wait();
     CollectionAssert.AreEqual(
+      msgs,
       sent
         .Where(s => s.To == to)
         .OrderBy(s => s.At)
         .ThenBy(s => s.Id)
         .Select(s => s.Message)
-        .ToArray(),
-      msgs
+        .ToArray()
     );
     return sent
       .Where(s => s.To == to)
@@ -59,13 +59,13 @@ public sealed class MockPushServiceImpl : IPushMiddleware
   {
     Task.Delay(200).Wait();
     CollectionAssert.AreEqual(
+      msgs,
       messages
         .Where(s => s.To == to)
         .OrderBy(s => s.At)
         .ThenBy(s => s.Id)
         .Select(s => s.Message)
-        .ToArray(),
-      msgs
+        .ToArray()
     );
     return messages
       .Where(s => s.To == to)

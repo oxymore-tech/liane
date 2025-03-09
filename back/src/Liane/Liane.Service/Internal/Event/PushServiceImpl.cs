@@ -16,12 +16,6 @@ public sealed class PushServiceImpl(IServiceProvider serviceProvider, LianeFetch
   {
     var resolvedLiane = await lianeFetcher.Get(liane.IdAsGuid());
     var sender = await userService.Get(message.CreatedBy);
-    if (resolvedLiane.Members.IsEmpty)
-    {
-      await PushMessageInternal(sender, resolvedLiane.CreatedBy, resolvedLiane, message);
-      return;
-    }
-
     foreach (var member in resolvedLiane.Members)
     {
       await PushMessageInternal(sender, member.User, resolvedLiane, message);

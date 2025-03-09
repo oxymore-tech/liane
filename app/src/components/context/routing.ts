@@ -42,7 +42,7 @@ export const AppLinking: LinkingOptions<NavigationParamList> = {
         path: "trip/:liane"
       },
       MatchList: {
-        path: "liane/:lianeId/match"
+        path: "liane/:lianeRequest/match"
       },
       Lianes: {
         path: "liane"

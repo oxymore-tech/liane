@@ -5,6 +5,7 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
+using Liane.Api.Auth;
 using Liane.Api.Community;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
@@ -22,6 +23,7 @@ using LianeMatch = Liane.Api.Community.LianeMatch;
 using LianeRequest = Liane.Api.Community.LianeRequest;
 using LianeState = Liane.Api.Community.LianeState;
 using Match = Liane.Api.Community.Match;
+using Notification = Liane.Api.Event.Notification;
 
 namespace Liane.Service.Internal.Community;
 
@@ -37,6 +39,8 @@ public sealed class LianeServiceImpl(
   LianeMatcher matcher,
   LianeMessageServiceImpl lianeMessageService,
   ITripService tripService,
+  IUserService userService,
+  IPushService pushService,
   EventDispatcher eventDispatcher) : ILianeService
 {
   public async Task<IncomingTrips> GetIncomingTrips()
@@ -114,7 +118,7 @@ public sealed class LianeServiceImpl(
       throw new ResourceNotFoundException("LianeRequest not found");
     }
 
-    var (linkedTo, lianeFilter) = await GetLinkedTo(connection, userId, [r]);
+    var (linkedTo, lianeFilter) = await GetLinkedTo(connection, [r.Id!.Value]);
 
     var matches = await matcher.FindLianeMatch(connection, lianeRequestId);
     var linkedToLianes = await lianeFetcher.FetchLianes(connection, lianeFilter);
@@ -131,14 +135,14 @@ public sealed class LianeServiceImpl(
     return new LianeMatch(r, new LianeState.Detached(matches));
   }
 
-  public async Task<ImmutableList<LianeMatch>> Match()
+  async Task<ImmutableList<LianeMatch>> ILianeService.Match()
   {
     var userId = currentContext.CurrentUser().Id;
     using var connection = db.NewConnection();
 
     var lianeRequests = await lianeRequestFetcher.FetchLianeRequests(connection, Filter<LianeRequestDb>.Where(r => r.CreatedBy, ComparisonOperator.Eq, userId));
 
-    var (linkedTo, lianeFilter) = await GetLinkedTo(connection, userId, lianeRequests);
+    var (linkedTo, lianeFilter) = await GetLinkedTo(connection, lianeRequests.Select(l => l.Id!.Value));
 
     var matches = await matcher.FindMatches(connection, lianeFilter);
     var linkedToLianes = await lianeFetcher.FetchLianes(connection, lianeFilter);
@@ -161,19 +165,12 @@ public sealed class LianeServiceImpl(
       .ToImmutableList();
   }
 
-  private static async Task<(ImmutableDictionary<Guid, LianeMemberDb> linkedTo, ImmutableList<Guid> lianeFilter)> GetLinkedTo(IDbConnection connection, string userId,
-    ImmutableList<LianeRequest> lianeRequests)
+  private static async Task<(ImmutableDictionary<Guid, LianeMemberDb> linkedTo, ImmutableList<Guid> lianeFilter)> GetLinkedTo(IDbConnection connection, IEnumerable<Guid> lianeRequests)
   {
-    // il ne faut pas ramener les liane_request qui sont des lianes (c'est à dire qui liane_request_id = liane_id)
-    // et qui sont liés aux requests du user courant (avec un joined_at != null)
-    var linkedRequests = await connection.QueryAsync<Guid>("""
-                                                           SELECT lm.liane_request_id FROM liane_member lm
-                                                                    INNER JOIN liane_member lm_owner ON lm.liane_id = lm_owner.liane_id AND lm.liane_id = lm_owner.liane_request_id
-                                                           WHERE lm.liane_request_id = ANY(@lianeRequests)
-                                                             AND lm.joined_at IS NOT NULL
-                                                           """, new { userId, lianeRequests = lianeRequests.Select(r => r.Id!.Value).ToArray() });
-
-    var linkedTo = (await connection.QueryAsync(Query.Select<LianeMemberDb>().Where(l => l.LianeRequestId, ComparisonOperator.In, linkedRequests)))
+    var linkedTo = (await connection.QueryAsync(Query.Select<LianeMemberDb>()
+        .Where(l => l.LianeRequestId, ComparisonOperator.In, lianeRequests)
+        .And(l => l.JoinedAt, ComparisonOperator.Ne, null)
+      ))
       .ToImmutableDictionary(m => m.LianeRequestId);
 
     var lianeFilter = linkedTo.Values.Select(s => s.LianeId).ToImmutableList();
@@ -185,24 +182,13 @@ public sealed class LianeServiceImpl(
     var userId = currentContext.CurrentUser().Id;
     using var connection = db.NewConnection();
 
-    var lianeRequestFilter = Filter<LianeRequestDb>.Empty;
-
-    if (filter.ForCurrentUser)
-    {
-      lianeRequestFilter &= Filter<LianeRequestDb>.Where(r => r.CreatedBy, ComparisonOperator.Eq, userId);
-    }
-
-    if (filter.Bbox is not null)
-    {
-      var ids = await connection.QueryAsync<Guid>("""
-                                                  SELECT DISTINCT COALESCE(lm.liane_id, lr.id) AS id
-                                                  FROM liane_request lr
-                                                  INNER JOIN  route r ON lr.way_points = r.way_points
-                                                  LEFT JOIN liane_member lm ON lr.id = lm.liane_request_id AND lm.joined_at is not null
-                                                  WHERE ST_Intersects(@bbox, r.geometry)
-                                                  """, new { bbox = filter.Bbox.AsPolygon() });
-      lianeRequestFilter &= Filter<LianeRequestDb>.Where(r => r.Id, ComparisonOperator.In, ids);
-    }
+    var lianeRequestsIds = await connection.QueryAsync<Guid>("""
+                                                             SELECT DISTINCT lr.id
+                                                             FROM liane_request lr
+                                                             INNER JOIN route r ON lr.way_points = r.way_points
+                                                             WHERE lr.created_by != @userId AND ST_Intersects(@bbox, r.geometry)
+                                                             """, new { userId, bbox = filter.Bbox.AsPolygon() });
+    var lianeRequestFilter = Filter<LianeRequestDb>.Where(r => r.Id, ComparisonOperator.In, lianeRequestsIds);
 
     IEnumerable<LianeRequest> lianeRequests = await lianeRequestFetcher.FetchLianeRequests(connection, lianeRequestFilter);
 
@@ -211,13 +197,48 @@ public sealed class LianeServiceImpl(
       lianeRequests = lianeRequests.Where(r => r.WeekDays.HasFlag(filter.WeekDays.Value));
     }
 
-    return (await lianeFetcher.FetchLianes(connection, lianeRequests.Select(l => l.Id!.Value).Take(20))).Values
-      .Where(l => l.TotalMembers > 0 || l.CreatedBy.Id != userId)
+    var lianeIds = await connection.QueryAsync<Guid>("""
+                                                     SELECT DISTINCT lm.liane_id
+                                                     FROM liane_member lm
+                                                     WHERE lm.liane_request_id = ANY(@lianeRequestsIds) AND lm.joined_at is not null
+                                                     """, new { lianeRequestsIds });
+
+    var lianes = (await lianeFetcher.FetchLianes(connection, lianeIds)).Values
+      .Take(10)
       .OrderByDescending(l => l.TotalMembers)
       .ThenByDescending(l => l.WeekDays)
       .ThenByDescending(l => l.ReturnAfter - l.ArriveBefore)
-      .ThenBy(l => l.Id)
+      .ThenByDescending(l => l.Id)
       .ToImmutableList();
+
+    var linkedRequests = lianes.SelectMany(l => l.Members.Select(m => m.LianeRequest.IdAsGuid())).ToImmutableHashSet();
+
+    var orphanRequests = (await lianeRequests
+        .Where(r => !linkedRequests.Contains(r.Id!.Value))
+        .SelectAsync(ToFakeLiane))
+      .Take(10)
+      .ToImmutableList();
+
+    return lianes.Concat(orphanRequests)
+      .Take(10)
+      .ToImmutableList();
+  }
+
+  private async Task<Api.Community.Liane> ToFakeLiane(LianeRequest r)
+  {
+    var user = await userService.Get(r.CreatedBy!);
+
+    return new Api.Community.Liane(
+      r.Id!.Value,
+      ImmutableList.Create(new LianeMember(user, r, r.CreatedAt!.Value, null)),
+      ImmutableList<LianeMember>.Empty,
+      await r.WayPoints.SelectAsync(rallyingPointService.Get),
+      r.RoundTrip,
+      r.ArriveBefore,
+      r.ReturnAfter,
+      r.WeekDays,
+      true
+    );
   }
 
   public async Task<LianeRequest> Update(Ref<LianeRequest> id, LianeRequest request)
@@ -295,165 +316,109 @@ public sealed class LianeServiceImpl(
     tx.Commit();
   }
 
-  public async Task<Api.Community.Liane?> JoinRequest(Ref<LianeRequest> lianeRequest, Ref<Api.Community.Liane> target)
+  public async Task<Api.Community.Liane?> JoinRequest(Ref<LianeRequest> a, Ref<Api.Community.Liane> b)
   {
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
 
     var userId = currentContext.CurrentUser().Id;
 
-    var idA = lianeRequest.IdAsGuid();
-    var idB = target.IdAsGuid();
+    var resolvedA = await TryFetchLianeOrRequest(connection, a.IdAsGuid(), userId, false, tx);
+    var resolvedB = await TryFetchLianeOrRequest(connection, b.IdAsGuid(), userId, false, tx);
 
-    if (idA == idB)
+    if (resolvedA is null || resolvedB is null)
     {
       return null;
     }
 
-    var lianeA = await lianeFetcher.FetchLiane(connection, idA, tx);
-    var lianeB = await lianeFetcher.FetchLiane(connection, idB, tx);
-
-    if (!lianeA.IsMember(userId) && !lianeB.IsMember(userId))
+    if ((resolvedA.IsCurrentUser && resolvedB.IsCurrentUser) || (!resolvedA.IsCurrentUser && !resolvedB.IsCurrentUser))
     {
       return null;
     }
 
-    var memberA = await connection.FirstOrDefaultAsync(Query.Select<LianeMemberDb>().Where(m => m.LianeRequestId, ComparisonOperator.Eq, idA), tx);
-    var memberB = await connection.FirstOrDefaultAsync(Query.Select<LianeMemberDb>().Where(m => m.LianeRequestId, ComparisonOperator.Eq, idB), tx);
+    var result = (resolvedA.IsCurrentUser ? (resolvedA, resolvedB) : (resolvedB, resolvedA)) switch
+    {
+      (LianeOrRequest.Request requester, LianeOrRequest.Request requestee) =>
+        await AddJoinRequest(connection, requester.Value, requestee.Value, tx),
 
-    Guid? joinedLianeA = memberA?.JoinedAt is not null ? memberA.LianeId : null;
-    Guid? joinedLianeB = memberB?.JoinedAt is not null ? memberB.LianeId : null;
+      (LianeOrRequest.Liane requestee, LianeOrRequest.Request requester) =>
+        await AddLianeMember(connection, requester.Value, requestee.Value.Id, tx),
 
-    if (joinedLianeA is not null && joinedLianeB is not null)
+      (LianeOrRequest.Request requester, LianeOrRequest.Liane requestee) =>
+        await AddLianeMemberRequest(connection, requester.Value, requestee.Value.Id, tx),
+
+      _ => null
+    };
+
+    var liane = result is null ? null : await lianeFetcher.FetchLiane(connection, result.Liane, tx);
+    tx.Commit();
+
+    if (result is null)
     {
       return null;
     }
 
-    if (joinedLianeA is not null)
+    foreach (var message in result.Messages)
     {
-      var liane = await lianeFetcher.FetchLiane(connection, joinedLianeA.Value, tx);
-      if (liane.IsMember(userId, false))
-      {
-        return await AddMemberInLiane(connection, lianeB, liane.Id, userId, false, tx);
-      }
-
-      await InsertJoinRequest(connection, lianeB.Id, liane.Id, tx, userId);
-      return null;
+      await eventDispatcher.Dispatch(liane!, message, result.At);
     }
 
-    if (joinedLianeB is not null)
-    {
-      var liane = await lianeFetcher.FetchLiane(connection, joinedLianeB.Value, tx);
-      if (liane.IsMember(userId, false))
-      {
-        return await AddMemberInLiane(connection, lianeA, liane.Id, userId, false, tx);
-      }
-
-      await InsertJoinRequest(connection, lianeA.Id, liane.Id, tx, userId);
-      return null;
-    }
-
-    if (memberB?.LianeId == lianeA.Id) // il s'agit du 2eme join request donc on créer la liane
-    {
-      if (lianeA.CreatedBy.Id != userId)
-      {
-        return null;
-      }
-
-      return await AddMemberInLiane(connection, lianeB, lianeA.Id, userId, true, tx);
-    }
-
-    if (memberA?.LianeId == lianeB.Id) // il s'agit du 2eme join request donc on créer la liane
-    {
-      if (lianeB.CreatedBy.Id != userId)
-      {
-        return null;
-      }
-
-      return await AddMemberInLiane(connection, lianeA, lianeB.Id, userId, true, tx);
-    }
-
-    {
-      var (mine, foreign) = lianeA.CreatedBy.Id == userId ? (lianeA.Id, lianeB.Id) : (lianeB.Id, lianeA.Id);
-      await InsertJoinRequest(connection, mine, foreign, tx, userId);
-      return null;
-    }
+    return result.IsJoined ? liane : null;
   }
 
-  public async Task<bool> Reject(Ref<LianeRequest> lianeRequest, Ref<Api.Community.Liane> target)
+  public async Task<bool> Reject(Ref<LianeRequest> a, Ref<Api.Community.Liane> b)
   {
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
+    var userId = currentContext.CurrentUser().Id;
 
-    var lrA = await connection.GetAsync<LianeRequestDb>(lianeRequest.IdAsGuid(), tx);
-    var lrB = await connection.GetAsync<LianeRequestDb>(target.IdAsGuid(), tx);
+    var resolvedA = await TryFetchLianeOrRequest(connection, a.IdAsGuid(), userId, true, tx);
+    var resolvedB = await TryFetchLianeOrRequest(connection, b.IdAsGuid(), userId, true, tx);
 
-    var memberA = await connection.FirstOrDefaultAsync(Query.Select<LianeMemberDb>().Where(m => m.LianeRequestId, ComparisonOperator.Eq, lianeRequest.IdAsGuid()), tx);
-    var memberB = await connection.FirstOrDefaultAsync(Query.Select<LianeMemberDb>().Where(m => m.LianeRequestId, ComparisonOperator.Eq, target.IdAsGuid()), tx);
-
-    if (memberA is null && memberB is null)
+    if (resolvedA is null || resolvedB is null)
     {
       return false;
     }
 
-    Guid? joinedLianeA = memberA?.JoinedAt is not null ? memberA.LianeId : null;
-    Guid? joinedLianeB = memberB?.JoinedAt is not null ? memberB.LianeId : null;
-
-    if (joinedLianeA is not null && joinedLianeB is not null)
+    if (!resolvedA.IsCurrentUser && !resolvedB.IsCurrentUser)
     {
       return false;
     }
 
-    if (joinedLianeA is not null)
+    var result = (resolvedA.IsCurrentUser ? (resolvedA, resolvedB) : (resolvedB, resolvedA)) switch
     {
-      return await Reject(connection, lrB, joinedLianeA.Value, tx);
+      (LianeOrRequest.Request requester, LianeOrRequest.Request requestee) =>
+        await RejectJoinRequest(connection, requester.Value, requestee.Value, tx),
+
+      (LianeOrRequest.Liane requestee, LianeOrRequest.Request requester) =>
+        await RejectLianeMember(connection, requester.Value, requestee.Value, tx),
+
+      (LianeOrRequest.Request requester, LianeOrRequest.Liane requestee) =>
+        await RejectLianeMember(connection, requester.Value, requestee.Value, tx),
+
+      _ => false
+    };
+
+    if (result)
+    {
+      tx.Commit();
     }
 
-    if (joinedLianeB is not null)
-    {
-      return await Reject(connection, lrA, joinedLianeB.Value, tx);
-    }
-
-    if (memberA is null && memberB?.LianeId == lrA.Id)
-    {
-      return await Reject(connection, lrB, lrA.Id, tx);
-    }
-
-    if (memberB is null && memberA?.LianeId == lrB.Id)
-    {
-      return await Reject(connection, lrA, lrB.Id, tx);
-    }
-
-    return await Reject(connection, lrB, lrA.Id, tx) || await Reject(connection, lrA, lrB.Id, tx);
+    return result;
   }
 
   public async Task<Api.Community.Liane> Get(Ref<Api.Community.Liane> id)
   {
     using var connection = db.NewConnection();
-    using var tx = connection.BeginTransaction();
     var userId = currentContext.CurrentUser().Id;
 
-    var idAsGuid = id.IdAsGuid();
-    var liane = await lianeFetcher.FetchLiane(connection, idAsGuid, tx);
+    var liane = await lianeFetcher.FetchLiane(connection, id.IdAsGuid());
     if (liane.IsMember(userId))
     {
       return liane;
     }
 
-    // check if the owner of the liane is a trying to join a liane (members of this foreign liane are autorized to get the user's liane) 
-    var member = await connection.FirstOrDefaultAsync(Query.Select<LianeMemberDb>().Where(m => m.LianeRequestId, ComparisonOperator.Eq, idAsGuid), tx);
-    if (member?.LianeId is null)
-    {
-      throw new UnauthorizedAccessException("User is not part of the liane");
-    }
-
-    var foreginLiane = await lianeFetcher.FetchLiane(connection, member.LianeId, tx);
-    if (!foreginLiane.IsMember(userId))
-    {
-      throw new UnauthorizedAccessException("User is not part of the liane");
-    }
-
-    return liane;
+    throw new UnauthorizedAccessException("User is not part of the liane");
   }
 
   public async Task<ImmutableList<WayPoint>> GetTrip(Guid liane, Guid? lianeRequest)
@@ -544,104 +509,174 @@ public sealed class LianeServiceImpl(
     return true;
   }
 
-  private async Task<bool> Reject(IDbConnection connection, LianeRequestDb lianeRequest, Guid lianeId, IDbTransaction tx)
+  private async Task<bool> RejectJoinRequest(IDbConnection connection, LianeRequest requesterValue, LianeRequest requesteeValue, IDbTransaction tx)
   {
-    var userId = currentContext.CurrentUser().Id;
+    var deleted = await connection.DeleteAsync(Filter<JoinRequestDb>.Where(l => l.RequesterId, ComparisonOperator.Eq, requesterValue.Id)
+      .And(l => l.RequesteeId, ComparisonOperator.Eq, requesteeValue.Id), tx);
+    var deletedOpposite = await connection.DeleteAsync(Filter<JoinRequestDb>.Where(l => l.RequesterId, ComparisonOperator.Eq, requesteeValue.Id)
+      .And(l => l.RequesteeId, ComparisonOperator.Eq, requesterValue.Id), tx);
 
-    var deleted = await connection.DeleteAsync(Filter<LianeMemberDb>
-      .Where(m => m.LianeRequestId, ComparisonOperator.Eq, lianeRequest.Id)
-      .And(m => m.LianeId, ComparisonOperator.Eq, lianeId)
-      .And(m => m.JoinedAt, ComparisonOperator.Eq, null), tx);
+    if (deletedOpposite > 0)
+    {
+      var requesterUser = await userService.Get(requesterValue.CreatedBy!);
+      var requesteeUser = await userService.Get(requesteeValue.CreatedBy!);
+      _ = Task.Run(() => pushService.Push(requesteeUser,
+        new Notification(Uuid7.Guid(), requesterValue.CreatedBy, DateTime.UtcNow, $"{requesterUser.Pseudo} n'a pas accepté votre demande", $"{requesterUser.Pseudo} n'a pas accepté votre demande",
+          $"liane://liane/{requesterValue.Id!.Value}/match"))
+      );
+      return true;
+    }
+
+    return deleted > 0;
+  }
+
+  private async Task<bool> RejectLianeMember(IDbConnection connection, LianeRequest requesterValue, Api.Community.Liane requesteeValue, IDbTransaction tx)
+  {
+    var lianeMember = await connection.FirstOrDefaultAsync(
+      Query.Select<LianeMemberDb>()
+        .Where(l => l.LianeRequestId, ComparisonOperator.Eq, requesterValue.Id)
+        .And(l => l.LianeId, ComparisonOperator.Eq, requesteeValue.Id)
+      , tx);
+
+    if (lianeMember is null)
+    {
+      return false;
+    }
+
+    var deleted = await connection.DeleteAsync(Filter<LianeMemberDb>.Where(l => l.LianeRequestId, ComparisonOperator.Eq, lianeMember.LianeRequestId)
+      .And(l => l.LianeId, ComparisonOperator.Eq, lianeMember.LianeId), tx);
 
     if (deleted == 0)
     {
       return false;
     }
 
-    var resolvedLianeRequest = await connection.GetAsync<LianeRequestDb>(lianeRequest.Id, tx);
-
-    if (resolvedLianeRequest.CreatedBy != userId)
-    {
-      await eventDispatcher.Dispatch(lianeId, new MessageContent.MemberRejected("", resolvedLianeRequest.CreatedBy));
-    }
-
-    tx.Commit();
+    await eventDispatcher.Dispatch(requesteeValue, new MessageContent.MemberRejected("", requesterValue.CreatedBy!));
 
     return true;
   }
 
-  private async Task<Api.Community.Liane> AddMemberInLiane(IDbConnection connection, Api.Community.Liane request, Guid liane, Ref<Api.Auth.User> userId, bool newLiane, IDbTransaction tx)
+  private async Task<JoinRequestResult?> AddLianeMember(IDbConnection connection, LianeRequest requester, Guid liane, IDbTransaction tx)
   {
-    // toutes les demandes en cours sur la liane request sont retransférées vers la liane
-    var moved = await connection.QueryAsync<(Guid, string)>("""
-                                                            SELECT lr.id, lr.created_by
-                                                            FROM liane_request lr
-                                                            INNER JOIN liane_member lm ON lr.id = lm.liane_request_id
-                                                            WHERE lm.liane_id = @liane_id AND lm.joined_at IS NULL
-                                                            """, new { liane_id = request.Id }, tx);
-    await connection.UpdateAsync(Query.Update<LianeMemberDb>()
-      .Set(m => m.LianeId, liane)
-      .Where(m => m.LianeId, ComparisonOperator.Eq, request.Id)
-      .And(m => m.JoinedAt, ComparisonOperator.Eq, null), tx);
-    /////
     var at = DateTime.UtcNow;
-    var updated = await connection.UpdateAsync(Query.Update<LianeMemberDb>()
-      .Set(m => m.JoinedAt, at)
-      .Where(m => m.LianeRequestId, ComparisonOperator.Eq, request.Id)
-      .And(m => m.JoinedAt, ComparisonOperator.Eq, null)
-      .And(m => m.LianeId, ComparisonOperator.Eq, liane), tx);
-
-    if (newLiane)
-    {
-      await connection.DeleteAsync(Filter<LianeMemberDb>.Where(m => m.LianeRequestId, ComparisonOperator.Eq, liane), tx);
-      await connection.InsertAsync(new LianeMemberDb(liane, liane, request.CreatedAt, request.CreatedAt, null), tx);
-      await eventDispatcher.Dispatch(liane, new MessageContent.MemberAdded("", userId, liane), request.CreatedAt);
-    }
-
-    if (updated > 0)
-    {
-      await eventDispatcher.Dispatch(liane, new MessageContent.MemberAdded("", request.CreatedBy, request.Id), at);
-    }
-
-    foreach (var (movedLianeRequestId, movedUserId) in moved)
-    {
-      await eventDispatcher.Dispatch(liane, new MessageContent.MemberRequested("", movedUserId, movedLianeRequestId), at);
-    }
-
-    var created = await lianeFetcher.FetchLiane(connection, liane, tx);
-    tx.Commit();
-    return created;
+    var (main, moved) = await AddLianeMember(connection, requester, liane, at, tx);
+    return new JoinRequestResult(at, liane, true, ImmutableList.Create(main).Concat(moved));
   }
 
-  private async Task InsertJoinRequest(IDbConnection connection, Guid request, Guid liane, IDbTransaction tx, string userId)
+  private async Task<LianeOrRequest?> TryFetchLianeOrRequest(IDbConnection connection, Guid id, string userId, bool includePendingMember, IDbTransaction tx)
   {
-    var at = DateTime.UtcNow;
-    // supprime toute autres demandes vers cette liane pour le même utilisateur
-    var existing = await connection.QuerySingleAsync<int>("""
-                                                          SELECT count(*) FROM liane_member lm
-                                                          WHERE lm.liane_id = @liane_id AND lm.liane_request_id = @liane_request_id
-                                                          """, new { liane_id = liane, liane_request_id = request }, tx);
-    if (existing > 0)
+    var lianeMember = await connection.FirstOrDefaultAsync(
+      Query.Select<LianeMemberDb>()
+        .Where(r => r.LianeRequestId, ComparisonOperator.Eq, id)
+        .And(r => r.JoinedAt, ComparisonOperator.Ne, null)
+      , tx);
+
+    var liane = await lianeFetcher.TryFetchLiane(connection, lianeMember?.LianeId ?? id, tx);
+    if (liane is not null)
     {
-      return;
+      return new LianeOrRequest.Liane(liane, liane.IsMember(userId, includePendingMember));
     }
 
-    await connection.ExecuteAsync("""
-                                  DELETE FROM liane_member lm
-                                  WHERE lm.liane_id = @liane_id
-                                      AND joined_at IS NULL
-                                      AND lm.liane_request_id IN (
-                                          SELECT lr.id
-                                          FROM liane_request lr
-                                          WHERE lr.created_by = @userId
-                                      )
-                                  """, new { liane_id = liane, liane_request_id = request, userId }, tx);
-    var updated = await connection.InsertAsync(new LianeMemberDb(request, liane, at, null, null), tx);
-    tx.Commit();
-    if (updated > 0)
+    var request = await lianeRequestFetcher.TryFetchLianeRequest(connection, id, tx);
+    return request is not null ? new LianeOrRequest.Request(request, request.CreatedBy?.Id == userId) : null;
+  }
+
+  private static async Task ClearPreviousRequests(IDbConnection connection, IDbTransaction tx, Guid? requesterId)
+  {
+    await connection.DeleteAsync(Filter<JoinRequestDb>.Where(lm => lm.RequesterId, ComparisonOperator.Eq, requesterId), tx);
+    await connection.DeleteAsync(Filter<LianeMemberDb>.Where(lm => lm.LianeRequestId, ComparisonOperator.Eq, requesterId), tx);
+  }
+
+  private async Task<JoinRequestResult?> AddLianeMemberRequest(IDbConnection connection, LianeRequest requester, Guid lianeId, IDbTransaction tx)
+  {
+    var at = DateTime.UtcNow;
+    var requesterId = requester.Id!.Value;
+    // on supprime une demande précédente si jamais il y en a une
+    await ClearPreviousRequests(connection, tx, requesterId);
+
+    await connection.InsertAsync(new LianeMemberDb(requesterId, lianeId, at, null, null), tx);
+
+    return new JoinRequestResult(at, lianeId, false, [new MessageContent.MemberRequested("", requester.CreatedBy!, requester)]);
+  }
+
+  private async Task<(MessageContent, IEnumerable<MessageContent>)> AddLianeMember(IDbConnection connection, LianeRequest requester, Guid liane, DateTime at, IDbTransaction tx)
+  {
+    var movedRequests = await ClearRequesterRequestAndMoveRequestees(connection, requester, liane, at, tx);
+
+    var updated = await connection.UpdateAsync(Query.Update<LianeMemberDb>()
+      .Where(l => l.LianeRequestId, ComparisonOperator.Eq, requester.Id)
+      .Set(l => l.JoinedAt, at), tx);
+    if (updated == 0)
     {
-      await eventDispatcher.Dispatch(liane, new MessageContent.MemberRequested("", userId, request), at);
+      await connection.InsertAsync(new LianeMemberDb(requester.Id!.Value, liane, at, at, null), tx);
     }
+
+    return (
+      new MessageContent.MemberAdded("", requester.CreatedBy!, requester.Id),
+      movedRequests.Select(lr => new MessageContent.MemberRequested("", lr.CreatedBy!, lr.Id))
+    );
+  }
+
+  private async Task<ImmutableList<LianeRequest>> ClearRequesterRequestAndMoveRequestees(IDbConnection connection, LianeRequest requester, Guid liane,
+    DateTime at, IDbTransaction tx)
+  {
+    await connection.DeleteAsync(Filter<JoinRequestDb>.Where(r => r.RequesterId, ComparisonOperator.Eq, requester.Id), tx);
+
+    // Toutes les demandes en cours sur la liane request sont retransférées vers la liane
+    var requesters = await connection.QueryAsync<Guid>(Query.Select<JoinRequestDb>(j => j.RequesterId)
+      .Where(r => r.RequesteeId, ComparisonOperator.Eq, requester.Id), tx);
+    await connection.DeleteAsync(Filter<JoinRequestDb>.Where(r => r.RequesteeId, ComparisonOperator.Eq, requester.Id), tx);
+
+    var movedRequests = await lianeRequestFetcher.FetchLianeRequests(connection, requesters, tx);
+    var movedMembers = movedRequests
+      .Select(lr => new LianeMemberDb(lr.Id!.Value, liane, at, null, null))
+      .ToImmutableList();
+
+    await connection.InsertMultipleAsync(movedMembers, tx);
+    return movedRequests;
+  }
+
+  private async Task<JoinRequestResult?> AddJoinRequest(IDbConnection connection, LianeRequest requester, LianeRequest requestee, IDbTransaction tx)
+  {
+    var requesterId = requester.Id!.Value;
+    var requesteeId = requestee.Id!.Value;
+
+    var existing = await connection.FirstOrDefaultAsync(Query.Select<JoinRequestDb>()
+        .Where(r => r.RequesterId, ComparisonOperator.Eq, requesterId)
+        .And(r => r.RequesteeId, ComparisonOperator.Eq, requesteeId)
+      , tx);
+    if (existing is not null)
+    {
+      return null;
+    }
+
+    var opposite = await connection.FirstOrDefaultAsync(Query.Select<JoinRequestDb>()
+        .Where(r => r.RequesterId, ComparisonOperator.Eq, requesteeId)
+        .And(r => r.RequesteeId, ComparisonOperator.Eq, requesterId)
+      , tx);
+    if (opposite is null)
+    {
+      var requestedAt = DateTime.UtcNow;
+      await connection.DeleteAsync(Filter<JoinRequestDb>.Where(j => j.RequesterId, ComparisonOperator.Eq, requesterId), tx);
+      await connection.InsertAsync(new JoinRequestDb(requesterId, requesteeId, requestedAt), tx);
+      var createdBy = await userService.Get(requester.CreatedBy!);
+      _ = Task.Run(() => pushService.Push(requestee.CreatedBy!,
+        new Notification(Uuid7.Guid(), createdBy, requestedAt, $"{createdBy.Pseudo} souhaite rejoindre votre liane", $"{createdBy.Pseudo} souhaite rejoindre votre liane",
+          $"liane://liane/{requesteeId}/match"))
+      );
+      return null;
+    }
+
+    await connection.DeleteAsync(Filter<JoinRequestDb>.Where(j => j.RequesterId, ComparisonOperator.Eq, requesteeId)
+      .And(r => r.RequesteeId, ComparisonOperator.Eq, requesterId), tx);
+
+    var at = DateTime.UtcNow;
+    var lianeId = Uuid7.Guid();
+
+    var (main1, moved1) = await AddLianeMember(connection, requester, lianeId, at, tx);
+    var (main2, moved2) = await AddLianeMember(connection, requestee, lianeId, at, tx);
+
+    return new JoinRequestResult(at, lianeId, true, ImmutableList.Create(main1).Concat([main2]).Concat(moved1).Concat(moved2));
   }
 
   private static Direction CheckDirection(ImmutableList<Ref<RallyingPoint>> lianeRequestWayPoints, ImmutableList<WayPoint> tripWayPoints)
@@ -676,15 +711,22 @@ public sealed class LianeServiceImpl(
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
     var lianeId = Guid.Parse(liane.Id);
+
     var lianeMemberDb = await lianeMessageService.TryGetMember(connection, lianeId, userId, tx);
     if (lianeMemberDb is null)
     {
       return false;
     }
 
-    await connection.ExecuteAsync("DELETE FROM liane_member WHERE liane_id = @liane_id AND liane_request_id = @liane_request_id",
-      new { liane_id = lianeMemberDb.LianeId, liane_request_id = lianeMemberDb.LianeRequestId }, tx);
+    var deleted = await connection.DeleteAsync(
+      Filter<LianeMemberDb>.Where(l => l.LianeRequestId, ComparisonOperator.Eq, lianeMemberDb.LianeRequestId)
+        .And(l => l.LianeId, ComparisonOperator.Eq, lianeMemberDb.LianeId), tx);
     tx.Commit();
+
+    if (deleted == 0)
+    {
+      return false;
+    }
 
     await eventDispatcher.Dispatch(liane, new MessageContent.MemberLeft("", userId));
 
@@ -747,6 +789,12 @@ public sealed class LianeServiceImpl(
   }
 }
 
+public sealed record JoinRequestDb(
+  Guid RequesterId,
+  Guid RequesteeId,
+  DateTime RequestedAt
+);
+
 public sealed record LianeMemberDb(
   Guid LianeRequestId,
   Guid LianeId,
@@ -794,3 +842,26 @@ public sealed record PendingRawMatch(
   LatLng? Deposit,
   bool IsReverseDirection
 );
+
+internal enum IsMember
+{
+  Yes,
+  No,
+  Pending
+}
+
+[Union]
+internal abstract record LianeOrRequest
+{
+  private LianeOrRequest()
+  {
+  }
+
+  public abstract bool IsCurrentUser { get; init; }
+
+  internal sealed record Liane(Api.Community.Liane Value, bool IsCurrentUser) : LianeOrRequest;
+
+  internal sealed record Request(LianeRequest Value, bool IsCurrentUser) : LianeOrRequest;
+}
+
+internal record JoinRequestResult(DateTime At, Guid Liane, bool IsJoined, IEnumerable<MessageContent> Messages);

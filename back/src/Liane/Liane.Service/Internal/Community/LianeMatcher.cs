@@ -5,6 +5,7 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
+using Liane.Api.Auth;
 using Liane.Api.Community;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
@@ -17,7 +18,7 @@ using Match = Liane.Api.Community.Match;
 
 namespace Liane.Service.Internal.Community;
 
-public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICurrentContext currentContext, LianeFetcher lianeFetcher)
+public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICurrentContext currentContext, LianeFetcher lianeFetcher, IUserService userService)
 {
   public const float MinScore = 0.33333f;
 
@@ -80,8 +81,8 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
                                                                      ((match_routes(a.geometry, b.geometry)).pickup) AS pickup,
                                                                      ((match_routes(a.geometry, b.geometry)).deposit) AS deposit,
                                                                      ((match_routes(a.geometry, b.geometry)).is_reverse_direction) AS is_reverse_direction,
-                                                                     lm_b.liane_id AS dangling_linked_to,
-                                                                     lm_b_owner.liane_id AS linked_to
+                                                                     lm_b.liane_id AS linked_to,
+                                                                     lr_b.created_by AS created_by
                                                               FROM liane_request lr_a
                                                                       INNER JOIN route a ON
                                                                         a.way_points = lr_a.way_points
@@ -94,13 +95,12 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
                                                                       LEFT JOIN liane_member lm_b ON
                                                                         lr_b.id = lm_b.liane_request_id
                                                                           AND lm_b.joined_at IS NOT NULL
-                                                                          AND NOT lm_b.liane_id = ANY(@linkedTo)
-                                                                      LEFT JOIN liane_member lm_b_owner ON
-                                                                        lm_b_owner.liane_request_id = lm_b.liane_id
-                                                                          AND lm_b_owner.liane_id = lm_b.liane_id
                                                                       INNER JOIN route b ON
                                                                         b.way_points = lr_b.way_points AND st_intersects(a.geometry, b.geometry)
-                                                              WHERE ((@from IS NULL AND lr_a.created_by = @userId) OR lr_a.id = @from)
+                                                              WHERE
+                                                                ((@from IS NULL AND lr_a.created_by = @userId) OR lr_a.id = @from)
+                                                                AND lr_b.is_enabled
+                                                                AND (lm_b.liane_id is NULL OR NOT lm_b.liane_id = ANY(@linkedTo))
                                                               ORDER BY ((match_routes(a.geometry, b.geometry)).score) DESC, "from"
                                                             """,
       new { userId, linkedTo = linkedTo.ToArray(), from, to },
@@ -118,11 +118,13 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
 
     var first = rawMatches.First();
     
+    var liane = first.LinkedTo is not null ? mapParams.Lianes.GetValueOrDefault(first.LinkedTo!.Value) : null;
+
     var matchingPoints = rawMatches.Select(m => GetBestMatch(m, mapParams.SnapedPoints))
       .Where(m => m is not null)
       .OrderByDescending(m => m!.Value.Score)
       .FirstOrDefault();
-    
+
     if (matchingPoints is null)
     {
       return null;
@@ -137,10 +139,9 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     var when = rawMatches.Select(m => new TimeRange(m.ArriveBefore, m.ReturnAfter))
       .AggregateRight((a, b) => a.Merge(b));
 
-    if (rawMatches.Count == 1)
+    if (liane is null)
     {
-
-      var joinRequest = GetJoinRequest(mapParams, first.LianeRequest, first.DanglingLinkedTo);
+      var joinRequest = GetJoinRequest(mapParams, first.LianeRequest);
       if (joinRequest is null && (matchingPoints.Value.Score < MinScore || matchingPoints.Value.Reverse))
       {
         return null;
@@ -151,15 +152,10 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
         return null;
       }
 
-      var liane = mapParams.Lianes.GetValueOrDefault(first.LianeRequest);
-      if (liane is null)
-      {
-        return null;
-      }
-
+      var user = await userService.Get(first.CreatedBy);
       return new Match.Single(
         first.LianeRequest,
-        ImmutableList.Create(liane.CreatedBy),
+        ImmutableList.Create(user),
         first.Name,
         weekDays,
         when,
@@ -178,12 +174,6 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
         return null;
       }
       
-      var liane = mapParams.Lianes.GetValueOrDefault(lianeKey);
-      if (liane is null)
-      {
-        return null;
-      }
-      
       return new Match.Group(
         lianeKey,
         liane.GetMembers(),
@@ -194,12 +184,12 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
         await matchingPoints.Value.Deposit.Resolve(rallyingPointService.Get),
         matchingPoints.Value.Score,
         matchingPoints.Value.Reverse,
-        mapParams.PendingJoinRequests.TryGetValue(first.From, out var d) ? d : null
+        mapParams.PendingMemberRequests.TryGetValue(lianeKey, out var d) ? d : null
       );
     }
   }
 
-  private static JoinRequest? GetJoinRequest(MapParams mapParams, Guid foreign, Guid? danglingLinkedTo)
+  private static JoinRequest? GetJoinRequest(MapParams mapParams, Guid foreign)
   {
     if (mapParams.PendingJoinRequests.TryGetValue(foreign, out var d))
     {
@@ -210,11 +200,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     {
       return new JoinRequest.Received(d2);
     }
-    
-    if (danglingLinkedTo.HasValue && mapParams.PendingJoinRequests.TryGetValue(danglingLinkedTo.Value, out var d3))
-    {
-      return new JoinRequest.Pending(d3);
-    }
+
     return null;
   }
 
@@ -235,9 +221,27 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
 
   private async Task<MapParams> GetMapParams(IDbConnection connection, ImmutableList<LianeRawMatch> rawMatches, string userId, IDbTransaction? tx = null)
   {
-    var lianes = await lianeFetcher.FetchLianes(connection, rawMatches.FilterSelectMany<LianeRawMatch, Guid>(r => [r.LinkedTo, r.LianeRequest]).Distinct(), tx);
+    var lianes = await lianeFetcher.FetchLianes(connection, rawMatches.FilterSelect(r => r.LinkedTo).Distinct(), tx);
     var snapedPoints = await rallyingPointService.Snap(rawMatches.FilterSelectMany<LianeRawMatch, LatLng>(r => [r.Deposit, r.Pickup]).ToImmutableHashSet());
     var pendingJoinRequests = (await connection.QueryAsync<(Guid, DateTime)>(
+        """
+        SELECT j.requester_id, j.requested_at
+        FROM liane_request lr
+                 INNER JOIN join_request j ON j.requestee_id = lr.id
+        WHERE lr.created_by = @userId
+        """,
+        new { userId }, tx)
+      ).ToImmutableDictionary(m => m.Item1, m => m.Item2);
+    var receivedJoinRequests = (await connection.QueryAsync<(Guid, DateTime)>(
+        """
+        SELECT j.requestee_id, j.requested_at
+        FROM liane_request lr
+                 INNER JOIN join_request j ON j.requester_id = lr.id
+        WHERE lr.created_by = @userId
+        """,
+        new { userId }, tx)
+      ).ToImmutableDictionary(m => m.Item1, m => m.Item2);
+    var pendingMemberRequests = (await connection.QueryAsync<(Guid, DateTime)>(
         """
         SELECT liane_member.liane_id, requested_at
         FROM liane_request
@@ -247,19 +251,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
         """,
         new { userId }, tx)
       ).ToImmutableDictionary(m => m.Item1, m => m.Item2);
-    var receivedJoinRequests = (await connection.QueryAsync<(Guid, DateTime)>(
-        """
-        SELECT liane_member.liane_request_id, requested_at
-        FROM liane_request
-                 INNER JOIN liane_member ON liane_request.id = liane_member.liane_id
-                 INNER JOIN liane_request lr_source ON lr_source.id = liane_member.liane_request_id
-        WHERE liane_request.created_by = @userId
-          AND liane_member.joined_at IS NULL
-          AND lr_source.created_by != @userId -- ici on pense au cas où je rejoins ma propre liane (après l'avoir quitter), je ne dois pas apparaitre comme receveur
-        """,
-        new { userId }, tx)
-      ).ToImmutableDictionary(m => m.Item1, m => m.Item2);
-    return new MapParams(snapedPoints, pendingJoinRequests, receivedJoinRequests, lianes);
+    return new MapParams(snapedPoints, pendingJoinRequests, receivedJoinRequests, pendingMemberRequests, lianes);
   }
 }
 
@@ -274,13 +266,14 @@ internal sealed record LianeRawMatch(
   LatLng? Pickup,
   LatLng? Deposit,
   bool IsReverseDirection,
-  Guid? DanglingLinkedTo,
-  Guid? LinkedTo
+  Guid? LinkedTo,
+  string CreatedBy
 );
 
 internal sealed record MapParams(
   ImmutableDictionary<LatLng, RallyingPoint> SnapedPoints,
   ImmutableDictionary<Guid, DateTime> PendingJoinRequests,
   ImmutableDictionary<Guid, DateTime> ReceivedJoinRequests,
+  ImmutableDictionary<Guid, DateTime> PendingMemberRequests,
   ImmutableDictionary<Guid, Api.Community.Liane> Lianes
 );
