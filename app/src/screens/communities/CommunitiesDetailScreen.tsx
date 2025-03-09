@@ -15,12 +15,13 @@ import { AppButton } from "@/components/base/AppButton.tsx";
 import { extractDays, extractTime } from "@/util/hooks/days.ts";
 import { useQueryClient } from "react-query";
 import { LianeQueryKey } from "@/util/hooks/query.ts";
+import { ModalLianeRequestItem } from "@/components/communities/ModalLianeRequestItemView.tsx";
 
 export const CommunitiesDetailScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesDetails">();
-  const { services, user } = useContext(AppContext);
+  const { user } = useContext(AppContext);
   const queryClient = useQueryClient();
-  const group = route.params.liane;
+  const liane = route.params.liane;
 
   const [myModalVisible, setMyModalVisible] = useState<boolean>(false);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
@@ -34,21 +35,40 @@ export const CommunitiesDetailScreen = () => {
     closeModalUser();
   };
 
-  const leaveLiane = useCallback(async () => {
-    setMyModalVisible(false);
-    if (group && group.id) {
-      try {
-        const result = await services.community.leave(group.id);
-        await queryClient.invalidateQueries(LianeQueryKey);
-        AppLogger.debug("COMMUNITIES", "Liane quittée avec succès", result);
-        navigation.popToTop();
-      } catch (e) {
-        AppLogger.debug("COMMUNITIES", "Au moment de quitter la liane, une erreur c'est produite", e);
-      }
-    } else {
-      AppLogger.debug("COMMUNITIES", "Pas de liane ID lors de la tentative de départ de la liane", group);
+  const myLianeRequest = useMemo(() => {
+    if (!liane) {
+      return undefined;
     }
-  }, [group, services.community, queryClient, navigation]);
+    const lianeMember = liane.members.find(member => member.user?.id === user?.id);
+    return lianeMember?.lianeRequest;
+  }, [liane, user?.id]);
+
+  const members = useMemo(() => {
+    // move current user on top
+    const currentUserId = user?.id;
+    if (!currentUserId) {
+      return liane.members;
+    }
+    const currentUserIndex = liane.members.findIndex(member => member.user?.id === currentUserId);
+    if (currentUserIndex === -1) {
+      return liane.members;
+    }
+    const currentUser = liane.members[currentUserIndex];
+    const newMembers = [...liane.members];
+    newMembers.splice(currentUserIndex, 1);
+    newMembers.unshift(currentUser);
+    return newMembers;
+  }, [liane.members, user?.id]);
+
+  const handleRefresh = useCallback(
+    async (deleted: boolean) => {
+      await queryClient.invalidateQueries(LianeQueryKey);
+      if (deleted) {
+        navigation.popToTop();
+      }
+    },
+    [navigation, queryClient]
+  );
 
   return (
     <View>
@@ -75,9 +95,9 @@ export const CommunitiesDetailScreen = () => {
           </View>
         </View>
         <View style={styles.membersContainer}>
-          <AppText style={styles.membersTitle}>Membres ({group.members.length})</AppText>
+          <AppText style={styles.membersTitle}>Membres ({liane.members.length})</AppText>
           <FlatList
-            data={group.members}
+            data={members}
             renderItem={({ item }) => (
               <MemberItem member={item} user={user} setMyModalVisible={setMyModalVisible} setModalVisible={setModalVisible} />
             )}
@@ -85,28 +105,13 @@ export const CommunitiesDetailScreen = () => {
           />
         </View>
       </View>
-      <SimpleModal visible={myModalVisible} setVisible={setMyModalVisible} backgroundColor={AppColors.white} hideClose>
-        <Column>
-          <Pressable
-            style={{ marginHorizontal: 16, marginBottom: 10, flexDirection: "row" }}
-            onPress={() => {
-              setMyModalVisible(false);
-              user &&
-                navigation.navigate("Publish", {
-                  initialValue: group.members.find(member => member.user?.id === user.id)?.lianeRequest
-                });
-            }}>
-            <AppIcon name="swap" />
-            <AppText style={{ marginLeft: 5, fontSize: 16, fontWeight: "bold", lineHeight: 24 }}>Modifier mes contraintes</AppText>
-          </Pressable>
-          <Pressable style={{ margin: 16, flexDirection: "row" }} onPress={leaveLiane}>
-            <AppIcon color={AppColors.primaryColor} name="log-out" />
-            <AppText style={{ marginLeft: 5, fontSize: 16, fontWeight: "bold", lineHeight: 24, color: AppColors.primaryColor }}>
-              Quitter la liane
-            </AppText>
-          </Pressable>
-        </Column>
-      </SimpleModal>
+      <ModalLianeRequestItem
+        lianeRequest={myLianeRequest}
+        attached={true}
+        onRefresh={handleRefresh}
+        myModalVisible={myModalVisible}
+        setMyModalVisible={setMyModalVisible}
+      />
       <SimpleModal visible={modalVisible} setVisible={closeModalUser} backgroundColor={AppColors.white} hideClose>
         <Column>
           <Pressable style={{ flexDirection: "row", marginHorizontal: 16 }} onPress={reportUser}>
@@ -146,7 +151,7 @@ const MemberItem = ({ member, user, setMyModalVisible, setModalVisible }: Member
         </View>
       </View>
       <Pressable onPress={() => (member.user?.id === user?.id ? setMyModalVisible(true) : setModalVisible(true))}>
-        <AppIcon name="more-vertical" />
+        <AppIcon name={member.user?.id === user?.id ? "edit" : "more-vertical"} size={30} />
       </Pressable>
     </View>
   );

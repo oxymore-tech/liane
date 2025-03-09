@@ -1,5 +1,5 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
-import { Pressable, SectionList, StyleSheet, View } from "react-native";
+import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { ImageBackground, Pressable, SectionList, StyleSheet, View } from "react-native";
 import { Center, Column, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { useAppNavigation } from "@/components/context/routing";
@@ -11,8 +11,12 @@ import { AppAvatars } from "@/components/UserPicture.tsx";
 import { AppButton } from "@/components/base/AppButton.tsx";
 import { useObservable } from "@/util/hooks/subscription.ts";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
-import { useLianeMatchQuery } from "@/util/hooks/query.ts";
+import { LianeQueryKey, useLianeMatchQuery } from "@/util/hooks/query.ts";
 import { GestureHandlerRootView, RefreshControl } from "react-native-gesture-handler";
+import { ModalLianeRequestItem } from "@/components/communities/ModalLianeRequestItemView.tsx";
+import { useQueryClient } from "react-query";
+import { Wallpapers } from "@/components/base/Wallpapers.ts";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Status = "Pending" | "Received" | "None";
 
@@ -25,6 +29,8 @@ const StatusOrder = {
 type Section = { data: CoMatch[]; status: Status };
 
 export const MatchListScreen = () => {
+  const queryClient = useQueryClient();
+  const insets = useSafeAreaInsets();
   const { services } = useContext(AppContext);
   const { navigation, route } = useAppNavigation<"MatchList">();
 
@@ -71,33 +77,58 @@ export const MatchListScreen = () => {
       .sort((a, b) => StatusOrder[a.status] - StatusOrder[b.status]);
   }, [state]);
 
+  const handleRefresh = useCallback(
+    async (deleted: boolean) => {
+      await queryClient.invalidateQueries(LianeQueryKey);
+      if (deleted) {
+        navigation.popToTop();
+      }
+    },
+    [navigation, queryClient]
+  );
+
+  const [myModalVisible, setMyModalVisible] = useState(false);
+
   return (
     <GestureHandlerRootView style={styles.mainContainer}>
-      <Row style={{ backgroundColor: AppColorPalettes.gray[100], justifyContent: "flex-start", alignItems: "center", padding: 16 }} spacing={16}>
-        <AppButton onPress={() => navigation.goBack()} icon="arrow-left" color={AppColors.primaryColor} />
-        <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 16, lineHeight: 27, color: AppColors.black }}>Propositions</AppText>
-      </Row>
-      <SectionList
-        renderSectionHeader={renderSectionHeader}
-        refreshing={isFetching}
-        refreshControl={<RefreshControl refreshing={isFetching || !state} onRefresh={refetch} />}
-        ListEmptyComponent={
-          <Center>
-            {!isFetching && !!state && (
-              <AppText style={{ color: AppColors.black, fontSize: 16, fontWeight: "bold" }}>Nous n'avons rien à vous proposer :-(</AppText>
-            )}
-          </Center>
-        }
-        sections={sections}
-        renderItem={({ item }) => (
-          <GroupItem
-            key={item.liane}
-            unread={!!unread[item.liane]}
-            group={item}
-            onPress={() => navigation.navigate("LianeMapDetail", { liane: item, request: state?.lianeRequest })}
-          />
-        )}
-      />
+      <ImageBackground source={Wallpapers[0]} style={{ flex: 1 }}>
+        <Row style={[styles.header, { paddingTop: insets.top }]} spacing={16}>
+          <AppButton onPress={() => navigation.goBack()} icon="arrow-left" color={AppColorPalettes.gray[800]} />
+          <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 24, lineHeight: 27, color: AppColorPalettes.gray[800] }}>
+            {state?.lianeRequest?.name}
+          </AppText>
+          <AppButton onPress={() => setMyModalVisible(true)} icon="edit" color={AppColorPalettes.gray[800]} />
+        </Row>
+        <SectionList
+          renderSectionHeader={renderSectionHeader}
+          refreshing={isFetching}
+          refreshControl={<RefreshControl refreshing={isFetching || !state} onRefresh={refetch} />}
+          ListEmptyComponent={
+            <Center>
+              {!isFetching && !!state ? (
+                <AppText style={{ color: AppColors.black, fontSize: 16, fontWeight: "bold" }}>Nous n'avons rien à vous proposer :-(</AppText>
+              ) : (
+                <AppText style={{ color: AppColors.black, fontSize: 16, fontWeight: "bold" }}>Recherche de propostions...</AppText>
+              )}
+            </Center>
+          }
+          sections={sections}
+          renderItem={({ item }) => (
+            <GroupItem
+              key={item.liane}
+              unread={!!unread[item.liane]}
+              group={item}
+              onPress={() => navigation.navigate("LianeMapDetail", { liane: item, request: state?.lianeRequest })}
+            />
+          )}
+        />
+        <ModalLianeRequestItem
+          lianeRequest={state?.lianeRequest}
+          onRefresh={handleRefresh}
+          myModalVisible={myModalVisible}
+          setMyModalVisible={setMyModalVisible}
+        />
+      </ImageBackground>
     </GestureHandlerRootView>
   );
 };
@@ -163,6 +194,12 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.grayBackground,
     justifyContent: "flex-start",
     flex: 1
+  },
+  header: {
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.4)"
   },
   headerSection: {
     paddingTop: 10,
