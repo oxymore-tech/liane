@@ -16,7 +16,7 @@ public sealed record LianeRequest(
   bool CanDrive,
   DayOfWeekFlag WeekDays,
   bool IsEnabled,
-  [SerializeAsResolvedRef] Ref<User>? CreatedBy,
+  [property:SerializeAsResolvedRef] Ref<User>? CreatedBy,
   DateTime? CreatedAt
 ) : IEntity<Guid?>;
 
