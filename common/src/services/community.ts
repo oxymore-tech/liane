@@ -89,8 +89,6 @@ export type CoLiane = Identity & {
   arriveBefore: TimeOnly;
   returnAfter: TimeOnly;
   weekDays: DayOfWeekFlag;
-  createdAt: UTCDateTime;
-  createdBy: User;
   fake: boolean;
 };
 

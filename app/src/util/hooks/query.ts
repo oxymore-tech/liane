@@ -20,6 +20,8 @@ export function useLianeMatch(lianeRequestId: string) {
   return useQuery(["liane", "match", lianeRequestId], async () => await services.community.matchLianeRequest(lianeRequestId));
 }
 
+export const LianeOnMapQueryKey = (bboxAsString: string) => ["liane", bboxAsString];
+
 export const TripQueryKey = ["trip"];
 
 export const TripDetailQueryKey = (id: Ref<Trip>) => ["trip", id];

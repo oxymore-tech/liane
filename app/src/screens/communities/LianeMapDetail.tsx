@@ -48,9 +48,6 @@ export const LianeMapDetailScreen = () => {
       if (lianeRequest) {
         return [];
       }
-      if (!matchOrLiane.members.length) {
-        return [matchOrLiane.createdBy];
-      }
       return matchOrLiane.members.map(m => m.user);
     } else {
       return matchOrLiane.members;
