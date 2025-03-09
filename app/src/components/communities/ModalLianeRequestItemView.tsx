@@ -61,10 +61,11 @@ export const ModalLianeRequestItem = ({ lianeRequest, attached, onRefresh, myMod
   }, [lianeRequest?.id, attached, services.community, onRefresh]);
 
   const renameLiane = useCallback(async () => {
-    if (!lianeRequest?.id) {
+    if (!lianeRequest) {
+      return;
     }
     try {
-      const result = await services.community.update(lianeRequest.id, {
+      const result = await services.community.update(lianeRequest.id!, {
         ...lianeRequest,
         name: name,
         wayPoints: lianeRequest.wayPoints.map(w => w.id)
@@ -83,7 +84,7 @@ export const ModalLianeRequestItem = ({ lianeRequest, attached, onRefresh, myMod
   const isValid = name.length > 0;
 
   return (
-    <SimpleModal visible={lianeRequest && myModalVisible} setVisible={setMyModalVisible} backgroundColor={AppColors.white} hideClose>
+    <SimpleModal visible={!!lianeRequest && myModalVisible} setVisible={setMyModalVisible} backgroundColor={AppColors.white} hideClose>
       {!showLianeNameInput ? (
         <Column spacing={30} style={{ alignItems: "center" }}>
           <AppButton
