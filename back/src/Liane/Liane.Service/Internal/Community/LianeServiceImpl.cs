@@ -733,26 +733,29 @@ public sealed class LianeServiceImpl(
     return true;
   }
 
-  private async Task<(ImmutableList<RallyingPoint> WayPoints, TimeOnly ArriveBefore, Ref<RallyingPoint> At)> GetBestTrip(IDbConnection connection, Guid liane, Guid? lianeRequest,
+  private async Task<(ImmutableList<RallyingPoint> WayPoints, TimeOnly ArriveBefore, Ref<RallyingPoint> At)> GetBestTrip(IDbConnection connection, Guid lianeRequestFrom, Guid? lianeRequestTo,
     IDbTransaction? tx = null)
   {
-    var resolved = await lianeFetcher.FetchLiane(connection, liane, tx);
-    if (lianeRequest is null)
+    var resolvedLianeRequest = await lianeRequestFetcher.FetchLianeRequest(connection, lianeRequestFrom, tx);
+    var wayPoints = await resolvedLianeRequest.WayPoints.SelectAsync(rallyingPointService.Get);
+    var arriveBefore = resolvedLianeRequest.ArriveBefore;
+    var end = wayPoints.Last();
+
+    if (lianeRequestTo is null)
     {
-      return (resolved.WayPoints, resolved.ArriveBefore, resolved.WayPoints.Last());
+      return (wayPoints, arriveBefore, end);
     }
 
-    var bestMatch = await matcher.FindMatchBetween(connection, liane, lianeRequest.Value, tx);
-
+    var bestMatch = await matcher.FindMatchBetween(connection, lianeRequestFrom, lianeRequestTo.Value, tx);
     if (bestMatch is null)
     {
-      return (resolved.WayPoints, resolved.ArriveBefore, resolved.WayPoints.Last());
+      return (wayPoints, arriveBefore, end);
     }
 
     return (
-      resolved.WayPoints.Insert(1, bestMatch.Pickup).Insert(2, bestMatch.Deposit).DistinctBy(w => w.Id).ToImmutableList(),
-      resolved.ArriveBefore,
-      resolved.WayPoints.Last()
+      wayPoints.Insert(1, bestMatch.Pickup).Insert(2, bestMatch.Deposit).DistinctBy(w => w.Id).ToImmutableList(),
+      arriveBefore,
+      end
     );
   }
 
