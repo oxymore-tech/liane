@@ -9,12 +9,12 @@ import { LianeListView } from "@/components/communities/LianeListView";
 import { AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { DefaultFloatingActions } from "@/components/context/FloatingActions.tsx";
-import { LianeQueryKey, useLianeMatches } from "@/util/hooks/query.ts";
+import { LianeQueryKey, useLianeMatchesQuery } from "@/util/hooks/query.ts";
 
 export const CommunitiesScreen = () => {
   const queryClient = useQueryClient();
 
-  const lianeMatches = useLianeMatches();
+  const lianeMatches = useLianeMatchesQuery();
 
   const { isFetching, error, data } = lianeMatches;
 

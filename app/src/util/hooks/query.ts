@@ -1,7 +1,8 @@
 import { useQuery } from "react-query";
-import { useContext } from "react";
+import { useCallback, useContext } from "react";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
 import { Ref, Trip } from "@liane/common";
+import { useFocusEffect } from "@react-navigation/native";
 
 export const LianeQueryKey = ["liane"];
 
@@ -10,14 +11,33 @@ export function useLianeQuery(id: string) {
   return useQuery(["liane", id], async () => await services.community.get(id));
 }
 
-export function useLianeMatches() {
+export function useLianeMatchesQuery() {
   const { services } = useContext(AppContext);
-  return useQuery(["liane", "match"], async () => await services.community.match());
+  const query = useQuery(["liane", "match"], async () => await services.community.match());
+
+  useFocusEffect(
+    useCallback(() => {
+      query.refetch().then();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+  );
+
+  return query;
 }
 
-export function useLianeMatch(lianeRequestId: string) {
+export function useLianeMatchQuery(lianeRequestId: string) {
   const { services } = useContext(AppContext);
-  return useQuery(["liane", "match", lianeRequestId], async () => await services.community.matchLianeRequest(lianeRequestId));
+
+  const query = useQuery(["liane", "match", lianeRequestId], async () => await services.community.matchLianeRequest(lianeRequestId));
+
+  useFocusEffect(
+    useCallback(() => {
+      query.refetch().then();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+  );
+
+  return query;
 }
 
 export const LianeOnMapQueryKey = (bboxAsString: string) => ["liane", bboxAsString];

@@ -72,6 +72,7 @@ export const ArchivedTripListView = ({ data, style, isFetching = false, onRefres
   return (
     <FlatList
       style={style}
+      refreshing={isFetching}
       refreshControl={<RefreshControl refreshing={isFetching} onRefresh={onRefresh} />}
       data={data}
       showsVerticalScrollIndicator={false}

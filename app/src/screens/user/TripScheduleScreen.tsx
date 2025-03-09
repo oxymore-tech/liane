@@ -95,6 +95,7 @@ const TripScheduleScreen = ({ route }: Props) => {
       <WeekHeader style={{ paddingHorizontal: 8 }} selectedDay={currentDate} onSelect={setCurrentDate} incomingTrips={trip.data} />
       <FlatList
         style={{ flex: 1, backgroundColor: AppColors.lightGrayBackground, paddingHorizontal: 8 }}
+        refreshing={trip.isFetching}
         refreshControl={<RefreshControl refreshing={trip.isFetching} onRefresh={() => trip.refetch()} />}
         data={currentList}
         showsVerticalScrollIndicator={false}

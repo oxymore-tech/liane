@@ -11,7 +11,7 @@ import { AppAvatars } from "@/components/UserPicture.tsx";
 import { AppButton } from "@/components/base/AppButton.tsx";
 import { useObservable } from "@/util/hooks/subscription.ts";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
-import { useLianeMatch } from "@/util/hooks/query.ts";
+import { useLianeMatchQuery } from "@/util/hooks/query.ts";
 import { GestureHandlerRootView, RefreshControl } from "react-native-gesture-handler";
 
 type Status = "Pending" | "Received" | "None";
@@ -30,7 +30,7 @@ export const MatchListScreen = () => {
 
   const unread = useObservable(services.realTimeHub.unreadNotifications, {});
 
-  const { data, isFetching, refetch } = useLianeMatch(route.params.lianeRequest);
+  const { data, isFetching, refetch } = useLianeMatchQuery(route.params.lianeRequest);
 
   const [state, setState] = useState<CoLianeMatch<Detached>>();
 
@@ -79,6 +79,7 @@ export const MatchListScreen = () => {
       </Row>
       <SectionList
         renderSectionHeader={renderSectionHeader}
+        refreshing={isFetching}
         refreshControl={<RefreshControl refreshing={isFetching || !state} onRefresh={refetch} />}
         ListEmptyComponent={
           <Center>

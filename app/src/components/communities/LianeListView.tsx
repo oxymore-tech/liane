@@ -28,6 +28,7 @@ export const LianeListView = ({ data, isFetching, onRefresh, loadMore }: LianeLi
   return (
     <FlatList
       style={{ flex: 1 }}
+      refreshing={isFetching}
       refreshControl={<RefreshControl refreshing={isFetching || false} onRefresh={onRefresh} />}
       data={data}
       ListEmptyComponent={

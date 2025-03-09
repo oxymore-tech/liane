@@ -119,6 +119,7 @@ export const MessageList = ({ liane, user, messages, loading, fetchMessages, fet
       <FlatList
         data={items}
         showsVerticalScrollIndicator={false}
+        refreshing={loading}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchMessages} />}
         style={{ flex: 1 }}
         keyExtractor={m => {
