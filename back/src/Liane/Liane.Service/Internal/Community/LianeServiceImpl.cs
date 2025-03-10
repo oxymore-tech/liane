@@ -41,6 +41,7 @@ public sealed class LianeServiceImpl(
   ITripService tripService,
   IUserService userService,
   IPushService pushService,
+  IHubService hubService,
   EventDispatcher eventDispatcher) : ILianeService
 {
   public async Task<IncomingTrips> GetIncomingTrips()
@@ -520,10 +521,14 @@ public sealed class LianeServiceImpl(
     {
       var requesterUser = await userService.Get(requesterValue.CreatedBy!);
       var requesteeUser = await userService.Get(requesteeValue.CreatedBy!);
-      _ = Task.Run(() => pushService.Push(requesteeUser,
-        new Notification(Uuid7.Guid(), requesterValue.CreatedBy, DateTime.UtcNow, $"{requesterUser.Pseudo} n'a pas accepté votre demande", $"{requesterUser.Pseudo} n'a pas accepté votre demande",
-          $"liane://liane/{requesteeValue.Id!.Value}/match"))
-      );
+      _ = Task.Run(async () =>
+      {
+        var requesteeId = requesteeValue.Id!.Value;
+        await pushService.Push(requesteeUser,
+          new Notification(Uuid7.Guid(), requesterValue.CreatedBy, DateTime.UtcNow, $"{requesterUser.Pseudo} n'a pas accepté votre demande", $"{requesterUser.Pseudo} n'a pas accepté votre demande",
+            $"liane://liane/{requesteeId}/match"));
+        await hubService.PushLianeUpdateTo(requesteeId, requesteeUser);
+      });
       return true;
     }
 
@@ -660,10 +665,13 @@ public sealed class LianeServiceImpl(
       await connection.DeleteAsync(Filter<JoinRequestDb>.Where(j => j.RequesterId, ComparisonOperator.Eq, requesterId), tx);
       await connection.InsertAsync(new JoinRequestDb(requesterId, requesteeId, requestedAt), tx);
       var createdBy = await userService.Get(requester.CreatedBy!);
-      _ = Task.Run(() => pushService.Push(requestee.CreatedBy!,
-        new Notification(Uuid7.Guid(), createdBy, requestedAt, $"{createdBy.Pseudo} souhaite rejoindre votre liane", $"{createdBy.Pseudo} souhaite rejoindre votre liane",
-          $"liane://liane/{requesteeId}/match"))
-      );
+      _ = Task.Run(async () =>
+      {
+        await pushService.Push(requestee.CreatedBy!,
+          new Notification(Uuid7.Guid(), createdBy, requestedAt, $"{createdBy.Pseudo} souhaite rejoindre votre liane", $"{createdBy.Pseudo} souhaite rejoindre votre liane",
+            $"liane://liane/{requesteeId}/match"));
+        await hubService.PushLianeUpdateTo(requesteeId, requestee.CreatedBy!);
+      });
       return null;
     }
 

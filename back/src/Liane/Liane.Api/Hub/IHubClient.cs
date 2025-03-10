@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Auth;
@@ -19,5 +20,5 @@ public interface IHubClient
 
   Task ReceiveTripUpdate(Trip.Trip trip);
 
-  Task ReceiveLianeUpdate(Community.Liane liane);
+  Task ReceiveLianeUpdate(Guid? lianeOrRequest);
 }
