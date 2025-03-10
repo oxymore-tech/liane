@@ -42,14 +42,15 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     var userId = currentContext.CurrentUser().Id;
     var rawMatches = await FindRawMatches(connection, userId, linkedTo, from, to, tx);
     var mapParams = await GetMapParams(connection, rawMatches, userId, tx);
+    var checkScore = from is null && to is null;
     return await rawMatches
-      .GroupByAsync(m => m.From, g => MapToMatches(g, mapParams));
+      .GroupByAsync(m => m.From, g => MapToMatches(g, mapParams, checkScore));
   }
 
-  private async Task<ImmutableList<Match>> MapToMatches(IEnumerable<LianeRawMatch> rawMatches, MapParams mapParams)
+  private async Task<ImmutableList<Match>> MapToMatches(IEnumerable<LianeRawMatch> rawMatches, MapParams mapParams, bool checkScore)
   {
     var matches = await rawMatches.GroupBy(m => m.LinkedTo ?? m.LianeRequest)
-      .FilterSelectAsync(r => ToMatch(r.Key, r.ToImmutableList(), mapParams));
+      .FilterSelectAsync(r => ToMatch(r.Key, r.ToImmutableList(), mapParams, checkScore));
     return matches
       .OrderByDescending(m => m.Score)
       .ThenByDescending(m => m is Match.Group group ? group.Matches.Count : 1)
@@ -98,7 +99,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
                                                                       INNER JOIN route b ON
                                                                         b.way_points = lr_b.way_points AND st_intersects(a.geometry, b.geometry)
                                                               WHERE
-                                                                ((@from IS NULL AND lr_a.created_by = @userId) OR lr_a.id = @from)
+                                                                ((@from IS NULL AND lr_a.created_by = @userId) OR (lr_a.id = @from OR lm_b.liane_id = @from))
                                                                 AND lr_b.is_enabled
                                                                 AND (lm_b.liane_id is NULL OR NOT lm_b.liane_id = ANY(@linkedTo))
                                                               ORDER BY ((match_routes(a.geometry, b.geometry)).score) DESC, "from"
@@ -109,7 +110,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     return result.ToImmutableList();
   }
 
-  private async Task<Match?> ToMatch(Guid lianeKey, ImmutableList<LianeRawMatch> rawMatches, MapParams mapParams)
+  private async Task<Match?> ToMatch(Guid lianeKey, ImmutableList<LianeRawMatch> rawMatches, MapParams mapParams, bool checkScore)
   {
     if (rawMatches.IsEmpty)
     {
@@ -142,7 +143,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     if (liane is null)
     {
       var joinRequest = GetJoinRequest(mapParams, first.LianeRequest);
-      if (joinRequest is null && (matchingPoints.Value.Score < MinScore || matchingPoints.Value.Reverse))
+      if (checkScore && joinRequest is null && (matchingPoints.Value.Score < MinScore || matchingPoints.Value.Reverse))
       {
         return null;
       }
@@ -169,7 +170,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
 
     {
       var matches = rawMatches.Select(m => (Ref<LianeRequest>)m.LianeRequest).ToImmutableList();
-      if (matchingPoints.Value.Score < MinScore || matchingPoints.Value.Reverse)
+      if (checkScore && (matchingPoints.Value.Score < MinScore || matchingPoints.Value.Reverse))
       {
         return null;
       }

@@ -736,16 +736,13 @@ public sealed class LianeServiceImpl(
   private async Task<(ImmutableList<RallyingPoint> WayPoints, TimeOnly ArriveBefore, Ref<RallyingPoint> At)> GetBestTrip(IDbConnection connection, Guid lianeRequestFrom, Guid? lianeRequestTo,
     IDbTransaction? tx = null)
   {
-    var resolvedLianeRequest = await lianeRequestFetcher.FetchLianeRequest(connection, lianeRequestFrom, tx);
-    var wayPoints = await resolvedLianeRequest.WayPoints.SelectAsync(rallyingPointService.Get);
-    var arriveBefore = resolvedLianeRequest.ArriveBefore;
-    var end = wayPoints.Last();
+    var (wayPoints, arriveBefore, end) = await GetTrip(connection, lianeRequestFrom, tx);
 
     if (lianeRequestTo is null)
     {
       return (wayPoints, arriveBefore, end);
     }
-
+   
     var bestMatch = await matcher.FindMatchBetween(connection, lianeRequestFrom, lianeRequestTo.Value, tx);
     if (bestMatch is null)
     {
@@ -757,6 +754,22 @@ public sealed class LianeServiceImpl(
       arriveBefore,
       end
     );
+  }
+
+  private async Task<(ImmutableList<RallyingPoint> wayPoints, TimeOnly arriveBefore, RallyingPoint end)> GetTrip(IDbConnection connection, Guid lianeRequestFrom, IDbTransaction? tx)
+  {
+    var liane = await lianeFetcher.TryFetchLiane(connection, lianeRequestFrom, tx);
+    
+    if (liane is not null)
+    {
+      return (liane.WayPoints, liane.ArriveBefore, liane.WayPoints.Last());
+    }
+    
+    var resolvedLianeRequest = await lianeRequestFetcher.FetchLianeRequest(connection, lianeRequestFrom, tx);
+    var wayPoints = await resolvedLianeRequest.WayPoints.SelectAsync(rallyingPointService.Get);
+    var arriveBefore = resolvedLianeRequest.ArriveBefore;
+    var end = wayPoints.Last();
+    return (wayPoints, arriveBefore, end);
   }
 
   private async Task<string[]> MergeRoute(ImmutableList<Ref<RallyingPoint>> wayPoints, IDbConnection connection, IDbTransaction tx)
