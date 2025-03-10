@@ -34,12 +34,12 @@ public sealed class PushUpdateHandler(
     var liane = await e.Liane.Resolve(i => lianeFetcher.Get(i.IdAsGuid()));
     foreach (var member in liane.Members)
     {
-      await hubService.PushLianeUpdateTo(liane, member.User);
+      await hubService.PushLianeUpdateTo(liane.Id, member.User);
     }
 
     if (e.Content is IUserTargeted addressedTo)
     {
-      await hubService.PushLianeUpdateTo(liane, addressedTo.User);
+      await hubService.PushLianeUpdateTo(liane.Id, addressedTo.User);
     }
   }
 }
