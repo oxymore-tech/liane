@@ -8,12 +8,12 @@ export const LianeQueryKey = ["liane"];
 
 export function useLianeQuery(id: string) {
   const { services } = useContext(AppContext);
-  return useQuery(["liane", id], async () => await services.community.get(id));
+  return useQuery(LianeDetailQueryKey(id), async () => await services.community.get(id));
 }
 
 export function useLianeMatchesQuery() {
   const { services } = useContext(AppContext);
-  const query = useQuery(["liane", "match"], async () => await services.community.match());
+  const query = useQuery(LianeMatchQueryKey, async () => await services.community.match());
 
   useFocusEffect(
     useCallback(() => {
@@ -28,7 +28,7 @@ export function useLianeMatchesQuery() {
 export function useLianeMatchQuery(lianeRequestId: string) {
   const { services } = useContext(AppContext);
 
-  const query = useQuery(["liane", "match", lianeRequestId], async () => await services.community.matchLianeRequest(lianeRequestId));
+  const query = useQuery(LianeMatchDetailQueryKey(lianeRequestId), async () => await services.community.matchLianeRequest(lianeRequestId));
 
   useFocusEffect(
     useCallback(() => {
@@ -41,6 +41,9 @@ export function useLianeMatchQuery(lianeRequestId: string) {
 }
 
 export const LianeOnMapQueryKey = (bboxAsString: string) => ["liane", bboxAsString];
+export const LianeMatchQueryKey = ["liane", "match"];
+export const LianeDetailQueryKey = (lianeOrRequest: string) => ["liane", lianeOrRequest];
+export const LianeMatchDetailQueryKey = (lianeOrRequest: string) => ["liane", "match", lianeOrRequest];
 
 export const TripQueryKey = ["trip"];
 

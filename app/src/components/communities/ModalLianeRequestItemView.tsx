@@ -43,7 +43,11 @@ export const ModalLianeRequestItem = ({ lianeRequest, attached, onRefresh, myMod
           onPress: async () => {
             try {
               setDeleting(true);
-              await services.community.delete(lianeRequest.id!);
+              if (attached) {
+                await services.community.leave(lianeRequest.id!);
+              } else {
+                await services.community.delete(lianeRequest.id!);
+              }
               if (onRefresh) {
                 onRefresh(true);
               }

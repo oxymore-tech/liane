@@ -713,14 +713,14 @@ public sealed class LianeServiceImpl(
     return Direction.Outbound;
   }
 
-  public async Task<bool> Leave(Ref<Api.Community.Liane> liane)
+  public async Task<bool> Leave(Ref<Api.Community.Liane> lianeOrRequest)
   {
     var userId = currentContext.CurrentUser().Id;
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
-    var lianeId = Guid.Parse(liane.Id);
+    var lianeOrRequestId = Guid.Parse(lianeOrRequest.Id);
 
-    var lianeMemberDb = await lianeMessageService.TryGetMember(connection, lianeId, userId, tx);
+    var lianeMemberDb = await lianeMessageService.TryGetMember(connection, lianeOrRequestId, userId, tx);
     if (lianeMemberDb is null)
     {
       return false;
@@ -736,7 +736,7 @@ public sealed class LianeServiceImpl(
       return false;
     }
 
-    await eventDispatcher.Dispatch(liane, new MessageContent.MemberLeft("", userId));
+    await eventDispatcher.Dispatch(lianeMemberDb.LianeId, new MessageContent.MemberLeft("", userId));
 
     return true;
   }

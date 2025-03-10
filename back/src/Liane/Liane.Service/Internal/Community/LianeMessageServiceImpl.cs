@@ -129,15 +129,16 @@ public sealed class LianeMessageServiceImpl(
     tx.Commit();
   }
 
-  public async Task<LianeMemberDb?> TryGetMember(IDbConnection connection, Guid lianeId, string? userId, IDbTransaction? tx)
+  public async Task<LianeMemberDb?> TryGetMember(IDbConnection connection, Guid lianeOrRequestId, string? userId, IDbTransaction? tx)
   {
     var userIdValue = userId ?? currentContext.CurrentUser().Id;
     var lianeMemberDb = await connection.QueryFirstOrDefaultAsync<LianeMemberDb>("""
                                                                                  SELECT liane_member.liane_request_id, liane_member.liane_id, liane_member.requested_at, liane_member.joined_at, liane_member.last_read_at
                                                                                  FROM liane_member
                                                                                    INNER JOIN liane_request ON liane_member.liane_request_id = liane_request.id
-                                                                                 WHERE liane_member.liane_id = @lianeId AND liane_request.created_by = @userId
-                                                                                 """, new { userId = userIdValue, lianeId }, tx);
+                                                                                 WHERE (liane_member.liane_request_id = @lianeOrRequestId OR liane_member.liane_id = @lianeOrRequestId)
+                                                                                   AND liane_request.created_by = @userId
+                                                                                 """, new { userId = userIdValue, lianeOrRequestId }, tx);
     return lianeMemberDb;
   }
 

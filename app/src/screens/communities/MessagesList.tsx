@@ -66,6 +66,7 @@ export const MessageList = ({ liane, user, messages, loading, fetchMessages, fet
         array.push({ title });
       }
     }
+    console.log("FINISHED", messages, array);
     return array;
   }, [messages]);
 

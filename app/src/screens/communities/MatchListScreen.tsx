@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { ImageBackground, Pressable, SectionList, StyleSheet, View } from "react-native";
-import { Center, Column, Row } from "@/components/base/AppLayout";
+import { Column, Row } from "@/components/base/AppLayout";
 import { AppText } from "@/components/base/AppText";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppIcon } from "@/components/base/AppIcon";
@@ -46,6 +46,7 @@ export const MatchListScreen = () => {
     }
 
     if (data.state.type === "Attached") {
+      navigation.popToTop();
       navigation.navigate("CommunitiesChat", { liane: data.state.liane.id! });
       return;
     }
@@ -104,13 +105,11 @@ export const MatchListScreen = () => {
           refreshing={isFetching}
           refreshControl={<RefreshControl refreshing={isFetching || !state} onRefresh={refetch} />}
           ListEmptyComponent={
-            <Center>
-              {!isFetching && !!state ? (
-                <AppText style={{ color: AppColors.black, fontSize: 16, fontWeight: "bold" }}>Nous n'avons rien à vous proposer :-(</AppText>
-              ) : (
-                <AppText style={{ color: AppColors.black, fontSize: 16, fontWeight: "bold" }}>Recherche de propostions...</AppText>
-              )}
-            </Center>
+            <View style={styles.headerSection}>
+              <AppText style={{ color: AppColorPalettes.gray[800], fontSize: 18, fontWeight: "bold" }}>
+                {!isFetching && !!state ? "Nous n'avons rien à vous proposer :-(" : "Recherche de propostions..."}
+              </AppText>
+            </View>
           }
           sections={sections}
           renderItem={({ item }) => (
@@ -147,7 +146,7 @@ const renderSectionHeader = ({ section }: { section: Section }) => {
   return (
     <View style={styles.headerSection}>
       {unread && <View style={styles.dot} />}
-      <AppText style={{ color: AppColors.black, fontWeight: "bold" }}>{text}</AppText>
+      <AppText style={{ color: AppColorPalettes.gray[800], fontWeight: "bold", fontSize: 18 }}>{text}</AppText>
     </View>
   );
 };
@@ -234,7 +233,8 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: AppColorPalettes.orange[500],
     borderColor: AppColors.white,
-    borderWidth: 1
+    borderWidth: 1,
+    marginRight: 5
   },
   city: {
     fontSize: 16,

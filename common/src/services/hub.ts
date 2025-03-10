@@ -31,7 +31,7 @@ export interface HubService {
 
   unreadNotifications: Observable<Record<Ref<CoLiane>, number>>;
   tripUpdates: Observable<Trip>;
-  lianeUpdates: Observable<CoLiane>;
+  lianeUpdates: Observable<string | undefined>;
   userUpdates: Observable<FullUser>;
   hubState: Observable<HubState>;
 }
@@ -44,7 +44,7 @@ type UnreadOverview = Record<Ref<CoLiane>, number>;
 
 export abstract class AbstractHubService implements HubService {
   tripUpdates = new Subject<Trip>();
-  lianeUpdates = new Subject<CoLiane>();
+  lianeUpdates = new Subject<string | undefined>();
   userUpdates = new Subject<FullUser>();
   unreadNotifications = new BehaviorSubject<Record<Ref<CoLiane>, number>>({});
   hubState = new Subject<HubState>();
@@ -94,8 +94,8 @@ export abstract class AbstractHubService implements HubService {
     this.tripUpdates.next(trip);
   };
 
-  protected receiveLianeUpdate = (liane: CoLiane) => {
-    this.lianeUpdates.next(liane);
+  protected receiveLianeUpdate = (lianeOrRequest?: string) => {
+    this.lianeUpdates.next(lianeOrRequest);
   };
 
   protected receiveUserUpdate = (user: FullUser) => {

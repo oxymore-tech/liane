@@ -1,7 +1,7 @@
 import React, { PropsWithChildren, useContext } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 import { useQueryClient } from "react-query";
-import { CoLiane, Trip } from "@liane/common";
+import { Trip } from "@liane/common";
 import { useSubscription } from "@/util/hooks/subscription";
 import { LianeGeolocation } from "@/api/service/location";
 import { LianeQueryKey, TripQueryKey } from "@/util/hooks/query.ts";
@@ -33,9 +33,9 @@ export const QueryUpdateProvider = (props: PropsWithChildren) => {
     []
   );
 
-  useSubscription<CoLiane>(
+  useSubscription<string | undefined>(
     services.realTimeHub.lianeUpdates,
-    () => {
+    (_?: string) => {
       queryClient.invalidateQueries(LianeQueryKey).then();
     },
     []

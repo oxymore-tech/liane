@@ -18,6 +18,12 @@ import ChatInput from "@/screens/communities/ChaInput.tsx";
 import { Wallpapers } from "@/components/base/Wallpapers.ts";
 import { TripQueryKey, useLianeQuery } from "@/util/hooks/query.ts";
 
+function appendDeduplicate(messages: LianeMessage[], newMessages: LianeMessage[]) {
+  const ids = new Set(messages.map(m => m.id));
+  const filteredMessages = newMessages.filter(m => !ids.has(m.id));
+  return [...filteredMessages, ...messages].sort((a, b) => b.id!.localeCompare(a.id!));
+}
+
 export const CommunitiesChatScreen = () => {
   const { navigation, route } = useAppNavigation<"CommunitiesChat">();
   const { user, services } = useContext(AppContext);
@@ -60,17 +66,6 @@ export const CommunitiesChatScreen = () => {
     [liane, services.realTimeHub]
   );
 
-  const appendMessagesWithoutDuplicates = useCallback(
-    (newMessages: LianeMessage[]) => {
-      const ids = new Set(messages.map(m => m.id));
-      const filteredMessages = newMessages.filter(m => !ids.has(m.id));
-      const result = [...filteredMessages, ...messages];
-      setMessages(result);
-      return result.length !== messages.length;
-    },
-    [messages]
-  );
-
   const appendMessage = useCallback(
     async (lianeId: Ref<CoLiane>, m: LianeMessage) => {
       if (!liane) {
@@ -79,12 +74,10 @@ export const CommunitiesChatScreen = () => {
       if (liane?.id !== lianeId) {
         return;
       }
-      if (!appendMessagesWithoutDuplicates([m])) {
-        return;
-      }
+      setMessages(v => appendDeduplicate(v, [m]));
       services.realTimeHub.markAsRead(liane?.id, new Date().toISOString()).then();
     },
-    [appendMessagesWithoutDuplicates, liane, services.realTimeHub]
+    [liane, services.realTimeHub]
   );
 
   const trip = useQuery(TripQueryKey, async () => await services.community.getIncomingTrips());
@@ -107,7 +100,6 @@ export const CommunitiesChatScreen = () => {
       setMessages(r.data);
       setPaginationCursor(r.next);
       services.realTimeHub.markAsRead(liane.id, new Date().toISOString()).then();
-    } catch (e) {
     } finally {
       setFetchingMessages(false);
     }
@@ -120,10 +112,10 @@ export const CommunitiesChatScreen = () => {
   const fetchNextPage = useCallback(async () => {
     if (paginationCursor && liane && liane.id) {
       const paginatedResult = await services.community.getMessages(liane.id, { cursor: paginationCursor, limit: 30 });
-      appendMessagesWithoutDuplicates(paginatedResult.data);
+      setMessages(v => [...paginatedResult.data, ...v]);
       setPaginationCursor(paginatedResult.next);
     }
-  }, [appendMessagesWithoutDuplicates, liane, paginationCursor, services.community]);
+  }, [liane, paginationCursor, services.community]);
 
   const me = useMemo(() => liane?.members.find(m => m.user.id === user!.id), [liane?.members, user]);
   const name = me?.lianeRequest?.name ?? "";
