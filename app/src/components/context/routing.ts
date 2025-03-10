@@ -1,5 +1,5 @@
 import { createNavigationContainerRef, LinkingOptions, RouteProp, useNavigation, useRoute } from "@react-navigation/native";
-import { CoLiane, CoMatch, Ref, ResolvedLianeRequest, Trip, User } from "@liane/common";
+import { CoLiane, CoMatch, LianeRequest, Ref, ResolvedLianeRequest, Trip, User } from "@liane/common";
 import { checkInitialNotification } from "@/api/service/notification";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
@@ -20,7 +20,7 @@ export type NavigationParamList = {
   Settings: undefined;
   RallyingPointRequests: undefined;
   CommunitiesDetails: { liane: CoLiane };
-  MatchList: { matches: CoMatch[]; lianeRequest: ResolvedLianeRequest };
+  MatchList: { lianeRequest: Ref<LianeRequest> };
   Calendrier: { trip?: Ref<Trip> };
 };
 
@@ -42,7 +42,7 @@ export const AppLinking: LinkingOptions<NavigationParamList> = {
         path: "trip/:liane"
       },
       MatchList: {
-        path: "liane/:lianeId/match"
+        path: "liane/:lianeRequest/match"
       },
       Lianes: {
         path: "liane"

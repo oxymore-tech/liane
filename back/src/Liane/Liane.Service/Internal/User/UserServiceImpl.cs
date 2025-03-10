@@ -5,13 +5,21 @@ using Liane.Api.Auth;
 using Liane.Api.Util.Exception;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
+using Microsoft.Extensions.Caching.Memory;
 using MongoDB.Driver;
 
 namespace Liane.Service.Internal.User;
 
 public sealed class UserServiceImpl(IMongoDatabase mongo) : BaseMongoCrudService<DbUser, Api.Auth.User>(mongo), IUserService
 {
+  private readonly IMemoryCache userCache = new MemoryCache(new MemoryCacheOptions());
+
   public override async Task<Api.Auth.User> Get(Ref<Api.Auth.User> reference)
+  {
+    return await userCache.GetOrCreate(reference.Id, _ => GetInternal(reference))!;
+  }
+
+  private async Task<Api.Auth.User> GetInternal(Ref<Api.Auth.User> reference)
   {
     try
     {
@@ -26,6 +34,7 @@ public sealed class UserServiceImpl(IMongoDatabase mongo) : BaseMongoCrudService
   public async Task UpdateAvatar(string id, string picturelUrl)
   {
     await UpdateField(id, u => u.UserInfo!.PictureUrl, picturelUrl);
+    userCache.Remove(id);
   }
 
   public async Task UpdateLastConnection(string id, DateTime timestamp)
@@ -61,6 +70,8 @@ public sealed class UserServiceImpl(IMongoDatabase mongo) : BaseMongoCrudService
           .Set(i => i.UserInfo!.LastName, lastName)
           .Set(i => i.UserInfo!.Gender, info.Gender)
       );
+    
+    userCache.Remove(id);
     return await GetFullUser(id);
   }
 
@@ -91,6 +102,7 @@ public sealed class UserServiceImpl(IMongoDatabase mongo) : BaseMongoCrudService
 
   public Task Delete(string id)
   {
+    userCache.Remove(id);
     return Mongo.GetCollection<DbUser>()
       .DeleteOneAsync(u => u.Id == id);
   }

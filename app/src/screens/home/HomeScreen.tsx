@@ -11,8 +11,7 @@ import { useBehaviorSubject } from "@/util/hooks/subscription";
 import { HomeMapBottomSheetContainer } from "@/screens/home/HomeMapBottomSheet.tsx";
 import { DefaultFloatingActions } from "@/components/context/FloatingActions.tsx";
 import { useQuery } from "react-query";
-
-export const LianeOnMapQueryKey = "lianesOnMap";
+import { LianeOnMapQueryKey } from "@/util/hooks/query.ts";
 
 const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureCollection, Set<Ref<Trip>> | undefined]> }) => {
   const { services } = useContext(AppContext);
@@ -21,12 +20,12 @@ const HomeScreenView = ({ displaySource }: { displaySource: Observable<[FeatureC
   const [bboxAsString, setBboxAsString] = useState("");
 
   const { data, isFetching } = useQuery(
-    [LianeOnMapQueryKey, bboxAsString],
-    () => {
-      return services.community.list({
-        forCurrentUser: false,
-        bbox
-      });
+    LianeOnMapQueryKey(bboxAsString),
+    async () => {
+      if (!bbox) {
+        return [];
+      }
+      return await services.community.list({ bbox });
     },
     { keepPreviousData: true }
   );

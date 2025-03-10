@@ -15,11 +15,12 @@ public interface ILianeService
   Task<LianeRequest> Update(Ref<LianeRequest> id, LianeRequest request);
   Task Delete(Ref<LianeRequest> id);
   Task<ImmutableList<LianeMatch>> Match();
+  Task<LianeMatch> Match(Guid lianeRequestId);
   Task<ImmutableList<Liane>> List(LianeFilter filter);
 
   Task<Liane> Get(Ref<Liane> id);
-  Task<Liane?> JoinRequest(Ref<Liane> a, Ref<Liane> b);
-  Task<bool> Reject(Ref<Liane> a, Ref<Liane> b);
+  Task<Liane?> JoinRequest(Ref<LianeRequest> lianeRequest, Ref<Liane> liane);
+  Task<bool> Reject(Ref<LianeRequest> lianeRequest, Ref<Liane> liane);
   Task<bool> Leave(Ref<Liane> liane);
 
   Task<ImmutableList<WayPoint>> GetTrip(Guid liane, Guid? lianeRequest);

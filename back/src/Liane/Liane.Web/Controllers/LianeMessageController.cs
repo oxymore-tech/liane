@@ -28,7 +28,7 @@ public sealed class LianeMessageController(ILianeMessageService lianeMessageServ
   }
 
   [HttpGet("liane/unread")]
-  public Task<ImmutableDictionary<Ref<Api.Community.Liane>, int>> GetUnreadLianes()
+  public Task<ImmutableDictionary<Ref<LianeRequest>, int>> GetUnreadLianes()
   {
     return lianeMessageService.GetUnreadLianes();
   }

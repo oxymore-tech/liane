@@ -48,9 +48,6 @@ export const LianeMapDetailScreen = () => {
       if (lianeRequest) {
         return [];
       }
-      if (!matchOrLiane.members.length) {
-        return [matchOrLiane.createdBy];
-      }
       return matchOrLiane.members.map(m => m.user);
     } else {
       return matchOrLiane.members;
@@ -61,11 +58,16 @@ export const LianeMapDetailScreen = () => {
     if (!lianeId) {
       return;
     }
-    services.community
-      .getTrip(lianeRequest?.id ?? lianeId)
-      .then(setWayPoints)
-      .catch(setError);
-  }, [lianeId, lianeRequest, services.community]);
+
+    if (isLiane(matchOrLiane)) {
+      services.community
+        .getTrip(lianeRequest?.id ?? lianeId)
+        .then(setWayPoints)
+        .catch(setError);
+    } else {
+      services.community.getTrip(lianeId, lianeRequest?.id).then(setWayPoints).catch(setError);
+    }
+  }, [lianeId, lianeRequest, matchOrLiane, services.community]);
 
   const mapBounds = useMemo(() => {
     if (wayPoints.length === 0) {

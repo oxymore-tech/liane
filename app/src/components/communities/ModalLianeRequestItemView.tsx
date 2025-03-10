@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useState } from "react";
-import { CoLianeMatch, CoLianeRequest } from "@liane/common";
+import { CoLianeRequest, ResolvedLianeRequest } from "@liane/common";
 import { AppContext } from "@/components/context/ContextProvider";
 import { Column, Row } from "@/components/base/AppLayout";
 import { AppColors } from "@/theme/colors";
@@ -11,27 +11,28 @@ import { AppTextInput } from "@/components/base/AppTextInput.tsx";
 import { Alert } from "react-native";
 
 type ModalLianeRequestItemProps = {
-  item: CoLianeMatch;
-  onRefresh: (() => void) | undefined;
+  lianeRequest?: ResolvedLianeRequest;
+  attached?: boolean;
+  onRefresh: ((deleted: boolean) => void) | undefined;
   myModalVisible: boolean;
   setMyModalVisible: (arg0: boolean) => void;
 };
 
-export const ModalLianeRequestItem = ({ item, onRefresh, myModalVisible, setMyModalVisible }: ModalLianeRequestItemProps) => {
+export const ModalLianeRequestItem = ({ lianeRequest, attached, onRefresh, myModalVisible, setMyModalVisible }: ModalLianeRequestItemProps) => {
   const { services } = useContext(AppContext);
   const { navigation } = useAppNavigation();
   const [showLianeNameInput, setLianeNameInputVisible] = useState<boolean>(false);
 
-  const [name, setName] = useState<string>(item.lianeRequest.name);
+  const [name, setName] = useState<string>(lianeRequest?.name ?? "");
   const [deleting, setDeleting] = useState(false);
 
   const deleteLiane = useCallback(async () => {
-    if (!item.lianeRequest.id) {
+    if (!lianeRequest?.id) {
       return;
     }
     Alert.alert(
       "Confirmation",
-      item.state.type === "Attached" ? "Êtes-vous sûr de vouloir quitter la liane ?" : "Êtes-vous sûr de vouloir supprimer votre liane ?",
+      attached ? "Êtes-vous sûr de vouloir quitter la liane ?" : "Êtes-vous sûr de vouloir supprimer votre liane ?",
       [
         {
           text: "Annuler",
@@ -42,9 +43,13 @@ export const ModalLianeRequestItem = ({ item, onRefresh, myModalVisible, setMyMo
           onPress: async () => {
             try {
               setDeleting(true);
-              await services.community.delete(item.lianeRequest.id!);
+              if (attached) {
+                await services.community.leave(lianeRequest.id!);
+              } else {
+                await services.community.delete(lianeRequest.id!);
+              }
               if (onRefresh) {
-                onRefresh();
+                onRefresh(true);
               }
             } finally {
               setDeleting(false);
@@ -57,40 +62,40 @@ export const ModalLianeRequestItem = ({ item, onRefresh, myModalVisible, setMyMo
         cancelable: true
       }
     );
-  }, [item.lianeRequest.id, item.state.type, onRefresh, services.community]);
+  }, [lianeRequest?.id, attached, services.community, onRefresh]);
 
   const renameLiane = useCallback(async () => {
-    const lianeRequest = item.lianeRequest;
-
-    if (lianeRequest && lianeRequest.id) {
-      try {
-        const result = await services.community.update(lianeRequest.id, {
-          ...lianeRequest,
-          name: name,
-          wayPoints: lianeRequest.wayPoints.map(w => w.id)
-        } as CoLianeRequest);
-        AppLogger.debug("COMMUNITIES", "Suppression d'une liane avec succès", result);
-        setLianeNameInputVisible(false);
-        setMyModalVisible(false);
-        if (onRefresh) {
-          onRefresh();
-        }
-      } catch (e) {
-        AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de la suppression d'une liane", e);
-      }
-    } else {
-      AppLogger.debug("COMMUNITIES", "Pas de liane ID lors de la suppression d'une liane", item);
+    if (!lianeRequest) {
+      return;
     }
-  }, [item, name, onRefresh, services.community, setMyModalVisible]);
+    try {
+      const result = await services.community.update(lianeRequest.id!, {
+        ...lianeRequest,
+        name: name,
+        wayPoints: lianeRequest.wayPoints.map(w => w.id)
+      } as CoLianeRequest);
+      AppLogger.debug("COMMUNITIES", "Suppression d'une liane avec succès", result);
+      setLianeNameInputVisible(false);
+      setMyModalVisible(false);
+      if (onRefresh) {
+        onRefresh(false);
+      }
+    } catch (e) {
+      AppLogger.debug("COMMUNITIES", "Une erreur est survenue lors de la suppression d'une liane", e);
+    }
+  }, [lianeRequest, name, onRefresh, services.community, setMyModalVisible]);
 
   const isValid = name.length > 0;
 
   return (
-    <SimpleModal visible={myModalVisible} setVisible={setMyModalVisible} backgroundColor={AppColors.white} hideClose>
+    <SimpleModal visible={!!lianeRequest && myModalVisible} setVisible={setMyModalVisible} backgroundColor={AppColors.white} hideClose>
       {!showLianeNameInput ? (
         <Column spacing={30} style={{ alignItems: "center" }}>
           <AppButton
-            onPress={() => setLianeNameInputVisible(true)}
+            onPress={() => {
+              setName(lianeRequest?.name ?? "");
+              setLianeNameInputVisible(true);
+            }}
             value="Renommer"
             color={AppColors.secondaryColor}
             icon="edit"
@@ -99,7 +104,7 @@ export const ModalLianeRequestItem = ({ item, onRefresh, myModalVisible, setMyMo
           <AppButton
             onPress={() => {
               navigation.navigate("Publish", {
-                initialValue: item.lianeRequest
+                initialValue: lianeRequest
               });
             }}
             value="Modifier"
@@ -107,13 +112,7 @@ export const ModalLianeRequestItem = ({ item, onRefresh, myModalVisible, setMyMo
             color={AppColors.secondaryColor}
             style={{ width: 200 }}
           />
-          <AppButton
-            onPress={deleteLiane}
-            loading={deleting}
-            value={item.state.type === "Attached" ? "Quitter" : "Supprimer"}
-            icon="log-out"
-            style={{ width: 200 }}
-          />
+          <AppButton onPress={deleteLiane} loading={deleting} value={attached ? "Quitter" : "Supprimer"} icon="log-out" style={{ width: 200 }} />
         </Column>
       ) : (
         <Column spacing={32}>

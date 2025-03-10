@@ -10,6 +10,7 @@ import { useAppNavigation } from "@/components/context/routing.ts";
 import { AppPressable } from "@/components/base/AppPressable.tsx";
 import { AppButton } from "@/components/base/AppButton.tsx";
 import { useNavigation } from "@react-navigation/native";
+import { TripHistoryQueryKey } from "@/util/hooks/query.ts";
 
 export const ArchivedTripsScreen = () => {
   const navigation = useNavigation();
@@ -31,7 +32,6 @@ const NoHistoryView = () => {
     </Center>
   );
 };
-export const TripHistoryQueryKey = "getLianeHistory";
 
 const ArchivedTripsView = WithFetchPaginatedResponse<Trip>(
   ({ data, refresh, refreshing, fetchNextPage, isFetchingNextPage }) => {
@@ -72,6 +72,7 @@ export const ArchivedTripListView = ({ data, style, isFetching = false, onRefres
   return (
     <FlatList
       style={style}
+      refreshing={isFetching}
       refreshControl={<RefreshControl refreshing={isFetching} onRefresh={onRefresh} />}
       data={data}
       showsVerticalScrollIndicator={false}

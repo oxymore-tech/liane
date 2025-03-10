@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Liane.Api.Auth;
@@ -9,17 +10,15 @@ namespace Liane.Api.Hub;
 
 public interface IHubClient
 {
-  Task ReceiveUnreadOverview(ImmutableDictionary<Ref<Community.Liane>, int> unreadOverview);
+  Task ReceiveUnreadOverview(ImmutableDictionary<Ref<LianeRequest>, int> unreadOverview);
 
   Task<bool> ReceiveLianeMessage(string conversationId, LianeMessage message);
 
   Task Me(FullUser user);
-  
-  Task AskForOverview();
 
   Task ReceiveTrackingInfo(TrackingInfo update);
 
   Task ReceiveTripUpdate(Trip.Trip trip);
 
-  Task ReceiveLianeUpdate(Community.Liane liane);
+  Task ReceiveLianeUpdate(Guid? lianeOrRequest);
 }

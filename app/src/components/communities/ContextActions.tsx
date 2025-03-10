@@ -49,7 +49,7 @@ export const LianeContextActions = ({ liane, lianeRequest, onJoin, onReject, pen
   const { user } = useContext(AppContext);
 
   if (liane.members.find(m => m.user.id === user?.id)) {
-    const pendingMember = liane.pendingMembers.find(m => m.user.id === lianeRequest?.createdBy);
+    const pendingMember = liane.pendingMembers.find(m => m.lianeRequest.id === lianeRequest?.id);
     if (!pendingMember) {
       return (
         <Center style={styles.columnAlignment}>

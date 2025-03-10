@@ -31,13 +31,18 @@ public sealed class LianeRequestFetcher(IRallyingPointService rallyingPointServi
 
   public async Task<LianeRequest> FetchLianeRequest(IDbConnection connection, Guid lianeRequestId, IDbTransaction? tx = null)
   {
-    var lianeRequest = (await FetchLianeRequests(connection, ImmutableList.Create(lianeRequestId), tx)).FirstOrDefault();
+    var lianeRequest = await TryFetchLianeRequest(connection, lianeRequestId, tx);
     if (lianeRequest is null)
     {
       throw new ResourceNotFoundException($"Liane request '{lianeRequestId}' not found");
     }
 
     return lianeRequest;
+  }
+
+  public async Task<LianeRequest?> TryFetchLianeRequest(IDbConnection connection, Guid lianeRequestId, IDbTransaction? tx)
+  {
+    return (await FetchLianeRequests(connection, ImmutableList.Create(lianeRequestId), tx)).FirstOrDefault();
   }
 
   public async Task<ImmutableList<LianeRequest>> FetchLianeRequests(IDbConnection connection, IEnumerable<Guid> lianeRequestFilter, IDbTransaction? tx = null) =>

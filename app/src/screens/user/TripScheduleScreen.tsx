@@ -13,6 +13,7 @@ import { TripItem } from "@/screens/user/TripItem.tsx";
 import { useAppNavigation } from "@/components/context/routing.ts";
 import { AppLocalization } from "@/api/i18n.ts";
 import { StaticScreenProps } from "@react-navigation/native";
+import { TripQueryKey } from "@/util/hooks/query.ts";
 
 function nowAtNoon() {
   const date = new Date();
@@ -94,6 +95,7 @@ const TripScheduleScreen = ({ route }: Props) => {
       <WeekHeader style={{ paddingHorizontal: 8 }} selectedDay={currentDate} onSelect={setCurrentDate} incomingTrips={trip.data} />
       <FlatList
         style={{ flex: 1, backgroundColor: AppColors.lightGrayBackground, paddingHorizontal: 8 }}
+        refreshing={trip.isFetching}
         refreshControl={<RefreshControl refreshing={trip.isFetching} onRefresh={() => trip.refetch()} />}
         data={currentList}
         showsVerticalScrollIndicator={false}
@@ -117,6 +119,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export const TripQueryKey = "trip";
-export const TripDetailQueryKey = (id: Ref<Trip>) => ["trip", id];
 export default TripScheduleScreen;

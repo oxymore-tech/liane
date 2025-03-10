@@ -137,7 +137,7 @@ function Navigation() {
         />
         <Stack.Screen name="Account" component={AccountScreen} />
         <Stack.Screen name="RallyingPointRequests" component={RallyingPointRequestsScreen} />
-        <Stack.Screen name="MatchList" component={MatchListScreen} />
+        <Stack.Screen name="MatchList" component={MatchListScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
     );
   }

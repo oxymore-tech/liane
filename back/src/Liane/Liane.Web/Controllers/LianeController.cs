@@ -23,6 +23,12 @@ public sealed class LianeController(ILianeService lianeService)
     return lianeService.Match();
   }
 
+  [HttpGet("match/{lianeRequestId:guid}")]
+  public Task<LianeMatch> Match(Guid lianeRequestId)
+  {
+    return lianeService.Match(lianeRequestId);
+  }
+  
   [HttpPut("liane")]
   public Task<ImmutableList<Api.Community.Liane>> List([FromBody] LianeFilter filter)
   {
@@ -65,16 +71,16 @@ public sealed class LianeController(ILianeService lianeService)
     return lianeService.GetTrip(liane, lianeRequest);
   }
 
-  [HttpPost("liane/{liane:guid}/join/{id:guid}")]
-  public Task<Api.Community.Liane?> JoinRequest(Guid id, Guid liane)
+  [HttpPost("liane/{liane:guid}/join/{lianeRequest:guid}")]
+  public Task<Api.Community.Liane?> JoinRequest(Guid lianeRequest, Guid liane)
   {
-    return lianeService.JoinRequest(id, liane);
+    return lianeService.JoinRequest(lianeRequest, liane);
   }
 
-  [HttpPost("liane/{liane:guid}/reject/{id:guid}")]
-  public Task<bool> Reject(Guid id, Guid liane)
+  [HttpPost("liane/{liane:guid}/reject/{lianeRequest:guid}")]
+  public Task<bool> Reject(Guid lianeRequest, Guid liane)
   {
-    return lianeService.Reject(id, liane);
+    return lianeService.Reject(lianeRequest, liane);
   }
 
   [HttpPost("liane/join_trip")]

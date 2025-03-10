@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Auth;
@@ -15,8 +15,8 @@ public sealed class MockPushServiceImpl : IPushMiddleware
 {
   public Priority Priority => Priority.High;
 
-  private readonly List<SentMessage> sent = [];
-  private readonly List<SentMessage> messages = [];
+  private readonly ConcurrentBag<SentMessage> sent = [];
+  private readonly ConcurrentBag<SentMessage> messages = [];
 
   public Task<bool> Push(Ref<User> receiver, Notification notification)
   {
@@ -37,13 +37,15 @@ public sealed class MockPushServiceImpl : IPushMiddleware
 
   public DateTime[] AssertPush(string? to, params string[] msgs)
   {
+    Task.Delay(200).Wait();
     CollectionAssert.AreEqual(
+      msgs,
       sent
         .Where(s => s.To == to)
         .OrderBy(s => s.At)
         .ThenBy(s => s.Id)
-        .Select(s => s.Message),
-      msgs
+        .Select(s => s.Message)
+        .ToArray()
     );
     return sent
       .Where(s => s.To == to)
@@ -55,13 +57,15 @@ public sealed class MockPushServiceImpl : IPushMiddleware
 
   public DateTime[] AssertMessage(string? to, params string[] msgs)
   {
+    Task.Delay(200).Wait();
     CollectionAssert.AreEqual(
+      msgs,
       messages
         .Where(s => s.To == to)
         .OrderBy(s => s.At)
         .ThenBy(s => s.Id)
-        .Select(s => s.Message),
-      msgs
+        .Select(s => s.Message)
+        .ToArray()
     );
     return messages
       .Where(s => s.To == to)

@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using Liane.Api.Auth;
 using Liane.Api.Trip;
+using Liane.Api.Util;
 using Liane.Api.Util.Http;
 using Liane.Api.Util.Ref;
 
@@ -17,24 +18,24 @@ public sealed record Liane(
   TimeOnly ArriveBefore,
   TimeOnly ReturnAfter,
   DayOfWeekFlag WeekDays,
-  User CreatedBy,
-  DateTime CreatedAt
+  bool Fake
 ) : IIdentity<Guid>, ISharedResource<LianeMember>
 {
-  public bool IsMember(Ref<User> user, bool pendingMember = true)
+  public bool IsMember(Ref<User> user, bool includePendingMember = true)
   {
     if (Members.Any(m => m.User.Id == user.Id))
     {
       return true;
     }
 
-    if (!pendingMember)
-    {
-      return false;
-    }
+    return includePendingMember && PendingMembers.Any(m => m.User.Id == user.Id);
+  }
 
-    return user.Id == CreatedBy.Id
-           || PendingMembers.Any(m => m.User.Id == user.Id);
+  public ImmutableList<User> GetMembers()
+  {
+    return Members
+      .FilterSelect(m => m.User.Value)
+      .ToImmutableList();
   }
 
   public int TotalMembers => Members.Count + PendingMembers.Count;
