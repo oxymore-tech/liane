@@ -42,7 +42,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
     var userId = currentContext.CurrentUser().Id;
     var rawMatches = await FindRawMatches(connection, userId, linkedTo, from, to, tx);
     var mapParams = await GetMapParams(connection, rawMatches, userId, tx);
-    var checkScore = from is null && to is null;
+    var checkScore = from is null || to is null;
     return await rawMatches
       .GroupByAsync(m => m.From, g => MapToMatches(g, mapParams, checkScore));
   }
@@ -89,7 +89,6 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
                                                                         a.way_points = lr_a.way_points
                                                                       INNER JOIN liane_request lr_b ON
                                                                         lr_b.id != lr_a.id
-                                                                          AND ((@to IS NULL AND lr_b.is_enabled) OR lr_b.id = @to)
                                                                           AND NOT lr_b.id = ANY(@linkedTo)
                                                                           AND lr_b.created_by != lr_a.created_by
                                                                           AND matching_weekdays(lr_a.week_days, lr_b.week_days)::integer != 0
@@ -100,7 +99,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
                                                                         b.way_points = lr_b.way_points AND st_intersects(a.geometry, b.geometry)
                                                               WHERE
                                                                 ((@from IS NULL AND lr_a.created_by = @userId) OR (lr_a.id = @from OR lm_b.liane_id = @from))
-                                                                AND lr_b.is_enabled
+                                                                AND ((@to IS NULL AND lr_b.is_enabled) OR (lr_b.id = @to OR lm_b.liane_id = @to))
                                                                 AND (lm_b.liane_id is NULL OR NOT lm_b.liane_id = ANY(@linkedTo))
                                                               ORDER BY ((match_routes(a.geometry, b.geometry)).score) DESC, "from"
                                                             """,
