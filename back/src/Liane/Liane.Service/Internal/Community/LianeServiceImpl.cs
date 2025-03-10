@@ -522,7 +522,7 @@ public sealed class LianeServiceImpl(
       var requesteeUser = await userService.Get(requesteeValue.CreatedBy!);
       _ = Task.Run(() => pushService.Push(requesteeUser,
         new Notification(Uuid7.Guid(), requesterValue.CreatedBy, DateTime.UtcNow, $"{requesterUser.Pseudo} n'a pas accepté votre demande", $"{requesterUser.Pseudo} n'a pas accepté votre demande",
-          $"liane://liane/{requesterValue.Id!.Value}/match"))
+          $"liane://liane/{requesteeValue.Id!.Value}/match"))
       );
       return true;
     }
