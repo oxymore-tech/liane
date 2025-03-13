@@ -95,7 +95,9 @@ const AppMapView = forwardRef(
     useEffect(() => {
       const initialCenter = userLocation ?? services.location.getLastKnownLocation() ?? DEFAULT_TLS;
       controller.setCenter(initialCenter, 10);
-    }, [controller, services.location, userLocation]);
+      // si on rajoute controller ça se met à jour trop souvent
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [services.location, userLocation]);
 
     useEffect(() => {
       if (!bounds) {
