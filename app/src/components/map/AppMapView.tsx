@@ -68,27 +68,25 @@ const AppMapView = forwardRef(
 
     const regionSubject = useSubject<RegionPayload>();
 
-    const controller: AppMapViewController = useMemo(() => {
-      return {
-        getCenter: () => mapRef.current?.getCenter(),
-        setCenter: (p: LatLng, zoom?: number, animationDuration = 200) => {
-          cameraRef.current?.setCamera({
-            centerCoordinate: [p.lng, p.lat],
-            zoomLevel: zoom,
-            padding: {
-              paddingBottom: cameraPadding ?? 0
-            },
-            animationDuration
-          });
-        },
-        fitBounds: (b: DisplayBoundingBox, animationDuration = 200) => {
-          cameraRef?.current?.fitBounds(b.ne, b.sw, [b.paddingTop, b.paddingRight, b.paddingBottom, b.paddingLeft], animationDuration);
-        },
-        getVisibleBounds: () => mapRef.current?.getVisibleBounds(),
-        getZoom: () => mapRef.current?.getZoom(),
-        subscribeToRegionChanges: callback => regionSubject.subscribe(callback)
-      };
-    }, [cameraPadding, regionSubject]);
+    const controller: AppMapViewController = {
+      getCenter: () => mapRef.current?.getCenter(),
+      setCenter: (p: LatLng, zoom?: number, animationDuration = 200) => {
+        cameraRef.current?.setCamera({
+          centerCoordinate: [p.lng, p.lat],
+          zoomLevel: zoom,
+          padding: {
+            paddingBottom: cameraPadding ?? 0
+          },
+          animationDuration
+        });
+      },
+      fitBounds: (b: DisplayBoundingBox, animationDuration = 200) => {
+        cameraRef?.current?.fitBounds(b.ne, b.sw, [b.paddingTop, b.paddingRight, b.paddingBottom, b.paddingLeft], animationDuration);
+      },
+      getVisibleBounds: () => mapRef.current?.getVisibleBounds(),
+      getZoom: () => mapRef.current?.getZoom(),
+      subscribeToRegionChanges: callback => regionSubject.subscribe(callback)
+    };
 
     useImperativeHandle(ref, () => controller);
 
@@ -104,7 +102,7 @@ const AppMapView = forwardRef(
         return;
       }
       controller?.fitBounds(bounds);
-    }, [controller, bounds]);
+    }, [bounds]);
 
     const handleRegionMoved = useCallback(
       (feature: GeoJSON.Feature<GeoJSON.Point, RegionPayload>) => {
@@ -114,7 +112,7 @@ const AppMapView = forwardRef(
           });
         }
       },
-      [controller, onRegionChanged]
+      [onRegionChanged]
     );
 
     return (
@@ -140,7 +138,7 @@ const AppMapView = forwardRef(
             deposit_cluster: rp_deposit_cluster_icon
           }}
         />
-        <MapLibreGL.Camera ref={cameraRef} />
+        <MapLibreGL.Camera ref={cameraRef} padding={{ paddingTop: cameraPadding }} />
         <MapControllerContext.Provider value={controller}>{children}</MapControllerContext.Provider>
         {userLocation && <UserLocation androidRenderMode="normal" />}
       </MapLibreGL.MapView>
