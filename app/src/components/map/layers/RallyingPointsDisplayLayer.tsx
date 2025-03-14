@@ -42,7 +42,7 @@ export const RallyingPointsDisplayLayer = ({ dispayCluster = false, selected, on
         if (!p.properties?.point_count) {
           //@ts-ignore
           onSelect({ ...p.properties, location: { lat: p.geometry.coordinates[1], lng: p.geometry.coordinates[0] } });
-          controller.flyTo({ lat: p.geometry.coordinates[1], lng: p.geometry.coordinates[0] }, 14);
+          controller.setCenter({ lat: p.geometry.coordinates[1], lng: p.geometry.coordinates[0] }, 14);
           return;
         }
       }
