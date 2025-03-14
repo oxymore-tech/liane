@@ -12,7 +12,7 @@ import React, {
 } from "react";
 import { Dimensions, Platform, StyleSheet } from "react-native";
 import MapLibreGL, { CameraRef, Logger, MapViewRef, RegionPayload } from "@maplibre/maplibre-react-native";
-import { BoundingBox, DEFAULT_TLS, DisplayBoundingBox, getMapStyleUrl, LatLng, toLatLng } from "@liane/common";
+import { BoundingBox, DisplayBoundingBox, getMapStyleUrl, LatLng, toLatLng } from "@liane/common";
 import { AppColorPalettes } from "@/theme/colors";
 import { Point, Position } from "geojson";
 import { SubscriptionLike } from "rxjs";
@@ -135,6 +135,7 @@ const AppMapView = forwardRef(
         getCenter: () => mapRef.current?.getCenter(),
         setCenter: (p: LatLng, zoom: number = 10, animationDuration = 200) => {
           const adjustedPosition = cameraPadding ? adjustCenterWithPadding(p, cameraPadding / 2, zoom) : p;
+          services.location.setLastCenterLocation({ ...adjustedPosition, zoom }).then();
           cameraRef.current?.setCamera({
             centerCoordinate: [adjustedPosition.lng, adjustedPosition.lat],
             zoomLevel: zoom,
@@ -151,13 +152,14 @@ const AppMapView = forwardRef(
         getZoom: () => mapRef.current?.getZoom(),
         subscribeToRegionChanges: callback => regionSubject.subscribe(callback)
       };
-    }, [cameraPadding, regionSubject]);
+    }, [cameraPadding, cameraRef, mapRef, regionSubject, services.location]);
 
     useImperativeHandle(ref, () => controller);
 
     useEffect(() => {
-      const initialCenter = userLocation ?? services.location.getLastKnownLocation() ?? DEFAULT_TLS;
-      controller.setCenter(initialCenter, 10);
+      const { zoom, ...previous } = services.location.getLastKnownLocation();
+      const initialCenter = userLocation ?? previous;
+      controller.setCenter(initialCenter, zoom ?? 10);
       // si on rajoute controller ça se met à jour trop souvent
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [services.location, userLocation]);
@@ -170,10 +172,6 @@ const AppMapView = forwardRef(
       // si on rajoute controller ça se met à jour trop souvent
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [bounds]);
-    //
-    // useEffect(() => {
-    //   cameraRef.current?.setCamera({ padding: { paddingBottom: cameraPadding } });
-    // }, [cameraPadding]);
 
     const handleRegionMoved = useCallback(
       async (feature: GeoJSON.Feature<GeoJSON.Point, RegionPayload>) => {
@@ -184,6 +182,7 @@ const AppMapView = forwardRef(
         if (!center) {
           return;
         }
+        await services.location.setLastCenterLocation({ lat: center[1], lng: center[0], zoom: feature.properties.zoomLevel });
         const newBbox = fromPositions2(feature.properties.visibleBounds, center, feature.properties.zoomLevel);
         const value = JSON.stringify(newBbox);
         if (value === bboxAsString) {
@@ -192,7 +191,7 @@ const AppMapView = forwardRef(
         setBboxAsString(value);
         setBbox(newBbox);
       },
-      [bboxAsString, onRegionChanged]
+      [bboxAsString, onRegionChanged, services.location]
     );
 
     const boundingBoxPolygon = useMemo(() => getBBoxPolygon(bbox), [bbox]);
@@ -206,7 +205,7 @@ const AppMapView = forwardRef(
         onPress={onPress ? e => onPress((e.geometry as Point).coordinates) : undefined}
         onRegionDidChange={handleRegionMoved}
         // @ts-ignore
-        onTouchEnd={() => {
+        onTouchStart={() => {
           if (Platform.OS === "android") {
             cameraRef.current?.setCamera({ centerCoordinate: undefined });
           }

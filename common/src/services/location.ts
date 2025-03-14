@@ -31,9 +31,12 @@ export function asSearchedLocation(rp: RallyingPoint): SearchedLocation {
   };
 }
 
+export type LatLngAndZoom = LatLng & { zoom?: number };
+
 export interface LocationService {
   currentLocation(): Promise<LatLng>;
-  getLastKnownLocation(): LatLng;
+  setLastCenterLocation(center: LatLngAndZoom): Promise<void>;
+  getLastKnownLocation(): LatLngAndZoom;
   cacheRecentLocation(rallyingPoint: RallyingPoint): Promise<RallyingPoint[]>;
   getRecentLocations(): Promise<RallyingPoint[]>;
   cacheRecentPlaceLocation(rallyingPoint: SearchedLocation): Promise<SearchedLocation[]>;
@@ -68,6 +71,7 @@ const rallyingPointsKey = "rallyingPoints";
 const recentPlacesKey = "recent_places";
 const tripsKey = "trips";
 const lastKnownLocationKey = "last_known_loc";
+const lastCenterKey = "last_center_loc";
 
 export abstract class AbstractLocationService implements LocationService {
   private lastKnownLocation: LatLng;
@@ -79,7 +83,7 @@ export abstract class AbstractLocationService implements LocationService {
     defaultLocation: LatLng
   ) {
     this.lastKnownLocation = defaultLocation;
-    this.storage.retrieveAsync<LatLng>(lastKnownLocationKey).then(res => {
+    this.getLastKnownLocationImpl().then(res => {
       if (res) {
         this.lastKnownLocation = res;
       }
@@ -130,6 +134,10 @@ export abstract class AbstractLocationService implements LocationService {
 
   async getRecentTrips(): Promise<Itinerary[]> {
     return (await this.storage.retrieveAsync<Itinerary[]>(tripsKey)) ?? [];
+  }
+
+  setLastCenterLocation(center: LatLng): Promise<void> {
+    return this.storage.storeAsync<LatLng>(lastCenterKey, center);
   }
 
   getLastKnownLocation(): LatLng {
@@ -198,9 +206,13 @@ export abstract class AbstractLocationService implements LocationService {
   }
 
   currentLocation = async (): Promise<LatLng> => {
-    this.lastKnownLocation = await this.currentLocationImpl();
-    await this.storage.storeAsync<LatLng>(lastKnownLocationKey, this.lastKnownLocation);
-    return this.lastKnownLocation;
+    try {
+      const lastKnownLocation = await this.currentLocationImpl();
+      await this.storage.storeAsync<LatLng>(lastKnownLocationKey, lastKnownLocation);
+      return lastKnownLocation;
+    } catch (e) {
+      return await this.getLastKnownLocation();
+    }
   };
 
   postPing = async (ping: MemberPing, timestamp?: number): Promise<void> => {
@@ -212,6 +224,10 @@ export abstract class AbstractLocationService implements LocationService {
   };
 
   abstract currentLocationImpl(): Promise<LatLng>;
+
+  private async getLastKnownLocationImpl(): Promise<LatLng | undefined> {
+    return (await this.storage.retrieveAsync<LatLng>(lastKnownLocationKey)) ?? (await this.storage.retrieveAsync<LatLng>(lastCenterKey));
+  }
 }
 
 export const DEFAULT_TLS = {
