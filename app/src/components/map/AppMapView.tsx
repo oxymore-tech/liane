@@ -10,7 +10,7 @@ import React, {
   useRef,
   useState
 } from "react";
-import { Platform, StyleSheet } from "react-native";
+import { Dimensions, Platform, StyleSheet } from "react-native";
 import MapLibreGL, { CameraRef, Logger, MapViewRef, RegionPayload } from "@maplibre/maplibre-react-native";
 import { BoundingBox, DEFAULT_TLS, DisplayBoundingBox, getMapStyleUrl, LatLng, toLatLng } from "@liane/common";
 import { AppColorPalettes } from "@/theme/colors";
@@ -78,6 +78,20 @@ export interface AppMapViewProps extends PropsWithChildren {
   onBboxChanged?: (bbox: BoundingBox) => void;
 }
 
+// Convertit le padding vertical en décalage de latitude
+const adjustCenterWithPadding = (position: LatLng, padding: number, zoom: number): LatLng => {
+  const { height } = Dimensions.get("window");
+
+  // Facteur d'échelle : combien de latitude par pixel en fonction du zoom
+  const latPerPixel = 360 / (Math.pow(2, zoom) * height);
+
+  // Décale la latitude vers le haut
+  return {
+    lat: position.lat - padding * latPerPixel,
+    lng: position.lng
+  };
+};
+
 /**
  * Get the square bouding box around the given center
  */
@@ -119,17 +133,15 @@ const AppMapView = forwardRef(
     const controller: AppMapViewController = useMemo(() => {
       return {
         getCenter: () => mapRef.current?.getCenter(),
-        setCenter: (p: LatLng, zoom?: number, animationDuration = 200) => {
+        setCenter: (p: LatLng, zoom: number = 10, animationDuration = 200) => {
+          const adjustedPosition = cameraPadding ? adjustCenterWithPadding(p, cameraPadding / 2, zoom) : p;
           cameraRef.current?.setCamera({
-            centerCoordinate: [p.lng, p.lat],
+            centerCoordinate: [adjustedPosition.lng, adjustedPosition.lat],
             zoomLevel: zoom,
-            padding: {
-              paddingBottom: cameraPadding ?? 0
-            },
             animationDuration
           });
           if (Platform.OS === "ios") {
-            cameraRef.current?.flyTo([p.lng, p.lat], animationDuration);
+            cameraRef.current?.flyTo([adjustedPosition.lng, adjustedPosition.lat], animationDuration);
           }
         },
         fitBounds: (b: DisplayBoundingBox, animationDuration = 200) => {
@@ -158,6 +170,10 @@ const AppMapView = forwardRef(
       // si on rajoute controller ça se met à jour trop souvent
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [bounds]);
+    //
+    // useEffect(() => {
+    //   cameraRef.current?.setCamera({ padding: { paddingBottom: cameraPadding } });
+    // }, [cameraPadding]);
 
     const handleRegionMoved = useCallback(
       async (feature: GeoJSON.Feature<GeoJSON.Point, RegionPayload>) => {
