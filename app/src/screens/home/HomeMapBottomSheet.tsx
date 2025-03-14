@@ -1,7 +1,7 @@
 import { CoLiane } from "@liane/common";
 import { AppColorPalettes } from "@/theme/colors.ts";
 import { LianeOnMapItem } from "@/screens/home/LianeOnMapItemView.tsx";
-import React, { useCallback, useContext } from "react";
+import React, { useCallback, useContext, useMemo } from "react";
 import { useAppNavigation } from "@/components/context/routing.ts";
 import { AppText } from "@/components/base/AppText.tsx";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
@@ -32,8 +32,12 @@ export const HomeMapBottomSheetContainer = ({ lianes = [], onBottomPaddingChange
     [navigation, user]
   );
 
+  const bottomSheetIndex = useMemo(() => {
+    return lianes.length === 0 ? 0 : 1;
+  }, [lianes]);
+
   return (
-    <AppBottomSheet snapPoints={[60, "50%", "100%"]} index={lianes.length === 0 ? 0 : 1} onChange={onBottomPaddingChange}>
+    <AppBottomSheet snapPoints={[60, "50%", "100%"]} index={bottomSheetIndex} onChange={onBottomPaddingChange}>
       <Column style={{ backgroundColor: AppColorPalettes.gray[700] }}>
         {isFetching ? (
           <ActivityIndicator color={AppColorPalettes.gray[100]} />

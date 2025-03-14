@@ -1,7 +1,7 @@
 import { useQuery } from "react-query";
 import { useCallback, useContext } from "react";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
-import { Ref, Trip } from "@liane/common";
+import { BoundingBox, Ref, Trip } from "@liane/common";
 import { useFocusEffect } from "@react-navigation/native";
 
 export const LianeQueryKey = ["liane"];
@@ -40,7 +40,7 @@ export function useLianeMatchQuery(lianeRequestId: string) {
   return query;
 }
 
-export const LianeOnMapQueryKey = (bboxAsString: string) => ["liane", bboxAsString];
+export const LianeOnMapQueryKey = (bbox?: BoundingBox) => ["liane", bbox];
 export const LianeMatchQueryKey = ["liane", "match"];
 export const LianeDetailQueryKey = (lianeOrRequest: string) => ["liane", lianeOrRequest];
 export const LianeMatchDetailQueryKey = (lianeOrRequest: string) => ["liane", "match", lianeOrRequest];

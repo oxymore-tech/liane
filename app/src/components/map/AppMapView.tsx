@@ -1,7 +1,18 @@
-import React, { ForwardedRef, forwardRef, PropsWithChildren, useCallback, useContext, useEffect, useImperativeHandle, useMemo, useRef } from "react";
+import React, {
+  ForwardedRef,
+  forwardRef,
+  PropsWithChildren,
+  useCallback,
+  useContext,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState
+} from "react";
 import { StyleSheet } from "react-native";
 import MapLibreGL, { CameraRef, Logger, MapViewRef, RegionPayload } from "@maplibre/maplibre-react-native";
-import { DEFAULT_TLS, DisplayBoundingBox, getMapStyleUrl, LatLng } from "@liane/common";
+import { BoundingBox, DEFAULT_TLS, DisplayBoundingBox, getMapStyleUrl, LatLng, toLatLng } from "@liane/common";
 import { AppColorPalettes } from "@/theme/colors";
 import { Point, Position } from "geojson";
 import { SubscriptionLike } from "rxjs";
@@ -33,17 +44,26 @@ export type AppMapViewController = {
   getCenter: () => Promise<Position> | undefined;
   subscribeToRegionChanges: (callback: (payload: RegionPayload) => void) => SubscriptionLike;
 };
+
+const getBBoxPolygon = (box?: BoundingBox) => {
+  if (!box) {
+    return [];
+  }
+  return [
+    [box.min.lng, box.min.lat], // Sud-Ouest
+    [box.max.lng, box.min.lat], // Sud-Est
+    [box.max.lng, box.max.lat], // Nord-Est
+    [box.min.lng, box.max.lat], // Nord-Ouest
+    [box.min.lng, box.min.lat] // Retour au point de départ
+  ];
+};
+
 // @ts-ignore
 const MapControllerContext = React.createContext<AppMapViewController>();
 
 export const useAppMapViewController = () => useContext<AppMapViewController>(MapControllerContext);
 
-export type MapMovedCallback = (payload: {
-  zoomLevel: number;
-  isUserInteraction: boolean;
-  visibleBounds: GeoJSON.Position[];
-  center: Position;
-}) => void;
+export type MapMovedCallback = (payload: { zoomLevel: number; isUserInteraction: boolean; visibleBounds: GeoJSON.Position[] }) => void;
 
 export interface AppMapViewProps extends PropsWithChildren {
   onRegionChanged?: MapMovedCallback;
@@ -55,11 +75,26 @@ export interface AppMapViewProps extends PropsWithChildren {
   onLongPress?: ((coordinates: Position) => void) | undefined;
   onPress?: ((coordinates: Position) => void) | undefined;
   cameraPadding?: number;
+  onBboxChanged?: (bbox: BoundingBox) => void;
+}
+
+/**
+ * Get the square bouding box around the given center
+ */
+export function fromPositions2(bbox: Position[], center: Position, zoomLevel: number): BoundingBox {
+  const margin = 0.02 * Math.pow(2, 10 - zoomLevel);
+  const [upperLeft, bottomRight] = bbox;
+  const delta = Math.abs(upperLeft[0] - bottomRight[0]) / 2 / Math.sqrt(2);
+
+  return {
+    max: toLatLng([upperLeft[0] - margin, upperLeft[1] - margin]),
+    min: toLatLng([bottomRight[0] + margin, center[1] - delta + margin])
+  };
 }
 
 const AppMapView = forwardRef(
   (
-    { onRegionChanged, children, userLocation, bounds, onLongPress, onPress, cameraPadding }: AppMapViewProps,
+    { onRegionChanged, children, userLocation, bounds, onLongPress, onPress, cameraPadding, onBboxChanged }: AppMapViewProps,
     ref: ForwardedRef<AppMapViewController>
   ) => {
     const mapRef = useRef<MapViewRef>(null);
@@ -68,25 +103,41 @@ const AppMapView = forwardRef(
 
     const regionSubject = useSubject<RegionPayload>();
 
-    const controller: AppMapViewController = {
-      getCenter: () => mapRef.current?.getCenter(),
-      setCenter: (p: LatLng, zoom?: number, animationDuration = 200) => {
-        cameraRef.current?.setCamera({
-          centerCoordinate: [p.lng, p.lat],
-          zoomLevel: zoom,
-          padding: {
-            paddingBottom: cameraPadding ?? 0
-          },
-          animationDuration
-        });
-      },
-      fitBounds: (b: DisplayBoundingBox, animationDuration = 200) => {
-        cameraRef?.current?.fitBounds(b.ne, b.sw, [b.paddingTop, b.paddingRight, b.paddingBottom, b.paddingLeft], animationDuration);
-      },
-      getVisibleBounds: () => mapRef.current?.getVisibleBounds(),
-      getZoom: () => mapRef.current?.getZoom(),
-      subscribeToRegionChanges: callback => regionSubject.subscribe(callback)
-    };
+    const [bbox, setBbox] = useState<BoundingBox>();
+    const [bboxAsString, setBboxAsString] = useState("");
+
+    useEffect(() => {
+      if (!bbox) {
+        return;
+      }
+      if (!onBboxChanged) {
+        return;
+      }
+      onBboxChanged(bbox);
+    }, [bbox, onBboxChanged]);
+
+    const controller: AppMapViewController = useMemo(() => {
+      return {
+        getCenter: () => mapRef.current?.getCenter(),
+        setCenter: (p: LatLng, zoom?: number, animationDuration = 200) => {
+          cameraRef.current?.setCamera({
+            centerCoordinate: [p.lng, p.lat],
+            zoomLevel: zoom,
+            padding: {
+              paddingBottom: cameraPadding ?? 0
+            },
+            animationDuration
+          });
+          cameraRef.current?.flyTo([p.lng, p.lat], animationDuration);
+        },
+        fitBounds: (b: DisplayBoundingBox, animationDuration = 200) => {
+          cameraRef?.current?.fitBounds(b.ne, b.sw, [b.paddingTop, b.paddingRight, b.paddingBottom, b.paddingLeft], animationDuration);
+        },
+        getVisibleBounds: () => mapRef.current?.getVisibleBounds(),
+        getZoom: () => mapRef.current?.getZoom(),
+        subscribeToRegionChanges: callback => regionSubject.subscribe(callback)
+      };
+    }, [cameraPadding, regionSubject]);
 
     useImperativeHandle(ref, () => controller);
 
@@ -102,18 +153,31 @@ const AppMapView = forwardRef(
         return;
       }
       controller?.fitBounds(bounds);
+      // si on rajoute controller ça se met à jour trop souvent
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [bounds]);
 
     const handleRegionMoved = useCallback(
-      (feature: GeoJSON.Feature<GeoJSON.Point, RegionPayload>) => {
+      async (feature: GeoJSON.Feature<GeoJSON.Point, RegionPayload>) => {
         if (onRegionChanged) {
-          controller.getCenter()?.then(center => {
-            onRegionChanged({ center, ...feature.properties });
-          });
+          onRegionChanged(feature.properties);
         }
+        const center = await mapRef.current?.getCenter();
+        if (!center) {
+          return;
+        }
+        const newBbox = fromPositions2(feature.properties.visibleBounds, center, feature.properties.zoomLevel);
+        const value = JSON.stringify(newBbox);
+        if (value === bboxAsString) {
+          return;
+        }
+        setBboxAsString(value);
+        setBbox(newBbox);
       },
-      [onRegionChanged]
+      [bboxAsString, onRegionChanged]
     );
+
+    const boundingBoxPolygon = useMemo(() => getBBoxPolygon(bbox), [bbox]);
 
     return (
       <MapLibreGL.MapView
@@ -123,10 +187,6 @@ const AppMapView = forwardRef(
         onLongPress={onLongPress ? e => onLongPress((e.geometry as Point).coordinates) : undefined}
         onPress={onPress ? e => onPress((e.geometry as Point).coordinates) : undefined}
         onRegionDidChange={handleRegionMoved}
-        // @ts-ignore
-        onTouchEnd={() => {
-          cameraRef.current?.setCamera({ centerCoordinate: undefined, padding: { paddingBottom: cameraPadding } });
-        }}
         rotateEnabled={false}
         pitchEnabled={false}
         logoEnabled={false}
@@ -138,8 +198,19 @@ const AppMapView = forwardRef(
             deposit_cluster: rp_deposit_cluster_icon
           }}
         />
-        <MapLibreGL.Camera ref={cameraRef} padding={{ paddingTop: cameraPadding }} />
+        <MapLibreGL.Camera ref={cameraRef} />
         <MapControllerContext.Provider value={controller}>{children}</MapControllerContext.Provider>
+        {__DEV__ && boundingBoxPolygon.length > 0 && (
+          <MapLibreGL.ShapeSource id="bbox" shape={{ type: "Polygon", coordinates: [boundingBoxPolygon] }}>
+            <MapLibreGL.LineLayer
+              id="bbox-line"
+              style={{
+                lineColor: "red",
+                lineWidth: 2
+              }}
+            />
+          </MapLibreGL.ShapeSource>
+        )}
         {userLocation && <UserLocation androidRenderMode="normal" />}
       </MapLibreGL.MapView>
     );
