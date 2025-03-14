@@ -1939,10 +1939,10 @@
     rxjs "^7.8.1"
     url-join "^5.0.0"
 
-"@maplibre/maplibre-react-native@^10.1.0":
-  version "10.1.0"
-  resolved "https://registry.yarnpkg.com/@maplibre/maplibre-react-native/-/maplibre-react-native-10.1.0.tgz#3e20a6721e1b129a24582113a69e4efe008cc91c"
-  integrity sha512-Yi9C9Ds/9mrzQkDfPGT+2K1rOZFlELSY8iAJ5mfq4soCMqiABSm4e8v3S1SZ5qx2f7EFblamniWILeIGNjiSeQ==
+"@maplibre/maplibre-react-native@^10.1.4":
+  version "10.1.4"
+  resolved "https://registry.yarnpkg.com/@maplibre/maplibre-react-native/-/maplibre-react-native-10.1.4.tgz#221c1058a4d71d11097eb7775ca6b31d0c66e7ac"
+  integrity sha512-Y+1FBOmTomyUFbkHCrIcDrScGxWUIINAiJnLq7WYr6D1v1+IdPrnhdsmif+YrXNLMTAgQB+bTtqDn8j4LNgwrQ==
   dependencies:
     "@turf/distance" "^7.1.0"
     "@turf/helpers" "^7.1.0"

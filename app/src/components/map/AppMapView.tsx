@@ -1,7 +1,18 @@
-import React, { ForwardedRef, forwardRef, PropsWithChildren, useCallback, useContext, useEffect, useImperativeHandle, useMemo, useRef } from "react";
-import { StyleSheet } from "react-native";
+import React, {
+  ForwardedRef,
+  forwardRef,
+  PropsWithChildren,
+  useCallback,
+  useContext,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState
+} from "react";
+import { Dimensions, Platform, StyleSheet } from "react-native";
 import MapLibreGL, { CameraRef, Logger, MapViewRef, RegionPayload } from "@maplibre/maplibre-react-native";
-import { DEFAULT_TLS, DisplayBoundingBox, getMapStyleUrl, LatLng } from "@liane/common";
+import { BoundingBox, DisplayBoundingBox, getMapStyleUrl, LatLng, toLatLng } from "@liane/common";
 import { AppColorPalettes } from "@/theme/colors";
 import { Point, Position } from "geojson";
 import { SubscriptionLike } from "rxjs";
@@ -27,23 +38,33 @@ Logger.setLogCallback(log => {
 
 export type AppMapViewController = {
   setCenter: (position: LatLng, zoom?: number, animationDuration?: number) => void;
+  flyTo: (p: LatLng, zoom: number) => void;
   fitBounds: (b: DisplayBoundingBox, animationDuration?: number) => void;
   getVisibleBounds: () => Promise<GeoJSON.Position[]> | undefined;
   getZoom: () => Promise<number> | undefined;
   getCenter: () => Promise<Position> | undefined;
   subscribeToRegionChanges: (callback: (payload: RegionPayload) => void) => SubscriptionLike;
 };
+
+const getBBoxPolygon = (box?: BoundingBox) => {
+  if (!box) {
+    return [];
+  }
+  return [
+    [box.min.lng, box.min.lat], // Sud-Ouest
+    [box.max.lng, box.min.lat], // Sud-Est
+    [box.max.lng, box.max.lat], // Nord-Est
+    [box.min.lng, box.max.lat], // Nord-Ouest
+    [box.min.lng, box.min.lat] // Retour au point de départ
+  ];
+};
+
 // @ts-ignore
 const MapControllerContext = React.createContext<AppMapViewController>();
 
 export const useAppMapViewController = () => useContext<AppMapViewController>(MapControllerContext);
 
-export type MapMovedCallback = (payload: {
-  zoomLevel: number;
-  isUserInteraction: boolean;
-  visibleBounds: GeoJSON.Position[];
-  center: Position;
-}) => void;
+export type MapMovedCallback = (payload: { zoomLevel: number; isUserInteraction: boolean; visibleBounds: GeoJSON.Position[] }) => void;
 
 export interface AppMapViewProps extends PropsWithChildren {
   onRegionChanged?: MapMovedCallback;
@@ -55,11 +76,40 @@ export interface AppMapViewProps extends PropsWithChildren {
   onLongPress?: ((coordinates: Position) => void) | undefined;
   onPress?: ((coordinates: Position) => void) | undefined;
   cameraPadding?: number;
+  onBboxChanged?: (bbox: BoundingBox) => void;
+}
+
+// Convertit le padding vertical en décalage de latitude
+const adjustCenterWithPadding = (position: LatLng, padding: number, zoom: number): LatLng => {
+  const { height } = Dimensions.get("window");
+
+  // Facteur d'échelle : combien de latitude par pixel en fonction du zoom
+  const latPerPixel = 360 / (Math.pow(2, zoom) * height);
+
+  // Décale la latitude vers le haut
+  return {
+    lat: position.lat - padding * latPerPixel,
+    lng: position.lng
+  };
+};
+
+/**
+ * Get the square bouding box around the given center
+ */
+export function fromPositions2(bbox: Position[], center: Position, zoomLevel: number): BoundingBox {
+  const margin = 0.02 * Math.pow(2, 10 - zoomLevel);
+  const [upperLeft, bottomRight] = bbox;
+  const delta = Math.abs(upperLeft[0] - bottomRight[0]) / 2 / Math.sqrt(2);
+
+  return {
+    max: toLatLng([upperLeft[0] - margin, upperLeft[1] - margin]),
+    min: toLatLng([bottomRight[0] + margin, center[1] - delta + margin])
+  };
 }
 
 const AppMapView = forwardRef(
   (
-    { onRegionChanged, children, userLocation, bounds, onLongPress, onPress, cameraPadding }: AppMapViewProps,
+    { onRegionChanged, children, userLocation, bounds, onLongPress, onPress, cameraPadding, onBboxChanged }: AppMapViewProps,
     ref: ForwardedRef<AppMapViewController>
   ) => {
     const mapRef = useRef<MapViewRef>(null);
@@ -68,18 +118,38 @@ const AppMapView = forwardRef(
 
     const regionSubject = useSubject<RegionPayload>();
 
+    const [bbox, setBbox] = useState<BoundingBox>();
+    const [bboxAsString, setBboxAsString] = useState("");
+
+    useEffect(() => {
+      if (!bbox) {
+        return;
+      }
+      if (!onBboxChanged) {
+        return;
+      }
+      onBboxChanged(bbox);
+    }, [bbox, onBboxChanged]);
+
     const controller: AppMapViewController = useMemo(() => {
       return {
         getCenter: () => mapRef.current?.getCenter(),
-        setCenter: (p: LatLng, zoom?: number, animationDuration = 200) => {
+        setCenter: (p: LatLng, zoom: number = 10, animationDuration = 200) => {
+          const adjustedPosition = cameraPadding ? adjustCenterWithPadding(p, cameraPadding / 2, zoom) : p;
           cameraRef.current?.setCamera({
-            centerCoordinate: [p.lng, p.lat],
+            centerCoordinate: [adjustedPosition.lng, adjustedPosition.lat],
             zoomLevel: zoom,
-            padding: {
-              paddingBottom: cameraPadding ?? 0
-            },
             animationDuration
           });
+          if (Platform.OS === "ios") {
+            cameraRef.current?.flyTo([adjustedPosition.lng, adjustedPosition.lat], animationDuration);
+          }
+        },
+        flyTo: (p: LatLng, zoom: number = 10) => {
+          const adjustedPosition = cameraPadding ? adjustCenterWithPadding(p, cameraPadding / 2, zoom) : p;
+          if (Platform.OS === "ios") {
+            cameraRef.current?.flyTo([adjustedPosition.lng, adjustedPosition.lat], 200);
+          }
         },
         fitBounds: (b: DisplayBoundingBox, animationDuration = 200) => {
           cameraRef?.current?.fitBounds(b.ne, b.sw, [b.paddingTop, b.paddingRight, b.paddingBottom, b.paddingLeft], animationDuration);
@@ -93,27 +163,50 @@ const AppMapView = forwardRef(
     useImperativeHandle(ref, () => controller);
 
     useEffect(() => {
-      const initialCenter = userLocation ?? services.location.getLastKnownLocation() ?? DEFAULT_TLS;
-      controller.setCenter(initialCenter, 10);
-    }, [controller, services.location, userLocation]);
+      const { zoom, ...previous } = services.location.getLastKnownLocation();
+      const initialCenter = userLocation ?? previous;
+      controller.setCenter(initialCenter, zoom ?? 10);
+      // si on rajoute controller ça se met à jour trop souvent
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [services.location, userLocation]);
 
     useEffect(() => {
       if (!bounds) {
         return;
       }
       controller?.fitBounds(bounds);
-    }, [controller, bounds]);
+      // si on rajoute controller ça se met à jour trop souvent
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [bounds]);
 
     const handleRegionMoved = useCallback(
-      (feature: GeoJSON.Feature<GeoJSON.Point, RegionPayload>) => {
+      async (feature: GeoJSON.Feature<GeoJSON.Point, RegionPayload>) => {
         if (onRegionChanged) {
-          controller.getCenter()?.then(center => {
-            onRegionChanged({ center, ...feature.properties });
-          });
+          onRegionChanged(feature.properties);
         }
+        const center = await mapRef.current?.getCenter();
+        if (!center) {
+          return;
+        }
+        await services.location.setLastCenterLocation({ lat: center[1], lng: center[0], zoom: feature.properties.zoomLevel });
+        const newBbox = fromPositions2(feature.properties.visibleBounds, center, feature.properties.zoomLevel);
+        const value = JSON.stringify(newBbox);
+        if (value === bboxAsString) {
+          return;
+        }
+        setBboxAsString(value);
+        setBbox(newBbox);
       },
-      [controller, onRegionChanged]
+      [bboxAsString, onRegionChanged, services.location]
     );
+
+    const boundingBoxPolygon = useMemo(() => getBBoxPolygon(bbox), [bbox]);
+
+    const onLoaded = useCallback(() => {
+      const { zoom, ...previous } = services.location.getLastKnownLocation();
+      const initialCenter = userLocation ?? previous;
+      controller.setCenter(initialCenter, zoom ?? 10);
+    }, [controller, services.location, userLocation]);
 
     return (
       <MapLibreGL.MapView
@@ -124,8 +217,12 @@ const AppMapView = forwardRef(
         onPress={onPress ? e => onPress((e.geometry as Point).coordinates) : undefined}
         onRegionDidChange={handleRegionMoved}
         // @ts-ignore
-        onTouchEnd={() => {
-          cameraRef.current?.setCamera({ centerCoordinate: undefined, padding: { paddingBottom: cameraPadding } });
+        onDidFinishLoadingMap={onLoaded}
+        // @ts-ignore
+        onTouchStart={() => {
+          if (Platform.OS === "android") {
+            cameraRef.current?.setCamera({ centerCoordinate: undefined });
+          }
         }}
         rotateEnabled={false}
         pitchEnabled={false}
@@ -140,6 +237,17 @@ const AppMapView = forwardRef(
         />
         <MapLibreGL.Camera ref={cameraRef} />
         <MapControllerContext.Provider value={controller}>{children}</MapControllerContext.Provider>
+        {__DEV__ && boundingBoxPolygon.length > 0 && (
+          <MapLibreGL.ShapeSource id="bbox" shape={{ type: "Polygon", coordinates: [boundingBoxPolygon] }}>
+            <MapLibreGL.LineLayer
+              id="bbox-line"
+              style={{
+                lineColor: "red",
+                lineWidth: 2
+              }}
+            />
+          </MapLibreGL.ShapeSource>
+        )}
         {userLocation && <UserLocation androidRenderMode="normal" />}
       </MapLibreGL.MapView>
     );

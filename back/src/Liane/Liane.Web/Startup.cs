@@ -248,7 +248,10 @@ public static class Startup
     services.AddAuthorization(x => { x.AddPolicy(RequireAuthPolicy, builder => { builder.Requirements.Add(new TokenRequirement()); }); });
 
     // Add json converters here as well
-    services.AddSignalR()
+    services.AddSignalR(options =>
+      {
+        options.EnableDetailedErrors = true;
+      })
       .AddJsonProtocol(options => { JsonSerializerSettings.ConfigureOptions(options.PayloadSerializerOptions); });
 
     // For Resource access level

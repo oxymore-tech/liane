@@ -18,7 +18,7 @@ export function toLatLng(position: Position): LatLng {
  */
 export function fromPositions(bbox: Position[], center: Position): BoundingBox {
   const [upperLeft, bottomRight] = bbox;
-  const delta = Math.abs(upperLeft[0] - bottomRight[0]) / 2;
+  const delta = Math.abs(upperLeft[0] - bottomRight[0]) / 2 / Math.sqrt(2);
 
   return {
     max: toLatLng([upperLeft[0], center[1] - delta]),

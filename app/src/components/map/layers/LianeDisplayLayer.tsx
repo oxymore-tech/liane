@@ -33,7 +33,6 @@ export const LianeDisplayLayer = ({ weekDays, onSelect }: LianeDisplayLayerProps
   const [sourceId, setSourceId] = useState("");
   useEffect(() => {
     setSourceId("segments" + params);
-    AppLogger.debug("MAP", "tile source", params);
   }, [params]);
 
   const controller = useAppMapViewController();
@@ -52,7 +51,6 @@ export const LianeDisplayLayer = ({ weekDays, onSelect }: LianeDisplayLayerProps
       const center = { lat: f.coordinates.latitude, lng: f.coordinates.longitude };
       if (points.length === 1 && !points[0].properties!.hasOwnProperty("point_count")) {
         const p = points[0];
-        AppLogger.debug("MAP", "selected point", p);
 
         //@ts-ignore
         onSelect({ ...p!.properties!, location: { lat: p.geometry.coordinates[1], lng: p.geometry.coordinates[0] } });
