@@ -10,7 +10,7 @@ import React, {
   useRef,
   useState
 } from "react";
-import { StyleSheet } from "react-native";
+import { Platform, StyleSheet } from "react-native";
 import MapLibreGL, { CameraRef, Logger, MapViewRef, RegionPayload } from "@maplibre/maplibre-react-native";
 import { BoundingBox, DEFAULT_TLS, DisplayBoundingBox, getMapStyleUrl, LatLng, toLatLng } from "@liane/common";
 import { AppColorPalettes } from "@/theme/colors";
@@ -128,7 +128,9 @@ const AppMapView = forwardRef(
             },
             animationDuration
           });
-          cameraRef.current?.flyTo([p.lng, p.lat], animationDuration);
+          if (Platform.OS === "ios") {
+            cameraRef.current?.flyTo([p.lng, p.lat], animationDuration);
+          }
         },
         fitBounds: (b: DisplayBoundingBox, animationDuration = 200) => {
           cameraRef?.current?.fitBounds(b.ne, b.sw, [b.paddingTop, b.paddingRight, b.paddingBottom, b.paddingLeft], animationDuration);
@@ -187,6 +189,12 @@ const AppMapView = forwardRef(
         onLongPress={onLongPress ? e => onLongPress((e.geometry as Point).coordinates) : undefined}
         onPress={onPress ? e => onPress((e.geometry as Point).coordinates) : undefined}
         onRegionDidChange={handleRegionMoved}
+        // @ts-ignore
+        onTouchEnd={() => {
+          if (Platform.OS === "android") {
+            cameraRef.current?.setCamera({ centerCoordinate: undefined });
+          }
+        }}
         rotateEnabled={false}
         pitchEnabled={false}
         logoEnabled={false}
