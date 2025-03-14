@@ -38,6 +38,7 @@ Logger.setLogCallback(log => {
 
 export type AppMapViewController = {
   setCenter: (position: LatLng, zoom?: number, animationDuration?: number) => void;
+  flyTo: (p: LatLng, zoom: number) => void;
   fitBounds: (b: DisplayBoundingBox, animationDuration?: number) => void;
   getVisibleBounds: () => Promise<GeoJSON.Position[]> | undefined;
   getZoom: () => Promise<number> | undefined;
@@ -135,7 +136,6 @@ const AppMapView = forwardRef(
         getCenter: () => mapRef.current?.getCenter(),
         setCenter: (p: LatLng, zoom: number = 10, animationDuration = 200) => {
           const adjustedPosition = cameraPadding ? adjustCenterWithPadding(p, cameraPadding / 2, zoom) : p;
-          services.location.setLastCenterLocation({ ...adjustedPosition, zoom }).then();
           cameraRef.current?.setCamera({
             centerCoordinate: [adjustedPosition.lng, adjustedPosition.lat],
             zoomLevel: zoom,
@@ -145,6 +145,12 @@ const AppMapView = forwardRef(
             cameraRef.current?.flyTo([adjustedPosition.lng, adjustedPosition.lat], animationDuration);
           }
         },
+        flyTo: (p: LatLng, zoom: number = 10) => {
+          const adjustedPosition = cameraPadding ? adjustCenterWithPadding(p, cameraPadding / 2, zoom) : p;
+          if (Platform.OS === "ios") {
+            cameraRef.current?.flyTo([adjustedPosition.lng, adjustedPosition.lat], 200);
+          }
+        },
         fitBounds: (b: DisplayBoundingBox, animationDuration = 200) => {
           cameraRef?.current?.fitBounds(b.ne, b.sw, [b.paddingTop, b.paddingRight, b.paddingBottom, b.paddingLeft], animationDuration);
         },
@@ -152,7 +158,7 @@ const AppMapView = forwardRef(
         getZoom: () => mapRef.current?.getZoom(),
         subscribeToRegionChanges: callback => regionSubject.subscribe(callback)
       };
-    }, [cameraPadding, cameraRef, mapRef, regionSubject, services.location]);
+    }, [cameraPadding, regionSubject]);
 
     useImperativeHandle(ref, () => controller);
 
@@ -196,6 +202,12 @@ const AppMapView = forwardRef(
 
     const boundingBoxPolygon = useMemo(() => getBBoxPolygon(bbox), [bbox]);
 
+    const onLoaded = useCallback(() => {
+      const { zoom, ...previous } = services.location.getLastKnownLocation();
+      const initialCenter = userLocation ?? previous;
+      controller.setCenter(initialCenter, zoom ?? 10);
+    }, [controller, services.location, userLocation]);
+
     return (
       <MapLibreGL.MapView
         ref={mapRef}
@@ -204,6 +216,8 @@ const AppMapView = forwardRef(
         onLongPress={onLongPress ? e => onLongPress((e.geometry as Point).coordinates) : undefined}
         onPress={onPress ? e => onPress((e.geometry as Point).coordinates) : undefined}
         onRegionDidChange={handleRegionMoved}
+        // @ts-ignore
+        onDidFinishLoadingMap={onLoaded}
         // @ts-ignore
         onTouchStart={() => {
           if (Platform.OS === "android") {

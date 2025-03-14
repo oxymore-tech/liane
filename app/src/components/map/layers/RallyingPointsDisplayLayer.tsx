@@ -42,7 +42,7 @@ export const RallyingPointsDisplayLayer = ({ dispayCluster = false, selected, on
         if (!p.properties?.point_count) {
           //@ts-ignore
           onSelect({ ...p.properties, location: { lat: p.geometry.coordinates[1], lng: p.geometry.coordinates[0] } });
-          controller.setCenter(center);
+          controller.flyTo({ lat: p.geometry.coordinates[1], lng: p.geometry.coordinates[0] }, 14);
           return;
         }
       }
@@ -62,7 +62,7 @@ export const RallyingPointsDisplayLayer = ({ dispayCluster = false, selected, on
     [controller, onSelect]
   );
 
-  const layers =  [
+  const layers = [
     <MapLibreGL.SymbolLayer
       key="rp_symbols"
       id="rp_symbols"
