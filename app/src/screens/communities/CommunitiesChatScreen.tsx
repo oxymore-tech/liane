@@ -112,7 +112,7 @@ export const CommunitiesChatScreen = () => {
   const fetchNextPage = useCallback(async () => {
     if (paginationCursor && liane && liane.id) {
       const paginatedResult = await services.community.getMessages(liane.id, { cursor: paginationCursor, limit: 30 });
-      setMessages(v => [...paginatedResult.data, ...v]);
+      setMessages(v => appendDeduplicate(v, paginatedResult.data));
       setPaginationCursor(paginatedResult.next);
     }
   }, [liane, paginationCursor, services.community]);
