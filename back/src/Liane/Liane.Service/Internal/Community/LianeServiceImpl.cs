@@ -427,12 +427,12 @@ public sealed class LianeServiceImpl(
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
 
-    var (rallyingPoints, arriveBefore, at) = await GetBestTrip(connection, liane, lianeRequest, tx);
+    var bestTrip = await GetBestTrip(connection, liane, lianeRequest, tx);
 
-    var wayPoints = await routingService.GetOptimizedTrip(rallyingPoints);
+    var wayPoints = await routingService.GetOptimizedTrip(bestTrip.WayPoints, bestTrip.Sources, bestTrip.Destinations);
 
-    var computedTime = TimeOnly.FromDateTime(wayPoints.First(w => w.RallyingPoint.Id == at.Id).Eta);
-    var diff = computedTime - arriveBefore;
+    var computedTime = TimeOnly.FromDateTime(wayPoints.First(w => w.RallyingPoint.Id == bestTrip.At.Id).Eta);
+    var diff = computedTime - bestTrip.ArriveBefore;
 
     return wayPoints.Select(w => w with { Eta = w.Eta - diff }).ToImmutableList();
   }
@@ -741,24 +741,38 @@ public sealed class LianeServiceImpl(
     return true;
   }
 
-  private async Task<(ImmutableList<RallyingPoint> WayPoints, TimeOnly ArriveBefore, Ref<RallyingPoint> At)> GetBestTrip(IDbConnection connection, Guid lianeRequestFrom, Guid? lianeRequestTo,
+  private async Task<BestTrip> GetBestTrip(IDbConnection connection, Guid lianeRequestFrom, Guid? lianeRequestTo,
     IDbTransaction? tx = null)
   {
     var (wayPoints, arriveBefore, end) = await GetTrip(connection, lianeRequestFrom, tx);
 
     if (lianeRequestTo is null)
     {
-      return (wayPoints, arriveBefore, end);
+      return new BestTrip(
+        wayPoints,
+        ImmutableHashSet.Create(wayPoints.First()),
+        ImmutableHashSet.Create(wayPoints.Last()),
+        arriveBefore,
+        end
+      );
     }
-   
+
     var bestMatch = await matcher.FindMatchBetween(connection, lianeRequestFrom, lianeRequestTo.Value, tx);
     if (bestMatch is null)
     {
-      return (wayPoints, arriveBefore, end);
+      return new BestTrip(
+        wayPoints,
+        ImmutableHashSet.Create(wayPoints.First()),
+        ImmutableHashSet.Create(wayPoints.Last()),
+        arriveBefore,
+        end
+      );
     }
 
-    return (
+    return new BestTrip(
       wayPoints.Insert(1, bestMatch.Pickup).Insert(2, bestMatch.Deposit).DistinctBy(w => w.Id).ToImmutableList(),
+      ImmutableHashSet.Create(wayPoints.First(), bestMatch.Pickup),
+      ImmutableHashSet.Create(wayPoints.Last(), bestMatch.Deposit),
       arriveBefore,
       end
     );
@@ -767,12 +781,12 @@ public sealed class LianeServiceImpl(
   private async Task<(ImmutableList<RallyingPoint> wayPoints, TimeOnly arriveBefore, RallyingPoint end)> GetTrip(IDbConnection connection, Guid lianeRequestFrom, IDbTransaction? tx)
   {
     var liane = await lianeFetcher.TryFetchLiane(connection, lianeRequestFrom, tx);
-    
+
     if (liane is not null)
     {
       return (liane.WayPoints, liane.ArriveBefore, liane.WayPoints.Last());
     }
-    
+
     var resolvedLianeRequest = await lianeRequestFetcher.FetchLianeRequest(connection, lianeRequestFrom, tx);
     var wayPoints = await resolvedLianeRequest.WayPoints.SelectAsync(rallyingPointService.Get);
     var arriveBefore = resolvedLianeRequest.ArriveBefore;
@@ -889,3 +903,11 @@ internal abstract record LianeOrRequest
 }
 
 internal record JoinRequestResult(DateTime At, Guid Liane, bool IsJoined, IEnumerable<MessageContent> Messages);
+
+internal record BestTrip(
+  ImmutableList<RallyingPoint> WayPoints,
+  ImmutableHashSet<RallyingPoint> Sources,
+  ImmutableHashSet<RallyingPoint> Destinations,
+  TimeOnly ArriveBefore,
+  Ref<RallyingPoint> At
+);

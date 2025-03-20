@@ -190,32 +190,121 @@ public sealed class RoutingServiceImpl(IOsrmService osrmService, ILogger<Routing
       : trip.ToImmutableList();
   }
 
-  public async Task<ImmutableList<WayPoint>> GetOptimizedTrip(ImmutableList<RallyingPoint> points)
+  public async Task<ImmutableList<WayPoint>> GetOptimizedTrip(ImmutableList<RallyingPoint> points, ImmutableHashSet<RallyingPoint> startpoints, ImmutableHashSet<RallyingPoint> endpoints)
   {
-    // call osrm trip service
-    var tripResponse = await osrmService.Trip(points.Select(rp => rp.Location));
+    var table = await osrmService.Table(points.Select(p => p.Location));
+
+    var n = points.Count;
+
+    if (n == 0)
+    {
+      return ImmutableList<WayPoint>.Empty;
+    }
+
+    var permutations = GetPermutations(n);
+    var bestDistance = double.MaxValue;
+    List<int>? bestRoute = null;
+
+    var matrix = new double[n, n];
+    for (var i = 0; i < n; i++)
+    {
+      for (var j = 0; j < n; j++)
+      {
+        matrix[i, j] = table.Durations[i][j] ?? double.MaxValue;
+      }
+    }
+
+    foreach (var perm in permutations)
+    {
+      if (!startpoints.Contains(points[perm.First()]))
+      {
+        continue;
+      }
+
+      if (!endpoints.Contains(points[perm.Last()]))
+      {
+        continue;
+      }
+
+      var distance = GetRouteDistance(perm, matrix);
+      if (distance < bestDistance)
+      {
+        bestDistance = distance;
+        bestRoute = perm;
+      }
+    }
+
+    if (bestRoute is null)
+    {
+      return ImmutableList<WayPoint>.Empty;
+    }
+
+    var wayPoints = new List<WayPoint>();
     var eta = DateTime.UtcNow.Date;
-    return tripResponse.Waypoints
-      .Select((w, i) =>
+    int? previous = null;
+    foreach (var i in bestRoute)
+    {
+      var duration = 0;
+      var distance = 0;
+      if (previous is not null)
       {
-        var rallyingPoint = points[w.WaypointIndex];
-        return (w, rallyingPoint);
-      })
-      // .OrderBy(w => w.w.WaypointIndex)
-      .Select((t, i) =>
-      {
-        var leg = i == 0 ? null : tripResponse.Trips[0].Legs[i - 1];
-        var duration = (int)(leg?.Duration ?? 0);
-        var distance = (int)(leg?.Distance ?? 0);
+        duration = (int)matrix[previous.Value, i];
+        distance = (int)(table.Distances[previous.Value][i] ?? 0);
         eta = eta.AddSeconds(duration);
-        return new WayPoint(t.rallyingPoint,
-          duration,
-          distance,
-          eta
-        );
-      })
-      .OrderBy(w => w.Eta)
-      .ToImmutableList();
+      }
+
+      wayPoints.Add(new WayPoint(points[i], duration, distance, eta));
+      previous = i;
+    }
+
+    return wayPoints.ToImmutableList();
+  }
+
+  private static List<List<int>> GetPermutations(int n)
+  {
+    var result = new List<List<int>>();
+    var list = Enumerable.Range(0, n).ToList();
+    GeneratePermutations(list, 0, n - 1, result);
+    return result;
+  }
+
+  private static void GeneratePermutations(List<int> list, int left, int right, List<List<int>> result)
+  {
+    if (left == right)
+    {
+      result.Add([..list]);
+    }
+    else
+    {
+      for (var i = left; i <= right; i++)
+      {
+        {
+          var a = list[left];
+          var b = list[i];
+          list[left] = b;
+          list[i] = a;
+        }
+        GeneratePermutations(list, left + 1, right, result);
+        {
+          // Backtrack
+          var a = list[left];
+          var b = list[i];
+          list[left] = b;
+          list[i] = a;
+        }
+      }
+    }
+  }
+
+  private static double GetRouteDistance(List<int> route, double[,] distanceMatrix)
+  {
+    double totalDistance = 0;
+    for (var i = 0; i < route.Count - 1; i++)
+    {
+      totalDistance += distanceMatrix[route[i], route[i + 1]];
+    }
+
+    return totalDistance;
   }
 
   private static IEnumerable<LatLng> GetFromTo(LatLng fromLocation, LatLng toLocation)

@@ -69,7 +69,7 @@ public sealed class OsrmClient(OsrmSettings settings) : IOsrmService
 
     var uri = $"/trip/v1/driving/{format}";
 
-    var result = await client.GetFromJsonAsync<Response.Trip>(uri.WithParams(new { geometries = "geojson", source = "first", destination = "last", roundtrip = "false" }), JsonOptions, cancellationToken: cancellationToken);
+    var result = await client.GetFromJsonAsync<Response.Trip>(uri.WithParams(new { geometries = "geojson", roundtrip = "false" }), JsonOptions, cancellationToken: cancellationToken);
 
     if (result == null)
     {
