@@ -131,10 +131,17 @@ const AppMapView = forwardRef(
       onBboxChanged(bbox);
     }, [bbox, onBboxChanged]);
 
+    const [userLocationInternal, setUserLocationInternal] = useState<string>("");
+
     const controller: AppMapViewController = useMemo(() => {
       return {
         getCenter: () => mapRef.current?.getCenter(),
-        setCenter: (p: LatLng, zoom: number = 10, animationDuration = 200) => {
+        setCenter: (p: LatLng, zoom = 10, animationDuration = 200) => {
+          const json = JSON.stringify(p);
+          if (userLocationInternal === json) {
+            return;
+          }
+          setUserLocationInternal(json);
           const adjustedPosition = cameraPadding ? adjustCenterWithPadding(p, cameraPadding / 2, zoom) : p;
           cameraRef.current?.setCamera({
             centerCoordinate: [adjustedPosition.lng, adjustedPosition.lat],
@@ -158,14 +165,14 @@ const AppMapView = forwardRef(
         getZoom: () => mapRef.current?.getZoom(),
         subscribeToRegionChanges: callback => regionSubject.subscribe(callback)
       };
-    }, [cameraPadding, regionSubject]);
+    }, [cameraPadding, regionSubject, userLocationInternal]);
 
     useImperativeHandle(ref, () => controller);
 
     useEffect(() => {
       const { zoom, ...previous } = services.location.getLastKnownLocation();
       const initialCenter = userLocation ?? previous;
-      controller.setCenter(initialCenter, zoom ?? 10);
+      controller.setCenter(initialCenter, zoom);
       // si on rajoute controller ça se met à jour trop souvent
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [services.location, userLocation]);
@@ -205,8 +212,15 @@ const AppMapView = forwardRef(
     const onLoaded = useCallback(() => {
       const { zoom, ...previous } = services.location.getLastKnownLocation();
       const initialCenter = userLocation ?? previous;
-      controller.setCenter(initialCenter, zoom ?? 10);
+      controller.setCenter(initialCenter, zoom, 0);
     }, [controller, services.location, userLocation]);
+
+    const handleTouchStart = useCallback(() => {
+      setUserLocationInternal("");
+      if (Platform.OS === "android") {
+        cameraRef.current?.setCamera({ centerCoordinate: undefined });
+      }
+    }, [setUserLocationInternal]);
 
     return (
       <MapLibreGL.MapView
@@ -219,11 +233,7 @@ const AppMapView = forwardRef(
         // @ts-ignore
         onDidFinishLoadingMap={onLoaded}
         // @ts-ignore
-        onTouchStart={() => {
-          if (Platform.OS === "android") {
-            cameraRef.current?.setCamera({ centerCoordinate: undefined });
-          }
-        }}
+        onTouchStart={handleTouchStart}
         rotateEnabled={false}
         pitchEnabled={false}
         logoEnabled={false}
