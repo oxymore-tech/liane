@@ -16,10 +16,10 @@ namespace Liane.Service.Internal.Community;
 
 public sealed class LianeFetcher(LianeRequestFetcher lianeRequestFetcher, IUserService userService, PostgisDatabase db, IRallyingPointService rallyingPointService)
 {
-  public async Task<Api.Community.Liane> Get(Guid lianeRequestId)
+  public async Task<Api.Community.Liane?> TryGet(Guid lianeRequestId)
   {
     using var connection = db.NewConnection();
-    return await FetchLiane(connection, lianeRequestId);
+    return await TryFetchLiane(connection, lianeRequestId);
   }
 
   public async Task<ImmutableDictionary<Guid, Api.Community.Liane>> List(IEnumerable<Guid> lianeRequestIds)
@@ -38,7 +38,7 @@ public sealed class LianeFetcher(LianeRequestFetcher lianeRequestFetcher, IUserS
     var liane = await TryFetchLiane(connection, lianeId, tx);
     if (liane is null)
     {
-      throw new ResourceNotFoundException($"Liane {liane} not found");
+      throw new ResourceNotFoundException($"Liane '{lianeId}' not found");
     }
 
     return liane;

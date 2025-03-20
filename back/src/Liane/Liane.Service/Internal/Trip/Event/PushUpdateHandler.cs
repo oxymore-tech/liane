@@ -1,7 +1,11 @@
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 using Liane.Api.Community;
 using Liane.Api.Event;
 using Liane.Api.Trip;
+using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Community;
 using Liane.Service.Internal.Event;
 
@@ -31,15 +35,34 @@ public sealed class PushUpdateHandler(
       return;
     }
 
-    var liane = await e.Liane.Resolve(i => lianeFetcher.Get(i.IdAsGuid()));
-    foreach (var member in liane.Members)
+    var receivers = await GetReceivers(e);
+    foreach (var receiver in receivers)
     {
-      await hubService.PushLianeUpdateTo(liane.Id, member.User);
+      await hubService.PushLianeUpdateTo(e.Liane.IdAsGuid(), receiver);
+    }
+  }
+
+  private async Task<IEnumerable<Ref<Api.Auth.User>>> GetReceivers(LianeEvent<MessageContent> lianeEvent)
+  {
+    if (lianeEvent.Liane is Ref<Api.Community.Liane>.Resolved r)
+    {
+      return GetReceivers(r.Value, lianeEvent.Content);
     }
 
-    if (e.Content is IUserTargeted addressedTo)
+    var liane = await lianeFetcher.TryGet(lianeEvent.Liane.IdAsGuid());
+    return liane is null
+      ? ImmutableList<Ref<Api.Auth.User>>.Empty
+      : GetReceivers(liane, lianeEvent.Content);
+  }
+
+  private static IEnumerable<Ref<Api.Auth.User>> GetReceivers(Api.Community.Liane liane, MessageContent content)
+  {
+    var users = liane.Members.Select(m => m.User).ToHashSet();
+    if (content is IUserTargeted addressedTo)
     {
-      await hubService.PushLianeUpdateTo(liane.Id, addressedTo.User);
+      users.Add(addressedTo.User);
     }
+
+    return users;
   }
 }
