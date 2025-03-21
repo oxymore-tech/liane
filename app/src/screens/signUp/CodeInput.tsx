@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { AppTextInput } from "@/components/base/AppTextInput";
 import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import { AppIcon } from "@/components/base/AppIcon";
@@ -10,15 +10,15 @@ import { sleep } from "@liane/common";
 
 type CodeInputProps = {
   submitting?: boolean;
-  submit: () => void;
-  retry: () => void;
+  submit: () => Promise<void>;
+  retry: () => Promise<void>;
   canSubmit?: boolean;
   code: string;
   onChange: (code: string) => void;
 };
 
 const resendDelay = 60;
-const Retry = (props: { retry: () => void }) => {
+const Retry = ({ retry }: { retry: () => Promise<void> }) => {
   const [allowRetryCountdown, setAllowRetryCountdown] = useState(resendDelay);
 
   useEffect(() => {
@@ -26,6 +26,18 @@ const Retry = (props: { retry: () => void }) => {
       setAllowRetryCountdown(Math.max(0, allowRetryCountdown - 1));
     });
   }, [allowRetryCountdown]);
+
+  const [sending, setSending] = useState(false);
+
+  const handleSend = useCallback(async () => {
+    try {
+      setSending(true);
+      await retry();
+      setAllowRetryCountdown(resendDelay);
+    } finally {
+      setSending(false);
+    }
+  }, [retry]);
 
   return (
     <Column style={{ alignItems: "center" }} spacing={4}>
@@ -35,21 +47,38 @@ const Retry = (props: { retry: () => void }) => {
         </AppText>
       )}
       {allowRetryCountdown === 0 && <AppText style={{ color: AppColors.white }}>Vous n'avez rien reçu ?</AppText>}
-      <AppPressableOverlay
-        disabled={allowRetryCountdown > 0}
-        backgroundStyle={{ borderRadius: 32 }}
-        style={{ padding: 8 }}
-        onPress={() => {
-          props.retry();
-          setAllowRetryCountdown(resendDelay);
-        }}>
+      <ResendLink allowRetryCountdown={allowRetryCountdown} onSend={handleSend} sending={sending} />
+    </Column>
+  );
+};
+
+export const ResendLink = ({
+  allowRetryCountdown,
+  onSend,
+  sending
+}: {
+  allowRetryCountdown: number;
+  onSend: () => Promise<void>;
+  sending: boolean;
+}) => {
+  if (sending) {
+    return (
+      <AppPressableOverlay disabled={true} backgroundStyle={{ borderRadius: 32 }} style={{ padding: 8 }}>
         <Row spacing={4} style={{ alignItems: "center" }}>
-          <AppText style={{ textDecorationLine: "underline", color: allowRetryCountdown === 0 ? AppColors.white : AppColorPalettes.gray[400] }}>
-            Renvoyer le code
-          </AppText>
+          <ActivityIndicator color={AppColors.white} size="small" />
         </Row>
       </AppPressableOverlay>
-    </Column>
+    );
+  }
+
+  return (
+    <AppPressableOverlay disabled={allowRetryCountdown > 0} backgroundStyle={{ borderRadius: 32 }} style={{ padding: 8 }} onPress={onSend}>
+      <Row spacing={4} style={{ alignItems: "center" }}>
+        <AppText style={{ textDecorationLine: "underline", color: allowRetryCountdown === 0 ? AppColors.white : AppColorPalettes.gray[300] }}>
+          Renvoyer le code
+        </AppText>
+      </Row>
+    </AppPressableOverlay>
   );
 };
 

@@ -42,6 +42,7 @@ const SignUpPage = ({ onLogin }: SignUpPageProps) => {
   const [code, setCode] = useState("");
   const [enterCode, setEnterCode] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
+  const [signingIn, setSigningIn] = useState(false);
   const [error, setError] = useState<string>();
 
   const phoneIsValid = useMemo(() => {
@@ -79,7 +80,7 @@ const SignUpPage = ({ onLogin }: SignUpPageProps) => {
     if (!code || !codeIsValid) {
       return;
     }
-    setLoading(true);
+    setSigningIn(true);
     try {
       const pushToken = await getPushToken();
       const response = await services.auth.login({ phone, code, pushToken });
@@ -88,7 +89,7 @@ const SignUpPage = ({ onLogin }: SignUpPageProps) => {
       AppLogger.error("LOGIN", e);
       setError("Code invalide");
     } finally {
-      setLoading(false);
+      setSigningIn(false);
     }
   }, [code, codeIsValid, onLogin, phone, services.auth]);
 
@@ -111,7 +112,7 @@ const SignUpPage = ({ onLogin }: SignUpPageProps) => {
           ) : phone === RNAppEnv.raw.TEST_ACCOUNT ? (
             <PasswordInput code={code} onChange={setCode} onValidate={login} />
           ) : (
-            <CodeInput code={code} canSubmit={codeIsValid} onChange={setCode} submit={login} retry={sendSms} />
+            <CodeInput code={code} canSubmit={codeIsValid} onChange={setCode} submit={login} submitting={signingIn} retry={sendSms} />
           )}
           <AppText style={styles.errorText}>{error ?? " "}</AppText>
         </View>
