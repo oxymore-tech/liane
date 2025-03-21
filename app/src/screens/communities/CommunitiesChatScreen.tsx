@@ -117,7 +117,10 @@ export const CommunitiesChatScreen = () => {
     }
   }, [liane, paginationCursor, services.community]);
 
-  const me = useMemo(() => liane?.members.find(m => m.user.id === user!.id), [liane?.members, user]);
+  const me = useMemo(() => {
+    console.log("liane", liane);
+    return liane?.members.find(m => m.user.id === user!.id);
+  }, [liane?.members, user]);
   const name = me?.lianeRequest?.name ?? "";
   const [launching, setLaunching] = useState(false);
 
