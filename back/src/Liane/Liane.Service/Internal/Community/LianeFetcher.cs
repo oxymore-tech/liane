@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using Dapper;
 using Liane.Api.Auth;
 using Liane.Api.Community;
 using Liane.Api.Trip;
@@ -57,6 +58,14 @@ public sealed class LianeFetcher(LianeRequestFetcher lianeRequestFetcher, IUserS
     var lianeRequests = (await lianeRequestFetcher.FetchLianeRequests(connection, lianeMemberDbs.Values.SelectMany(g => g.Select(m => m.LianeRequestId)).Distinct(), tx))
       .ToImmutableDictionary(r => r.Id!.Value);
 
+    var requestLength = (await connection.QueryAsync<(Guid, double)>("""
+                                                                     SELECT lr.id, st_length(r.geometry) as length
+                                                                     FROM liane_request lr
+                                                                     INNER JOIN route r ON r.way_points = lr.way_points
+                                                                     WHERE lr.id = ANY(@lianeRequestIds)
+                                                                     """, new { lianeRequestIds = lianeRequests.Keys.ToArray() }, tx))
+      .ToImmutableDictionary(i => i.Item1, i => i.Item2);
+
     return (await lianeMemberDbs
         .OrderBy(e => e.Key)
         .FilterSelectAsync(async e =>
@@ -77,21 +86,74 @@ public sealed class LianeFetcher(LianeRequestFetcher lianeRequestFetcher, IUserS
             return null;
           }
 
-          var first = lianeMembers.First().LianeRequest.Value!;
+          var agg = AggregateLianeRequest(lianeMembers, requestLength);
 
           return new Api.Community.Liane(
             e.Key,
             lianeMembers,
             lianePendingMembers,
-            await first.WayPoints.SelectAsync(rallyingPointService.Get),
-            first.RoundTrip,
-            first.ArriveBefore,
-            first.ReturnAfter,
-            first.WeekDays,
+            await agg.Longuest.WayPoints.SelectAsync(rallyingPointService.Get),
+            agg.RoundTrip,
+            agg.ArriveBefore.Start,
+            agg.ReturnAfter.Start,
+            agg.ArriveBefore.End,
+            agg.ReturnAfter.End,
+            agg.WeekDays,
             false
           );
         }))
       .ToImmutableDictionary(l => l.Id);
+  }
+
+  private static AggregatedLianeRequest AggregateLianeRequest(ImmutableList<LianeMember> lianeMembers, ImmutableDictionary<Guid, double> requestLength)
+  {
+    LianeRequest? longuest = null;
+
+    double length = 0;
+    var weekDays = DayOfWeekFlag.Empty;
+    var arriveBeforeMin = TimeOnly.MaxValue;
+    var arriveBeforeMax = TimeOnly.MinValue;
+    var returnAfterMin = TimeOnly.MaxValue;
+    var returnAfterMax = TimeOnly.MinValue;
+    var roundTrip = false;
+    
+    foreach (var lianeRequest in lianeMembers.Select(l => l.LianeRequest.Value!))
+    {
+      var currentLength = requestLength.GetValueOrDefault(lianeRequest.Id!.Value);
+      if (length < currentLength)
+      {
+        length = currentLength;
+        longuest = lianeRequest;
+      }
+      weekDays |= lianeRequest.WeekDays;
+      
+      if (arriveBeforeMin > lianeRequest.ArriveBefore)
+      {
+        arriveBeforeMin = lianeRequest.ArriveBefore;
+      }
+      if (arriveBeforeMax < lianeRequest.ArriveBefore)
+      {
+        arriveBeforeMax = lianeRequest.ArriveBefore;
+      }
+      if (returnAfterMin > lianeRequest.ReturnAfter)
+      {
+        returnAfterMin = lianeRequest.ReturnAfter;
+      }
+      if (returnAfterMax < lianeRequest.ReturnAfter)
+      {
+        returnAfterMax = lianeRequest.ReturnAfter;
+      }
+      if (lianeRequest.RoundTrip)
+      {
+        roundTrip = true;
+      }
+    }
+    return new AggregatedLianeRequest(longuest!,
+      new TimeRange(arriveBeforeMin, arriveBeforeMax),
+      new TimeRange(returnAfterMin, returnAfterMax),
+      weekDays,
+      roundTrip
+    );
   }
 
   private async Task<LianeMember?> ToLianeMember(ImmutableDictionary<Guid, LianeRequest> lianeRequests, LianeMemberDb m, DateTime joinedAt)
@@ -106,3 +168,11 @@ public sealed class LianeFetcher(LianeRequestFetcher lianeRequestFetcher, IUserS
     return new LianeMember(user, memberRequest, joinedAt, m.LastReadAt);
   }
 }
+
+internal sealed record AggregatedLianeRequest( 
+  LianeRequest Longuest,
+  TimeRange ArriveBefore,
+  TimeRange ReturnAfter,
+  DayOfWeekFlag WeekDays,
+  bool RoundTrip
+);

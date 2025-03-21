@@ -21,7 +21,6 @@ namespace Liane.Service.Internal.Community;
 public sealed class LianeMessageServiceImpl(
   PostgisDatabase db,
   ICurrentContext currentContext,
-  LianeFetcher lianeFetcher,
   IPushService pushService,
   IUserService userService
 ) : ILianeMessageService

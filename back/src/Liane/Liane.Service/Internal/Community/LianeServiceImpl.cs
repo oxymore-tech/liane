@@ -237,6 +237,8 @@ public sealed class LianeServiceImpl(
       r.RoundTrip,
       r.ArriveBefore,
       r.ReturnAfter,
+      r.ArriveBefore,
+      r.ReturnAfter,
       r.WeekDays,
       true
     );
