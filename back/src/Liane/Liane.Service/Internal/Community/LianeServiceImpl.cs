@@ -443,31 +443,35 @@ public sealed class LianeServiceImpl(
 
     var (_, route) = await GetRoute(ImmutableList.Create(from, to));
 
-    var rawMatch = (await connection.QueryAsync<PendingRawMatch>("""
-                                                                 SELECT
-                                                                     ((match).score) AS score,
-                                                                     ((match).pickup) AS pickup,
-                                                                     ((match).deposit) AS deposit,
-                                                                     ((match).is_reverse_direction) AS is_reverse_direction
-                                                                 FROM (
-                                                                          SELECT
-                                                                              match_routes(@route, b.geometry) AS match
-                                                                          FROM liane_request lr
-                                                                           INNER JOIN route b on b.way_points = lr.way_points
-                                                                          WHERE lr.id = @liane
-                                                                      ) AS ii
-                                                                 WHERE (match).score > @threshold AND (match).is_reverse_direction = false 
-                                                                 LIMIT 1
-                                                                 """,
+    var pendingRawMatches = await connection.QueryAsync<PendingRawMatch>("""
+                                                                         SELECT
+                                                                            ii.id as liane_request_id,
+                                                                             ((match).score) AS score,
+                                                                             ((match).pickup) AS pickup,
+                                                                             ((match).deposit) AS deposit,
+                                                                             ((match).is_reverse_direction) AS is_reverse_direction
+                                                                         FROM (
+                                                                                  SELECT
+                                                                                    lr.id,
+                                                                                      match_routes(@route, b.geometry) AS match
+                                                                                  FROM liane_request lr
+                                                                                    INNER JOIN route b on b.way_points = lr.way_points
+                                                                                    LEFT JOIN liane_member lm on lm.liane_request_id = lr.id
+                                                                                  WHERE (lr.id = @liane OR lm.liane_id = @liane)
+                                                                              ) AS ii
+                                                                         WHERE (match).score > @threshold AND (match).is_reverse_direction = false 
+                                                                         ORDER BY (match).score desc
+                                                                         """,
       new { threshold = LianeMatcher.MinScore, route, liane }
-    )).FirstOrDefault();
+    );
+    var rawMatch = pendingRawMatches.FirstOrDefault(r => r.Deposit is not null && r.Pickup is not null);
 
-    if (rawMatch?.Deposit is null || rawMatch.Pickup is null)
+    if (rawMatch is null)
     {
       return null;
     }
 
-    var snapedPoints = await rallyingPointService.Snap(ImmutableHashSet.Create(rawMatch.Pickup.Value, rawMatch.Deposit.Value));
+    var snapedPoints = await rallyingPointService.Snap(ImmutableHashSet.Create(rawMatch.Pickup!.Value, rawMatch.Deposit!.Value));
     var pickup = snapedPoints.GetValueOrDefault(rawMatch.Pickup.Value);
     var deposit = snapedPoints.GetValueOrDefault(rawMatch.Deposit.Value);
     return new PendingMatch(pickup, deposit, rawMatch.IsReverseDirection);
@@ -874,7 +878,8 @@ enum Direction
   Inbound
 };
 
-public sealed record PendingRawMatch(
+internal sealed record PendingRawMatch(
+  Guid LianeRequestId,
   float Score,
   LatLng? Pickup,
   LatLng? Deposit,
