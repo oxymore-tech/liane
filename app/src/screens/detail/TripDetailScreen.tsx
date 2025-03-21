@@ -141,12 +141,16 @@ const LianeDetailPage = ({ match }: { match: LianeMatch | undefined }) => {
 
 const toLianeMatch = (trip: Trip, memberId: string): LianeMatch => {
   const m = trip.members.find(u => u.user.id === memberId)!;
+  const pickup = m ? trip.wayPoints.find(w => w.rallyingPoint.id === m.from)!.rallyingPoint.id! : trip.wayPoints[0].rallyingPoint.id!;
+  const deposit = m
+    ? trip.wayPoints.find(w => w.rallyingPoint.id === m.to)!.rallyingPoint.id!
+    : trip.wayPoints[trip.wayPoints.length - 1].rallyingPoint.id!;
   return {
     trip,
     match: {
       type: "Exact",
-      pickup: trip.wayPoints.find(w => w.rallyingPoint.id === m.from)!.rallyingPoint.id!,
-      deposit: trip.wayPoints.find(w => w.rallyingPoint.id === m.to)!.rallyingPoint.id!
+      pickup: pickup,
+      deposit: deposit
     },
     freeSeatsCount: trip.members.map(l => l.seatCount).reduce((acc, c) => acc + c, 0)
   };
