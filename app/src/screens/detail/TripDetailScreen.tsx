@@ -14,7 +14,6 @@ import {
   LianeMatch,
   Trip
 } from "@liane/common";
-import { useTripStatus } from "@/components/trip/trip";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
 import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
@@ -40,7 +39,7 @@ export const TripDetailScreen = () => {
   const { route } = useAppNavigation<"TripDetail">();
   const tripParam = route.params.trip;
 
-  const { data: liane, refetch } = useQuery(TripDetailQueryKey(typeof tripParam === "string" ? tripParam : tripParam.id!), () => {
+  const { data: trip, refetch } = useQuery(TripDetailQueryKey(typeof tripParam === "string" ? tripParam : tripParam.id!), () => {
     if (typeof tripParam === "string") {
       return services.trip.get(tripParam);
     } else {
@@ -55,11 +54,10 @@ export const TripDetailScreen = () => {
     }
   }, [refetch, tripParam]);
 
-  const match = useMemo(() => (liane ? toLianeMatch(liane, user!.id!) : undefined), [liane, user]);
-  const lianeStatus = useTripStatus(liane);
+  const match = useMemo(() => (trip ? toLianeMatch(trip, user!.id!) : undefined), [trip, user]);
 
   return (
-    <TripGeolocationProvider trip={liane}>
+    <TripGeolocationProvider trip={trip}>
       <LianeDetailPage match={match} />
     </TripGeolocationProvider>
   );
