@@ -14,7 +14,6 @@ import {
   LianeMatch,
   Trip
 } from "@liane/common";
-import { useTripStatus } from "@/components/trip/trip";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
 import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
@@ -40,7 +39,7 @@ export const TripDetailScreen = () => {
   const { route } = useAppNavigation<"TripDetail">();
   const tripParam = route.params.trip;
 
-  const { data: liane, refetch } = useQuery(TripDetailQueryKey(typeof tripParam === "string" ? tripParam : tripParam.id!), () => {
+  const { data: trip, refetch } = useQuery(TripDetailQueryKey(typeof tripParam === "string" ? tripParam : tripParam.id!), () => {
     if (typeof tripParam === "string") {
       return services.trip.get(tripParam);
     } else {
@@ -55,11 +54,10 @@ export const TripDetailScreen = () => {
     }
   }, [refetch, tripParam]);
 
-  const match = useMemo(() => (liane ? toLianeMatch(liane, user!.id!) : undefined), [liane, user]);
-  const lianeStatus = useTripStatus(liane);
+  const match = useMemo(() => (trip ? toLianeMatch(trip, user!.id!) : undefined), [trip, user]);
 
   return (
-    <TripGeolocationProvider trip={liane}>
+    <TripGeolocationProvider trip={trip}>
       <LianeDetailPage match={match} />
     </TripGeolocationProvider>
   );
@@ -141,12 +139,16 @@ const LianeDetailPage = ({ match }: { match: LianeMatch | undefined }) => {
 
 const toLianeMatch = (trip: Trip, memberId: string): LianeMatch => {
   const m = trip.members.find(u => u.user.id === memberId)!;
+  const pickup = m ? trip.wayPoints.find(w => w.rallyingPoint.id === m.from)!.rallyingPoint.id! : trip.wayPoints[0].rallyingPoint.id!;
+  const deposit = m
+    ? trip.wayPoints.find(w => w.rallyingPoint.id === m.to)!.rallyingPoint.id!
+    : trip.wayPoints[trip.wayPoints.length - 1].rallyingPoint.id!;
   return {
     trip,
     match: {
       type: "Exact",
-      pickup: trip.wayPoints.find(w => w.rallyingPoint.id === m.from)!.rallyingPoint.id!,
-      deposit: trip.wayPoints.find(w => w.rallyingPoint.id === m.to)!.rallyingPoint.id!
+      pickup: pickup,
+      deposit: deposit
     },
     freeSeatsCount: trip.members.map(l => l.seatCount).reduce((acc, c) => acc + c, 0)
   };

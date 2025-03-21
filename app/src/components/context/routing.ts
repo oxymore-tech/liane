@@ -48,7 +48,7 @@ export const AppLinking: LinkingOptions<NavigationParamList> = {
         path: "liane"
       },
       CommunitiesChat: {
-        path: "liane/:lianeId"
+        path: "liane/:liane"
       }
     }
   }

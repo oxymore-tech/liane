@@ -29,9 +29,9 @@ export function WeekHeader({ selectedDay, style, onSelect, incomingTrips }: Week
     <Column style={[{ backgroundColor: AppColors.white }, style]}>
       <AppText style={styles.month}>{AppLocalization.formatMonth(selectedDay)}</AppText>
       <Row style={{ width: "100%", justifyContent: "space-between", marginVertical: 16 }}>
-        {days.map((day, index) => (
+        {days.map(day => (
           <Day
-            key={index}
+            key={day.getDate()}
             date={day}
             selected={selectedDay.getDate() === day.getDate()}
             onSelect={onSelect}
@@ -64,7 +64,7 @@ function Day({ date, selected, onSelect, incomingTrips }: DayProps) {
   return (
     <AppPressable style={{ flexDirection: "column", alignItems: "center" }} onPress={() => onSelect(date)}>
       <AppText style={styles.weekday}>{AppLocalization.formatDay(date).substring(0, 3)}</AppText>
-      <View style={[styles.day, selected && { backgroundColor: AppColorPalettes.pink[500] }]}>
+      <View style={[styles.day, selected && { backgroundColor: AppColorPalettes.pink[500], borderRadius: 45 }]}>
         <AppText style={[styles.dayLabel, selected && { color: AppColors.white }]}>{date.getDate()}</AppText>
       </View>
       {indication && (
@@ -92,7 +92,6 @@ const styles = StyleSheet.create({
     fontSize: 14
   },
   day: {
-    borderRadius: 45,
     width: 45,
     height: 45,
     justifyContent: "center",

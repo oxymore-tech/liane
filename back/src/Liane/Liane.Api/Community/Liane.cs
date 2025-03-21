@@ -17,6 +17,8 @@ public sealed record Liane(
   bool RoundTrip,
   TimeOnly ArriveBefore,
   TimeOnly ReturnAfter,
+  TimeOnly ArriveBeforeMax,
+  TimeOnly ReturnAfterMax,
   DayOfWeekFlag WeekDays,
   bool Fake
 ) : IIdentity<Guid>, ISharedResource<LianeMember>

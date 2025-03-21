@@ -7,7 +7,6 @@ import { Row } from "@/components/base/AppLayout.tsx";
 import { AppIcon } from "@/components/base/AppIcon.tsx";
 
 export type AccordionProps = {
-  title: string;
   header?: React.ReactNode;
   step: number;
   onChangeStep?: (step: number) => void;

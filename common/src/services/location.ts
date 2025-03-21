@@ -211,7 +211,7 @@ export abstract class AbstractLocationService implements LocationService {
       await this.storage.storeAsync<LatLng>(lastKnownLocationKey, lastKnownLocation);
       return lastKnownLocation;
     } catch (e) {
-      return await this.getLastKnownLocation();
+      return this.getLastKnownLocation();
     }
   };
 

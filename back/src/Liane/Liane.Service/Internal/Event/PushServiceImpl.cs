@@ -14,7 +14,12 @@ public sealed class PushServiceImpl(IServiceProvider serviceProvider, LianeFetch
 {
   public async Task PushMessage(Ref<Api.Community.Liane> liane, LianeMessage message)
   {
-    var resolvedLiane = await lianeFetcher.Get(liane.IdAsGuid());
+    var resolvedLiane = await lianeFetcher.TryGet(liane.IdAsGuid());
+    if (resolvedLiane is null)
+    {
+      return;
+    }
+
     var sender = await userService.Get(message.CreatedBy);
     foreach (var member in resolvedLiane.Members)
     {

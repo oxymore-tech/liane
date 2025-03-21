@@ -10,7 +10,6 @@ import { extractWaypointFromTo } from "@/util/hooks/lianeRequest";
 import { DetachedLianeItem } from "@/components/communities/DetachedLianeItem.tsx";
 import { useAppNavigation } from "@/components/context/routing.ts";
 import { AppIcon } from "@/components/base/AppIcon.tsx";
-import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker.tsx";
 
 type LianeRequestItemProps = {
   item: CoLianeMatch;

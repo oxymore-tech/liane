@@ -52,7 +52,7 @@ public abstract class CronJobService(ILogger logger, string cronExpression, bool
         return;
       }
 
-      Logger.LogInformation("{job} : will run at '{at}'", GetType().Name, next.Value);
+      Logger.LogTrace("{job} : will run at '{at}'", GetType().Name, next.Value);
       timer = new Timer(delayMs);
       timer.Elapsed += async (_, _) =>
       {

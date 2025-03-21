@@ -28,6 +28,7 @@ export const AppTextInput = forwardRef(
             placeholderTextColor={placeholderTextColor ?? AppColorPalettes.gray[400]}
             ref={ref}
             style={[
+              { flex: 1, width: "100%", letterSpacing: 0 },
               AppStyles.text,
               AppStyles.input,
               subText ? styles.inputWithSubText : styles.input,

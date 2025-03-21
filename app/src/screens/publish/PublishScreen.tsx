@@ -10,7 +10,7 @@ import { AppText } from "@/components/base/AppText";
 import { AppPressableIcon } from "@/components/base/AppPressable";
 import { DayOfTheWeekPicker } from "@/components/DayOfTheWeekPicker";
 
-import { AppColors } from "@/theme/colors";
+import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
 import { CoLianeRequest, DayOfWeekFlag, getLianeId, ResolvedLianeRequest, TimeOnly, Itinerary } from "@liane/common";
 import { useAppNavigation } from "@/components/context/routing";
@@ -147,9 +147,22 @@ export const PublishScreen = () => {
     [lianeId, services.community, stepDone, trip]
   );
 
+  const title = useMemo(
+    () =>
+      lianeId
+        ? "Vous avez choisi de rejoindre cette liane, dites-nous en plus sur votre trajet habituel"
+        : "Indiquez un trajet habituel et nous rechercherons des propositions pour vous",
+    [lianeId]
+  );
+
   return (
     <View style={{ flex: 1 }}>
-      <PageHeader title={lianeId ? "Rejoindre une liane" : "Créer une annonce"} navigation={navigation} />
+      <PageHeader title={lianeId ? "Rejoindre la liane" : "Rechercher ou lancer une liane"} navigation={navigation} />
+      <AppText
+        style={{ fontSize: 16, marginBottom: 16, paddingHorizontal: 16, textAlign: "center", color: AppColorPalettes.orange[500] }}
+        numberOfLines={5}>
+        {title}
+      </AppText>
       <ItinerarySearchForm
         style={{ paddingHorizontal: 16 }}
         formStyle={styles.stepContainer}
@@ -162,7 +175,6 @@ export const PublishScreen = () => {
       />
       {step >= 0 && (
         <Accordion
-          title={lianeId ? "Rejoindre une liane" : "Créer une annonce"}
           step={step}
           onChangeStep={setStep}
           style={styles.accordion}
@@ -249,13 +261,13 @@ const StepForm = ({ title, children, disabled = false, onValidate }: StepFormPro
 const DaysStepView = ({ onChange, value, requiredDays }: StepProps<DayOfWeekFlag> & { requiredDays?: DayOfWeekFlag }) => {
   const [daysOfTheWeek, setDaysOfTheWeek] = useState<DayOfWeekFlag>(value);
 
-  const daysMessage = useMemo(() => AppLocalization.formatDaysOfTheWeek(daysOfTheWeek), [daysOfTheWeek]);
-
   const isValid = daysOverlap(daysOfTheWeek, requiredDays) && daysOfTheWeek !== "0000000";
   return (
-    <StepForm title="Quels jours voyagez-vous ?" onValidate={() => onChange(daysOfTheWeek)} disabled={!isValid}>
+    <StepForm title="Quels jours voyagez-vous habituellement ?" onValidate={() => onChange(daysOfTheWeek)} disabled={!isValid}>
+      <AppText style={{ fontSize: 14, alignSelf: "center", textAlign: "center", marginVertical: 20 }} numberOfLines={3}>
+        Cochez tous les jours où vous êtes suceptible de faire le trajet
+      </AppText>
       <DayOfTheWeekPicker requiredDays={requiredDays} selectedDays={daysOfTheWeek} onChangeDays={setDaysOfTheWeek} />
-      <AppText style={{ fontSize: 16, alignSelf: "flex-start", marginVertical: 20 }}>{daysMessage ?? "Sélectionnez un jour"}</AppText>
     </StepForm>
   );
 };
@@ -316,6 +328,9 @@ const TimeStepView = ({ title, onChange, value }: TimeStepProps) => {
   return (
     <StepForm title={title} onValidate={() => onChange(internalValue)}>
       <TimeConstraintView value={internalValue} onChange={setInternalValue} />
+      <AppText style={{ fontSize: 14, alignSelf: "center", textAlign: "center", marginVertical: 20 }} numberOfLines={3}>
+        Indiquez un horaire habituel où vous faites le trajet, cet horaire est indicatif (si vous ne savez pas mettez des horaires larges)
+      </AppText>
     </StepForm>
   );
 };

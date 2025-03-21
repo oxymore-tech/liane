@@ -21,7 +21,6 @@ namespace Liane.Service.Internal.Community;
 public sealed class LianeMessageServiceImpl(
   PostgisDatabase db,
   ICurrentContext currentContext,
-  LianeFetcher lianeFetcher,
   IPushService pushService,
   IUserService userService
 ) : ILianeMessageService
@@ -70,30 +69,30 @@ public sealed class LianeMessageServiceImpl(
 
     var userId = currentContext.CurrentUser().Id;
     var pendingJoinRequests = await connection.QueryAsync<(Guid, int)>("""
-                                                                             SELECT req.id, COUNT(req.id)
-                                                                             FROM liane_request req
-                                                                               INNER JOIN join_request m ON m.requester_id = req.id
-                                                                             WHERE req.created_by = @userId
-                                                                             GROUP BY req.id
-                                                                             """,
+                                                                       SELECT req.id, COUNT(req.id)
+                                                                       FROM liane_request req
+                                                                         INNER JOIN join_request m ON m.requester_id = req.id
+                                                                       WHERE req.created_by = @userId
+                                                                       GROUP BY req.id
+                                                                       """,
       new { userId }
       , tx);
     var receivedJoinRequests = await connection.QueryAsync<(Guid, int)>("""
-                                                                              SELECT req.id, COUNT(req.id)
-                                                                              FROM liane_request req
-                                                                                INNER JOIN join_request m ON m.requestee_id = req.id
-                                                                              WHERE req.created_by = @userId
-                                                                              GROUP BY req.id
-                                                                              """,
+                                                                        SELECT req.id, COUNT(req.id)
+                                                                        FROM liane_request req
+                                                                          INNER JOIN join_request m ON m.requestee_id = req.id
+                                                                        WHERE req.created_by = @userId
+                                                                        GROUP BY req.id
+                                                                        """,
       new { userId }
       , tx);
     var pendingMemberRequests = await connection.QueryAsync<(Guid, int)>("""
-                                                                              SELECT req.id, COUNT(req.id)
-                                                                              FROM liane_request req
-                                                                                INNER JOIN liane_member m ON m.liane_request_id = req.id
-                                                                              WHERE m.joined_at IS NULL AND req.created_by = @userId
-                                                                              GROUP BY req.id
-                                                                              """,
+                                                                         SELECT req.id, COUNT(req.id)
+                                                                         FROM liane_request req
+                                                                           INNER JOIN liane_member m ON m.liane_request_id = req.id
+                                                                         WHERE m.joined_at IS NULL AND req.created_by = @userId
+                                                                         GROUP BY req.id
+                                                                         """,
       new { userId }
       , tx);
     var unread = await connection.QueryAsync<(Guid, int)>("""
@@ -148,10 +147,10 @@ public sealed class LianeMessageServiceImpl(
     using var tx = connection.BeginTransaction();
     var userId = currentContext.CurrentUser().Id;
     var lianeId = Guid.Parse(liane.Id);
-    var resolvedLiane = await lianeFetcher.FetchLiane(connection, lianeId, tx);
-    if (content is MessageContent.Text && !resolvedLiane.IsMember(userId))
+
+    if (content is MessageContent.Text)
     {
-      throw new UnauthorizedAccessException("User is not part of the liane");
+      await CheckIsMember(connection, lianeId, userId, tx);
     }
 
     var now = at ?? DateTime.UtcNow;

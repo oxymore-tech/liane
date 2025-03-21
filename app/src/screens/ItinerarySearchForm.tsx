@@ -99,6 +99,7 @@ export const RallyingPointSuggestions = ({
       style={{ flex: 1 }}
       data={locationList}
       keyExtractor={i => i.id!}
+      keyboardShouldPersistTaps="always"
       renderItem={({ item }) => (
         <AppPressableOverlay
           key={item.id!}

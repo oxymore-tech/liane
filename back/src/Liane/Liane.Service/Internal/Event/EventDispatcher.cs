@@ -31,7 +31,14 @@ public sealed class EventDispatcher(
       .Distinct();
     foreach (var eventListener in eventListeners)
     {
-      await eventListener.OnEvent(lianeEvent);
+      try
+      {
+        await eventListener.OnEvent(lianeEvent);
+      }
+      catch (Exception ex)
+      {
+        logger.LogWarning(ex, "An exception occurred while dispatching event: {EventListener}", eventListener);
+      }
     }
   }
 }

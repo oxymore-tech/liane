@@ -237,6 +237,8 @@ public sealed class LianeServiceImpl(
       r.RoundTrip,
       r.ArriveBefore,
       r.ReturnAfter,
+      r.ArriveBefore,
+      r.ReturnAfter,
       r.WeekDays,
       true
     );
@@ -427,12 +429,12 @@ public sealed class LianeServiceImpl(
     using var connection = db.NewConnection();
     using var tx = connection.BeginTransaction();
 
-    var (rallyingPoints, arriveBefore, at) = await GetBestTrip(connection, liane, lianeRequest, tx);
+    var bestTrip = await GetBestTrip(connection, liane, lianeRequest, tx);
 
-    var wayPoints = await routingService.GetOptimizedTrip(rallyingPoints);
+    var wayPoints = await routingService.GetOptimizedTrip(bestTrip.WayPoints, bestTrip.Sources, bestTrip.Destinations);
 
-    var computedTime = TimeOnly.FromDateTime(wayPoints.First(w => w.RallyingPoint.Id == at.Id).Eta);
-    var diff = computedTime - arriveBefore;
+    var computedTime = TimeOnly.FromDateTime(wayPoints.First(w => w.RallyingPoint.Id == bestTrip.At.Id).Eta);
+    var diff = computedTime - bestTrip.ArriveBefore;
 
     return wayPoints.Select(w => w with { Eta = w.Eta - diff }).ToImmutableList();
   }
@@ -443,31 +445,35 @@ public sealed class LianeServiceImpl(
 
     var (_, route) = await GetRoute(ImmutableList.Create(from, to));
 
-    var rawMatch = (await connection.QueryAsync<PendingRawMatch>("""
-                                                                 SELECT
-                                                                     ((match).score) AS score,
-                                                                     ((match).pickup) AS pickup,
-                                                                     ((match).deposit) AS deposit,
-                                                                     ((match).is_reverse_direction) AS is_reverse_direction
-                                                                 FROM (
-                                                                          SELECT
-                                                                              match_routes(@route, b.geometry) AS match
-                                                                          FROM liane_request lr
-                                                                           INNER JOIN route b on b.way_points = lr.way_points
-                                                                          WHERE lr.id = @liane
-                                                                      ) AS ii
-                                                                 WHERE (match).score > @threshold AND (match).is_reverse_direction = false 
-                                                                 LIMIT 1
-                                                                 """,
+    var pendingRawMatches = await connection.QueryAsync<PendingRawMatch>("""
+                                                                         SELECT
+                                                                            ii.id as liane_request_id,
+                                                                             ((match).score) AS score,
+                                                                             ((match).pickup) AS pickup,
+                                                                             ((match).deposit) AS deposit,
+                                                                             ((match).is_reverse_direction) AS is_reverse_direction
+                                                                         FROM (
+                                                                                  SELECT
+                                                                                    lr.id,
+                                                                                      match_routes(@route, b.geometry) AS match
+                                                                                  FROM liane_request lr
+                                                                                    INNER JOIN route b on b.way_points = lr.way_points
+                                                                                    LEFT JOIN liane_member lm on lm.liane_request_id = lr.id
+                                                                                  WHERE (lr.id = @liane OR lm.liane_id = @liane)
+                                                                              ) AS ii
+                                                                         WHERE (match).score > @threshold AND (match).is_reverse_direction = false 
+                                                                         ORDER BY (match).score desc
+                                                                         """,
       new { threshold = LianeMatcher.MinScore, route, liane }
-    )).FirstOrDefault();
+    );
+    var rawMatch = pendingRawMatches.FirstOrDefault(r => r.Deposit is not null && r.Pickup is not null);
 
-    if (rawMatch?.Deposit is null || rawMatch.Pickup is null)
+    if (rawMatch is null)
     {
       return null;
     }
 
-    var snapedPoints = await rallyingPointService.Snap(ImmutableHashSet.Create(rawMatch.Pickup.Value, rawMatch.Deposit.Value));
+    var snapedPoints = await rallyingPointService.Snap(ImmutableHashSet.Create(rawMatch.Pickup!.Value, rawMatch.Deposit!.Value));
     var pickup = snapedPoints.GetValueOrDefault(rawMatch.Pickup.Value);
     var deposit = snapedPoints.GetValueOrDefault(rawMatch.Deposit.Value);
     return new PendingMatch(pickup, deposit, rawMatch.IsReverseDirection);
@@ -741,24 +747,38 @@ public sealed class LianeServiceImpl(
     return true;
   }
 
-  private async Task<(ImmutableList<RallyingPoint> WayPoints, TimeOnly ArriveBefore, Ref<RallyingPoint> At)> GetBestTrip(IDbConnection connection, Guid lianeRequestFrom, Guid? lianeRequestTo,
+  private async Task<BestTrip> GetBestTrip(IDbConnection connection, Guid lianeRequestFrom, Guid? lianeRequestTo,
     IDbTransaction? tx = null)
   {
     var (wayPoints, arriveBefore, end) = await GetTrip(connection, lianeRequestFrom, tx);
 
     if (lianeRequestTo is null)
     {
-      return (wayPoints, arriveBefore, end);
+      return new BestTrip(
+        wayPoints,
+        ImmutableHashSet.Create(wayPoints.First()),
+        ImmutableHashSet.Create(wayPoints.Last()),
+        arriveBefore,
+        end
+      );
     }
-   
+
     var bestMatch = await matcher.FindMatchBetween(connection, lianeRequestFrom, lianeRequestTo.Value, tx);
     if (bestMatch is null)
     {
-      return (wayPoints, arriveBefore, end);
+      return new BestTrip(
+        wayPoints,
+        ImmutableHashSet.Create(wayPoints.First()),
+        ImmutableHashSet.Create(wayPoints.Last()),
+        arriveBefore,
+        end
+      );
     }
 
-    return (
+    return new BestTrip(
       wayPoints.Insert(1, bestMatch.Pickup).Insert(2, bestMatch.Deposit).DistinctBy(w => w.Id).ToImmutableList(),
+      ImmutableHashSet.Create(wayPoints.First(), bestMatch.Pickup),
+      ImmutableHashSet.Create(wayPoints.Last(), bestMatch.Deposit),
       arriveBefore,
       end
     );
@@ -767,12 +787,12 @@ public sealed class LianeServiceImpl(
   private async Task<(ImmutableList<RallyingPoint> wayPoints, TimeOnly arriveBefore, RallyingPoint end)> GetTrip(IDbConnection connection, Guid lianeRequestFrom, IDbTransaction? tx)
   {
     var liane = await lianeFetcher.TryFetchLiane(connection, lianeRequestFrom, tx);
-    
+
     if (liane is not null)
     {
       return (liane.WayPoints, liane.ArriveBefore, liane.WayPoints.Last());
     }
-    
+
     var resolvedLianeRequest = await lianeRequestFetcher.FetchLianeRequest(connection, lianeRequestFrom, tx);
     var wayPoints = await resolvedLianeRequest.WayPoints.SelectAsync(rallyingPointService.Get);
     var arriveBefore = resolvedLianeRequest.ArriveBefore;
@@ -860,7 +880,8 @@ enum Direction
   Inbound
 };
 
-public sealed record PendingRawMatch(
+internal sealed record PendingRawMatch(
+  Guid LianeRequestId,
   float Score,
   LatLng? Pickup,
   LatLng? Deposit,
@@ -889,3 +910,11 @@ internal abstract record LianeOrRequest
 }
 
 internal record JoinRequestResult(DateTime At, Guid Liane, bool IsJoined, IEnumerable<MessageContent> Messages);
+
+internal record BestTrip(
+  ImmutableList<RallyingPoint> WayPoints,
+  ImmutableHashSet<RallyingPoint> Sources,
+  ImmutableHashSet<RallyingPoint> Destinations,
+  TimeOnly ArriveBefore,
+  Ref<RallyingPoint> At
+);

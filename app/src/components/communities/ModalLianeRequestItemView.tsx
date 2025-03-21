@@ -13,7 +13,7 @@ import { Alert } from "react-native";
 type ModalLianeRequestItemProps = {
   lianeRequest?: ResolvedLianeRequest;
   attached?: boolean;
-  onRefresh: ((deleted: boolean) => void) | undefined;
+  onRefresh?: (deleted: boolean) => Promise<void>;
   myModalVisible: boolean;
   setMyModalVisible: (arg0: boolean) => void;
 };
@@ -49,7 +49,7 @@ export const ModalLianeRequestItem = ({ lianeRequest, attached, onRefresh, myMod
                 await services.community.delete(lianeRequest.id!);
               }
               if (onRefresh) {
-                onRefresh(true);
+                await onRefresh(true);
               }
             } finally {
               setDeleting(false);
