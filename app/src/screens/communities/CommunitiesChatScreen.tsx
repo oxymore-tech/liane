@@ -1,6 +1,6 @@
 import { CoLiane, LianeMessage, RallyingPoint, Ref, Trip } from "@liane/common";
 import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { ImageBackground, KeyboardAvoidingView, Platform, StyleSheet } from "react-native";
+import { ImageBackground, KeyboardAvoidingView, StyleSheet } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Row } from "@/components/base/AppLayout";
@@ -159,7 +159,7 @@ export const CommunitiesChatScreen = () => {
 
   return (
     <ImageBackground source={Wallpapers[0]} style={{ flex: 1, paddingBottom: insets.bottom }}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "android" ? "height" : "padding"} enabled={Platform.OS !== "android"}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
         <Row style={[styles.header, { paddingTop: insets.top }]} spacing={16}>
           <AppButton onPress={() => navigation.goBack()} icon="arrow-left" color={AppColorPalettes.gray[800]} />
           <AppText style={{ paddingLeft: 5, fontWeight: "bold", fontSize: 24, lineHeight: 27, color: AppColorPalettes.gray[800] }}>{name}</AppText>
