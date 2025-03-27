@@ -4,29 +4,32 @@ import { AppContext } from "@/components/context/ContextProvider";
 
 export const useTripStatus = (trip?: Trip, user?: FullUser): LiveTripStatus | undefined => {
   const { user: currentUser } = useContext(AppContext);
-  const userId = useMemo(() => user?.id ?? currentUser?.id, [user, currentUser]);
+  const tripMember = useMemo(() => {
+    const userId = user?.id ?? currentUser?.id;
+    return trip?.members?.find(m => m.user.id === userId);
+  }, [trip, user, currentUser]);
 
-  if (!userId) {
+  if (!tripMember) {
     return undefined;
   }
 
-  const [status, setStatus] = useState(trip ? getLiveTripStatus(trip, userId) : undefined);
+  const [status, setStatus] = useState(trip ? getLiveTripStatus(trip, tripMember) : undefined);
 
   useEffect(() => {
     if (!trip) {
       return;
     }
-    setStatus(getLiveTripStatus(trip, userId));
-  }, [trip, userId]);
+    setStatus(getLiveTripStatus(trip, tripMember));
+  }, [trip, tripMember]);
 
   useEffect(() => {
     if (trip && status?.nextUpdateMillis !== undefined) {
       const timeout = setTimeout(() => {
-        setStatus(getLiveTripStatus(trip, userId));
+        setStatus(getLiveTripStatus(trip, tripMember));
       }, status.nextUpdateMillis);
       return () => clearTimeout(timeout);
     }
-  }, [status?.nextUpdateMillis, trip, userId]);
+  }, [status?.nextUpdateMillis, trip, tripMember]);
 
   return status?.status;
 };
