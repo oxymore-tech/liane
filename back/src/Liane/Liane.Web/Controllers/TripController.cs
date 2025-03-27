@@ -26,7 +26,7 @@ public sealed class TripController(
   public async Task<Trip> Get([FromRoute] string id)
   {
     var current = currentContext.CurrentResource<Trip>();
-    return await tripService.GetForCurrentUser(current is not null ? current : id);
+    return await tripService.Get(current is not null ? current : id);
   }
 
   [HttpDelete("{id}")]

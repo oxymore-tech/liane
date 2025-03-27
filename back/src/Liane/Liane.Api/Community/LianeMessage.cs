@@ -57,6 +57,4 @@ public abstract record MessageContent
   public sealed record MemberLeftTrip(string Value, Ref<User> User, Ref<ApiTrip> Trip) : TripMessage(Value, Trip), IUserTargeted;
 
   public sealed record MemberHasStarted(string Value, Ref<ApiTrip> Trip) : TripMessage(Value, Trip);
-
-  public sealed record MemberFeedback(Ref<ApiTrip> Trip, Feedback Feedback) : TripMessage(null, Trip);
 }

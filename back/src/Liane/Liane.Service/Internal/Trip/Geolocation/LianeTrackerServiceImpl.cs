@@ -11,6 +11,7 @@ using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Api.Util.Exception;
 using Liane.Api.Util.Ref;
+using Liane.Service.Internal.Event;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Osrm;
 using Liane.Service.Internal.Postgis;
@@ -27,21 +28,21 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
   private readonly IPostgisService postgisService;
   private readonly IMongoDatabase mongo;
   private readonly ILogger<LianeTrackerServiceImpl> logger;
-  private readonly ILianeUpdatePushService lianeUpdatePushService;
+  private readonly IHubService hubService;
   private readonly Timer timer = new(interval: 2 * 60 * 1000);
   private readonly ConcurrentDictionary<string, Action?> onReachedDestinationActions = new();
   private readonly ITripService tripService;
   private readonly ICurrentContext currentContext;
 
   public LianeTrackerServiceImpl(LianeTrackerCache trackerCache, ILogger<LianeTrackerServiceImpl> logger, IPostgisService postgisService, IOsrmService osrmService, IMongoDatabase mongo,
-    ILianeUpdatePushService lianeUpdatePushService, ITripService tripService, ICurrentContext currentContext)
+    IHubService hubService, ITripService tripService, ICurrentContext currentContext)
   {
     this.trackerCache = trackerCache;
     this.logger = logger;
     this.postgisService = postgisService;
     this.osrmService = osrmService;
     this.mongo = mongo;
-    this.lianeUpdatePushService = lianeUpdatePushService;
+    this.hubService = hubService;
     this.tripService = tripService;
     this.currentContext = currentContext;
     timer.Elapsed += (_, _) =>
@@ -53,7 +54,7 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
     };
   }
 
-  public async Task<LianeTracker> Start(Api.Trip.Trip trip, Action? onReachedDestination = null)
+  public async Task<TripTracker> Start(Api.Trip.Trip trip, Action? onReachedDestination = null)
   {
     onReachedDestinationActions[trip.Id] = onReachedDestination ?? GetDefaultOnReachedDestination(trip);
     return await trackerCache.GetOrAddTracker(trip.Id, async _ =>
@@ -73,11 +74,11 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
         await mongo.GetCollection<LianeTrackReport>().InsertOneAsync(new LianeTrackReport(trip.Id, ImmutableList<MemberLocationSample>.Empty, ImmutableList<Car>.Empty, DateTime.UtcNow));
       }
 
-      return new LianeTracker(tripSession, trip);
+      return new TripTracker(tripSession, trip);
     });
   }
 
-  private async Task PushPing(LianeTracker tracker, UserPing ping)
+  private async Task PushPing(TripTracker tracker, UserPing ping)
   {
     var pingTime = ping.At;
 
@@ -188,25 +189,30 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
     }
   }
 
-  public async Task PushPing(Ref<Api.Trip.Trip> liane, UserPing ping)
+  public async Task PushPing(Ref<Api.Trip.Trip> trip, UserPing ping)
   {
-    var tracker = trackerCache.GetTracker(liane);
+    var tracker = trackerCache.GetTracker(trip);
     if (tracker is null)
     {
-      logger.LogWarning($"No tracker for liane = '{liane}'");
+      logger.LogWarning($"No tracker for trip = '{trip}'");
       return;
     }
 
     await PushPing(tracker, ping);
     await PublishLocation(tracker);
+    if (tracker.MemberHasArrived(ping.User))
+    {
+      await tripService.FinishTrip(tracker.Trip, ping.User);
+      await hubService.PushTripUpdate(tracker.Trip);
+    }
   }
 
-  private async Task PublishLocation(LianeTracker tracker)
+  private async Task PublishLocation(TripTracker tracker)
   {
     var info = tracker.GetTrackingInfo();
     foreach (var member in tracker.Trip.Members)
     {
-      await lianeUpdatePushService.Push(info, member.User);
+      await hubService.PushTrackingInfo(info, member.User);
     }
   }
 
@@ -234,7 +240,7 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
     }
   }
 
-  private async Task InsertMemberLocation(LianeTracker tracker, Ref<Api.Auth.User> user, MemberLocationSample data)
+  private async Task InsertMemberLocation(TripTracker tracker, Ref<Api.Auth.User> user, MemberLocationSample data)
   {
     tracker.InsertMemberLocation(user, data);
     var car = tracker.GetTrackingInfo().Car;
@@ -283,17 +289,24 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
     var previousReport = (await mongo.GetCollection<LianeTrackReport>().FindAsync(r => r.Id == liane.Id)).FirstOrDefault();
     var lianeDb = await mongo.GetCollection<LianeDb>().Find(l => l.Id == liane.Id).FirstOrDefaultAsync();
     var startDate = lianeDb.Pings.FirstOrDefault()?.At;
-    if (startDate is null) return;
+    if (startDate is null)
+    {
+      return;
+    }
+
     try
     {
       if (previousReport is not null)
+      {
         await mongo.GetCollection<LianeTrackReport>().ReplaceOneAsync(r => r.Id == liane.Id,
           new LianeTrackReport(liane.Id, ImmutableList<MemberLocationSample>.Empty, ImmutableList<Car>.Empty, startDate.Value)
         );
+      }
+
       var route = await osrmService.Route(liane.WayPoints.Select(w => w.RallyingPoint.Location), overview: "full");
       var routeAsLineString = route.Routes[0].Geometry.Coordinates.ToLineString();
       await using var tripSession = await postgisService.CreateOfflineTrip(liane.Id, routeAsLineString);
-      var tracker = new LianeTracker(tripSession, liane);
+      var tracker = new TripTracker(tripSession, liane);
       foreach (var ping in lianeDb.Pings)
       {
         await PushPing(tracker, ping);
@@ -301,7 +314,11 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
     }
     catch (Exception)
     {
-      if (previousReport is not null) await mongo.GetCollection<LianeTrackReport>().ReplaceOneAsync(r => r.Id == liane.Id, previousReport);
+      if (previousReport is not null)
+      {
+        await mongo.GetCollection<LianeTrackReport>().ReplaceOneAsync(r => r.Id == liane.Id, previousReport);
+      }
+
       throw;
     }
   }

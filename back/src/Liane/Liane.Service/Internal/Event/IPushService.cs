@@ -14,7 +14,7 @@ public enum Priority
 public interface IPushMiddleware
 {
   Priority Priority { get; }
-  Task<bool> Push(Ref<Api.Auth.User> receiver, Notification notification);
+  Task<bool> PushTrackingInfo(Ref<Api.Auth.User> receiver, Notification notification);
   Task<bool> PushMessage(Api.Auth.User sender, Ref<Api.Auth.User> receiver, Ref<Api.Community.Liane> liane, LianeMessage message);
 }
 

@@ -19,17 +19,17 @@ public sealed partial class PostgisServiceImpl
 
   public Task<ITripSession> CreateOfflineTrip(string id, LineString route)
   {
-    return Task.FromResult((ITripSession)new OfflineTripSession(db, route));
+    return Task.FromResult<ITripSession>(new OfflineTripSession(db, route));
   }
 
   private sealed class OngoingTripSession(string id, PostgisDatabase postgis) : ITripSession
   {
-    public async Task<(double fraction, LatLng nearestPoint, double distance)> LocateOnRoute(LatLng coordinate)
+    public async Task<(double fraction, LatLng nearestPoint, double distance)> LocateOnRoute(LatLng point)
     {
       using var connection = postgis.NewConnection();
       var result = await connection.QuerySingleAsync<(double fraction, LatLng nearestPoint, double distance)>(
         "select fraction, ST_LineInterpolatePoint(geometry, fraction) as nearest_point, ST_DistanceSphere(@point::geometry(Point, 4326), geometry) as distance from (select ST_LineLocatePoint(geometry, @point::geometry(Point, 4326)) as fraction, geometry from ongoing_trip where id = @id) as trip",
-        new { id = id, point = coordinate }
+        new { id, point }
       );
       return result;
     }

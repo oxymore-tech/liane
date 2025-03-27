@@ -21,7 +21,7 @@ public sealed class ChatHub(
   ICurrentContext currentContext,
   IUserService userService,
   IHubService hubService,
-  ILianeUpdatePushService lianeUpdatePushService)
+  ITripUpdatePushService tripUpdatePushService)
   : Hub<IHubClient>
 {
   public Task SendToLiane(MessageContent lianeMessage, string lianeId)
@@ -68,7 +68,7 @@ public sealed class ChatHub(
 
   public async Task<TrackingInfo?> GetLastTrackingInfo(string lianeId)
   {
-    return await lianeUpdatePushService.GetLastTrackingInfo(lianeId);
+    return await tripUpdatePushService.GetLastTrackingInfo(lianeId);
   }
   
   public async Task AskForOverview()

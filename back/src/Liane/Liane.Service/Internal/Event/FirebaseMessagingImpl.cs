@@ -39,7 +39,7 @@ public sealed class FirebaseMessagingImpl : IPushMiddleware
 
   public Task<bool> PushMessage(Api.Auth.User sender, Ref<Api.Auth.User> receiver, Ref<Api.Community.Liane> liane, LianeMessage message)
   {
-    return Push(receiver, new Notification(
+    return PushTrackingInfo(receiver, new Notification(
       message.Id,
       message.CreatedBy,
       message.CreatedAt!.Value,
@@ -49,7 +49,7 @@ public sealed class FirebaseMessagingImpl : IPushMiddleware
     ));
   }
 
-  public async Task<bool> Push(Ref<Api.Auth.User> receiver, Notification notification)
+  public async Task<bool> PushTrackingInfo(Ref<Api.Auth.User> receiver, Notification notification)
   {
     if (receiver.Id == notification.CreatedBy?.Id)
     {

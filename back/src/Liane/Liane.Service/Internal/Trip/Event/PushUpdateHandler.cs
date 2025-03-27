@@ -24,10 +24,7 @@ public sealed class PushUpdateHandler(
     if (e.PublishTripUpdate is not null)
     {
       var trip = await e.PublishTripUpdate.Resolve(tripService.Get);
-      foreach (var member in trip.Members)
-      {
-        await hubService.PushTripUpdateTo(trip, member.User);
-      }
+      await hubService.PushTripUpdate(trip);
     }
 
     if (!e.PublishLianeUpdate)

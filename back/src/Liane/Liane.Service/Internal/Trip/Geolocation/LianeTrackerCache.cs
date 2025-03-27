@@ -10,16 +10,16 @@ namespace Liane.Service.Internal.Trip.Geolocation;
 public sealed class LianeTrackerCache : ILianeTrackerCache
 {
   
-  private readonly ConcurrentDictionary<string, LianeTracker> trackers = new();
-  public IEnumerable<LianeTracker> Trackers => trackers.Values;
+  private readonly ConcurrentDictionary<string, TripTracker> trackers = new();
+  public IEnumerable<TripTracker> Trackers => trackers.Values;
 
-  public LianeTracker? GetTracker(Ref<Api.Trip.Trip> liane)
+  public TripTracker? GetTracker(Ref<Api.Trip.Trip> liane)
   {
     trackers.TryGetValue(liane.Id, out var value);
     return value;
   }
 
-  public async Task<LianeTracker> GetOrAddTracker(Ref<Api.Trip.Trip> liane, Func<Ref<Api.Trip.Trip>, Task<LianeTracker>> factory)
+  public async Task<TripTracker> GetOrAddTracker(Ref<Api.Trip.Trip> liane, Func<Ref<Api.Trip.Trip>, Task<TripTracker>> factory)
   {
     var found = trackers.TryGetValue(liane.Id, out var value);
     if (!found)
@@ -30,7 +30,7 @@ public sealed class LianeTrackerCache : ILianeTrackerCache
     return value!;
   }
 
-  public LianeTracker? RemoveTracker(Ref<Api.Trip.Trip> liane)
+  public TripTracker? RemoveTracker(Ref<Api.Trip.Trip> liane)
   {
     trackers.TryRemove(liane.Id, out var value);
     return value;

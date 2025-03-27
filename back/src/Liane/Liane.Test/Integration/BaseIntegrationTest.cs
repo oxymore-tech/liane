@@ -95,7 +95,7 @@ public abstract class BaseIntegrationTest
     services.AddService(new FirebaseSettings(null));
     services.AddService<MockPushServiceImpl>();
     services.AddService(Moq.Mock.Of<IHubService>());
-    services.AddService(Moq.Mock.Of<ILianeUpdatePushService>());
+    services.AddService(Moq.Mock.Of<ITripUpdatePushService>());
     services.AddService(Moq.Mock.Of<IImageService>());
     services.AddService<TripServiceImpl>();
     services.AddService<RallyingPointRequestServiceImpl>();

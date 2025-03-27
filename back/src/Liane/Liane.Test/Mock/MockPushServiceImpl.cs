@@ -18,7 +18,7 @@ public sealed class MockPushServiceImpl : IPushMiddleware
   private readonly ConcurrentBag<SentMessage> sent = [];
   private readonly ConcurrentBag<SentMessage> messages = [];
 
-  public Task<bool> Push(Ref<User> receiver, Notification notification)
+  public Task<bool> PushTrackingInfo(Ref<User> receiver, Notification notification)
   {
     sent.Add(new SentMessage(notification.Id, notification.CreatedAt!.Value, receiver.Id, notification.Message));
     return Task.FromResult(true);

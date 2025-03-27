@@ -12,13 +12,13 @@ using Liane.Service.Internal.Util;
 
 namespace Liane.Service.Internal.Trip;
 
-public sealed class LianeTracker
+public sealed class TripTracker
 {
   private readonly ConcurrentDictionary<string, BufferedList<MemberLocationSample>> currentLocationMap = new();
   private readonly double[] wayPointFractions;
   private TrackingInfo? lastTrackingInfo;
 
-  public LianeTracker(ITripSession tripSession, Api.Trip.Trip trip)
+  public TripTracker(ITripSession tripSession, Api.Trip.Trip trip)
   {
     Trip = trip;
     TripSession = tripSession;
@@ -102,7 +102,11 @@ public sealed class LianeTracker
     var lastLocations = currentLocationMap.GetValueOrDefault(member.Id);
 
     var currentLocation = lastLocations?.Peek();
-    if (currentLocation is null) return null;
+    if (currentLocation is null)
+    {
+      return null;
+    }
+
     var isMoving = IsMoving(currentLocation, lastLocations);
 
     var nextWayPoint = Trip.GetWayPoint(currentLocation.NextPointIndex);
@@ -124,31 +128,49 @@ public sealed class LianeTracker
   /// </summary>
   /// <param name="member"></param>
   /// <returns>null if current member does not share its position, a boolean otherwise</returns>
-  public bool? MemberHasArrived(Ref<Api.Auth.User> member)
+  public bool MemberHasArrived(Ref<Api.Auth.User> member)
   {
     var currentLocation = GetCurrentLocation(member.Id);
 
-    var memberArrivalIndex = Trip.WayPoints.FindIndex(w => w.RallyingPoint.Id == Trip.Members.Find(m => m.User.Id == member.Id)!.To.Id);
+    var tripMember = Trip.Members.Find(m => m.User.Id == member.Id);
+
+    if (tripMember is null)
+    {
+      return false;
+    }
+
+    if (tripMember.Arrival is not null || tripMember.Cancellation is not null)
+    {
+      return false;
+    }
+
+    var memberArrivalIndex = Trip.WayPoints.FindIndex(w => w.RallyingPoint.Id == tripMember!.To.Id);
     if (currentLocation is null)
     {
-      if (Trip.Driver.User.Id != member.Id)
+      if (Trip.Driver.User.Id == member.Id)
       {
-        var driverNextIndex = GetDriverNextIndex();
-        return driverNextIndex is null ? null : memberArrivalIndex < driverNextIndex || Finished;
+        return false;
       }
 
-      return null;
+      var driverNextIndex = GetDriverNextIndex();
+      return driverNextIndex is not null && (memberArrivalIndex < driverNextIndex || Finished);
     }
 
     var arrived = memberArrivalIndex < currentLocation.NextPointIndex || Finished;
-    if (arrived) return true;
-    if (Trip.Driver.User.Id != member.Id)
+    if (arrived)
     {
-      var driverNextIndex = GetDriverNextIndex();
-      return driverNextIndex is null ? null : memberArrivalIndex < driverNextIndex || Finished;
+      return true;
     }
 
-    return false;
+    if (Trip.Driver.User.Id == member.Id)
+    {
+      return false;
+    }
+
+    {
+      var driverNextIndex = GetDriverNextIndex();
+      return driverNextIndex is not null && (memberArrivalIndex < driverNextIndex || Finished);
+    }
   }
 
   public int GetFirstWayPoint(string userId)
@@ -175,7 +197,11 @@ public sealed class LianeTracker
 
   public TrackingInfo GetTrackingInfo()
   {
-    if (lastTrackingInfo is not null) return lastTrackingInfo;
+    if (lastTrackingInfo is not null)
+    {
+      return lastTrackingInfo;
+    }
+
     var carPassengers = currentLocationMap.Where(entry =>
       {
         var userId = entry.Key;

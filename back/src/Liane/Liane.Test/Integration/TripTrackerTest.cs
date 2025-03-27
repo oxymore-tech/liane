@@ -23,7 +23,7 @@ using NUnit.Framework;
 namespace Liane.Test.Integration;
 
 [TestFixture(Category = "Integration")]
-public sealed class LianeTrackerTest : BaseIntegrationTest
+public sealed class TripTrackerTest : BaseIntegrationTest
 {
   private static (Api.Trip.Trip liane, FeatureCollection pings) PrepareTestData(Ref<User> userId)
   {
@@ -233,7 +233,7 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
     Assert.Less(1, actual.Car.Position.Distance(expectedLocation!.Value));
   }
 
-  private async Task<(LianeTracker, ImmutableList<UserPing>, ImmutableDictionary<Ref<User>, Ref<User>>)> SetupTracker(string file)
+  private async Task<(TripTracker, ImmutableList<UserPing>, ImmutableDictionary<Ref<User>, Ref<User>>)> SetupTracker(string file)
   {
     var bson = BsonDocument.Parse(AssertExtensions.ReadTestResource(file));
     var lianeDb = BsonSerializer.Deserialize<LianeDb>(bson);
@@ -254,7 +254,7 @@ public sealed class LianeTrackerTest : BaseIntegrationTest
     return (tracker, pings, userMapping.ToImmutableDictionary(e => e.Value, e => e.Key));
   }
 
-  private async Task<(LianeTracker, ImmutableDictionary<Ref<User>, Ref<User>>)> SetupTrackerAt(string file, string? at = null)
+  private async Task<(TripTracker, ImmutableDictionary<Ref<User>, Ref<User>>)> SetupTrackerAt(string file, string? at = null)
   {
     var (tracker, pings, userMapping) = await SetupTracker(file);
     // Send first few pings outside of planned route

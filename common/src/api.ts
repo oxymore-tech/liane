@@ -137,7 +137,7 @@ export type Trip = Entity & {
   departureTime: UTCDateTime;
   return?: Ref<Trip>;
   wayPoints: WayPoint[];
-  members: LianeMember[];
+  members: TripMember[];
   driver: { user: Ref<User>; canDrive: boolean };
   state: TripStatus;
 };
@@ -152,7 +152,7 @@ export type WayPoint = {
   effectiveTime?: UTCDateTime;
 };
 
-export type LianeMember = {
+export type TripMember = {
   user: User;
   from: Ref<RallyingPoint>;
   to: Ref<RallyingPoint>;
@@ -160,6 +160,8 @@ export type LianeMember = {
   geolocationLevel: GeolocationLevel;
   cancellation?: UTCDateTime;
   departure?: UTCDateTime;
+  arrival?: UTCDateTime;
+  archiving?: UTCDateTime;
 };
 
 // A date time in ISO 8601 format

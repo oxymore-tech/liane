@@ -29,7 +29,6 @@ public sealed record LianeEvent<T>(
     MessageContent.MemberJoinedTrip => true,
     MessageContent.MemberLeftTrip => true,
     MessageContent.MemberHasStarted => true,
-    MessageContent.MemberFeedback => true,
     _ => false
   };
 }

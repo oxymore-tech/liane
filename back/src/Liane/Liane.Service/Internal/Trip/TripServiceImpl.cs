@@ -102,18 +102,6 @@ public sealed class TripServiceImpl(
       .SelectAsync(MapEntity);
   }
 
-  public async Task<Api.Trip.Trip> GetForCurrentUser(Ref<Api.Trip.Trip> l, Ref<Api.Auth.User>? user = null)
-  {
-    var userId = user ?? currentContext.CurrentUser().Id;
-    var liane = await Get(l);
-    var member = liane.Members.Find(m => m.User.Id == userId);
-    if (member is null)
-    {
-      return liane;
-    }
-
-    return liane with { State = GetUserState(liane, member) };
-  }
 
   public async Task<PaginatedResponse<LianeMatch>> Match(Filter filter, Pagination pagination, CancellationToken cancellationToken = default)
   {
@@ -193,12 +181,9 @@ public sealed class TripServiceImpl(
   {
     var filter = BuildFilter(tripFilter);
     var paginatedLianes = await Collection.PaginateTime(pagination, l => l.DepartureTime, filter, cancellationToken: cancellationToken);
-    if (tripFilter is { ForCurrentUser: true, States.Length: > 0 })
+    if (tripFilter is { States.Length: > 0 })
     {
-      // Return with user's version of liane state
-      var result = await paginatedLianes.SelectAsync(async l =>
-        l with { State = GetUserState(await MapEntity(l), l.Members.Find(m => m.User.Id == currentContext.CurrentUser().Id)!) });
-      paginatedLianes = result.Where(l => tripFilter.States.Contains(l.State));
+      paginatedLianes = paginatedLianes.Where(l => tripFilter.States.Contains(l.State));
     }
 
     return await paginatedLianes.SelectAsync(MapEntity) with { TotalCount = await Count(filter) };
@@ -358,15 +343,12 @@ public sealed class TripServiceImpl(
   public async Task UpdateFeedback(Ref<Api.Trip.Trip> liane, Feedback feedback)
   {
     var resolved = await Get(liane);
-    var sender =
-      currentContext.CurrentUser().Id;
+    var sender = currentContext.CurrentUser().Id;
     var updated = await Update(liane, Builders<LianeDb>.Update.Set(l => l.Members, resolved.Members.Select(m => m.User.Id == sender ? m with { Feedback = feedback } : m)));
     if (updated.Members.All(m => m.Feedback is not null))
     {
-      updated = await Update(liane, Builders<LianeDb>.Update.Set(l => l.State, updated.Members.All(m => m.Feedback!.Canceled) ? TripStatus.Canceled : TripStatus.Archived));
+      await Update(liane, Builders<LianeDb>.Update.Set(l => l.State, updated.Members.All(m => m.Feedback!.Canceled) ? TripStatus.Canceled : TripStatus.Archived));
     }
-
-    await eventDispatcher.Dispatch(updated.Liane!, new MessageContent.MemberFeedback(liane, feedback));
   }
 
   private async Task<Api.Trip.Trip> AddMemberSingle(Ref<Api.Trip.Trip> liane, TripMember newMember)
@@ -705,6 +687,25 @@ public sealed class TripServiceImpl(
 
     await eventDispatcher.Dispatch(trip.Liane, new MessageContent.MemberLeftTrip("", sender, trip));
   }
+  
+  public async Task FinishTrip(Ref<Api.Trip.Trip> tripRef, Ref<Api.Auth.User> user)
+  {
+    var trip = await Get(tripRef);
+    var now = DateTime.UtcNow;
+
+    var alreadyCanceled = trip.Members.FirstOrDefault(m => m.User.Id == user.Id && m.Arrival is not null);
+    if (alreadyCanceled is not null)
+    {
+      return;
+    }
+
+    if (user == trip.Driver.User)
+    {
+      await UpdateState(trip, TripStatus.Finished);
+    }
+
+    await Update(tripRef, Builders<LianeDb>.Update.Set(l => l.Members, trip.Members.Select(m => m.User.Id == user ? m with { Arrival = now } : m)));
+  }
 
   public async Task StartTrip(Ref<Api.Trip.Trip> tripRef)
   {
@@ -727,35 +728,6 @@ public sealed class TripServiceImpl(
 
     await eventDispatcher.Dispatch(trip.Liane, new MessageContent.MemberHasStarted("", trip), now);
   }
-
-  private TripStatus GetUserState(Api.Trip.Trip trip, TripMember member)
-  {
-    if (member.Cancellation is not null) return TripStatus.Canceled;
-
-    var current = trip.State;
-    if (current == TripStatus.Started)
-    {
-      // Return NotStarted while user has not confirmed
-      if (member.Departure is null) return TripStatus.NotStarted;
-      else
-      {
-        var arrived = trackerCache.GetTracker(trip.Id)?.MemberHasArrived(member.User);
-        if (arrived is not null && arrived.Value)
-        {
-          return TripStatus.Finished;
-        }
-      }
-    }
-
-    // Final states
-    if (current == TripStatus.Finished && member.Feedback is not null)
-    {
-      return member.Feedback.Canceled ? TripStatus.Canceled : TripStatus.Archived;
-    }
-
-    return current;
-  }
-
 
   public async Task<PaginatedResponse<DetailedLianeTrackReport>> ListTripRecords(Pagination pagination, TripRecordFilter filter)
   {
