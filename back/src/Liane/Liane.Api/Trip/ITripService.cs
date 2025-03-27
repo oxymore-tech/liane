@@ -23,6 +23,7 @@ public interface ITripService : ICrudEntityService<TripRequest, Trip>
   Task<LianeMatchDisplay> MatchWithDisplay(Filter filter, Pagination pagination, CancellationToken cancellationToken = default);
   Task UpdateState(Ref<Trip> trip, TripStatus state);
   Task UpdateFeedback(Ref<Trip> trip, Feedback feedback);
+  Task UpdateFeedback(Ref<Trip> trip, Ref<User> member, Feedback feedback);
   Task<string> GetContact(Ref<Trip> id, Ref<User> requester, Ref<User> member);
   Task<Trip> UpdateDepartureTime(Ref<Trip> trip, DateTime departureTime);
   Task<PaginatedResponse<DetailedLianeTrackReport>> ListTripRecords(Pagination pagination, TripRecordFilter filter);
@@ -31,5 +32,4 @@ public interface ITripService : ICrudEntityService<TripRequest, Trip>
   Task UpdateGeolocationSetting(Ref<Trip> trip, GeolocationLevel level);
   Task CancelTrip(Ref<Trip> trip);
   Task StartTrip(Ref<Trip> trip);
-  Task FinishTrip(Ref<Trip> trip, Ref<User> user);
 }

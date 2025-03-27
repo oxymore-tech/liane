@@ -202,7 +202,7 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
     await PublishLocation(tracker);
     if (tracker.MemberHasArrived(ping.User))
     {
-      await tripService.FinishTrip(tracker.Trip, ping.User);
+      await tripService.UpdateFeedback(tracker.Trip, ping.User, new Feedback(false, "Automatic via ping"));
       await hubService.PushTripUpdate(tracker.Trip);
     }
   }

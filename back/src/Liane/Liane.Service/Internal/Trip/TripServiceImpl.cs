@@ -102,7 +102,6 @@ public sealed class TripServiceImpl(
       .SelectAsync(MapEntity);
   }
 
-
   public async Task<PaginatedResponse<LianeMatch>> Match(Filter filter, Pagination pagination, CancellationToken cancellationToken = default)
   {
     var from = await rallyingPointService.Get(filter.From);
@@ -253,21 +252,21 @@ public sealed class TripServiceImpl(
     // Cancel ongoing trips where user is driver
     await Mongo.GetCollection<LianeDb>()
       .Find(l => l.Driver.User == member.Id && l.State == TripStatus.Started)
-      .ForEachAsync(async (l) => await CancelTrip(l.Id));
+      .ForEachAsync(async l => await CancelTrip(l.Id));
 
     // Leave liane not yet started and joined as members
     await Mongo.GetCollection<LianeDb>()
       .Find(
         Builders<LianeDb>.Filter.ElemMatch(l => l.Members, m => m.User == member.Id) &
         Builders<LianeDb>.Filter.Eq(l => l.State, TripStatus.NotStarted))
-      .ForEachAsync(async (l) => await RemoveMember(l.Id, member.Id));
+      .ForEachAsync(async l => await RemoveMember(l.Id, member.Id));
 
     // Cancel participation to ongoing trips joined as members
     await Mongo.GetCollection<LianeDb>()
       .Find(
         Builders<LianeDb>.Filter.ElemMatch(l => l.Members, m => m.User == member.Id) &
         Builders<LianeDb>.Filter.Eq(l => l.State, TripStatus.Started))
-      .ForEachAsync(async (l) => await CancelTrip(l.Id));
+      .ForEachAsync(async l => await CancelTrip(l.Id));
   }
 
   public async Task<Api.Trip.Trip?> RemoveMember(Ref<Api.Trip.Trip> liane, Ref<Api.Auth.User> member)
@@ -340,14 +339,30 @@ public sealed class TripServiceImpl(
       : new Match.Compatible(new Delta(delta, tripIntent.TotalDistance() - wayPoints.TotalDistance()), from.Id!, to.Id!, tripIntent);
   }
 
-  public async Task UpdateFeedback(Ref<Api.Trip.Trip> liane, Feedback feedback)
+  public Task UpdateFeedback(Ref<Api.Trip.Trip> trip, Feedback feedback)
   {
-    var resolved = await Get(liane);
     var sender = currentContext.CurrentUser().Id;
-    var updated = await Update(liane, Builders<LianeDb>.Update.Set(l => l.Members, resolved.Members.Select(m => m.User.Id == sender ? m with { Feedback = feedback } : m)));
+    return UpdateFeedback(trip, sender, feedback);
+  }
+
+  public async Task UpdateFeedback(Ref<Api.Trip.Trip> trip, Ref<Api.Auth.User> user, Feedback feedback)
+  {
+    var resolved = await Get(trip);
+
+    var tripMember = resolved.Members.Find(m => m.User.Id == user.Id);
+    if (tripMember is null)
+    {
+      return;
+    }
+
+    var now = DateTime.UtcNow;
+    var update = feedback.Canceled
+      ? tripMember with { Feedback = feedback, Cancellation = now }
+      : tripMember with { Feedback = feedback, Arrival = now };
+    var updated = await Update(trip, Builders<LianeDb>.Update.Set(l => l.Members, resolved.Members.Select(m => m.User.Id == user.Id ? update : m)));
     if (updated.Members.All(m => m.Feedback is not null))
     {
-      await Update(liane, Builders<LianeDb>.Update.Set(l => l.State, updated.Members.All(m => m.Feedback!.Canceled) ? TripStatus.Canceled : TripStatus.Archived));
+      await Update(trip, Builders<LianeDb>.Update.Set(l => l.State, updated.Members.All(m => m.Feedback!.Canceled) ? TripStatus.Canceled : TripStatus.Archived));
     }
   }
 
@@ -686,25 +701,6 @@ public sealed class TripServiceImpl(
     await Update(tripRef, Builders<LianeDb>.Update.Set(l => l.Members, trip.Members.Select(m => m.User.Id == sender ? m with { Cancellation = now } : m)));
 
     await eventDispatcher.Dispatch(trip.Liane, new MessageContent.MemberLeftTrip("", sender, trip));
-  }
-  
-  public async Task FinishTrip(Ref<Api.Trip.Trip> tripRef, Ref<Api.Auth.User> user)
-  {
-    var trip = await Get(tripRef);
-    var now = DateTime.UtcNow;
-
-    var alreadyCanceled = trip.Members.FirstOrDefault(m => m.User.Id == user.Id && m.Arrival is not null);
-    if (alreadyCanceled is not null)
-    {
-      return;
-    }
-
-    if (user == trip.Driver.User)
-    {
-      await UpdateState(trip, TripStatus.Finished);
-    }
-
-    await Update(tripRef, Builders<LianeDb>.Update.Set(l => l.Members, trip.Members.Select(m => m.User.Id == user ? m with { Arrival = now } : m)));
   }
 
   public async Task StartTrip(Ref<Api.Trip.Trip> tripRef)
