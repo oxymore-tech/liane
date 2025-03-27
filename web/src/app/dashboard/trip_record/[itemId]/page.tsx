@@ -2,7 +2,7 @@
 import { useAppServices } from "@/components/ContextProvider";
 import React, { PropsWithChildren, useMemo, useState } from "react";
 import { FeatureCollection } from "geojson";
-import { LianeMember, RallyingPoint } from "@liane/common";
+import { TripMember, RallyingPoint } from "@liane/common";
 import { Button, Card, ToggleSwitch } from "flowbite-react";
 import { TripRecord } from "@/api/api";
 import { dispatchHighlightPointEvent, TimelineChart, TimelineData } from "@/components/charts/timeline/Timeline";
@@ -63,7 +63,7 @@ const TripView = ({ record, children }: { record: TripRecord } & PropsWithChildr
   );
 };
 
-type RecordUserData = Omit<Omit<LianeMember, "from">, "to"> & { from: RallyingPoint; to: RallyingPoint };
+type RecordUserData = Omit<Omit<TripMember, "from">, "to"> & { from: RallyingPoint; to: RallyingPoint };
 
 const milliInADay = 3600 * 24 * 1000;
 const generateId = (userIndex: number, startDate: Date, d: Date) => {
