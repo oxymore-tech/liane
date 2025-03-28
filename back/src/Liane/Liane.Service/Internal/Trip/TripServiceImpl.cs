@@ -24,7 +24,6 @@ using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Direction = Liane.Api.Trip.Direction;
 using LianeMatch = Liane.Api.Trip.LianeMatch;
 using Match = Liane.Api.Trip.Match;
 
@@ -280,20 +279,20 @@ public sealed class TripServiceImpl(
     {
       return null;
     }
-    
+
     var foundMember = toUpdate.Members.Find(m => m.User.Id == member.Id);
 
     if (foundMember is null)
     {
       return null;
     }
-    
+
     if (toUpdate.Driver.User.Id == foundMember.User.Id && toUpdate.State == TripStatus.NotStarted)
     {
       await Delete(trip);
       return null;
     }
-    
+
     var newMembers = toUpdate.Members.Remove(foundMember);
     if (newMembers.IsEmpty)
     {
@@ -643,11 +642,7 @@ public sealed class TripServiceImpl(
       ]);
       if (lianeDb.State != TripStatus.Started)
       {
-        var doneSession = trackerCache.RemoveTracker(liane.Id);
-        if (doneSession is not null)
-        {
-          await doneSession.Dispose();
-        }
+        await trackerCache.RemoveTracker(liane.Id);
       }
     }
 
@@ -789,7 +784,22 @@ public sealed class TripServiceImpl(
       .Project<DetailedLianeTrackReportDb>(Builders<BsonDocument>.Projection.Exclude("memberLocations").Exclude("carLocations"))
       .Match(Builders<DetailedLianeTrackReportDb>.Filter.Exists(l => l.Liane))
       .FirstOrDefaultAsync();
-    if (report is null) throw new ResourceNotFoundException("LianeTrackReport " + id);
+    if (report is null)
+    {
+      throw new ResourceNotFoundException("LianeTrackReport " + id);
+    }
+
     return await MapLianeTrackReport(report);
+  }
+
+  public override async Task<bool> Delete(Ref<Api.Trip.Trip> reference)
+  {
+    var deleted = await base.Delete(reference);
+    if (deleted)
+    {
+      await trackerCache.RemoveTracker(reference);
+    }
+
+    return deleted;
   }
 }

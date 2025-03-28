@@ -15,7 +15,7 @@ type TripActionsProps = {
   trip: Trip;
   booked: boolean;
   style?: StyleProp<ViewStyle>;
-  user: FullUser;
+  user?: FullUser;
   onUpdate: (trip: Trip) => void;
 };
 
@@ -62,7 +62,7 @@ export const TripActions = memo(({ style, trip, booked, onUpdate, user }: TripAc
   }, [onUpdate, services.community, trip]);
 
   const handleLeave = useCallback(async () => {
-    const isDriver = user.id === trip.driver.user;
+    const isDriver = user?.id === trip.driver.user;
     if (!isDriver) {
       setLeaving(true);
       try {
@@ -93,7 +93,7 @@ export const TripActions = memo(({ style, trip, booked, onUpdate, user }: TripAc
         style: "default"
       }
     ]);
-  }, [onUpdate, services.trip, trip, user.id]);
+  }, [onUpdate, services.trip, trip, user]);
 
   const availableSeats = useMemo(() => trip.members.reduce((acc, m) => acc + m.seatCount, 0), [trip]);
 

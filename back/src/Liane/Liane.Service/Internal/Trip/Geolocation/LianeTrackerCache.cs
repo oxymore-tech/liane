@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Liane.Api.Util.Ref;
-using Microsoft.Extensions.Caching.Memory;
 
 namespace Liane.Service.Internal.Trip.Geolocation;
 
@@ -30,10 +29,13 @@ public sealed class LianeTrackerCache : ILianeTrackerCache
     return value!;
   }
 
-  public TripTracker? RemoveTracker(Ref<Api.Trip.Trip> liane)
+  public async Task RemoveTracker(Ref<Api.Trip.Trip> trip)
   {
-    trackers.TryRemove(liane.Id, out var value);
-    return value;
+    trackers.TryRemove(trip.Id, out var value);
+    if (value is not null)
+    {
+      await value.Dispose();
+    }
   }
 
 }
