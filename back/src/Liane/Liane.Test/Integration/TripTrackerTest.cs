@@ -8,6 +8,7 @@ using GeoJSON.Text.Geometry;
 using Liane.Api.Auth;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
+using Liane.Api.Util.Exception;
 using Liane.Api.Util.Ref;
 using Liane.Service.Internal.Mongo;
 using Liane.Service.Internal.Trip;
@@ -67,7 +68,17 @@ public sealed class TripTrackerTest : BaseIntegrationTest
         break;
       }
 
-      await lianeTrackerService.PushPing(liane, p);
+      try
+      {
+        await lianeTrackerService.PushPing(liane, p);
+      }
+      catch (ResourceNotFoundException e)
+      {
+        if (e.Message != "Arrived")
+        {
+          Assert.Fail("Unexpected exception: " + e.Message);
+        }
+      }
     }
 
     var lastLocation = tracker.GetCurrentMemberLocation(driver);
@@ -252,7 +263,13 @@ public sealed class TripTrackerTest : BaseIntegrationTest
 
     foreach (var p in sublist)
     {
-      await lianeTrackerService.PushPing(tracker.Trip, p);
+      try
+      {
+        await lianeTrackerService.PushPing(tracker.Trip, p);
+      }
+      catch (ResourceNotFoundException)
+      {
+      }
     }
 
     return (tracker, userMapping);

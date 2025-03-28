@@ -15,7 +15,7 @@ export type NavigationParamList = {
   Profile: { user: User } | undefined;
   ProfileEdit: undefined;
   Account: undefined;
-  TripGeolocationWizard: { showIntro: boolean; trip: Trip } | undefined;
+  TripGeolocationWizard: { showIntro?: boolean; trip?: Trip } | undefined;
   ArchivedTrips: undefined;
   Settings: undefined;
   RallyingPointRequests: undefined;
