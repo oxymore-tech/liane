@@ -49,6 +49,7 @@ import CloseCircle from "@/assets/icons/close-circle.svg";
 import Checkmark from "@/assets/icons/checkmark.svg";
 import Settings from "@/assets/icons/settings.svg";
 import Message from "@/assets/icons/message.svg";
+import Protect from "@/assets/icons/protect.svg";
 
 import { AppDimensions } from "@/theme/dimensions";
 import { AppColorPalettes } from "@/theme/colors";
@@ -156,6 +157,8 @@ export function AppIcon({ name, color = AppColorPalettes.gray[800], size = AppDi
       return <Settings {...props} />;
     case "message":
       return <Message {...props} />;
+    case "protect":
+      return <Protect {...props} />;
     case "search":
     default:
       return <Search {...props} />;
@@ -211,5 +214,6 @@ const AppIconsNames = [
   "close-circle",
   "checkmark",
   "settings",
-  "message"
+  "message",
+  "protect"
 ] as const;

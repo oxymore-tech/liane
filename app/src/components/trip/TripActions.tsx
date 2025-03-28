@@ -30,9 +30,9 @@ export function TripActions({ style, trip, onUpdate, user }: TripActionsProps) {
   const handleStart = useCallback(async () => {
     setStarting(true);
     try {
-      //await services.trip.start(trip.trip.id!);
-      navigation.navigate("TripGeolocationWizard", { showAs: null, lianeId: undefined });
+      await services.trip.start(trip.trip.id!);
       onUpdate(trip.trip);
+      navigation.navigate("TripGeolocationWizard", { showIntro: true, trip: trip.trip });
     } finally {
       setStarting(false);
     }

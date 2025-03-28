@@ -37,9 +37,8 @@ export const startGeolocationService = async (liane: Trip, force: boolean = fals
 };
 
 export const GeolocationSwitch = ({ liane: match }: { liane: Trip }) => {
-  const { user } = useContext(AppContext);
+  const { user, services } = useContext(AppContext);
   const geoloc = useTripGeolocation();
-  const { services } = useContext(AppContext);
   const me = useMemo(() => match.members.find(l => l.user.id === user!.id)!, [match.members, user]);
   const [isTracked, setTracked] = useState<boolean | undefined>(me.geolocationLevel === "Hidden" || me.geolocationLevel === "Shared");
   const { navigation } = useAppNavigation();
@@ -93,7 +92,7 @@ export const GeolocationSwitch = ({ liane: match }: { liane: Trip }) => {
   const setGeolocalisationEnabled = async (enabled: boolean) => {
     const oldValue = isTracked;
     if (enabled && geolocPermission === GeolocationPermission.Denied) {
-      navigation.navigate("TripGeolocationWizard", { showAs: null, lianeId: match.id });
+      //navigation.navigate("TripGeolocationWizard", {  lianeId: match.id });
       return;
     }
 
