@@ -158,62 +158,33 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
     var at = DateTimeOffset.FromUnixTimeMilliseconds(e.Timestamp).UtcDateTime;
     var memberId = currentContext.CurrentUser().Id;
     var ping = new UserPing(memberId, at, e.Coordinate);
-    var filter = Builders<LianeDb>.Filter.Where(l => l.Id == e.Trip)
-                 & Builders<LianeDb>.Filter.Or(Builders<LianeDb>.Filter.Lt(l => l.DepartureTime, DateTime.UtcNow + TimeSpan.FromMinutes(15)),
-                   Builders<LianeDb>.Filter.Where(l => l.State == TripStatus.Started))
-                 & Builders<LianeDb>.Filter.ElemMatch(l => l.Members, m => m.User == memberId);
-
-    var liane = await mongo.GetCollection<LianeDb>()
-      .FindOneAndUpdateAsync(filter,
-        Builders<LianeDb>.Update.AddToSet(l => l.Pings, ping),
-        new FindOneAndUpdateOptions<LianeDb> { ReturnDocument = ReturnDocument.After }
-      );
-
-    if (liane is null)
-    {
-      throw ResourceNotFoundException.For(e.Trip);
-    }
-
-    if (liane.State is not TripStatus.Started)
-    {
-      throw new ValidationException(ValidationMessage.LianeStateInvalid(liane.State));
-    }
-
-    try
-    {
-      await PushPing(liane.Id, ping);
-    }
-    catch (Exception)
-    {
-      logger.LogWarning("Unable to push ping for '{0}' : {1}", liane.Id, ping);
-    }
+    await PushPing(e.Trip, ping);
   }
 
   public async Task PushPing(Ref<Api.Trip.Trip> trip, UserPing ping)
   {
+    var resolved = await tripService.Get(trip);
+    var tripMember = resolved.Members.Find(m => m.User.Id == ping.User.Id);
+    if (tripMember is null)
+    {
+      throw new ResourceNotFoundException("Not member");
+    }
+
     var tracker = trackerCache.GetTracker(trip);
     if (tracker is null)
     {
       logger.LogWarning($"No tracker for trip = '{trip}'");
       return;
     }
-    
-    var resolved = await tripService.Get(trip);
 
     await PushPing(tracker, ping);
     await PublishLocation(tracker);
 
-    var tripMember = resolved.Members.Find(m => m.User.Id == ping.User.Id);
-    if (tripMember is null)
-    {
-      throw new ResourceNotFoundException("Not member");
-    }
-    
     if (tripMember.Cancellation is not null || tripMember.Arrival is not null)
     {
       throw new ResourceNotFoundException("Already arrived");
     }
-    
+
     if (tracker.MemberHasArrived(tripMember))
     {
       await tripService.UpdateFeedback(tracker.Trip, ping.User, new Feedback(false, "Automatic via ping"));
