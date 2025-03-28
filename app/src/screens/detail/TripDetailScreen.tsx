@@ -156,6 +156,7 @@ export const TripWithDateView = (props: { trip: Trip; showPassengers?: boolean }
 };
 
 const TripDetailView = ({ liane, onUpdate }: { liane: LianeMatch; onUpdate: () => void }) => {
+  const { user } = useContext(AppContext);
   const { wayPoints: currentTrip } = useMemo(() => getTripFromMatch(liane), [liane]);
   const userTripDistance = Math.ceil(getTotalDistance(currentTrip) / 1000);
 
@@ -175,7 +176,7 @@ const TripDetailView = ({ liane, onUpdate }: { liane: LianeMatch; onUpdate: () =
 
       {!["Finished", "Archived", "Canceled"].includes(liane.trip.state) && (
         <Row style={styles.statusLianeContainer}>
-          <TripActions trip={liane.trip} booked={booked} onUpdate={onUpdate} />
+          <TripActions trip={liane.trip} booked={booked} onUpdate={onUpdate} user={user} />
         </Row>
       )}
 

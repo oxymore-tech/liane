@@ -1,7 +1,7 @@
 import { FullUser, Trip } from "@liane/common";
 import { useTripStatus } from "@/components/trip/trip";
-import React, { memo, useCallback, useContext, useState } from "react";
-import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
+import React, { memo, useCallback, useContext, useMemo, useState } from "react";
+import { Alert, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { AppColors } from "@/theme/colors";
 import { Row } from "@/components/base/AppLayout.tsx";
 import { AppButton } from "@/components/base/AppButton.tsx";
@@ -15,7 +15,7 @@ type TripActionsProps = {
   trip: Trip;
   booked: boolean;
   style?: StyleProp<ViewStyle>;
-  user?: FullUser;
+  user: FullUser;
   onUpdate: (trip: Trip) => void;
 };
 
@@ -62,26 +62,50 @@ export const TripActions = memo(({ style, trip, booked, onUpdate, user }: TripAc
   }, [onUpdate, services.community, trip]);
 
   const handleLeave = useCallback(async () => {
-    setLeaving(true);
-    try {
-      await services.trip.leave(trip.id!);
-      onUpdate(trip);
-    } finally {
-      setLeaving(false);
+    const isDriver = user.id === trip.driver.user;
+    if (!isDriver) {
+      setLeaving(true);
+      try {
+        await services.trip.leave(trip.id!);
+        onUpdate(trip);
+      } finally {
+        setLeaving(false);
+      }
+      return;
     }
-  }, [onUpdate, services.trip, trip]);
+    Alert.alert("Supprimer le trajet", "Voulez-vous vraiment supprimer ce trajet ?", [
+      {
+        text: "Annuler",
+        onPress: () => {},
+        style: "cancel"
+      },
+      {
+        text: "Supprimer",
+        onPress: async () => {
+          setLeaving(true);
+          try {
+            await services.trip.leave(trip.id!);
+            onUpdate(trip);
+          } finally {
+            setLeaving(false);
+          }
+        },
+        style: "default"
+      }
+    ]);
+  }, [onUpdate, services.trip, trip, user.id]);
+
+  const availableSeats = useMemo(() => trip.members.reduce((acc, m) => acc + m.seatCount, 0), [trip]);
 
   if (status === "Finished" || status === "Canceled") {
     return;
   }
 
-  const availableSeats = trip.members.reduce((acc, m) => acc + m.seatCount, 0);
-
   return (
     <Row style={[styles.container, style]}>
       {trip.state === "Started" && <AppIcon style={{ marginLeft: 5 }} name="car" color={AppColors.primaryColor} size={30} />}
       {booked && trip.state === "NotStarted" ? (
-        <AppButton value="Quitter" loading={leaving} onPress={handleLeave} color={AppColors.backgroundColor} />
+        <AppButton value="Annuler" loading={leaving} onPress={handleLeave} color={AppColors.backgroundColor} />
       ) : (
         <View style={{ flex: 1 }} />
       )}

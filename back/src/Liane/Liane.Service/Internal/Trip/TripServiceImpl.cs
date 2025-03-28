@@ -278,18 +278,23 @@ public sealed class TripServiceImpl(
 
     if (toUpdate is null)
     {
-      throw ResourceNotFoundException.For(trip);
+      return null;
     }
-
+    
     var foundMember = toUpdate.Members.Find(m => m.User.Id == member.Id);
 
     if (foundMember is null)
     {
       return null;
     }
-
+    
+    if (toUpdate.Driver.User.Id == foundMember.User.Id && toUpdate.State == TripStatus.NotStarted)
+    {
+      await Delete(trip);
+      return null;
+    }
+    
     var newMembers = toUpdate.Members.Remove(foundMember);
-
     if (newMembers.IsEmpty)
     {
       await Delete(trip);
