@@ -125,34 +125,39 @@ function getTimeForUser(liane: Trip, tripMember: TripMember, type: "to" | "from"
 
 export type LiveUpdateTripStatus = { status: LiveTripStatus; nextUpdateMillis?: number };
 
-export function getLiveTripStatus(trip: Trip, tripMember: TripMember): LiveUpdateTripStatus {
-  if (trip.state === "NotStarted") {
-    const [, delta] = getTimeForUser(trip, tripMember, "from");
-    if (delta <= 24 * 60 * 60 && delta > -1 * 2 * 60 * 60) {
-      return { status: "StartingSoon", nextUpdateMillis: delta * 1000 };
-    }
-    return { status: trip.state };
-  }
-
+function getUserTripStatus(trip: Trip, tripMember: TripMember): TripStatus {
   if (trip.state !== "Started") {
-    return { status: trip.state };
+    return trip.state;
   }
 
   if (tripMember.arrival) {
-    return { status: "Finished" };
+    return "Finished";
   }
 
   if (tripMember.archiving) {
-    return { status: "Archived" };
+    return "Archived";
   }
 
   if (tripMember.cancellation) {
-    return { status: "Canceled" };
+    return "Canceled";
   }
 
   if (tripMember.departure) {
-    return { status: "Started" };
+    return "Started";
   }
 
-  return { status: trip.state };
+  return "NotStarted";
+}
+
+export function getLiveTripStatus(trip: Trip, tripMember: TripMember): LiveUpdateTripStatus {
+  const status = getUserTripStatus(trip, tripMember);
+  if (status === "NotStarted") {
+    const [, delta] = getTimeForUser(trip, tripMember, "from");
+    if (delta <= 24 * 60 * 60 && delta > -1 * 2 * 60 * 60) {
+      return { status: "StartingSoon", nextUpdateMillis: 30000 };
+    }
+    return { status };
+  }
+
+  return { status };
 }

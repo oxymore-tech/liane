@@ -1,6 +1,6 @@
-import { FullUser, IncomingTrip, Trip } from "@liane/common";
+import { FullUser, Trip } from "@liane/common";
 import { useTripStatus } from "@/components/trip/trip";
-import React, { useCallback, useContext, useState } from "react";
+import React, { memo, useCallback, useContext, useState } from "react";
 import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { AppColors } from "@/theme/colors";
 import { Row } from "@/components/base/AppLayout.tsx";
@@ -12,14 +12,15 @@ import { useAppNavigation } from "@/components/context/routing.ts";
 import Geolocation from "../../../native-modules/geolocation";
 
 type TripActionsProps = {
-  trip: IncomingTrip;
+  trip: Trip;
+  booked: boolean;
   style?: StyleProp<ViewStyle>;
   user?: FullUser;
   onUpdate: (trip: Trip) => void;
 };
 
-export function TripActions({ style, trip, onUpdate, user }: TripActionsProps) {
-  const status = useTripStatus(trip.trip, user);
+export const TripActions = memo(({ style, trip, booked, onUpdate, user }: TripActionsProps) => {
+  const status = useTripStatus(trip, user);
   const { services } = useContext(AppContext);
   const { navigation } = useAppNavigation();
 
@@ -31,60 +32,60 @@ export function TripActions({ style, trip, onUpdate, user }: TripActionsProps) {
   const handleStart = useCallback(async () => {
     setStarting(true);
     try {
-      await services.trip.start(trip.trip.id!);
-      onUpdate(trip.trip);
-      navigation.navigate("TripGeolocationWizard", { showIntro: true, trip: trip.trip });
+      await services.trip.start(trip.id!);
+      onUpdate(trip);
+      navigation.navigate("TripGeolocationWizard", { showIntro: true, trip: trip });
     } finally {
       setStarting(false);
     }
-  }, [navigation, onUpdate, services.trip, trip.trip]);
+  }, [navigation, onUpdate, services.trip, trip]);
 
   const handleStop = useCallback(async () => {
     setStoping(true);
     try {
-      await services.trip.updateFeedback(trip.trip.id!, { comment: "Terminé", canceled: false });
+      await services.trip.updateFeedback(trip.id!, { comment: "Terminé", canceled: false });
       await Geolocation.stopSendingPings();
-      onUpdate(trip.trip);
+      onUpdate(trip);
     } finally {
       setStoping(false);
     }
-  }, [onUpdate, services.trip, trip.trip]);
+  }, [onUpdate, services.trip, trip]);
 
   const handleJoin = useCallback(async () => {
     setJoining(true);
     try {
-      await services.community.joinTrip({ liane: trip.trip.liane, trip: trip.trip.id!, takeReturnTrip: false });
-      onUpdate(trip.trip);
+      await services.community.joinTrip({ liane: trip.liane, trip: trip.id!, takeReturnTrip: false });
+      onUpdate(trip);
     } finally {
       setJoining(false);
     }
-  }, [onUpdate, services.community, trip.trip]);
+  }, [onUpdate, services.community, trip]);
 
   const handleLeave = useCallback(async () => {
     setLeaving(true);
     try {
-      await services.trip.leave(trip.trip.id!);
-      onUpdate(trip.trip);
+      await services.trip.leave(trip.id!);
+      onUpdate(trip);
     } finally {
       setLeaving(false);
     }
-  }, [onUpdate, services.trip, trip.trip]);
+  }, [onUpdate, services.trip, trip]);
 
-  if (status === "Finished") {
+  if (status === "Finished" || status === "Canceled") {
     return;
   }
 
-  const availableSeats = trip.trip.members.reduce((acc, m) => acc + m.seatCount, 0);
+  const availableSeats = trip.members.reduce((acc, m) => acc + m.seatCount, 0);
 
   return (
     <Row style={[styles.container, style]}>
-      {status === "Started" && <AppIcon style={{ marginLeft: 5 }} name="car" color={AppColors.primaryColor} size={30} />}
-      {trip.booked && status === "NotStarted" ? (
+      {trip.state === "Started" && <AppIcon style={{ marginLeft: 5 }} name="car" color={AppColors.primaryColor} size={30} />}
+      {booked && trip.state === "NotStarted" ? (
         <AppButton value="Quitter" loading={leaving} onPress={handleLeave} color={AppColors.backgroundColor} />
       ) : (
         <View style={{ flex: 1 }} />
       )}
-      {trip.booked ? (
+      {booked ? (
         status === "Started" ? (
           <AppButton value="C'est terminé ?" loading={stoping} onPress={handleStop} color={AppColors.secondaryColor} />
         ) : (
@@ -97,7 +98,7 @@ export function TripActions({ style, trip, onUpdate, user }: TripActionsProps) {
       )}
     </Row>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

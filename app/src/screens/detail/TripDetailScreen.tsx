@@ -1,19 +1,10 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import AppMapView from "@/components/map/AppMapView";
 import { AppBottomSheet, AppBottomSheetHandleHeight } from "@/components/base/AppBottomSheet";
 import { Column, Row } from "@/components/base/AppLayout";
 import { FloatingBackButton } from "@/components/FloatingBackButton";
-import {
-  capitalize,
-  getBoundingBox,
-  getTotalDistance,
-  getTripCostContribution,
-  getTripFromMatch,
-  getUserTrip,
-  LianeMatch,
-  Trip
-} from "@liane/common";
+import { getBoundingBox, getTotalDistance, getTripCostContribution, getTripFromMatch, getUserTrip, LianeMatch, Trip } from "@liane/common";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppContext } from "@/components/context/ContextProvider";
 import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
@@ -24,15 +15,14 @@ import { LianeMatchUserRouteLayer } from "@/components/map/layers/LianeMatchRout
 import { InfoItem } from "@/screens/detail/components/InfoItem";
 import { WayPointDisplay } from "@/components/map/markers/WayPointDisplay";
 import { AppIcon } from "@/components/base/AppIcon";
-import { UserPicture } from "@/components/UserPicture";
-import { TripStatusView } from "@/components/trip/TripStatusView.tsx";
+import { TripMembers } from "@/components/UserPicture";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
 import { AppStyles } from "@/theme/styles";
-import { AppLocalization } from "@/api/i18n";
 import { WayPointsView } from "@/components/trip/WayPointsView";
 import { LianeProofDisplay } from "@/components/map/layers/LianeProofDisplay";
 import { LocationMarker } from "@/screens/detail/components/LocationMarker";
 import { TripDetailQueryKey } from "@/util/hooks/query.ts";
+import { TripActions } from "@/components/trip/TripActions.tsx";
 
 export const TripDetailScreen = () => {
   const { services, user } = useContext(AppContext);
@@ -43,7 +33,7 @@ export const TripDetailScreen = () => {
     if (typeof tripParam === "string") {
       return services.trip.get(tripParam);
     } else {
-      return tripParam;
+      return services.trip.get(tripParam.id!);
     }
   });
 
@@ -56,14 +46,18 @@ export const TripDetailScreen = () => {
 
   const match = useMemo(() => (trip ? toLianeMatch(trip, user!.id!) : undefined), [trip, user]);
 
+  const handleUpdate = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
+
   return (
     <TripGeolocationProvider trip={trip}>
-      <LianeDetailPage match={match} />
+      <LianeDetailPage match={match} onUpdate={handleUpdate} />
     </TripGeolocationProvider>
   );
 };
 
-const LianeDetailPage = ({ match }: { match: LianeMatch | undefined }) => {
+const LianeDetailPage = ({ match, onUpdate }: { match?: LianeMatch; onUpdate: () => void }) => {
   const { navigation } = useAppNavigation();
 
   const [bSheetTop, setBSheetTop] = useState<number>(0);
@@ -125,7 +119,7 @@ const LianeDetailPage = ({ match }: { match: LianeMatch | undefined }) => {
         <AppBottomSheet onChange={v => setBSheetTop(v)} snapPoints={[AppBottomSheetHandleHeight, "50%", "100%"]} index={1} dark={false}>
           {match && (
             <ScrollView style={{ paddingHorizontal: 12, backgroundColor: AppColorPalettes.gray[100], paddingBottom: 100 }}>
-              <LianeDetailView liane={match} />
+              <TripDetailView liane={match} onUpdate={onUpdate} />
             </ScrollView>
           )}
 
@@ -154,76 +148,34 @@ const toLianeMatch = (trip: Trip, memberId: string): LianeMatch => {
   };
 };
 
-export const LianeWithDateView = (props: { trip: Trip }) => {
-  const date = capitalize(AppLocalization.formatMonthDay(new Date(props.trip.departureTime)));
+export const TripWithDateView = (props: { trip: Trip; showPassengers?: boolean }) => {
   const { user } = useContext(AppContext);
   const { wayPoints } = useMemo(() => getUserTrip(props.trip, user!.id!), [props.trip, user]);
-  const passengers = useMemo(
-    () => props.trip.members.filter(m => m.user.id !== props.trip.driver.user && user?.id !== m.user.id),
-    [props.trip, user?.id]
-  );
   const lastDriverLocUpdate = useCarDelay();
-  return (
-    <Column spacing={4} style={styles.flex}>
-      <AppText style={styles.date}>{date}</AppText>
-      <Row spacing={8} style={styles.flex}>
-        <WayPointsView wayPoints={wayPoints} carLocation={lastDriverLocUpdate} />
-        <View style={{ flexGrow: 1, flexShrink: 1 }} />
-        <Column style={{ justifyContent: "space-evenly", flexShrink: 0 }}>
-          {wayPoints.map(w => (
-            <Row key={w.rallyingPoint.id} style={{ minHeight: 32, alignItems: "center" }}>
-              {passengers
-                .filter(m => m.user.id !== props.trip.driver.user && m.from === w.rallyingPoint.id)
-                .map(m => (
-                  <View key={m.user.id}>
-                    <UserPicture url={m.user.pictureUrl} size={28} borderColor={AppColors.primaryColor} borderWidth={1} />
-                    <View style={{ position: "absolute", bottom: -2, left: -2, backgroundColor: AppColorPalettes.gray[200], borderRadius: 20 }}>
-                      <AppIcon name="arrow-up" color={AppColors.primaryColor} size={18} />
-                    </View>
-                  </View>
-                ))}
-              {passengers
-                .filter(m => m.user.id !== props.trip.driver.user && m.to === w.rallyingPoint.id)
-                .map(m => (
-                  <View key={m.user.id}>
-                    <UserPicture url={m.user.pictureUrl} size={28} borderColor={AppColors.primaryColor} borderWidth={1} />
-                    <View style={{ position: "absolute", bottom: -2, left: -2, backgroundColor: AppColorPalettes.gray[200], borderRadius: 20 }}>
-                      <AppIcon name="arrow-down" color={AppColorPalettes.gray[800]} size={18} />
-                    </View>
-                  </View>
-                ))}
-            </Row>
-          ))}
-        </Column>
-      </Row>
-    </Column>
-  );
+  return <WayPointsView wayPoints={wayPoints} carLocation={lastDriverLocUpdate} />;
 };
 
-const LianeDetailView = ({ liane }: { liane: LianeMatch }) => {
+const TripDetailView = ({ liane, onUpdate }: { liane: LianeMatch; onUpdate: () => void }) => {
   const { wayPoints: currentTrip } = useMemo(() => getTripFromMatch(liane), [liane]);
   const userTripDistance = Math.ceil(getTotalDistance(currentTrip) / 1000);
 
   const tripPrice = getTripCostContribution(liane.trip);
 
-  const driver = liane.trip.members.find(m => m.user.id === liane.trip.driver.user)!.user;
-  const { user } = useContext(AppContext);
+  const booked = useMemo(() => {
+    const member = liane.trip.members.find(m => m.user.id === liane.trip.driver.user);
+    return !!member && member.seatCount > 0;
+  }, [liane.trip.driver.user, liane.trip.members]);
 
   return (
     <Column style={styles.bottomContainer}>
       <View>
-        <Row style={styles.driverContainer}>
-          <Row spacing={8}>
-            <UserPicture url={driver.pictureUrl} size={38} id={driver.id} />
-            <AppText style={styles.driverText}>{driver.id === user!.id! ? "Moi" : driver.pseudo}</AppText>
-          </Row>
-        </Row>
-        <LianeWithDateView trip={liane.trip} />
+        <TripMembers trip={liane.trip} showStatus={true} />
+        <TripWithDateView trip={liane.trip} showPassengers />
       </View>
 
       {!["Finished", "Archived", "Canceled"].includes(liane.trip.state) && (
         <Row style={styles.statusLianeContainer}>
-          <TripStatusView trip={liane.trip} />
+          <TripActions trip={liane.trip} booked={booked} onUpdate={onUpdate} />
         </Row>
       )}
 
@@ -283,22 +235,9 @@ const styles = StyleSheet.create({
     padding: 8,
     backgroundColor: AppColors.backgroundColor
   },
-  driverContainer: {
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 8
-  },
-  driverText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    alignSelf: "center"
-  },
   statusLianeContainer: {
     paddingVertical: 8,
     justifyContent: "space-between"
-  },
-  flex: {
-    flex: 1
   },
   infoTravel: {
     fontSize: 14,
@@ -324,10 +263,5 @@ const styles = StyleSheet.create({
     flexShrink: 2,
     alignSelf: "center",
     marginHorizontal: 8
-  },
-  date: {
-    fontWeight: "bold",
-    fontSize: 18,
-    paddingHorizontal: 8
   }
 });

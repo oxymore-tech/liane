@@ -14,6 +14,7 @@ import { useAppNavigation } from "@/components/context/routing.ts";
 import { AppLocalization } from "@/api/i18n.ts";
 import { StaticScreenProps } from "@react-navigation/native";
 import { TripQueryKey } from "@/util/hooks/query.ts";
+import { TripGeolocationProvider } from "@/screens/detail/TripGeolocationProvider.tsx";
 
 function nowAtNoon() {
   const date = new Date();
@@ -26,7 +27,7 @@ type Props = StaticScreenProps<{
 }>;
 
 const TripScheduleScreen = ({ route }: Props) => {
-  const { services } = useContext(AppContext);
+  const { services, user } = useContext(AppContext);
   const { navigation } = useAppNavigation<"Calendrier">();
 
   const trip = useQuery(TripQueryKey, async () => await services.community.getIncomingTrips());
@@ -71,6 +72,19 @@ const TripScheduleScreen = ({ route }: Props) => {
     return trip.data[DayOfWeekUtils.from(currentDate.getDay())] ?? [];
   }, [trip.data, currentDate]);
 
+  const activeTrip = useMemo(() => {
+    if (!trip.data) {
+      return;
+    }
+    return Object.values(trip.data)
+      .flatMap(t => t)
+      .find(t => t.trip.state === "Started")?.trip;
+  }, [trip.data]);
+
+  const handleUpdate = useCallback(async () => {
+    await trip.refetch();
+  }, [trip]);
+
   if (trip.error) {
     // Show content depending on the error or propagate it
     if (trip.error instanceof UnauthorizedError) {
@@ -82,7 +96,7 @@ const TripScheduleScreen = ({ route }: Props) => {
             <AppText style={AppStyles.errorData}>Une erreur est survenue.</AppText>
             <AppText style={AppStyles.errorData}>Message: {(trip.error as any).message}</AppText>
             <View style={{ marginTop: 12 }}>
-              <AppButton color={AppColors.primaryColor} value="Réessayer" icon="refresh" onPress={() => trip.refetch()} />
+              <AppButton color={AppColors.primaryColor} value="Réessayer" icon="refresh" onPress={handleUpdate} />
             </View>
           </Column>
         </View>
@@ -91,23 +105,27 @@ const TripScheduleScreen = ({ route }: Props) => {
   }
 
   return (
-    <Column style={styles.container}>
-      <WeekHeader style={{ paddingHorizontal: 8 }} selectedDay={currentDate} onSelect={setCurrentDate} incomingTrips={trip.data} />
-      <FlatList
-        style={{ flex: 1, backgroundColor: AppColors.lightGrayBackground, paddingHorizontal: 8 }}
-        refreshing={trip.isFetching}
-        refreshControl={<RefreshControl refreshing={trip.isFetching} onRefresh={() => trip.refetch()} />}
-        data={currentList}
-        showsVerticalScrollIndicator={false}
-        renderItem={props => <TripItem {...props} onOpenTrip={handleOpenTrip} onOpenChat={handleOpenChat} onUpdate={() => trip.refetch()} />}
-        keyExtractor={item => item.trip.id!}
-        ListEmptyComponent={
-          <Center>
-            <AppText style={AppStyles.noData}>Aucun trajet {AppLocalization.formatDay(currentDate)}</AppText>
-          </Center>
-        }
-      />
-    </Column>
+    <TripGeolocationProvider trip={activeTrip}>
+      <Column style={styles.container}>
+        <WeekHeader style={{ paddingHorizontal: 8 }} selectedDay={currentDate} onSelect={setCurrentDate} incomingTrips={trip.data} />
+        <FlatList
+          style={{ flex: 1, backgroundColor: AppColors.lightGrayBackground, paddingHorizontal: 8 }}
+          refreshing={trip.isFetching}
+          refreshControl={<RefreshControl refreshing={trip.isFetching} onRefresh={handleUpdate} />}
+          data={currentList}
+          showsVerticalScrollIndicator={false}
+          renderItem={props => (
+            <TripItem user={user} item={props.item} onOpenTrip={handleOpenTrip} onOpenChat={handleOpenChat} onUpdate={handleUpdate} />
+          )}
+          keyExtractor={item => item.trip.id!}
+          ListEmptyComponent={
+            <Center>
+              <AppText style={AppStyles.noData}>Aucun trajet {AppLocalization.formatDay(currentDate)}</AppText>
+            </Center>
+          }
+        />
+      </Column>
+    </TripGeolocationProvider>
   );
 };
 

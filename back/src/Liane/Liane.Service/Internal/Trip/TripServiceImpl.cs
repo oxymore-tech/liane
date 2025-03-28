@@ -270,18 +270,18 @@ public sealed class TripServiceImpl(
       .ForEachAsync(async l => await CancelTrip(l.Id));
   }
 
-  public async Task<Api.Trip.Trip?> RemoveMember(Ref<Api.Trip.Trip> liane, Ref<Api.Auth.User> member)
+  public async Task<Api.Trip.Trip?> RemoveMember(Ref<Api.Trip.Trip> trip, Ref<Api.Auth.User> member)
   {
     var toUpdate = await Mongo.GetCollection<LianeDb>()
-      .Find(l => l.Id == liane.Id)
+      .Find(l => l.Id == trip.Id)
       .FirstOrDefaultAsync();
 
     if (toUpdate is null)
     {
-      throw ResourceNotFoundException.For(liane);
+      throw ResourceNotFoundException.For(trip);
     }
 
-    var foundMember = toUpdate.Members.Find(m => m.User == member.Id);
+    var foundMember = toUpdate.Members.Find(m => m.User.Id == member.Id);
 
     if (foundMember is null)
     {
@@ -292,11 +292,11 @@ public sealed class TripServiceImpl(
 
     if (newMembers.IsEmpty)
     {
-      await Delete(liane);
+      await Delete(trip);
       return null;
     }
 
-    var newDriver = toUpdate.Driver.User == foundMember.User
+    var newDriver = toUpdate.Driver.User.Id == foundMember.User.Id
       ? newMembers.First().User
       : toUpdate.Driver.User;
 
@@ -304,7 +304,7 @@ public sealed class TripServiceImpl(
       .Pull(l => l.Members, foundMember)
       .Set(l => l.TotalSeatCount, toUpdate.TotalSeatCount - foundMember.SeatCount);
 
-    var updated = await Update(liane, update);
+    var updated = await Update(trip, update);
 
     var updatedLiane = await MapEntity(updated);
     await postgisService.UpdateGeometry(updatedLiane);
