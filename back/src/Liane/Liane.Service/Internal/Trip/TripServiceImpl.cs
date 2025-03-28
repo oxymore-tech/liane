@@ -40,7 +40,8 @@ public sealed class TripServiceImpl(
   IPostgisService postgisService,
   IUserStatService userStatService,
   LianeTrackerCache trackerCache,
-  EventDispatcher eventDispatcher)
+  EventDispatcher eventDispatcher,
+  IHubService hubService)
   : BaseMongoCrudService<LianeDb, Api.Trip.Trip>(mongo), ITripService
 {
   private const int MaxDeltaInSeconds = 15 * 60; // 15 min
@@ -362,8 +363,10 @@ public sealed class TripServiceImpl(
     var updated = await Update(trip, Builders<LianeDb>.Update.Set(l => l.Members, resolved.Members.Select(m => m.User.Id == user.Id ? update : m)));
     if (updated.Members.All(m => m.Feedback is not null))
     {
-      await Update(trip, Builders<LianeDb>.Update.Set(l => l.State, updated.Members.All(m => m.Feedback!.Canceled) ? TripStatus.Canceled : TripStatus.Archived));
+      updated = await Update(trip, Builders<LianeDb>.Update.Set(l => l.State, updated.Members.All(m => m.Feedback!.Canceled) ? TripStatus.Canceled : TripStatus.Archived));
     }
+
+    await hubService.PushTripUpdate(await MapEntity(updated));
   }
 
   private async Task<Api.Trip.Trip> AddMemberSingle(Ref<Api.Trip.Trip> liane, TripMember newMember)
@@ -389,7 +392,10 @@ public sealed class TripServiceImpl(
     var updated = await Update(liane, updateDef);
 
     var pointsToUpdate = new[] { newMember.From, newMember.To }.Where(r => toUpdate.WayPoints.Find(w => w.RallyingPoint.Id == r.Id) is null).ToImmutableList();
-    if (pointsToUpdate.Any()) await rallyingPointService.UpdateStats(pointsToUpdate, updated.DepartureTime);
+    if (pointsToUpdate.Any())
+    {
+      await rallyingPointService.UpdateStats(pointsToUpdate, updated.DepartureTime);
+    }
 
     var updatedLiane = await MapEntity(updated);
     await postgisService.UpdateGeometry(updatedLiane);

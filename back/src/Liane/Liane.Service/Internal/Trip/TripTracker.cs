@@ -123,28 +123,11 @@ public sealed class TripTracker
            lastLocations.Any(l => l.Coordinate.HasValue && l.Coordinate.Value.Distance(currentLocation.Coordinate.Value) > 1);
   }
 
-  /// <summary>
-  /// Check if given member, or else the driver has arrived
-  /// </summary>
-  /// <param name="member"></param>
-  /// <returns>null if current member does not share its position, a boolean otherwise</returns>
-  public bool MemberHasArrived(Ref<Api.Auth.User> member)
+  public bool MemberHasArrived(TripMember tripMember)
   {
+    var member = tripMember.User;
     var currentLocation = GetCurrentLocation(member.Id);
-
-    var tripMember = Trip.Members.Find(m => m.User.Id == member.Id);
-
-    if (tripMember is null)
-    {
-      return false;
-    }
-
-    if (tripMember.Arrival is not null || tripMember.Cancellation is not null)
-    {
-      return false;
-    }
-
-    var memberArrivalIndex = Trip.WayPoints.FindIndex(w => w.RallyingPoint.Id == tripMember!.To.Id);
+    var memberArrivalIndex = Trip.WayPoints.FindIndex(w => w.RallyingPoint.Id == tripMember.To.Id);
     if (currentLocation is null)
     {
       if (Trip.Driver.User.Id == member.Id)
@@ -171,6 +154,12 @@ public sealed class TripTracker
       var driverNextIndex = GetDriverNextIndex();
       return driverNextIndex is not null && (memberArrivalIndex < driverNextIndex || Finished);
     }
+  }
+
+  public bool MemberHasArrived(Ref<Api.Auth.User> member)
+  {
+    var tripMember = Trip.Members.Find(m => m.User.Id == member.Id);
+    return tripMember is not null && MemberHasArrived(tripMember);
   }
 
   public int GetFirstWayPoint(string userId)

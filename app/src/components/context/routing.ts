@@ -39,7 +39,7 @@ export const AppLinking: LinkingOptions<NavigationParamList> = {
     initialRouteName: "Home",
     screens: {
       TripDetail: {
-        path: "trip/:liane"
+        path: "trip/:trip"
       },
       MatchList: {
         path: "liane/:lianeRequest/match"

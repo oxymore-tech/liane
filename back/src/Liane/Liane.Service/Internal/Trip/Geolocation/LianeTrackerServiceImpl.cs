@@ -197,13 +197,28 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
       logger.LogWarning($"No tracker for trip = '{trip}'");
       return;
     }
+    
+    var resolved = await tripService.Get(trip);
 
     await PushPing(tracker, ping);
     await PublishLocation(tracker);
-    if (tracker.MemberHasArrived(ping.User))
+
+    var tripMember = resolved.Members.Find(m => m.User.Id == ping.User.Id);
+    if (tripMember is null)
+    {
+      throw new ResourceNotFoundException("Not member");
+    }
+    
+    if (tripMember.Cancellation is not null || tripMember.Arrival is not null)
+    {
+      throw new ResourceNotFoundException("Already arrived");
+    }
+    
+    if (tracker.MemberHasArrived(tripMember))
     {
       await tripService.UpdateFeedback(tracker.Trip, ping.User, new Feedback(false, "Automatic via ping"));
       await hubService.PushTripUpdate(tracker.Trip);
+      throw new ResourceNotFoundException("Arrived");
     }
   }
 

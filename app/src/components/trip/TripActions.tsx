@@ -9,6 +9,7 @@ import { AppContext } from "@/components/context/ContextProvider.tsx";
 import { AppIcon } from "@/components/base/AppIcon.tsx";
 import { AppText } from "@/components/base/AppText.tsx";
 import { useAppNavigation } from "@/components/context/routing.ts";
+import Geolocation from "../../../native-modules/geolocation";
 
 type TripActionsProps = {
   trip: IncomingTrip;
@@ -42,6 +43,7 @@ export function TripActions({ style, trip, onUpdate, user }: TripActionsProps) {
     setStoping(true);
     try {
       await services.trip.updateFeedback(trip.trip.id!, { comment: "Terminé", canceled: false });
+      await Geolocation.stopSendingPings();
       onUpdate(trip.trip);
     } finally {
       setStoping(false);
