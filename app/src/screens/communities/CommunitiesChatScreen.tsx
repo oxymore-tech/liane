@@ -1,4 +1,4 @@
-import { CoLiane, LianeMessage, RallyingPoint, Ref, Trip } from "@liane/common";
+import { CoLiane, LianeMessage, RallyingPoint, Ref } from "@liane/common";
 import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { ImageBackground, KeyboardAvoidingView, StyleSheet } from "react-native";
 import { AppColorPalettes, AppColors } from "@/theme/colors";
@@ -8,7 +8,6 @@ import { AppText } from "@/components/base/AppText";
 import { AppContext } from "@/components/context/ContextProvider";
 import { useAppNavigation } from "@/components/context/routing";
 import { AppLogger } from "@/api/logger";
-import { useSubscription } from "@/util/hooks/subscription.ts";
 import { useQuery, useQueryClient } from "react-query";
 import { AppButton } from "@/components/base/AppButton";
 import { LaunchTripModal } from "@/screens/communities/LaunchTripModal";
@@ -81,14 +80,6 @@ export const CommunitiesChatScreen = () => {
   );
 
   const trip = useQuery(TripQueryKey, async () => await services.community.getIncomingTrips());
-
-  useSubscription<Trip>(
-    services.realTimeHub.tripUpdates,
-    () => {
-      trip.refetch().then();
-    },
-    []
-  );
 
   const fetchMessages = useCallback(async () => {
     if (!liane?.id) {

@@ -123,7 +123,9 @@ function getTimeForUser(liane: Trip, tripMember: TripMember, type: "to" | "from"
   return [time, delta];
 }
 
-export function getLiveTripStatus(trip: Trip, tripMember: TripMember): { status: LiveTripStatus; nextUpdateMillis?: number } {
+export type LiveUpdateTripStatus = { status: LiveTripStatus; nextUpdateMillis?: number };
+
+export function getLiveTripStatus(trip: Trip, tripMember: TripMember): LiveUpdateTripStatus {
   if (trip.state === "NotStarted") {
     const [, delta] = getTimeForUser(trip, tripMember, "from");
     if (delta <= 24 * 60 * 60 && delta > -1 * 2 * 60 * 60) {

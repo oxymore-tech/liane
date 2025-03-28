@@ -598,7 +598,7 @@ public sealed class LianeServiceImpl(
     await connection.DeleteAsync(Filter<LianeMemberDb>.Where(lm => lm.LianeRequestId, ComparisonOperator.Eq, requesterId), tx);
   }
 
-  private async Task<JoinRequestResult?> AddLianeMemberRequest(IDbConnection connection, LianeRequest requester, Guid lianeId, IDbTransaction tx)
+  private static async Task<JoinRequestResult?> AddLianeMemberRequest(IDbConnection connection, LianeRequest requester, Guid lianeId, IDbTransaction tx)
   {
     var at = DateTime.UtcNow;
     var requesterId = requester.Id!.Value;

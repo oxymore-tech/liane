@@ -8,6 +8,7 @@ import { AppButton } from "@/components/base/AppButton.tsx";
 import { AppContext } from "@/components/context/ContextProvider.tsx";
 import { AppIcon } from "@/components/base/AppIcon.tsx";
 import { AppText } from "@/components/base/AppText.tsx";
+import { useAppNavigation } from "@/components/context/routing.ts";
 
 type TripActionsProps = {
   trip: IncomingTrip;
@@ -19,6 +20,7 @@ type TripActionsProps = {
 export function TripActions({ style, trip, onUpdate, user }: TripActionsProps) {
   const status = useTripStatus(trip.trip, user);
   const { services } = useContext(AppContext);
+  const { navigation } = useAppNavigation();
 
   const [starting, setStarting] = useState(false);
   const [leaving, setLeaving] = useState(false);
@@ -28,12 +30,13 @@ export function TripActions({ style, trip, onUpdate, user }: TripActionsProps) {
   const handleStart = useCallback(async () => {
     setStarting(true);
     try {
-      await services.trip.start(trip.trip.id!);
+      //await services.trip.start(trip.trip.id!);
+      navigation.navigate("TripGeolocationWizard", { showAs: null, lianeId: undefined });
       onUpdate(trip.trip);
     } finally {
       setStarting(false);
     }
-  }, [onUpdate, services.trip, trip.trip]);
+  }, [navigation, onUpdate, services.trip, trip.trip]);
 
   const handleStop = useCallback(async () => {
     setStoping(true);

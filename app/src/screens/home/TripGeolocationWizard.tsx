@@ -153,7 +153,7 @@ const Page2 = (props: { next: (authorize: boolean) => void }) => {
   return (
     <View style={{ alignItems: "center", flex: 1 }}>
       <AppText numberOfLines={3} style={{ fontSize: 20, fontWeight: "bold", textAlign: "center", marginVertical: 8 }}>
-        Autoriser l'accès à votre position lorsque l'application est fermée, offre de nombreux avantages
+        Voulez-vous partager votre position pour ce trajet ?
       </AppText>
       <Column style={{ width: "100%", marginVertical: 32, paddingHorizontal: 16 }} spacing={24}>
         {items.map(item => {
@@ -168,10 +168,10 @@ const Page2 = (props: { next: (authorize: boolean) => void }) => {
       <Space />
       <Column style={{ alignItems: "center" }}>
         <Row spacing={8} style={{ justifyContent: "space-between", alignItems: "center", marginTop: 16 }}>
-          <Button text="Autoriser" onPress={authorize} />
+          <Button text="Oui" onPress={authorize} />
         </Row>
         <Row spacing={8} style={{ justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-          <Button text="Refuser" onPress={alertLocation} color={AppColorPalettes.gray[400]} />
+          <Button text="Non" onPress={alertLocation} color={AppColorPalettes.gray[400]} />
         </Row>
       </Column>
     </View>
