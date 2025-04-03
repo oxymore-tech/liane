@@ -138,25 +138,12 @@ public sealed class TripTrackerTest : BaseIntegrationTest
   [Test]
   public async Task ShouldNotFinishTrip()
   {
-    var finished = false;
-    var bson = BsonDocument.Parse(AssertExtensions.ReadTestResource("Geolocation/liane-pings-case-1.json"));
-    var lianeDb = BsonSerializer.Deserialize<LianeDb>(bson);
-    var userIds = lianeDb.Members.Select((m, i) => (m, i)).ToDictionary(m => m.m.User, m => Fakers.FakeDbUsers[m.i].Id);
-    lianeDb = lianeDb with { Members = lianeDb.Members.Select(m => m with { User = userIds[m.User] }).ToImmutableList() };
-    await mongo.GetCollection<LianeDb>().InsertOneAsync(lianeDb);
-    var liane = await tripService.Get(lianeDb.Id);
-    var tracker = await lianeTrackerService.Start(liane, () => { finished = true; });
-    var pings = lianeDb.Pings.OrderBy(p => p.At).Select(p => p with { User = userIds[p.User] }).ToImmutableList();
-    foreach (var p in pings)
-    {
-      if (finished) break;
-      await lianeTrackerService.PushPing(liane, p);
-    }
+    var (tracker, _) = await SetupTrackerAt("Geolocation/liane-pings-case-1.json");
 
-    var lastLocation = tracker.GetCurrentMemberLocation(pings.Last().User);
-    Assert.AreEqual(liane.WayPoints.Last().RallyingPoint.Id, lastLocation!.NextPoint.Id);
+    var trackingInfo = tracker.GetTrackingInfo();
+    Assert.AreEqual("mairie:31427", trackingInfo.Car!.NextPoint.Id);
 
-    Assert.False(finished);
+    Assert.AreEqual(trackingInfo.Liane.Value!.State, TripStatus.Finished);
   }
 
   [Test]
@@ -241,13 +228,14 @@ public sealed class TripTrackerTest : BaseIntegrationTest
     var userMapping = lianeDb.Members.Select((m, i) => (m, i)).ToImmutableDictionary(m => (Ref<User>)m.m.User.Id, m => (Ref<User>)Fakers.FakeDbUsers[m.i].Id);
     lianeDb = lianeDb with
     {
+      State = TripStatus.Started,
       Driver = lianeDb.Driver with { User = userMapping[lianeDb.Driver.User] },
       Members = lianeDb.Members.Select(m => m with { User = userMapping[m.User] }).ToImmutableList(),
       Pings = lianeDb.Pings.Select(p => p with { User = userMapping[p.User] }).ToImmutableList()
     };
     await mongo.GetCollection<LianeDb>().InsertOneAsync(lianeDb);
-    var liane = await tripService.Get(lianeDb.Id);
-    var tracker = await lianeTrackerService.Start(liane);
+    var trip = await tripService.Get(lianeDb.Id);
+    var tracker = await lianeTrackerService.Start(trip);
     var pings = lianeDb.Pings
       .OrderBy(p => p.At)
       .ToImmutableList();
@@ -265,7 +253,7 @@ public sealed class TripTrackerTest : BaseIntegrationTest
     {
       try
       {
-        await lianeTrackerService.PushPing(tracker.Trip, p);
+        await lianeTrackerService.PushPing(tracker.Trip.Id, p);
       }
       catch (ResourceNotFoundException)
       {
@@ -343,6 +331,9 @@ public sealed class TripTrackerTest : BaseIntegrationTest
     var actual = tracker.GetTrackingInfo();
 
     Assert.AreEqual("custom:001", actual.Car?.NextPoint.Id);
+
+    var trip = await tripService.Get(actual.Liane);
+    Assert.AreEqual(trip.State, TripStatus.Started);
   }
 
 

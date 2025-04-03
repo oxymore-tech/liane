@@ -87,7 +87,8 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
 
     if (ping.Coordinate is null)
     {
-      await InsertMemberLocation(tracker, ping.User.Id, new(pingTime, nextPointIndex, TimeSpan.Zero, null, null, double.PositiveInfinity, ping.User));
+      var memberLocationSample = new MemberLocationSample(pingTime, nextPointIndex, TimeSpan.Zero, null, null, double.PositiveInfinity, ping.User);
+      await InsertMemberLocation(tracker, ping.User.Id, memberLocationSample);
       return;
     }
 
@@ -101,7 +102,9 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
       var computedLocation = await osrmService.Nearest(ping.Coordinate.Value) ?? ping.Coordinate.Value;
       var table = await osrmService.Table(new List<LatLng> { computedLocation, nextPoint.Location });
       var delay = TimeSpan.FromSeconds(table.Durations[0][1]!.Value);
-      await InsertMemberLocation(tracker, ping.User.Id, new(pingTime, nextPointIndex, delay, computedLocation, ping.Coordinate.Value, nextPointDistance, ping.User));
+
+      var memberLocationSample = new MemberLocationSample(pingTime, nextPointIndex, delay, computedLocation, ping.Coordinate.Value, nextPointDistance, ping.User);
+      await InsertMemberLocation(tracker, ping.User.Id, memberLocationSample);
     }
     else
     {
@@ -115,14 +118,14 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
         if (nextPointIndex == tracker.Trip.WayPoints.Count - 1)
         {
           // Driver arrived near destination point
-          tracker.Finish();
           await mongo.GetCollection<LianeTrackReport>()
             .FindOneAndUpdateAsync(r => r.Id == tracker.Trip.Id, Builders<LianeTrackReport>.Update.Set(r => r.FinishedAt, DateTime.UtcNow));
           onReachedDestinationActions.TryGetValue(tracker.Trip.Id, out var callback);
           callback?.Invoke();
         }
 
-        await InsertMemberLocation(tracker, ping.User.Id, new(pingTime, pingNextPointIndex, TimeSpan.Zero, ping.Coordinate.Value, ping.Coordinate.Value, nextPointDistance, ping.User));
+        var locationSample = new MemberLocationSample(pingTime, pingNextPointIndex, TimeSpan.Zero, ping.Coordinate.Value, ping.Coordinate.Value, nextPointDistance, ping.User);
+        await InsertMemberLocation(tracker, ping.User.Id, locationSample);
         return;
       }
 
@@ -149,7 +152,8 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
       var estimatedDuration = TimeSpan.FromSeconds(table.Durations[0][1]!.Value);
       var delay = estimatedDuration;
 
-      await InsertMemberLocation(tracker, ping.User.Id, new(pingTime, pingNextPointIndex, delay, computedLocation, ping.Coordinate.Value, nextPointDistance, ping.User));
+      var memberLocationSample = new MemberLocationSample(pingTime, pingNextPointIndex, delay, computedLocation, ping.Coordinate.Value, nextPointDistance, ping.User);
+      await InsertMemberLocation(tracker, ping.User.Id, memberLocationSample);
     }
   }
 
@@ -163,22 +167,7 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
 
   public async Task PushPing(Ref<Api.Trip.Trip> trip, UserPing ping)
   {
-    var resolved = await tripService.Get(trip);
-    var tripMember = resolved.Members.Find(m => m.User.Id == ping.User.Id);
-    if (tripMember is null)
-    {
-      throw new ResourceNotFoundException("Not member");
-    }
-
-    if (tripMember.Cancellation is not null || tripMember.Arrival is not null)
-    {
-      throw new ResourceNotFoundException("Already arrived");
-    }
-    
-    if (resolved.State != TripStatus.Started)
-    {
-      throw new ResourceNotFoundException("Not started");
-    }
+    var (resolved, tripMember) = await tripService.StartTrip(trip, ping.User);
 
     var tracker = trackerCache.GetTracker(trip);
     if (tracker is null)
@@ -190,10 +179,15 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
     await PushPing(tracker, ping);
     await PublishLocation(tracker);
 
+    if (resolved.State != TripStatus.Started)
+    {
+      throw new ResourceNotFoundException("Not started");
+    }
+
     if (tracker.MemberHasArrived(tripMember))
     {
-      await tripService.UpdateFeedback(tracker.Trip, ping.User, new Feedback(false, "Automatic via ping"));
-      await hubService.PushTripUpdate(tracker.Trip);
+      var updated = await tripService.UpdateFeedback(tracker.Trip, ping.User, new Feedback(false, "Automatic via ping"));
+      await hubService.PushTripUpdate(updated);
       throw new ResourceNotFoundException("Arrived");
     }
   }

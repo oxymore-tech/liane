@@ -31,13 +31,6 @@ public sealed class TripTracker
 
   public ITripSession TripSession { get; }
 
-  public bool Finished { get; private set; }
-
-  public void Finish()
-  {
-    Finished = true;
-  }
-
   public async Task<double> GetWayPointFraction(int index)
   {
     var nextPointFraction = wayPointFractions[index];
@@ -128,32 +121,8 @@ public sealed class TripTracker
     var member = tripMember.User;
     var currentLocation = GetCurrentLocation(member.Id);
     var memberArrivalIndex = Trip.WayPoints.FindIndex(w => w.RallyingPoint.Id == tripMember.To.Id);
-    if (currentLocation is null)
-    {
-      if (Trip.Driver.User.Id == member.Id)
-      {
-        return false;
-      }
 
-      var driverNextIndex = GetDriverNextIndex();
-      return driverNextIndex is not null && (memberArrivalIndex < driverNextIndex || Finished);
-    }
-
-    var arrived = memberArrivalIndex < currentLocation.NextPointIndex || Finished;
-    if (arrived)
-    {
-      return true;
-    }
-
-    if (Trip.Driver.User.Id == member.Id)
-    {
-      return false;
-    }
-
-    {
-      var driverNextIndex = GetDriverNextIndex();
-      return driverNextIndex is not null && (memberArrivalIndex < driverNextIndex || Finished);
-    }
+    return currentLocation?.NextPointIndex == memberArrivalIndex && currentLocation.PointDistance < ILianeTrackerService.NearPointDistanceInMeters;
   }
 
   public bool MemberHasArrived(Ref<Api.Auth.User> member)
@@ -226,19 +195,12 @@ public sealed class TripTracker
         entry => entry.Key,
         entry => GetCurrentMemberLocation(entry.Key)!
       );
-    lastTrackingInfo = new TrackingInfo(Trip, car, otherMembers);
+    lastTrackingInfo = new TrackingInfo(Trip.Id, car, otherMembers);
     return lastTrackingInfo;
   }
 
   public async Task Dispose()
   {
     await TripSession.DisposeAsync();
-  }
-
-  private int? GetDriverNextIndex()
-  {
-    var driverCurrentLocation = GetCurrentLocation(Trip.Driver.User.Id);
-
-    return driverCurrentLocation?.NextPointIndex;
   }
 }

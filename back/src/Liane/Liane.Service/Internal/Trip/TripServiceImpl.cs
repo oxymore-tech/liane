@@ -350,14 +350,14 @@ public sealed class TripServiceImpl(
     return UpdateFeedback(trip, sender, feedback);
   }
 
-  public async Task UpdateFeedback(Ref<Api.Trip.Trip> trip, Ref<Api.Auth.User> user, Feedback feedback)
+  public async Task<Api.Trip.Trip> UpdateFeedback(Ref<Api.Trip.Trip> trip, Ref<Api.Auth.User> user, Feedback feedback)
   {
     var resolved = await Get(trip);
 
     var tripMember = resolved.Members.Find(m => m.User.Id == user.Id);
     if (tripMember is null)
     {
-      return;
+      return resolved;
     }
 
     var now = DateTime.UtcNow;
@@ -370,7 +370,9 @@ public sealed class TripServiceImpl(
       updated = await Update(trip, Builders<LianeDb>.Update.Set(l => l.State, updated.Members.All(m => m.Feedback!.Canceled) ? TripStatus.Canceled : TripStatus.Archived));
     }
 
-    await hubService.PushTripUpdate(await MapEntity(updated));
+    var mapEntity = await MapEntity(updated);
+    await hubService.PushTripUpdate(mapEntity);
+    return mapEntity;
   }
 
   private async Task<Api.Trip.Trip> AddMemberSingle(Ref<Api.Trip.Trip> liane, TripMember newMember)
@@ -709,16 +711,32 @@ public sealed class TripServiceImpl(
     await eventDispatcher.Dispatch(trip.Liane, new MessageContent.MemberLeftTrip("", sender, trip));
   }
 
-  public async Task StartTrip(Ref<Api.Trip.Trip> tripRef)
-  {
-    var trip = await Get(tripRef);
-    var sender = currentContext.CurrentUser().Id;
-    var now = DateTime.UtcNow;
+  public async Task StartTrip(Ref<Api.Trip.Trip> trip) => await StartTrip(trip, currentContext.CurrentUser().Id);
 
-    var alreadyStarted = trip.Members.FirstOrDefault(m => m.User.Id == sender && m.Departure is not null);
-    if (alreadyStarted is not null)
+  public async Task<(Api.Trip.Trip, TripMember)> StartTrip(Ref<Api.Trip.Trip> tripRef, Ref<Api.Auth.User> sender)
+  {
+    var trip = await Get(tripRef.Id);
+
+    if (trip.State is TripStatus.Finished or TripStatus.Canceled or TripStatus.Archived)
     {
-      return;
+      throw new ResourceNotFoundException($"Trip {trip.State}");
+    }
+
+    var tripMember = trip.Members.Find(m => m.User.Id == sender.Id);
+    if (tripMember is null)
+    {
+      throw new ResourceNotFoundException("Not member");
+    }
+    
+    if (tripMember.Cancellation is not null || tripMember.Arrival is not null)
+    {
+      throw new ResourceNotFoundException("Already arrived");
+    }
+    
+    var alreadyStarted = tripMember.Departure is not null;
+    if (alreadyStarted)
+    {
+      return (trip, tripMember);
     }
 
     if (trip.State == TripStatus.NotStarted)
@@ -726,9 +744,15 @@ public sealed class TripServiceImpl(
       await UpdateState(trip, TripStatus.Started);
     }
 
-    await Update(tripRef, Builders<LianeDb>.Update.Set(l => l.Members, trip.Members.Select(m => m.User.Id == sender ? m with { Departure = now } : m)));
+    var now = DateTime.UtcNow;
+    var updated = await Update(tripRef, Builders<LianeDb>.Update
+      .Set(l => l.State, TripStatus.Started)
+      .Set(l => l.Members, trip.Members.Select(m => m.User.Id == sender.Id ? m with { Departure = now } : m)));
 
-    await eventDispatcher.Dispatch(trip.Liane, new MessageContent.MemberHasStarted("", trip), now);
+    var upatedTrip = await MapEntity(updated);
+    await eventDispatcher.Dispatch(upatedTrip.Liane, new MessageContent.MemberHasStarted("", upatedTrip), now);
+    
+    return (upatedTrip, upatedTrip.Members.Find(m => m.User.Id == sender.Id)!);
   }
 
   public async Task<PaginatedResponse<DetailedLianeTrackReport>> ListTripRecords(Pagination pagination, TripRecordFilter filter)
