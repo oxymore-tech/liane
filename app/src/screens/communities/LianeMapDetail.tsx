@@ -171,7 +171,7 @@ export const LianeMapDetailScreen = () => {
 
           <Column spacing={10} style={styles.bottom}>
             <DayOfTheWeekPicker selectedDays={weekDays} dualOptionMode={true} />
-            <WayPointsView wayPoints={wayPoints} style={{ backgroundColor: AppColorPalettes.gray[100], borderRadius: 20 }} dark={false} />
+            <WayPointsView wayPoints={wayPoints} style={{ backgroundColor: AppColorPalettes.gray[100], borderRadius: 20 }} dark={true} />
             <View
               style={{
                 flex: 1,
