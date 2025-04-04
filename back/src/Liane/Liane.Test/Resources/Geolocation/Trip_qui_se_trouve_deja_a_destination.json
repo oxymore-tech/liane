@@ -80,7 +80,7 @@
     }
   ],
   "return": null,
-  "state": "Canceled",
+  "state": "Started",
   "totalSeatCount": 0,
   "wayPoints": [
     {

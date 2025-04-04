@@ -334,7 +334,7 @@ public sealed class TripTrackerTest : BaseIntegrationTest
     Assert.AreEqual("custom:001", actual.Car?.NextPoint.Id);
 
     var trip = await tripService.Get(actual.Liane);
-    Assert.AreEqual(trip.State, TripStatus.Started);
+    Assert.AreEqual(TripStatus.Archived, trip.State);
   }
 
 
