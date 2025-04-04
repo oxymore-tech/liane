@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Dapper;
 using Liane.Api.Auth;
 using Liane.Api.Community;
+using Liane.Api.Trip;
 using Liane.Api.Util;
 using Liane.Api.Util.Pagination;
 using Liane.Api.Util.Ref;
@@ -182,7 +183,7 @@ public sealed class LianeMessageServiceImpl(
     var sentBy = await FormatUser(await sender.Resolve(userService.Get));
     return content switch
     {
-      MessageContent.LianeRequestModified => $"{sentBy} a modifié son annonce",
+      MessageContent.LianeRequestModified => $"{sentBy} a modifié son trajet",
       MessageContent.TripAdded m => $"{sentBy} lance un covoit pour le {FormatDate(m.Trip.Value?.DepartureTime)}",
       MessageContent.MemberRequested m => $"{await FormatUser(m.User)} souhaite rejoindre la liane",
       MessageContent.MemberAdded m => $"{await FormatUser(m.User)} a rejoint la liane",
@@ -190,6 +191,7 @@ public sealed class LianeMessageServiceImpl(
       MessageContent.MemberLeft m => $"{await FormatUser(m.User)} a quitté la liane",
       MessageContent.MemberJoinedTrip m => await FormatJoinedTrip(m),
       MessageContent.MemberLeftTrip m => $"{await FormatUser(m.User)} a quitté le trajet du {FormatDate(m.Trip.Value?.DepartureTime)}",
+      MessageContent.MemberCancelTrip m => $"{sentBy} a annulé le trajet du {FormatDate(m.Trip.Value?.DepartureTime)}",
       MessageContent.MemberHasStarted => $"{sentBy} est en route",
       _ => null
     };

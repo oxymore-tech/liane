@@ -18,18 +18,9 @@ public sealed record LianeEvent<T>(
   public bool PublishLianeUpdate => Content switch
   {
     MessageContent.LianeRequestModified => false,
-    MessageContent.MemberRequested => true,
-    MessageContent.MemberAdded => true,
-    MessageContent.MemberRejected => true,
-    MessageContent.MemberLeft => true,
-    MessageContent.TripAdded => true,
-    MessageContent.TripArchived => true,
-    MessageContent.TripFinished => true,
+    MessageContent.Text => false,
     MessageContent.GeolocationLevelChanged => false,
-    MessageContent.MemberJoinedTrip => true,
-    MessageContent.MemberLeftTrip => true,
-    MessageContent.MemberHasStarted => true,
-    _ => false
+    _ => true
   };
 }
 

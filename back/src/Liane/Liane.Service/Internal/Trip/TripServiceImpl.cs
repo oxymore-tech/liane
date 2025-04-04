@@ -289,14 +289,16 @@ public sealed class TripServiceImpl(
 
     if (toUpdate.Driver.User.Id == foundMember.User.Id && toUpdate.State == TripStatus.NotStarted)
     {
-      await Delete(trip);
+      var resolvedTrip = await MapEntity(toUpdate);
+      await DeleteAndCancelTrip(resolvedTrip);
       return null;
     }
 
     var newMembers = toUpdate.Members.Remove(foundMember);
     if (newMembers.IsEmpty)
     {
-      await Delete(trip);
+      var resolvedTrip = await MapEntity(toUpdate);
+      await DeleteAndCancelTrip(resolvedTrip);
       return null;
     }
 
@@ -316,6 +318,12 @@ public sealed class TripServiceImpl(
     await eventDispatcher.Dispatch(updatedLiane.Liane, new MessageContent.MemberLeftTrip("", foundMember.User, updatedLiane));
 
     return updatedLiane;
+  }
+
+  private async Task DeleteAndCancelTrip(Api.Trip.Trip trip)
+  {
+    await Delete(trip);
+    await eventDispatcher.Dispatch(trip.Liane, new MessageContent.MemberCancelTrip("", trip));
   }
 
   public async Task<Match?> GetNewTrip(Ref<Api.Trip.Trip> liane, RallyingPoint from, RallyingPoint to, bool isDriverSegment)
@@ -727,12 +735,12 @@ public sealed class TripServiceImpl(
     {
       throw new ResourceNotFoundException("Not member");
     }
-    
+
     if (tripMember.Cancellation is not null || tripMember.Arrival is not null)
     {
       throw new ResourceNotFoundException("Already arrived");
     }
-    
+
     var alreadyStarted = tripMember.Departure is not null;
     if (alreadyStarted)
     {
@@ -751,7 +759,7 @@ public sealed class TripServiceImpl(
 
     var upatedTrip = await MapEntity(updated);
     await eventDispatcher.Dispatch(upatedTrip.Liane, new MessageContent.MemberHasStarted("", upatedTrip), now);
-    
+
     return (upatedTrip, upatedTrip.Members.Find(m => m.User.Id == sender.Id)!);
   }
 
