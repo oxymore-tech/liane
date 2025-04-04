@@ -352,20 +352,20 @@ public sealed class TripServiceImpl(
       : new Match.Compatible(new Delta(delta, tripIntent.TotalDistance() - wayPoints.TotalDistance()), from.Id!, to.Id!, tripIntent);
   }
 
-  public Task UpdateFeedback(Ref<Api.Trip.Trip> trip, Feedback feedback)
+  public async Task UpdateFeedback(Ref<Api.Trip.Trip> trip, Feedback feedback)
   {
     var sender = currentContext.CurrentUser().Id;
-    return UpdateFeedback(trip, sender, feedback);
+    await UpdateFeedback(trip, sender, feedback);
   }
 
-  public async Task<Api.Trip.Trip> UpdateFeedback(Ref<Api.Trip.Trip> trip, Ref<Api.Auth.User> user, Feedback feedback)
+  public async Task UpdateFeedback(Ref<Api.Trip.Trip> trip, Ref<Api.Auth.User> user, Feedback feedback)
   {
     var resolved = await Get(trip);
 
     var tripMember = resolved.Members.Find(m => m.User.Id == user.Id);
     if (tripMember is null)
     {
-      return resolved;
+      return;
     }
 
     var now = DateTime.UtcNow;
@@ -375,12 +375,12 @@ public sealed class TripServiceImpl(
     var updated = await Update(trip, Builders<LianeDb>.Update.Set(l => l.Members, resolved.Members.Select(m => m.User.Id == user.Id ? update : m)));
     if (updated.Members.All(m => m.Feedback is not null))
     {
-      updated = await Update(trip, Builders<LianeDb>.Update.Set(l => l.State, updated.Members.All(m => m.Feedback!.Canceled) ? TripStatus.Canceled : TripStatus.Archived));
+      var state = updated.Members.All(m => m.Feedback!.Canceled) ? TripStatus.Canceled : TripStatus.Archived;
+      await UpdateState(trip, state);
     }
 
     var mapEntity = await MapEntity(updated);
     await hubService.PushTripUpdate(mapEntity);
-    return mapEntity;
   }
 
   private async Task<Api.Trip.Trip> AddMemberSingle(Ref<Api.Trip.Trip> liane, TripMember newMember)
@@ -406,7 +406,7 @@ public sealed class TripServiceImpl(
     var updated = await Update(liane, updateDef);
 
     var pointsToUpdate = new[] { newMember.From, newMember.To }.Where(r => toUpdate.WayPoints.Find(w => w.RallyingPoint.Id == r.Id) is null).ToImmutableList();
-    if (pointsToUpdate.Any())
+    if (!pointsToUpdate.IsEmpty)
     {
       await rallyingPointService.UpdateStats(pointsToUpdate, updated.DepartureTime);
     }

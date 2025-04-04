@@ -186,8 +186,7 @@ public sealed class LianeTrackerServiceImpl : ILianeTrackerService
 
     if (tracker.MemberHasArrived(tripMember))
     {
-      var updated = await tripService.UpdateFeedback(resolved, ping.User, new Feedback(false, "Automatic via ping"));
-      await hubService.PushTripUpdate(updated);
+      await tripService.UpdateFeedback(resolved, ping.User, new Feedback(false, "Automatic via ping"));
       throw new ResourceNotFoundException("Arrived");
     }
   }
