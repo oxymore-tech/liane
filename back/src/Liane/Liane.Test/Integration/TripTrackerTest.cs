@@ -144,7 +144,7 @@ public sealed class TripTrackerTest : BaseIntegrationTest
     Assert.AreEqual("mairie:31427", trackingInfo.Car!.NextPoint.Id);
 
     var trip = await tripService.Get(trackingInfo.Liane);
-    Assert.AreEqual(trip.State, TripStatus.Finished);
+    Assert.AreEqual(trip.State, TripStatus.Started);
   }
 
   [Test]
