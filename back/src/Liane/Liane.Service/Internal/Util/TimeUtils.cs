@@ -11,4 +11,9 @@ public static class TimeUtils
     var utcNow = DateTime.UtcNow;
     return DateTime.SpecifyKind(TimeZoneInfo.ConvertTimeFromUtc(utcNow, FranceTimeZone), DateTimeKind.Local);
   }
+  
+  public static TimeOnly FromDateTime(DateTime dateTime)
+  {
+    return TimeOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(dateTime, FranceTimeZone));
+  }
 }

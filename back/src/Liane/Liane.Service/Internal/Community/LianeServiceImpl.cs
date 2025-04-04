@@ -433,7 +433,7 @@ public sealed class LianeServiceImpl(
 
     var wayPoints = await routingService.GetOptimizedTrip(bestTrip.WayPoints, bestTrip.Sources, bestTrip.Destinations);
 
-    var computedTime = TimeOnly.FromDateTime(wayPoints.First(w => w.RallyingPoint.Id == bestTrip.At.Id).Eta);
+    var computedTime = TimeUtils.FromDateTime(wayPoints.First(w => w.RallyingPoint.Id == bestTrip.At.Id).Eta);
     var diff = computedTime - bestTrip.ArriveBefore;
 
     return wayPoints.Select(w => w with { Eta = w.Eta - diff }).ToImmutableList();
