@@ -122,7 +122,19 @@ public sealed class TripTracker
     var currentLocation = GetCurrentLocation(member.Id);
     var memberArrivalIndex = Trip.WayPoints.FindIndex(w => w.RallyingPoint.Id == tripMember.To.Id);
 
-    return currentLocation?.NextPointIndex == memberArrivalIndex && currentLocation.PointDistance < ILianeTrackerService.NearPointDistanceInMeters;
+    if (currentLocation?.NextPointIndex == memberArrivalIndex && currentLocation.PointDistance < ILianeTrackerService.NearPointDistanceInMeters)
+    {
+      return true;
+    }
+    
+    if (lastTrackingInfo?.Car is null)
+    {
+      return false;
+    }
+
+    var carNextPointIndex = Trip.WayPoints.FindIndex(w => w.RallyingPoint.Id == lastTrackingInfo.Car.NextPoint.Id);
+    return memberArrivalIndex < carNextPointIndex || 
+           (memberArrivalIndex == carNextPointIndex && lastTrackingInfo.Car.PointDistance < ILianeTrackerService.NearPointDistanceInMeters);
   }
 
   public bool MemberHasArrived(Ref<Api.Auth.User> member)
@@ -185,7 +197,8 @@ public sealed class TripTracker
         (long)carPosition.Delay.TotalMilliseconds,
         carPosition.Coordinate.Value,
         carPassengers,
-        IsMoving(lastCarPings.First(), lastCarPings)
+        IsMoving(lastCarPings.First(), lastCarPings),
+        carPosition.PointDistance
       )
       : null;
 

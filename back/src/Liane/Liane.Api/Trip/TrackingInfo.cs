@@ -17,7 +17,8 @@ public sealed record Car(
   long Delay,
   LatLng Position,
   ImmutableHashSet<Ref<Auth.User>> Members,
-  bool IsMoving
+  bool IsMoving,
+  double PointDistance
 );
 
 public sealed record TrackedMemberLocation(
@@ -27,5 +28,5 @@ public sealed record TrackedMemberLocation(
   Ref<RallyingPoint> NextPoint,
   long Delay,
   LatLng? Location,
-  bool IsMoving = true
+  bool IsMoving
 );
