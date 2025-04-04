@@ -44,7 +44,7 @@ public sealed class PushServiceImpl(IServiceProvider serviceProvider, LianeFetch
     var pushMiddlewares = GetPushMiddlewares();
     foreach (var pushService in pushMiddlewares)
     {
-      if (await pushService.Push(receiver, notification))
+      if (await pushService.PushTrackingInfo(receiver, notification))
       {
         return true;
       }

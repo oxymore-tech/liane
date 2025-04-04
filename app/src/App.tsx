@@ -6,7 +6,6 @@ import { AppWindowsSizeProvider } from "@/components/base/AppWindowsSizeProvider
 import Navigation from "@/components/context/Navigation";
 import { AppLinking, RootNavigation } from "@/components/context/routing";
 import { NavigationContainer } from "@react-navigation/native";
-import { AppModalNavigationProvider } from "@/components/AppModalNavigationProvider";
 import { DdRumReactNavigationTracking } from "@datadog/mobile-react-navigation";
 
 const App = () => (
@@ -14,16 +13,14 @@ const App = () => (
     <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
     <AppWindowsSizeProvider>
       <ContextProvider>
-        <AppModalNavigationProvider>
-          <NavigationContainer
-            linking={AppLinking}
-            ref={RootNavigation}
-            onReady={() => {
-              DdRumReactNavigationTracking.startTrackingViews(RootNavigation.current);
-            }}>
-            <Navigation />
-          </NavigationContainer>
-        </AppModalNavigationProvider>
+        <NavigationContainer
+          linking={AppLinking}
+          ref={RootNavigation}
+          onReady={() => {
+            DdRumReactNavigationTracking.startTrackingViews(RootNavigation.current);
+          }}>
+          <Navigation />
+        </NavigationContainer>
       </ContextProvider>
     </AppWindowsSizeProvider>
   </SafeAreaProvider>

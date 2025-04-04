@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Liane.Api.Routing;
 using Liane.Api.Trip;
 using Liane.Service.Internal.Osrm;
-using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Logging;
 using Route = Liane.Api.Routing.Route;
 
@@ -241,7 +240,7 @@ public sealed class RoutingServiceImpl(IOsrmService osrmService, ILogger<Routing
     }
 
     var wayPoints = new List<WayPoint>();
-    var eta = TimeUtils.NowInFrance().Date;
+    var eta = DateTime.UtcNow.Date;
     int? previous = null;
     foreach (var i in bestRoute)
     {

@@ -119,6 +119,7 @@ export type MemberRejected = { type: "MemberRejected"; value: string; user: Ref<
 export type MemberLeft = { type: "MemberLeft"; value: string; user: Ref<User> };
 export type MemberJoinedTrip = { type: "MemberJoinedTrip"; value: string; user: Ref<User>; trip: Ref<Trip>; takeReturn: boolean };
 export type MemberLeftTrip = { type: "MemberLeftTrip"; value: string; user: Ref<User>; trip: Ref<Trip> };
+export type MemberCancelTrip = { type: "MemberCancelTrip"; value: string; trip: Ref<Trip> };
 export type MemberHasStarted = { type: "MemberHasStarted"; value: string; user: Ref<User>; trip: Ref<Trip> };
 
 export type MessageContent =
@@ -131,7 +132,8 @@ export type MessageContent =
   | MemberHasStarted
   | MemberLeft
   | MemberJoinedTrip
-  | MemberLeftTrip;
+  | MemberLeftTrip
+  | MemberCancelTrip;
 
 export type LianeMessage<T extends MessageContent = MessageContent> = Entity & { content: T };
 

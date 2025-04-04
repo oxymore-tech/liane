@@ -9,7 +9,7 @@ using NUnit.Framework;
 
 namespace Liane.Test.Internal.Trip;
 
-public sealed class LianeTrackerTest
+public sealed class TripTrackerTest
 {
   [Test]
   public void ShouldGetFirstWayPoint()
@@ -25,7 +25,7 @@ public sealed class LianeTrackerTest
     );
     var liane = new Api.Trip.Trip("id", null!, "A", DateTime.Now, DateTime.Now, null, waypoints, members, new Driver("A"), TripStatus.NotStarted);
 
-    var tracker = new LianeTracker(new Mock<ITripSession>().Object, liane);
+    var tracker = new TripTracker(new Mock<ITripSession>().Object, liane);
     var firstPointIndexA = tracker.GetFirstWayPoint("A");
     var firstPointIndexB = tracker.GetFirstWayPoint("B");
 

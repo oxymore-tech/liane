@@ -24,7 +24,6 @@ using Liane.Service.Internal.Util;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Direction = Liane.Api.Trip.Direction;
 using LianeMatch = Liane.Api.Trip.LianeMatch;
 using Match = Liane.Api.Trip.Match;
 
@@ -40,7 +39,8 @@ public sealed class TripServiceImpl(
   IPostgisService postgisService,
   IUserStatService userStatService,
   LianeTrackerCache trackerCache,
-  EventDispatcher eventDispatcher)
+  EventDispatcher eventDispatcher,
+  IHubService hubService)
   : BaseMongoCrudService<LianeDb, Api.Trip.Trip>(mongo), ITripService
 {
   private const int MaxDeltaInSeconds = 15 * 60; // 15 min
@@ -100,19 +100,6 @@ public sealed class TripServiceImpl(
         && l.DepartureTime <= end)
       .SortBy(l => l.DepartureTime)
       .SelectAsync(MapEntity);
-  }
-
-  public async Task<Api.Trip.Trip> GetForCurrentUser(Ref<Api.Trip.Trip> l, Ref<Api.Auth.User>? user = null)
-  {
-    var userId = user ?? currentContext.CurrentUser().Id;
-    var liane = await Get(l);
-    var member = liane.Members.Find(m => m.User.Id == userId);
-    if (member is null)
-    {
-      return liane;
-    }
-
-    return liane with { State = GetUserState(liane, member) };
   }
 
   public async Task<PaginatedResponse<LianeMatch>> Match(Filter filter, Pagination pagination, CancellationToken cancellationToken = default)
@@ -193,12 +180,9 @@ public sealed class TripServiceImpl(
   {
     var filter = BuildFilter(tripFilter);
     var paginatedLianes = await Collection.PaginateTime(pagination, l => l.DepartureTime, filter, cancellationToken: cancellationToken);
-    if (tripFilter is { ForCurrentUser: true, States.Length: > 0 })
+    if (tripFilter is { States.Length: > 0 })
     {
-      // Return with user's version of liane state
-      var result = await paginatedLianes.SelectAsync(async l =>
-        l with { State = GetUserState(await MapEntity(l), l.Members.Find(m => m.User.Id == currentContext.CurrentUser().Id)!) });
-      paginatedLianes = result.Where(l => tripFilter.States.Contains(l.State));
+      paginatedLianes = paginatedLianes.Where(l => tripFilter.States.Contains(l.State));
     }
 
     return await paginatedLianes.SelectAsync(MapEntity) with { TotalCount = await Count(filter) };
@@ -268,50 +252,57 @@ public sealed class TripServiceImpl(
     // Cancel ongoing trips where user is driver
     await Mongo.GetCollection<LianeDb>()
       .Find(l => l.Driver.User == member.Id && l.State == TripStatus.Started)
-      .ForEachAsync(async (l) => await CancelTrip(l.Id));
+      .ForEachAsync(async l => await CancelTrip(l.Id));
 
     // Leave liane not yet started and joined as members
     await Mongo.GetCollection<LianeDb>()
       .Find(
         Builders<LianeDb>.Filter.ElemMatch(l => l.Members, m => m.User == member.Id) &
         Builders<LianeDb>.Filter.Eq(l => l.State, TripStatus.NotStarted))
-      .ForEachAsync(async (l) => await RemoveMember(l.Id, member.Id));
+      .ForEachAsync(async l => await RemoveMember(l.Id, member.Id));
 
     // Cancel participation to ongoing trips joined as members
     await Mongo.GetCollection<LianeDb>()
       .Find(
         Builders<LianeDb>.Filter.ElemMatch(l => l.Members, m => m.User == member.Id) &
         Builders<LianeDb>.Filter.Eq(l => l.State, TripStatus.Started))
-      .ForEachAsync(async (l) => await CancelTrip(l.Id));
+      .ForEachAsync(async l => await CancelTrip(l.Id));
   }
 
-  public async Task<Api.Trip.Trip?> RemoveMember(Ref<Api.Trip.Trip> liane, Ref<Api.Auth.User> member)
+  public async Task<Api.Trip.Trip?> RemoveMember(Ref<Api.Trip.Trip> trip, Ref<Api.Auth.User> member)
   {
     var toUpdate = await Mongo.GetCollection<LianeDb>()
-      .Find(l => l.Id == liane.Id)
+      .Find(l => l.Id == trip.Id)
       .FirstOrDefaultAsync();
 
     if (toUpdate is null)
     {
-      throw ResourceNotFoundException.For(liane);
+      return null;
     }
 
-    var foundMember = toUpdate.Members.Find(m => m.User == member.Id);
+    var foundMember = toUpdate.Members.Find(m => m.User.Id == member.Id);
 
     if (foundMember is null)
     {
       return null;
     }
 
-    var newMembers = toUpdate.Members.Remove(foundMember);
-
-    if (newMembers.IsEmpty)
+    if (toUpdate.Driver.User.Id == foundMember.User.Id && toUpdate.State == TripStatus.NotStarted)
     {
-      await Delete(liane);
+      var resolvedTrip = await MapEntity(toUpdate);
+      await DeleteAndCancelTrip(resolvedTrip);
       return null;
     }
 
-    var newDriver = toUpdate.Driver.User == foundMember.User
+    var newMembers = toUpdate.Members.Remove(foundMember);
+    if (newMembers.IsEmpty)
+    {
+      var resolvedTrip = await MapEntity(toUpdate);
+      await DeleteAndCancelTrip(resolvedTrip);
+      return null;
+    }
+
+    var newDriver = toUpdate.Driver.User.Id == foundMember.User.Id
       ? newMembers.First().User
       : toUpdate.Driver.User;
 
@@ -319,7 +310,7 @@ public sealed class TripServiceImpl(
       .Pull(l => l.Members, foundMember)
       .Set(l => l.TotalSeatCount, toUpdate.TotalSeatCount - foundMember.SeatCount);
 
-    var updated = await Update(liane, update);
+    var updated = await Update(trip, update);
 
     var updatedLiane = await MapEntity(updated);
     await postgisService.UpdateGeometry(updatedLiane);
@@ -327,6 +318,12 @@ public sealed class TripServiceImpl(
     await eventDispatcher.Dispatch(updatedLiane.Liane, new MessageContent.MemberLeftTrip("", foundMember.User, updatedLiane));
 
     return updatedLiane;
+  }
+
+  private async Task DeleteAndCancelTrip(Api.Trip.Trip trip)
+  {
+    await Delete(trip);
+    await eventDispatcher.Dispatch(trip.Liane, new MessageContent.MemberCancelTrip("", trip));
   }
 
   public async Task<Match?> GetNewTrip(Ref<Api.Trip.Trip> liane, RallyingPoint from, RallyingPoint to, bool isDriverSegment)
@@ -355,18 +352,35 @@ public sealed class TripServiceImpl(
       : new Match.Compatible(new Delta(delta, tripIntent.TotalDistance() - wayPoints.TotalDistance()), from.Id!, to.Id!, tripIntent);
   }
 
-  public async Task UpdateFeedback(Ref<Api.Trip.Trip> liane, Feedback feedback)
+  public async Task UpdateFeedback(Ref<Api.Trip.Trip> trip, Feedback feedback)
   {
-    var resolved = await Get(liane);
-    var sender =
-      currentContext.CurrentUser().Id;
-    var updated = await Update(liane, Builders<LianeDb>.Update.Set(l => l.Members, resolved.Members.Select(m => m.User.Id == sender ? m with { Feedback = feedback } : m)));
-    if (updated.Members.All(m => m.Feedback is not null))
+    var sender = currentContext.CurrentUser().Id;
+    await UpdateFeedback(trip, sender, feedback);
+  }
+
+  public async Task UpdateFeedback(Ref<Api.Trip.Trip> trip, Ref<Api.Auth.User> user, Feedback feedback)
+  {
+    var resolved = await Get(trip);
+
+    var tripMember = resolved.Members.Find(m => m.User.Id == user.Id);
+    if (tripMember is null)
     {
-      updated = await Update(liane, Builders<LianeDb>.Update.Set(l => l.State, updated.Members.All(m => m.Feedback!.Canceled) ? TripStatus.Canceled : TripStatus.Archived));
+      return;
     }
 
-    await eventDispatcher.Dispatch(updated.Liane!, new MessageContent.MemberFeedback(liane, feedback));
+    var now = DateTime.UtcNow;
+    var update = feedback.Canceled
+      ? tripMember with { Feedback = feedback, Cancellation = now }
+      : tripMember with { Feedback = feedback, Arrival = now };
+    var updated = await Update(trip, Builders<LianeDb>.Update.Set(l => l.Members, resolved.Members.Select(m => m.User.Id == user.Id ? update : m)));
+    if (updated.Members.All(m => m.Feedback is not null))
+    {
+      var state = updated.Members.All(m => m.Feedback!.Canceled) ? TripStatus.Canceled : TripStatus.Archived;
+      await UpdateState(trip, state);
+    }
+
+    var mapEntity = await MapEntity(updated);
+    await hubService.PushTripUpdate(mapEntity);
   }
 
   private async Task<Api.Trip.Trip> AddMemberSingle(Ref<Api.Trip.Trip> liane, TripMember newMember)
@@ -392,7 +406,10 @@ public sealed class TripServiceImpl(
     var updated = await Update(liane, updateDef);
 
     var pointsToUpdate = new[] { newMember.From, newMember.To }.Where(r => toUpdate.WayPoints.Find(w => w.RallyingPoint.Id == r.Id) is null).ToImmutableList();
-    if (pointsToUpdate.Any()) await rallyingPointService.UpdateStats(pointsToUpdate, updated.DepartureTime);
+    if (!pointsToUpdate.IsEmpty)
+    {
+      await rallyingPointService.UpdateStats(pointsToUpdate, updated.DepartureTime);
+    }
 
     var updatedLiane = await MapEntity(updated);
     await postgisService.UpdateGeometry(updatedLiane);
@@ -635,11 +652,7 @@ public sealed class TripServiceImpl(
       ]);
       if (lianeDb.State != TripStatus.Started)
       {
-        var doneSession = trackerCache.RemoveTracker(liane.Id);
-        if (doneSession is not null)
-        {
-          await doneSession.Dispose();
-        }
+        await trackerCache.RemoveTracker(liane.Id);
       }
     }
 
@@ -706,16 +719,32 @@ public sealed class TripServiceImpl(
     await eventDispatcher.Dispatch(trip.Liane, new MessageContent.MemberLeftTrip("", sender, trip));
   }
 
-  public async Task StartTrip(Ref<Api.Trip.Trip> tripRef)
-  {
-    var trip = await Get(tripRef);
-    var sender = currentContext.CurrentUser().Id;
-    var now = DateTime.UtcNow;
+  public async Task StartTrip(Ref<Api.Trip.Trip> trip) => await StartTrip(trip, currentContext.CurrentUser().Id);
 
-    var alreadyStarted = trip.Members.FirstOrDefault(m => m.User.Id == sender && m.Departure is not null);
-    if (alreadyStarted is not null)
+  public async Task<(Api.Trip.Trip, TripMember)> StartTrip(Ref<Api.Trip.Trip> tripRef, Ref<Api.Auth.User> sender)
+  {
+    var trip = await Get(tripRef.Id);
+
+    if (trip.State is TripStatus.Finished or TripStatus.Canceled or TripStatus.Archived)
     {
-      return;
+      throw new ResourceNotFoundException($"Trip {trip.State}");
+    }
+
+    var tripMember = trip.Members.Find(m => m.User.Id == sender.Id);
+    if (tripMember is null)
+    {
+      throw new ResourceNotFoundException("Not member");
+    }
+
+    if (tripMember.Cancellation is not null || tripMember.Arrival is not null)
+    {
+      throw new ResourceNotFoundException("Already arrived");
+    }
+
+    var alreadyStarted = tripMember.Departure is not null;
+    if (alreadyStarted)
+    {
+      return (trip, tripMember);
     }
 
     if (trip.State == TripStatus.NotStarted)
@@ -723,39 +752,16 @@ public sealed class TripServiceImpl(
       await UpdateState(trip, TripStatus.Started);
     }
 
-    await Update(tripRef, Builders<LianeDb>.Update.Set(l => l.Members, trip.Members.Select(m => m.User.Id == sender ? m with { Departure = now } : m)));
+    var now = DateTime.UtcNow;
+    var updated = await Update(tripRef, Builders<LianeDb>.Update
+      .Set(l => l.State, TripStatus.Started)
+      .Set(l => l.Members, trip.Members.Select(m => m.User.Id == sender.Id ? m with { Departure = now } : m)));
 
-    await eventDispatcher.Dispatch(trip.Liane, new MessageContent.MemberHasStarted("", trip), now);
+    var upatedTrip = await MapEntity(updated);
+    await eventDispatcher.Dispatch(upatedTrip.Liane, new MessageContent.MemberHasStarted("", upatedTrip), now);
+
+    return (upatedTrip, upatedTrip.Members.Find(m => m.User.Id == sender.Id)!);
   }
-
-  private TripStatus GetUserState(Api.Trip.Trip trip, TripMember member)
-  {
-    if (member.Cancellation is not null) return TripStatus.Canceled;
-
-    var current = trip.State;
-    if (current == TripStatus.Started)
-    {
-      // Return NotStarted while user has not confirmed
-      if (member.Departure is null) return TripStatus.NotStarted;
-      else
-      {
-        var arrived = trackerCache.GetTracker(trip.Id)?.MemberHasArrived(member.User);
-        if (arrived is not null && arrived.Value)
-        {
-          return TripStatus.Finished;
-        }
-      }
-    }
-
-    // Final states
-    if (current == TripStatus.Finished && member.Feedback is not null)
-    {
-      return member.Feedback.Canceled ? TripStatus.Canceled : TripStatus.Archived;
-    }
-
-    return current;
-  }
-
 
   public async Task<PaginatedResponse<DetailedLianeTrackReport>> ListTripRecords(Pagination pagination, TripRecordFilter filter)
   {
@@ -810,7 +816,22 @@ public sealed class TripServiceImpl(
       .Project<DetailedLianeTrackReportDb>(Builders<BsonDocument>.Projection.Exclude("memberLocations").Exclude("carLocations"))
       .Match(Builders<DetailedLianeTrackReportDb>.Filter.Exists(l => l.Liane))
       .FirstOrDefaultAsync();
-    if (report is null) throw new ResourceNotFoundException("LianeTrackReport " + id);
+    if (report is null)
+    {
+      throw new ResourceNotFoundException("LianeTrackReport " + id);
+    }
+
     return await MapLianeTrackReport(report);
+  }
+
+  public override async Task<bool> Delete(Ref<Api.Trip.Trip> reference)
+  {
+    var deleted = await base.Delete(reference);
+    if (deleted)
+    {
+      await trackerCache.RemoveTracker(reference);
+    }
+
+    return deleted;
   }
 }

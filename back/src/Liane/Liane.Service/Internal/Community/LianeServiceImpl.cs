@@ -433,7 +433,7 @@ public sealed class LianeServiceImpl(
 
     var wayPoints = await routingService.GetOptimizedTrip(bestTrip.WayPoints, bestTrip.Sources, bestTrip.Destinations);
 
-    var computedTime = TimeOnly.FromDateTime(wayPoints.First(w => w.RallyingPoint.Id == bestTrip.At.Id).Eta);
+    var computedTime = TimeUtils.FromDateTime(wayPoints.First(w => w.RallyingPoint.Id == bestTrip.At.Id).Eta);
     var diff = computedTime - bestTrip.ArriveBefore;
 
     return wayPoints.Select(w => w with { Eta = w.Eta - diff }).ToImmutableList();
@@ -598,7 +598,7 @@ public sealed class LianeServiceImpl(
     await connection.DeleteAsync(Filter<LianeMemberDb>.Where(lm => lm.LianeRequestId, ComparisonOperator.Eq, requesterId), tx);
   }
 
-  private async Task<JoinRequestResult?> AddLianeMemberRequest(IDbConnection connection, LianeRequest requester, Guid lianeId, IDbTransaction tx)
+  private static async Task<JoinRequestResult?> AddLianeMemberRequest(IDbConnection connection, LianeRequest requester, Guid lianeId, IDbTransaction tx)
   {
     var at = DateTime.UtcNow;
     var requesterId = requester.Id!.Value;

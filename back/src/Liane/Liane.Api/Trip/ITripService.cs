@@ -23,13 +23,14 @@ public interface ITripService : ICrudEntityService<TripRequest, Trip>
   Task<LianeMatchDisplay> MatchWithDisplay(Filter filter, Pagination pagination, CancellationToken cancellationToken = default);
   Task UpdateState(Ref<Trip> trip, TripStatus state);
   Task UpdateFeedback(Ref<Trip> trip, Feedback feedback);
+  Task UpdateFeedback(Ref<Trip> trip, Ref<User> member, Feedback feedback);
   Task<string> GetContact(Ref<Trip> id, Ref<User> requester, Ref<User> member);
   Task<Trip> UpdateDepartureTime(Ref<Trip> trip, DateTime departureTime);
-  Task<Trip> GetForCurrentUser(Ref<Trip> l, Ref<User>? user = null);
   Task<PaginatedResponse<DetailedLianeTrackReport>> ListTripRecords(Pagination pagination, TripRecordFilter filter);
   Task<DetailedLianeTrackReport> GetTripRecord(string id);
   Task<FeatureCollection> GetRawGeolocationPings(Ref<Trip> trip);
   Task UpdateGeolocationSetting(Ref<Trip> trip, GeolocationLevel level);
   Task CancelTrip(Ref<Trip> trip);
   Task StartTrip(Ref<Trip> trip);
+  Task<(Trip, TripMember)> StartTrip(Ref<Trip> tripRef, Ref<User> sender);
 }

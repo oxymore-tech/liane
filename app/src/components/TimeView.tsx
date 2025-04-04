@@ -20,7 +20,7 @@ export type TimeViewProps<T extends GenericTimeValue> = {
   editable?: boolean;
 };
 
-function convertToTimeOnly(value: GenericTimeValue | undefined): TimeOnly | undefined {
+export function convertToTimeOnly(value: GenericTimeValue | undefined): TimeOnly | undefined {
   if (value instanceof Date) {
     return { hour: value.getHours(), minute: value.getMinutes() } as TimeOnly;
   }
@@ -112,16 +112,16 @@ export const InternalTimeView = ({ style, textStyle, onChange, value, minDate, m
           onCancel={handlePress}
         />
       )}
-      <AppText style={[textStyle, styles.hourStyle]}>{AppLocalization.formatTimeOnly(dateValue)}</AppText>
+      <AppText style={[styles.hourStyle, textStyle]}>{AppLocalization.formatTimeOnly(dateValue)}</AppText>
     </Pressable>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     borderRadius: 20,
-    paddingVertical: 12
+    padding: 8
   },
   hourStyle: {
     fontWeight: "bold",

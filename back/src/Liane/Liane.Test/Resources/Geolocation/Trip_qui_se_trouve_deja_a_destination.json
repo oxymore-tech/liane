@@ -16,7 +16,7 @@
       "feedback": null,
       "geolocationLevel": "Shared",
       "departure": {"$date": "2024-04-11T13:01:24.385Z"},
-      "cancellation": {"$date": "2024-04-11T13:04:24.140Z"}
+      "cancellation": null
     },
     {
       "user": {"$oid": "63f73936d3436d499d1075f6"},
@@ -80,7 +80,7 @@
     }
   ],
   "return": null,
-  "state": "Canceled",
+  "state": "Started",
   "totalSeatCount": 0,
   "wayPoints": [
     {

@@ -1,4 +1,4 @@
-import { addSeconds, Trip, LianeMatch, LianeMember, TripStatus, RallyingPoint, Ref, UnionUtils, User, UTCDateTime, WayPoint } from ".";
+import { addSeconds, Trip, LianeMatch, TripMember, TripStatus, RallyingPoint, Ref, UnionUtils, User, UTCDateTime, WayPoint } from ".";
 
 export type UserTrip = {
   wayPoints: WayPoint[];
@@ -13,7 +13,7 @@ export function getTotalDistance(trip: WayPoint[]) {
   return trip.map(w => w.distance).reduce((d, acc) => d + acc, 0);
 }
 
-export function getMemberTrip(liane: Trip, member: LianeMember) {
+export function getMemberTrip(liane: Trip, member: TripMember) {
   return getUserTrip(liane, member.user.id!);
 }
 
@@ -115,24 +115,49 @@ export function getTripMatch(to: RallyingPoint, from: RallyingPoint, originalTri
 
 export type LiveTripStatus = TripStatus | "StartingSoon";
 
-function getTimeForUser(liane: Trip, user: Ref<User>, type: "to" | "from"): [Date, number] {
-  const find = liane.members.find(m => m.user.id === user);
-  if (!find) {
-    return [new Date(), 0];
-  }
-  const pointId = find[type];
+function getTimeForUser(liane: Trip, tripMember: TripMember, type: "to" | "from"): [Date, number] {
+  const pointId = tripMember[type];
   const time = new Date(liane.wayPoints.find(w => w.rallyingPoint.id === pointId)!.eta);
   // @ts-ignore
   const delta = (time - new Date()) / 1000;
   return [time, delta];
 }
 
-export function getLiveTripStatus(liane: Trip, user: Ref<User>): { status: LiveTripStatus; nextUpdateMillis?: number } {
-  if (liane.state === "NotStarted") {
-    const [, delta] = getTimeForUser(liane, user, "from");
-    if (delta <= 24 * 60 * 60 && delta > -1 * 2 * 60 * 60) {
-      return { status: "StartingSoon", nextUpdateMillis: delta * 1000 };
-    }
+export type LiveUpdateTripStatus = { status: LiveTripStatus; nextUpdateMillis?: number };
+
+function getUserTripStatus(trip: Trip, tripMember: TripMember): TripStatus {
+  if (trip.state !== "Started") {
+    return trip.state;
   }
-  return { status: liane.state };
+
+  if (tripMember.arrival) {
+    return "Finished";
+  }
+
+  if (tripMember.archiving) {
+    return "Archived";
+  }
+
+  if (tripMember.cancellation) {
+    return "Canceled";
+  }
+
+  if (tripMember.departure) {
+    return "Started";
+  }
+
+  return "NotStarted";
+}
+
+export function getLiveTripStatus(trip: Trip, tripMember: TripMember): LiveUpdateTripStatus {
+  const status = getUserTripStatus(trip, tripMember);
+  if (status === "NotStarted") {
+    const [, delta] = getTimeForUser(trip, tripMember, "from");
+    if (delta <= 24 * 60 * 60 && delta > -1 * 2 * 60 * 60) {
+      return { status: "StartingSoon", nextUpdateMillis: 30000 };
+    }
+    return { status };
+  }
+
+  return { status };
 }

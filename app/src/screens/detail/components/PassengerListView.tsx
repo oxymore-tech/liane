@@ -1,4 +1,4 @@
-import { LianeMember } from "@liane/common";
+import { TripMember } from "@liane/common";
 import { Column, Row } from "@/components/base/AppLayout";
 import { View } from "react-native";
 import { AppText } from "@/components/base/AppText";
@@ -6,7 +6,7 @@ import { AppPressableOverlay } from "@/components/base/AppPressable";
 import { UserPicture } from "@/components/UserPicture";
 import React from "react";
 
-export const PassengerListView = (props: { members: LianeMember[] }) => {
+export const PassengerListView = (props: { members: TripMember[] }) => {
   return (
     <Column spacing={12}>
       <View style={{ paddingTop: 16, paddingHorizontal: 24 }}>

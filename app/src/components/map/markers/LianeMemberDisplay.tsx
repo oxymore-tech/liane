@@ -37,7 +37,7 @@ export const LianeMemberDisplay = ({
   const region = useSubscriptionValue(controller.subscribeToRegionChanges, [controller]);
   const zoom = region?.zoomLevel || 10;
   const formattedDelay = delay ? AppLocalization.formatDuration(delay) : undefined;
-  const description = isMoving ? (formattedDelay ? " arrive dans " + formattedDelay : "") : "est à l'arrêt";
+  const description = isMoving ? (formattedDelay ? " arrive dans " + formattedDelay : "") : " est à l'arrêt";
   if (minZoom && zoom <= minZoom) {
     return null;
   }
@@ -45,19 +45,19 @@ export const LianeMemberDisplay = ({
     <MarkerView id={user.id!} coordinate={[location.lng, location.lat]} anchor={{ x: 0.5, y: 1 }}>
       <Animated.View entering={FadeIn} exiting={FadeOut} pointerEvents="none" style={[styles.wayPointContainer, { bottom: -4 }]}>
         <View style={styles.wayPointContainer}>
-            {zoom > 7.5 && (
-              <Animated.View style={styles.userNameContainer} entering={ZoomIn}>
-                <Text style={styles.userNameText}>{user.pseudo + description}</Text>
-              </Animated.View>
-            )}
-            <View
-              style={[
-                styles.userPictureContainer,
-                { borderRadius: size, width: size, height: size, borderColor: active ? AppColors.primaryColor : AppColorPalettes.gray[400] }
-              ]}>
-              {isCar ? <Car width={size - 8} height={size - 8} /> : <UserPicture url={user.pictureUrl} id={user.id} size={size - 8} />}
-            </View>
+          {zoom > 7.5 && (
+            <Animated.View style={styles.userNameContainer} entering={ZoomIn}>
+              <Text style={styles.userNameText}>{user.pseudo + description}</Text>
+            </Animated.View>
+          )}
+          <View
+            style={[
+              styles.userPictureContainer,
+              { borderRadius: size, width: size, height: size, borderColor: active ? AppColors.primaryColor : AppColorPalettes.gray[400] }
+            ]}>
+            {isCar ? <Car width={size - 8} height={size - 8} /> : <UserPicture url={user.pictureUrl} id={user.id} size={size - 8} />}
           </View>
+        </View>
 
         <Svg width="10" height="16" viewBox="0 0 13 18" fill="none" opacity={showLocationPin ? 1 : 0} transform={[{ translateY: -4 }]}>
           <Path

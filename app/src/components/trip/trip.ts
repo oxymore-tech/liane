@@ -1,28 +1,38 @@
-import { LiveTripStatus, getLiveTripStatus, Trip } from "@liane/common";
-import { useContext, useEffect, useState } from "react";
+import { FullUser, getLiveTripStatus, LiveTripStatus, LiveUpdateTripStatus, Trip } from "@liane/common";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { AppContext } from "@/components/context/ContextProvider";
 
-export const useTripStatus = (liane?: Trip): LiveTripStatus | undefined => {
-  const { user } = useContext(AppContext);
-  const userId = user!.id!;
+export const useTripStatus = (trip?: Trip, user?: FullUser): LiveTripStatus | undefined => {
+  const { user: currentUser } = useContext(AppContext);
 
-  const [status, setStatus] = useState(liane ? getLiveTripStatus(liane, userId) : undefined);
+  const tripMember = useMemo(() => {
+    const userId = user?.id ?? currentUser?.id;
+    return trip?.members?.find(m => m.user.id === userId);
+  }, [trip, user, currentUser]);
+
+  const [status, setStatus] = useState<LiveUpdateTripStatus>();
 
   useEffect(() => {
-    if (!liane) {
+    if (!trip) {
       return;
     }
-    setStatus(getLiveTripStatus(liane, userId));
-  }, [liane, userId]);
+    if (!tripMember) {
+      return;
+    }
+    setStatus(getLiveTripStatus(trip, tripMember));
+  }, [trip, tripMember]);
 
   useEffect(() => {
-    if (liane && status?.nextUpdateMillis !== undefined) {
+    if (trip && status?.nextUpdateMillis !== undefined) {
       const timeout = setTimeout(() => {
-        setStatus(getLiveTripStatus(liane, userId));
+        if (!tripMember) {
+          return;
+        }
+        setStatus(getLiveTripStatus(trip, tripMember));
       }, status.nextUpdateMillis);
       return () => clearTimeout(timeout);
     }
-  }, [status?.nextUpdateMillis, liane, userId]);
+  }, [status?.nextUpdateMillis, trip, tripMember]);
 
   return status?.status;
 };

@@ -1,11 +1,12 @@
 import React, { useMemo } from "react";
 import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { Column, Row } from "@/components/base/AppLayout";
-import { TimeView } from "@/components/TimeView";
+import { convertToTimeOnly, TimeView } from "@/components/TimeView";
 import { AppText } from "@/components/base/AppText";
 import { AppColorPalettes } from "@/theme/colors";
 import { addSeconds, Car, WayPoint } from "@liane/common";
 import { AppIcon } from "@/components/base/AppIcon";
+import { AppLocalization } from "@/api/i18n.ts";
 
 export interface WayPointsViewProps {
   style?: StyleProp<ViewStyle>;
@@ -34,28 +35,20 @@ type WayPointViewProps = {
   dark?: boolean;
 };
 
-export const WayPointView = ({ wayPoint, type, isPast = false, delay, dark }: WayPointViewProps) => {
+export const WayPointView = ({ wayPoint, type, isPast = false, delay = 0, dark }: WayPointViewProps) => {
   return (
     <Row style={{ alignItems: "center" }} spacing={8}>
-      {(!delay || isPast) && (
+      <View>
         <TimeView
           textStyle={[styles.mainWayPointTime, { color: isPast ? AppColorPalettes.gray[400] : AppColorPalettes.orange[500] }]}
-          value={wayPoint.effectiveTime ?? wayPoint.eta}
+          value={addSeconds(new Date(wayPoint.eta), delay).toISOString()}
         />
-      )}
-      {!!delay && !isPast && (
-        <Column>
-          <TimeView
-            textStyle={[styles.mainWayPointTime, { color: isPast ? AppColorPalettes.gray[400] : AppColorPalettes.orange[500] }]}
-            value={addSeconds(new Date(wayPoint.eta), delay).toISOString()}
-          />
-          <View style={{ height: 8 }} />
-          <TimeView
-            textStyle={{ position: "absolute", bottom: 0, right: 0, textDecorationLine: "line-through" }}
-            value={wayPoint.effectiveTime ?? wayPoint.eta}
-          />
-        </Column>
-      )}
+        {delay > 0 && (
+          <AppText style={{ position: "absolute", bottom: 0, right: 0, textDecorationLine: "line-through", fontSize: 12 }}>
+            {AppLocalization.formatTimeOnly(convertToTimeOnly(wayPoint.effectiveTime ?? wayPoint.eta))}
+          </AppText>
+        )}
+      </View>
       {type === "step" && (
         <View
           style={{ backgroundColor: isPast ? AppColorPalettes.gray[500] : AppColorPalettes.orange[500], borderRadius: 16, margin: 5, padding: 4 }}
@@ -91,7 +84,7 @@ function computeDelay(carLocation: Car | undefined, wayPoints: WayPoint[]) {
   return (new Date(carLocation.at).getTime() + carLocation.delay - new Date(nextWayPoint.eta).getTime()) / 1000;
 }
 
-export const WayPointsView = ({ style, wayPoints, carLocation, dark }: WayPointsViewProps) => {
+export const WayPointsView = ({ wayPoints, carLocation, dark }: WayPointsViewProps) => {
   const { from, to, steps } = useMemo(() => extractData(wayPoints), [wayPoints]);
   const nextWayPointIndex = carLocation ? wayPoints.findIndex(w => w.rallyingPoint.id === carLocation.nextPoint) : undefined;
   const delay = computeDelay(carLocation, wayPoints);
@@ -101,7 +94,7 @@ export const WayPointsView = ({ style, wayPoints, carLocation, dark }: WayPoints
   }
 
   return (
-    <Column style={[{ flexGrow: 1, flexShrink: 1 }, style]}>
+    <Column>
       <WayPointView wayPoint={from} type="pickup" isPast={!!nextWayPointIndex && nextWayPointIndex > 0} delay={delay} dark={dark} />
       {steps.map((s, i) => (
         <WayPointView

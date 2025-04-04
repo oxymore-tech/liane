@@ -38,6 +38,7 @@ public sealed record TripMember(
   GeolocationLevel GeolocationLevel = GeolocationLevel.None,
   DateTime? Departure = null,
   DateTime? Cancellation = null,
+  DateTime? Arrival = null,
   bool TakeReturnTrip = false
 ) : IResourceMember;
 

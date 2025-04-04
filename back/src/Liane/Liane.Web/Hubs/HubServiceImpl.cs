@@ -19,7 +19,7 @@ public sealed class HubServiceImpl(
   ILogger<HubServiceImpl> logger,
   ILianeTrackerCache trackerCache,
   ILianeMessageService lianeMessageService
-) : IHubService, IPushMiddleware, ILianeUpdatePushService
+) : IHubService, IPushMiddleware, ITripUpdatePushService
 {
   private MemoryCache CurrentConnections { get; } = new(new MemoryCacheOptions());
 
@@ -31,7 +31,7 @@ public sealed class HubServiceImpl(
     return connectionId;
   }
 
-  public async Task<bool> Push(Ref<User> recipient, Notification notification)
+  public async Task<bool> PushTrackingInfo(Ref<User> recipient, Notification notification)
   {
     if (notification.CreatedBy is not null)
     {
@@ -82,7 +82,7 @@ public sealed class HubServiceImpl(
     return Task.FromResult(lastValue);
   }
 
-  public async Task Push(TrackingInfo update, Ref<User> user)
+  public async Task PushTrackingInfo(TrackingInfo update, Ref<User> user)
   {
     var connectionId = GetConnectionId(user);
     if (connectionId is null)
@@ -115,7 +115,15 @@ public sealed class HubServiceImpl(
     }
   }
 
-  public async Task PushTripUpdateTo(Trip trip, Ref<User> recipient)
+  public async Task PushTripUpdate(Trip trip)
+  {
+    foreach (var member in trip.Members)
+    {
+      await PushTripUpdateTo(trip, member.User);
+    }
+  }
+
+  private async Task PushTripUpdateTo(Trip trip, Ref<User> recipient)
   {
     var connectionId = GetConnectionId(recipient);
     if (connectionId is not null)

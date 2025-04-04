@@ -36,6 +36,7 @@ export const QueryUpdateProvider = (props: PropsWithChildren) => {
   useSubscription<string | undefined>(
     services.realTimeHub.lianeUpdates,
     (_?: string) => {
+      queryClient.invalidateQueries(TripQueryKey).then();
       queryClient.invalidateQueries(LianeQueryKey).then();
     },
     []

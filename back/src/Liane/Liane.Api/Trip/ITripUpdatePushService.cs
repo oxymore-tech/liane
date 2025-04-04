@@ -3,8 +3,7 @@ using Liane.Api.Util.Ref;
 
 namespace Liane.Api.Trip;
 
-public interface ILianeUpdatePushService
+public interface ITripUpdatePushService
 {
   Task<TrackingInfo?> GetLastTrackingInfo(Ref<Trip> liane);
-  Task Push(TrackingInfo update, Ref<Auth.User> user);
 }

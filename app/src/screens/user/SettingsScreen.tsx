@@ -40,9 +40,7 @@ export const SettingsScreen = () => {
         <AppPressableOverlay
           style={{ paddingHorizontal: 24 }}
           onPress={() => {
-            AppStorage.saveSetting("geolocation", undefined).then(() =>
-              navigation.navigate("TripGeolocationWizard", { showAs: null, lianeId: undefined })
-            );
+            AppStorage.saveSetting("geolocation", undefined).then(() => navigation.navigate("TripGeolocationWizard", {}));
           }}>
           <Row style={styles.settingRow}>
             <AppText style={styles.settingTitle}>Géolocalisation</AppText>

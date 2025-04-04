@@ -16,7 +16,7 @@ import { ChoiceModal } from "@/components/modal/ChoiceModal";
 import { CommonActions } from "@react-navigation/native";
 import { TimeView } from "@/components/TimeView";
 import { AppRoundedButton } from "@/components/base/AppRoundedButton";
-import {TripQueryKey} from "@/util/hooks/query.ts";
+import { TripQueryKey } from "@/util/hooks/query.ts";
 
 export const TripActionsView = ({ match }: { match: LianeMatch }) => {
   const trip = match.trip;
@@ -114,10 +114,7 @@ export const TripActionsView = ({ match }: { match: LianeMatch }) => {
         actionText="Modifier l'horaire"
         backgroundColor={AppColors.white}
         onAction={async () => {
-          const updated = await services.trip.updateDepartureTime(trip.id!, date.toISOString());
-          // Update current page's content
-          navigation.dispatch(CommonActions.setParams({ liane: updated }));
-          // Update trip list
+          await services.trip.updateDepartureTime(trip.id!, date.toISOString());
           await queryClient.invalidateQueries(TripQueryKey);
           setTimeModalVisible(false);
         }}
@@ -184,7 +181,7 @@ const leaveTrip = (
   navigation: NativeStackNavigationProp<NavigationParamList, keyof NavigationParamList>,
   services: AppServices,
   queryClient: QueryClient,
-  liane: Trip
+  trip: Trip
 ) => {
   Alert.alert("Quitter le trajet", "Voulez-vous vraiment quitter ce trajet ?", [
     {
@@ -195,7 +192,7 @@ const leaveTrip = (
     {
       text: "Quitter",
       onPress: async () => {
-        await services.trip.leave(liane.id!);
+        await services.trip.leave(trip.id!);
         await queryClient.invalidateQueries(TripQueryKey);
         navigation.goBack();
       },

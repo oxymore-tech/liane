@@ -45,7 +45,7 @@ export const getLianeStatusStyle = (lianeStatus: LiveTripStatus): [string | unde
       //  color = AppColorPalettes.yellow[100];
       break;
     case "Started":
-      status = "En cours";
+      status = "En route";
       //  color = ContextualColors.greenValid.light;
       break;
     case "Finished":

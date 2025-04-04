@@ -61,8 +61,7 @@ export const TripGeolocationProvider = ({ trip, children }: { trip?: Trip } & Pr
   }, [trip, services.realTimeHub, shouldBeActive]);
 
   if (geolocRunning === undefined) {
-    // Return null while fetching info
-    return null;
+    return children;
   }
   const value: TripGeolocation = {
     trip,
