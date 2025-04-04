@@ -143,7 +143,8 @@ public sealed class TripTrackerTest : BaseIntegrationTest
     var trackingInfo = tracker.GetTrackingInfo();
     Assert.AreEqual("mairie:31427", trackingInfo.Car!.NextPoint.Id);
 
-    Assert.AreEqual(trackingInfo.Liane.Value!.State, TripStatus.Finished);
+    var trip = await tripService.Get(trackingInfo.Liane);
+    Assert.AreEqual(trip.State, TripStatus.Finished);
   }
 
   [Test]
