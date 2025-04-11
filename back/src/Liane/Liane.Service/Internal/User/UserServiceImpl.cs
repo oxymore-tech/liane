@@ -70,7 +70,7 @@ public sealed class UserServiceImpl(IMongoDatabase mongo) : BaseMongoCrudService
           .Set(i => i.UserInfo!.LastName, lastName)
           .Set(i => i.UserInfo!.Gender, info.Gender)
       );
-    
+
     userCache.Remove(id);
     return await GetFullUser(id);
   }
