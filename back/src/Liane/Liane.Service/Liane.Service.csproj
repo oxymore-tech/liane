@@ -14,6 +14,7 @@
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
         <PackageReference Include="CsvHelper" Version="30.0.1" />
         <PackageReference Include="Dapper" Version="2.1.35" />
+        <PackageReference Include="Datadog.Trace" Version="3.14.3" />
         <PackageReference Include="dbup-postgresql" Version="5.0.40" />
         <PackageReference Include="FirebaseAdmin" Version="2.4.0" />
         <PackageReference Include="GeoJSON.Text" Version="1.0.2" />
@@ -33,6 +34,10 @@
     <ItemGroup>
       <EmbeddedResource Include="Resources\*.*" />
       <EmbeddedResource Include="Scripts\*.sql" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Internal\Metrics\" />
     </ItemGroup>
 
 </Project>

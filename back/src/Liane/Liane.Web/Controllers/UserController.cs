@@ -9,19 +9,9 @@ namespace Liane.Web.Controllers;
 [Route("api/user")]
 [ApiController]
 [RequiresAuth]
-public sealed class UserController : ControllerBase
+public sealed class UserController(ICurrentContext currentContext, IUserService userService, IDeleteAccountService deleteAccountService)
+  : ControllerBase
 {
-  private readonly ICurrentContext currentContext;
-  private readonly IUserService userService;
-  private readonly IDeleteAccountService deleteAccountService;
-
-  public UserController(ICurrentContext currentContext, IUserService userService, IDeleteAccountService deleteAccountService)
-  {
-    this.currentContext = currentContext;
-    this.userService = userService;
-    this.deleteAccountService = deleteAccountService;
-  }
-
   [HttpGet]
   public Task<FullUser> Me()
   {
@@ -33,7 +23,7 @@ public sealed class UserController : ControllerBase
   {
     return userService.UpdatePushToken(currentContext.CurrentUser().Id, pushToken);
   }
-  
+
   [HttpPatch]
   public Task<FullUser> UpdateInfo([FromBody] UserInfo info)
   {
