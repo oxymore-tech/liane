@@ -114,3 +114,12 @@ export type TimeRange = {
   start: TimeOnly;
   end: TimeOnly;
 };
+
+export class DateUtils {
+  static isWithinLastWeek(date: Date, now: Date = new Date()): boolean {
+    const oneWeekAgo = new Date(now);
+    oneWeekAgo.setDate(now.getDate() - 7);
+
+    return date > oneWeekAgo && date <= now;
+  }
+}

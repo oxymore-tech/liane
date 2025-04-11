@@ -1,7 +1,7 @@
 import { FlatList, ViewToken } from "react-native";
 import { RefreshControl } from "react-native-gesture-handler";
 import { AppText } from "@/components/base/AppText.tsx";
-import { capitalize, CoLiane, IncomingTrip, LianeMessage, Trip, User } from "@liane/common";
+import { capitalize, CoLiane, DateUtils, IncomingTrip, LianeMessage, Trip, User } from "@liane/common";
 import { AppLocalization } from "@/api/i18n.ts";
 import { MessageBubble } from "@/screens/communities/MessageBubble.tsx";
 import React, { useCallback, useMemo, useState } from "react";
@@ -17,17 +17,6 @@ type MessageListProps = {
   fetchNextPage: () => void;
   incomingTrips?: Record<string, IncomingTrip[]>;
 };
-
-function isWithinLastWeek(date: Date) {
-  const now = new Date(); // Current date and time
-  const today = now.getDay(); // Get the current day of the week (0 = Sunday, 6 = Saturday)
-
-  // Calculate the start of "last week" (excluding today's weekday from last week)
-  const startOfLastWeek = new Date();
-  startOfLastWeek.setDate(now.getDate() - 7 - today + 1); // Last week's Monday (or start of last week)
-
-  return date >= startOfLastWeek;
-}
 
 type LianeSection = {
   title: string;
@@ -147,7 +136,7 @@ const Header = ({ title, fixed }: HeaderProps) => {
   const date = useMemo(() => {
     const sectionDate = new Date(title);
 
-    if (isWithinLastWeek(sectionDate)) {
+    if (DateUtils.isWithinLastWeek(sectionDate)) {
       const today = new Date();
       const yesterday = new Date();
       yesterday.setDate(today.getDate() - 1);

@@ -144,7 +144,7 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
 
     if (liane is null)
     {
-      var joinRequest = GetJoinRequest(mapParams, first.LianeRequest);
+      var joinRequest = GetJoinRequest(mapParams, first.From, first.LianeRequest);
       if (checkScore && joinRequest is null && (matchingPoints.Value.Score < MinScore || matchingPoints.Value.Reverse))
       {
         return null;
@@ -187,19 +187,19 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
         await matchingPoints.Value.Deposit.Resolve(rallyingPointService.Get),
         matchingPoints.Value.Score,
         matchingPoints.Value.Reverse,
-        mapParams.PendingMemberRequests.TryGetValue(lianeKey, out var d) ? d : null
+        mapParams.PendingMemberRequests.TryGetValue((first.From, lianeKey), out var d) ? d : null
       );
     }
   }
 
-  private static JoinRequest? GetJoinRequest(MapParams mapParams, Guid foreign)
+  private static JoinRequest? GetJoinRequest(MapParams mapParams, Guid requester, Guid requestee)
   {
-    if (mapParams.PendingJoinRequests.TryGetValue(foreign, out var d))
+    if (mapParams.JoinRequests.TryGetValue((requester, requestee), out var d))
     {
       return new JoinRequest.Pending(d);
     }
 
-    if (mapParams.ReceivedJoinRequests.TryGetValue(foreign, out var d2))
+    if (mapParams.JoinRequests.TryGetValue((requestee, requester), out var d2))
     {
       return new JoinRequest.Received(d2);
     }
@@ -226,35 +226,26 @@ public sealed class LianeMatcher(IRallyingPointService rallyingPointService, ICu
   {
     var lianes = await lianeFetcher.FetchLianes(connection, rawMatches.FilterSelect(r => r.LinkedTo).Distinct(), tx);
     var snapedPoints = await rallyingPointService.Snap(rawMatches.FilterSelectMany<LianeRawMatch, LatLng>(r => [r.Deposit, r.Pickup]).ToImmutableHashSet());
-    var pendingJoinRequests = (await connection.QueryAsync<(Guid, DateTime)>(
+    var joinRequests = (await connection.QueryAsync<(Guid, Guid, DateTime)>(
         """
-        SELECT j.requestee_id, j.requested_at
+        SELECT DISTINCT j.requester_id, j.requestee_id, j.requested_at
         FROM liane_request lr
-                 INNER JOIN join_request j ON j.requester_id = lr.id
+                 INNER JOIN join_request j ON (j.requester_id = lr.id OR j.requestee_id = lr.id)
         WHERE lr.created_by = @userId
         """,
         new { userId }, tx)
-      ).ToImmutableDictionary(m => m.Item1, m => m.Item2);
-    var receivedJoinRequests = (await connection.QueryAsync<(Guid, DateTime)>(
+      ).ToImmutableDictionary(m => (m.Item1, m.Item2), m => m.Item3);
+    var pendingMemberRequests = (await connection.QueryAsync<(Guid, Guid, DateTime)>(
         """
-        SELECT j.requester_id, j.requested_at
-        FROM liane_request lr
-                 INNER JOIN join_request j ON j.requestee_id = lr.id
-        WHERE lr.created_by = @userId
-        """,
-        new { userId }, tx)
-      ).ToImmutableDictionary(m => m.Item1, m => m.Item2);
-    var pendingMemberRequests = (await connection.QueryAsync<(Guid, DateTime)>(
-        """
-        SELECT liane_member.liane_id, requested_at
+        SELECT liane_member.liane_request_id, liane_member.liane_id, requested_at
         FROM liane_request
                  INNER JOIN liane_member ON liane_request.id = liane_member.liane_request_id
         WHERE liane_request.created_by = @userId
           AND liane_member.joined_at IS NULL
         """,
         new { userId }, tx)
-      ).ToImmutableDictionary(m => m.Item1, m => m.Item2);
-    return new MapParams(snapedPoints, pendingJoinRequests, receivedJoinRequests, pendingMemberRequests, lianes);
+      ).ToImmutableDictionary(m => (m.Item1, m.Item2), m => m.Item3);
+    return new MapParams(snapedPoints, joinRequests, pendingMemberRequests, lianes);
   }
 }
 
@@ -275,8 +266,7 @@ internal sealed record LianeRawMatch(
 
 internal sealed record MapParams(
   ImmutableDictionary<LatLng, RallyingPoint> SnapedPoints,
-  ImmutableDictionary<Guid, DateTime> PendingJoinRequests,
-  ImmutableDictionary<Guid, DateTime> ReceivedJoinRequests,
-  ImmutableDictionary<Guid, DateTime> PendingMemberRequests,
+  ImmutableDictionary<(Guid, Guid), DateTime> JoinRequests,
+  ImmutableDictionary<(Guid, Guid), DateTime> PendingMemberRequests,
   ImmutableDictionary<Guid, Api.Community.Liane> Lianes
 );
