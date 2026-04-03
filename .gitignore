@@ -1,32 +1,21 @@
 node_modules/
-.expo/
-npm-debug.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
-*.orig.*
-web-build/
-web-report/
 *.log
-
 data/
 .idea/
-venv/
-
-# macOS
 .DS_Store
 
+# Deploy
 deploy/.env
 deploy/service-account.json
-dump.rdb
-.env.*
-deploy/db/user.json
-*.temprp.*
-/app/ios/liane.xcworkspace/contents.xcworkspacedata
-/app/ios/liane.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
-/app/ios/liane.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
-/app/ios/liane.xcworkspace/xcshareddata/swiftpm/Package.resolved
-/common/package-lock.json
-/app/ios/Podfile.lock
+
+# Rust
+/api/target/
+/cli/target/
+
+# Web
+/web/.next/
+/web/public/sw.js
+/web/public/swe-worker-*.js
+
+# SQLx offline mode
+/api/.sqlx/

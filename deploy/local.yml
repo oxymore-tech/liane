@@ -1,0 +1,27 @@
+services:
+
+  postgres:
+    image: "postgis/postgis:17-3.5"
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: liane
+      POSTGRES_USER: liane
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - "${LIANE_HOME}/data/postgres:/var/lib/postgresql/data"
+    restart: unless-stopped
+
+  martin:
+    image: ghcr.io/maplibre/martin
+    command: ["--config", "/config.yaml"]
+    ports:
+      - "3001:3000"
+    volumes:
+      - "./martin/config.yaml:/config.yaml:ro"
+    environment:
+      DB_USER: liane
+      DB_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      - postgres
+    restart: unless-stopped

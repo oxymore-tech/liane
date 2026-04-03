@@ -1,29 +1,27 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import React, { ReactNode } from "react";
-import ContextProvider, { PageLayout } from "@/components/ContextProvider";
-import { LocalizationProvider } from "@/api/intl";
+import type { ReactNode } from "react";
+import AppProvider from "@/components/context-provider";
 
 export const metadata: Metadata = {
   title: "Liane",
-  description: "Covoiturage de campagne",
-  icons: [{ rel: "favicon", url: "/admin/favicon.png" }],
-  other: {
-    preconnect: ["https://fonts.googleapis.com", "https://fonts.gstatic.com"],
-    stylesheet: ["https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap"]
-  }
+  description: "Covoiturage rural et solidaire",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Liane",
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="fr">
-      <body>
-        <LocalizationProvider>
-          <ContextProvider>
-            <PageLayout>{children}</PageLayout>
-          </ContextProvider>
-        </LocalizationProvider>
-      </body>
+      <AppProvider>
+        <body className="flex flex-col bg-gray-800 h-screen w-full">
+          {children}
+        </body>
+      </AppProvider>
     </html>
   );
 }
