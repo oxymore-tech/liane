@@ -3,6 +3,7 @@ use api::error::{AppError, Result, handle_error};
 use api::router::api_router;
 use axum::http::{HeaderValue, Method};
 use axum::{Extension, Router, http};
+use clap::Parser;
 use dotenvy::dotenv;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
@@ -15,24 +16,34 @@ use tracing::Level;
 
 use api::config::Config;
 
+#[derive(Parser)]
+struct Args {
+    #[arg(short, long)]
+    debug: bool,
+}
+
 #[tokio::main]
 async fn main() {
-    configure_logger();
+    let args = Args::parse();
+    configure_logger(args.debug);
 
     handle_error(try_main).await;
 }
 
-fn configure_logger() {
+fn configure_logger(debug: bool) {
+    let level = if debug { Level::DEBUG } else { Level::INFO };
+
     #[cfg(debug_assertions)]
     tracing_subscriber::fmt()
         .with_target(false)
+        .with_max_level(level)
         .compact()
         .init();
 
     #[cfg(not(debug_assertions))]
     tracing_subscriber::fmt()
         .json()
-        .with_max_level(Level::INFO)
+        .with_max_level(level)
         .with_current_span(false)
         .init();
 }

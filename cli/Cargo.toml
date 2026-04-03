@@ -20,6 +20,7 @@ clap_complete = "4"
 itertools = "0"
 dns-lookup = "3"
 serde_json = "1"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
 
 [package.metadata.commands]
 install = "cargo install --path ."

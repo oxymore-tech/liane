@@ -3,9 +3,10 @@ use axum::Json;
 use sqlx::PgPool;
 use axum::Extension;
 
+use crate::auth::extractor::AdminUser;
 use crate::error::{AppError, Result};
-use crate::rallying_point::model::{BboxQuery, RallyingPoint, SearchQuery, SnapQuery};
-use crate::rallying_point::service;
+use crate::rallying_point::model::{BboxQuery, GenerateQuery, RallyingPoint, SearchQuery, SnapQuery};
+use crate::rallying_point::{generate, service};
 
 pub async fn search(
     Extension(db): Extension<PgPool>,
@@ -36,4 +37,14 @@ pub async fn bbox(
     let limit = q.limit.unwrap_or(200).min(1000);
     let results = service::bbox(&db, q.lat, q.lng, q.lat2, q.lng2, limit).await?;
     Ok(Json(results))
+}
+
+pub async fn generate_points(
+    _admin: AdminUser,
+    Extension(db): Extension<PgPool>,
+    Query(q): Query<GenerateQuery>,
+) -> Result<Json<serde_json::Value>> {
+    let test_only = q.source.as_deref() == Some("test");
+    let count = generate::generate(&db, test_only).await?;
+    Ok(Json(serde_json::json!({ "count": count })))
 }

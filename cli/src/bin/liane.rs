@@ -7,6 +7,7 @@ use tracing::{Level, error};
 
 use cli::docker::{dump, install, start, stop};
 use cli::env::Env;
+use cli::token::generate_token;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None, name = "liane")]
@@ -53,6 +54,16 @@ pub enum Commands {
         #[arg(default_value_t = Env::Dev)]
         env: Env,
     },
+
+    /// Generate a JWT token for a user by phone number
+    Token {
+        /// Phone number (e.g. +33600000000)
+        #[arg(default_value = "+33600000000")]
+        phone: String,
+        /// SMS code (default: test code 000000)
+        #[arg(default_value = "000000")]
+        code: String,
+    },
 }
 
 #[tokio::main]
@@ -83,6 +94,11 @@ async fn try_main() -> Result<()> {
 
         Commands::Dump { env } => {
             dump(env).await?;
+        }
+
+        Commands::Token { phone, code } => {
+            let token = generate_token(&phone, &code).await?;
+            println!("Authorization:Bearer {token}");
         }
     };
 

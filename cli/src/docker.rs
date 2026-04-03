@@ -2,10 +2,10 @@ use std::ffi::OsStr;
 use std::io::stdin;
 use std::path::Path;
 
-use crate::command;
+use crate::{command, local};
 use anyhow::Result;
 use itertools::Itertools;
-use tokio::fs::{File, remove_dir_all};
+use tokio::fs::File;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tracing::info;
 
@@ -18,7 +18,7 @@ pub async fn start(env: Env, purge: bool) -> Result<()> {
         if purge {
             let path = format!("{}/data", env.home());
             info!("Purging {:?}", path);
-            remove_dir_all(path).await?
+            local!("sudo", "rm", "-Rf", &path).status().await?;
         }
     } else {
         command!(env, "git", "-C", &env.home(), "pull")

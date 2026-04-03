@@ -40,7 +40,7 @@ CREATE TABLE rallying_point (
     id              UUID PRIMARY KEY DEFAULT uuidv7(),
     label           VARCHAR(255) NOT NULL,
     location        GEOGRAPHY(Point, 4326) NOT NULL,
-    type            VARCHAR(50) NOT NULL,
+    kind            VARCHAR(50) NOT NULL,
     address         TEXT NOT NULL DEFAULT '',
     zip_code        VARCHAR(10) NOT NULL DEFAULT '',
     city            VARCHAR(100) NOT NULL DEFAULT '',
@@ -140,7 +140,7 @@ RETURNS bytea AS $$
         SELECT
             id,
             label,
-            type,
+            kind,
             city,
             is_active,
             ST_AsMVTGeom(
