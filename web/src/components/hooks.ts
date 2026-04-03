@@ -1,14 +1,5 @@
-import {
-  usePathname,
-  useRouter,
-} from "next/navigation";
-import {
-  type DependencyList,
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
 import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
+import { type DependencyList, useCallback, useEffect, useState } from "react";
 import { BadRequest, NotFound, Unauthorized } from "@/api/exception";
 
 export type QueryResult<T> = {

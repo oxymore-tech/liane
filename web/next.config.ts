@@ -9,6 +9,18 @@ const withSerwist = withSerwistInit({
 });
 
 const nextConfig: NextConfig = withSerwist({
+  async rewrites() {
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api"}/:path*`,
+      },
+      {
+        source: "/tiles/:path*",
+        destination: `${process.env.NEXT_PUBLIC_TILES_URL ?? "http://localhost:3001"}/:path*`,
+      },
+    ];
+  },
   async headers() {
     return [
       {

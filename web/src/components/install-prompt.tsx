@@ -82,9 +82,7 @@ export const InstallPrompt = () => {
                 Si le bouton ne fonctionne pas :
               </p>
               <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700">
-                <li>
-                  Appuyez sur le menu (3 points en haut a droite)
-                </li>
+                <li>Appuyez sur le menu (3 points en haut a droite)</li>
                 <li>
                   Selectionnez <strong>"Installer l'application"</strong> ou{" "}
                   <strong>"Ajouter a l'ecran d'accueil"</strong>
