@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -104,7 +106,7 @@ pub async fn bbox(
     Ok(results)
 }
 
-pub async fn find_by_ids(db: &PgPool, ids: &[Uuid]) -> Result<Vec<RallyingPoint>> {
+pub async fn find_by_ids(db: &PgPool, ids: &[Uuid]) -> Result<HashMap<Uuid, RallyingPoint>> {
     let results = sqlx::query_as::<_, RallyingPoint>(
         r#"
             SELECT
@@ -125,5 +127,8 @@ pub async fn find_by_ids(db: &PgPool, ids: &[Uuid]) -> Result<Vec<RallyingPoint>
     .bind(ids)
     .fetch_all(db)
     .await?;
-    Ok(results)
+    Ok(results
+        .into_iter()
+        .map(|point| (point.id, point))
+        .collect())
 }

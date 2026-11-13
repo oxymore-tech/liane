@@ -37,7 +37,7 @@ pub async fn list(db: &PgPool, user_id: &Uuid) -> Result<Vec<LianeRequest>> {
         .iter()
         .flat_map(|row| row.waypoints.iter().copied())
         .collect();
-    let points = find_points(db, &waypoint_ids).await?;
+    let points = rallying_point::service::find_by_ids(db, &waypoint_ids).await?;
 
     Ok(rows
         .into_iter()
@@ -214,7 +214,7 @@ async fn validated_points(
         return Err(AppError::BadRequest);
     }
 
-    let points = find_points(db, waypoint_ids).await?;
+    let points = rallying_point::service::find_by_ids(db, waypoint_ids).await?;
     let all_usable = waypoint_ids
         .iter()
         .all(|id| points.get(id).is_some_and(|point| point.is_active));
@@ -225,11 +225,6 @@ async fn validated_points(
     Ok(points)
 }
 
-async fn find_points(db: &PgPool, ids: &[Uuid]) -> Result<HashMap<Uuid, RallyingPoint>> {
-    let points = rallying_point::service::find_by_ids(db, ids).await?;
-    Ok(points.into_iter().map(|point| (point.id, point)).collect())
-}
-
 async fn with_fetched_waypoints(
     db: &PgPool,
     row: Option<LianeRequestRow>,
@@ -237,7 +232,7 @@ async fn with_fetched_waypoints(
     let Some(row) = row else {
         return Ok(None);
     };
-    let points = find_points(db, &row.waypoints).await?;
+    let points = rallying_point::service::find_by_ids(db, &row.waypoints).await?;
     Ok(Some(with_waypoints(row, &points)))
 }
 

@@ -26,7 +26,7 @@ pub struct User {
     pub created_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Serialize, FromRow)]
+#[derive(Debug, Clone, Serialize, FromRow)]
 pub struct PublicUser {
     pub id: Uuid,
     pub pseudo: Option<String>,
