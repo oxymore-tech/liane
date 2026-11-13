@@ -4,3 +4,4 @@ pub mod db;
 pub mod error;
 pub mod rallying_point;
 pub mod router;
+pub mod user;

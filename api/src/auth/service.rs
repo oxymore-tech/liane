@@ -61,13 +61,13 @@ pub async fn login(db: &PgPool, config: &Config, req: &AuthRequest) -> Result<Au
         verify_code(db, &phone, &req.code).await?;
     }
 
-    let row: Option<(Uuid, bool, bool)> =
-        sqlx::query_as(r#"SELECT id, is_admin, is_signed_up FROM "user" WHERE phone = $1"#)
+    let row: Option<(Uuid, bool)> =
+        sqlx::query_as(r#"SELECT id, is_admin FROM "user" WHERE phone = $1"#)
             .bind(&phone)
             .fetch_optional(db)
             .await?;
 
-    let (user_id, is_admin, is_signed_up) = match row {
+    let (user_id, is_admin) = match row {
         Some(r) => r,
         None => {
             let id: (Uuid,) = sqlx::query_as(
@@ -77,14 +77,13 @@ pub async fn login(db: &PgPool, config: &Config, req: &AuthRequest) -> Result<Au
             .bind(is_test)
             .fetch_one(db)
             .await?;
-            (id.0, is_test, false)
+            (id.0, is_test)
         }
     };
 
     let auth_user = AuthUser {
         id: user_id,
         is_admin,
-        is_signed_up,
         iat: 0,
         exp: 0,
     };
@@ -156,7 +155,6 @@ fn generate_token(user: &AuthUser, config: &Config) -> Result<String> {
     let claims = AuthUser {
         id: user.id,
         is_admin: user.is_admin,
-        is_signed_up: user.is_signed_up,
         iat: now,
         exp: now + 30 * 24 * 3600,
     };
