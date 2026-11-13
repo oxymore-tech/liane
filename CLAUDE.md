@@ -1,0 +1,7 @@
+- Code clair, homogene, explicite, bien decoupe et bien nomme. Pas de commentaires inutiles
+- API : Rust / Axum 0.8 / SQLx / PostgreSQL + PostGIS. Port 5000. Lancer avec `cd api && cargo run`
+- Web : Next.js / React / Tailwind 4 / PWA Serwist. Port 3000. Lancer avec `cd web && yarn dev`
+- CLI : Rust / Clap. Installer avec `cd cli && cargo install --path .`
+- Infra locale : `liane start` (PostgreSQL + Martin via Docker Compose)
+- Linter web : Biome (`cd web && yarn lint`)
+- Pas de multi-tenant. Base unique PostgreSQL

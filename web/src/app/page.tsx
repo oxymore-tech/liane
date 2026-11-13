@@ -1,20 +1,15 @@
 "use client";
-import React, { useState } from "react";
-import { RallyingPointLayer } from "@/components/map/layers/RallyingPointLayer";
-import { useCurrentUser } from "@/components/ContextProvider";
-import { LianeDisplayLayer } from "@/components/map/layers/LianeDisplayLayer";
-import { ToastMessage } from "@/components/base/ToastMessage";
-import { AppMapView } from "@/components/map/AppMapView";
+
+import dynamic from "next/dynamic";
+
+const MapView = dynamic(() => import("@/components/map/map-view"), {
+  ssr: false,
+});
 
 export default function Home() {
-  const user = useCurrentUser();
-
-  const [zoom, setZoom] = useState<number | undefined>();
   return (
-    <AppMapView onZoom={setZoom}>
-      {!!user && <LianeDisplayLayer />}
-      <RallyingPointLayer />
-      {!!zoom && zoom < 8 && <ToastMessage message="Zoomez pour afficher les points de ralliement." level="info" />}
-    </AppMapView>
+    <main className="flex flex-1">
+      <MapView />
+    </main>
   );
 }
