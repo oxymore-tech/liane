@@ -16,7 +16,7 @@ pub enum RallyingPointKind {
     TownHall,
 }
 
-#[derive(Debug, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct RallyingPoint {
     pub id: Uuid,
     pub label: String,

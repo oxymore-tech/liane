@@ -1,4 +1,5 @@
 use sqlx::PgPool;
+use uuid::Uuid;
 
 use crate::error::Result;
 use crate::rallying_point::model::RallyingPoint;
@@ -98,6 +99,30 @@ pub async fn bbox(
     .bind(lat2)
     .bind(lng2)
     .bind(limit)
+    .fetch_all(db)
+    .await?;
+    Ok(results)
+}
+
+pub async fn find_by_ids(db: &PgPool, ids: &[Uuid]) -> Result<Vec<RallyingPoint>> {
+    let results = sqlx::query_as::<_, RallyingPoint>(
+        r#"
+            SELECT
+                id,
+                label,
+                ST_Y(location::geometry) AS lat,
+                ST_X(location::geometry) AS lng,
+                kind,
+                address,
+                zip_code,
+                city,
+                place_count,
+                is_active
+            FROM rallying_point
+            WHERE id = ANY($1)
+        "#,
+    )
+    .bind(ids)
     .fetch_all(db)
     .await?;
     Ok(results)
