@@ -11,6 +11,9 @@
 # nécessaire à la limite de débit par adresse IP : l'API lit l'adresse du client dans l'en-tête
 # X-Forwarded-For que Traefik complète (TRUSTED_PROXY_COUNT=1), alors que le serveur Next relaie cet
 # en-tête tel que le client l'a envoyé.
+#
+# Les services se joignent par des noms propres à Liane (liane-postgres, liane-api, liane-martin, liane-osrm) :
+# sur le réseau partagé avec Traefik, un autre projet peut avoir un service nommé « postgres » ou « api ».
 
 name: liane
 
@@ -33,7 +36,9 @@ services:
       interval: 10s
       timeout: 3s
       retries: 6
-    networks: [internal]
+    networks:
+      internal:
+        aliases: [liane-postgres]
     restart: unless-stopped
 
   api:
@@ -41,7 +46,7 @@ services:
     build: ../api
     environment:
       # Le mot de passe figure dans une URL : lettres et chiffres seulement, ou encodé (%xx).
-      DATABASE_URL: postgres://liane:${DB_PASSWORD}@postgres:5432/liane
+      DATABASE_URL: postgres://liane:${DB_PASSWORD}@liane-postgres:5432/liane
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET est obligatoire}
       SMS_PROVIDER: ${SMS_PROVIDER:?SMS_PROVIDER est obligatoire (brevo en production)}
       SMS_API_KEY: ${SMS_API_KEY:-}
@@ -63,7 +68,10 @@ services:
       traefik.http.routers.liane-api.entrypoints: ${TRAEFIK_ENTRYPOINT:-websecure}
       traefik.http.routers.liane-api.tls.certresolver: ${TRAEFIK_CERT_RESOLVER:-letsencrypt}
       traefik.http.services.liane-api.loadbalancer.server.port: "5000"
-    networks: [internal, proxy]
+    networks:
+      internal:
+        aliases: [liane-api]
+      proxy:
     stop_grace_period: 15s
     restart: unless-stopped
 
@@ -75,6 +83,7 @@ services:
     environment:
       DB_USER: liane
       DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: liane-postgres
     depends_on:
       api:
         condition: service_healthy   # l'API crée les fonctions de tuiles (migrations) avant que Martin ne les lise
@@ -86,7 +95,10 @@ services:
       traefik.http.routers.liane-tiles.middlewares: liane-tiles-strip
       traefik.http.middlewares.liane-tiles-strip.stripprefix.prefixes: /tiles
       traefik.http.services.liane-tiles.loadbalancer.server.port: "3000"
-    networks: [internal, proxy]
+    networks:
+      internal:
+        aliases: [liane-martin]
+      proxy:
     restart: unless-stopped
 
   web:
@@ -94,6 +106,8 @@ services:
     build:
       context: ../web
       args:
+        API_URL: http://liane-api:5000/api
+        TILES_URL: http://liane-martin:3000
         MAPTILER_KEY: ${MAPTILER_KEY:-}
     depends_on:
       - api
@@ -109,19 +123,21 @@ services:
   # Facultatif (--profile osrm) : calcul des tracés par la route. Sans lui, OSRM_URL reste vide et les
   # tracés sont des lignes droites. Les données (OSRM_DATA_DIR) sont préparées à part avec osrm-extract,
   # osrm-partition et osrm-customize ; compter environ 2 Go de mémoire pour l'Occitanie.
-  # Avec ce service : OSRM_URL=http://osrm:5000
+  # Avec ce service : OSRM_URL=http://liane-osrm:5000
   osrm:
     profiles: [osrm]
     image: ghcr.io/project-osrm/osrm-backend:v6.0.0
     command: ["osrm-routed", "--algorithm", "mld", "/data/${OSRM_DATA_FILE:-occitanie.osrm}"]
     volumes:
       - ${OSRM_DATA_DIR:-./osrm-data}:/data:ro
-    networks: [internal]
+    networks:
+      internal:
+        aliases: [liane-osrm]
     restart: unless-stopped
 
   # Facultatif (--profile backup) : une sauvegarde par jour dans le volume backup-data, gardée
   # BACKUP_KEEP_DAYS jours. À compléter par une copie hors du serveur : ce volume est sur le même disque.
-  # Restauration : gunzip -c liane-AAAA-MM-JJ.sql.gz | psql -h postgres -U liane -d liane
+  # Restauration : gunzip -c liane-AAAA-MM-JJ.sql.gz | psql -h liane-postgres -U liane -d liane
   backup:
     profiles: [backup]
     image: postgis/postgis:18-3.6
@@ -133,7 +149,7 @@ services:
       - |
         while true; do
           file=/backup/liane-$$(date +%F).sql.gz
-          if pg_dump -h postgres -U liane -d liane --clean --if-exists | gzip > $$file.tmp && [ -s $$file.tmp ]; then
+          if pg_dump -h liane-postgres -U liane -d liane --clean --if-exists | gzip > $$file.tmp && [ -s $$file.tmp ]; then
             mv $$file.tmp $$file
             echo "backup written: $$file"
           else

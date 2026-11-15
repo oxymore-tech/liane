@@ -15,8 +15,8 @@ RUN corepack enable
 COPY package.json yarn.lock .yarnrc.yml ./
 RUN yarn install --immutable
 
-ARG API_URL=http://api:5000/api
-ARG TILES_URL=http://martin:3000
+ARG API_URL=http://liane-api:5000/api
+ARG TILES_URL=http://liane-martin:3000
 ARG MAPTILER_KEY=
 ENV NEXT_PUBLIC_API_URL=$API_URL \
     NEXT_PUBLIC_TILES_URL=$TILES_URL \

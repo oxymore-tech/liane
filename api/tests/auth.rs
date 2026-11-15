@@ -297,6 +297,18 @@ fn gesture_at(kind: &str, point: &common::Point) -> Value {
     json!({ "kind": kind, "position": { "lat": point.lat, "lng": point.lng, "accuracy_meters": 15.0 } })
 }
 
+/// Ce qui reste d'un compte supprimé.
+#[derive(sqlx::FromRow)]
+struct DeletedAccount {
+    phone: String,
+    pseudo: Option<String>,
+    first_name: Option<String>,
+    last_name: Option<String>,
+    is_deleted: bool,
+    proof_identity_key: Option<String>,
+    proof_phone_trunc: Option<String>,
+}
+
 async fn count(app: &TestApp, sql: &str, user_id: &str) -> i64 {
     sqlx::query_scalar(sql)
         .bind(user_id)
@@ -418,31 +430,26 @@ async fn deleting_an_account_erases_it_and_keeps_attested_trips_anonymous() {
     assert_eq!(status, StatusCode::UNAUTHORIZED);
     app.pushes.expect(&driver_device, "annulé").await;
 
-    let (phone, pseudo, first_name, last_name, is_deleted, identity_key, phone_trunc): (
-        String,
-        Option<String>,
-        Option<String>,
-        Option<String>,
-        bool,
-        Option<String>,
-        Option<String>,
-    ) = sqlx::query_as(
-        r#"SELECT phone, pseudo, first_name, last_name, deleted_at IS NOT NULL, proof_identity_key, proof_phone_trunc
+    let shell: DeletedAccount = sqlx::query_as(
+        r#"SELECT phone, pseudo, first_name, last_name, deleted_at IS NOT NULL AS is_deleted, proof_identity_key, proof_phone_trunc
            FROM "user" WHERE id = $1::uuid"#,
     )
     .bind(&leaver_id)
     .fetch_one(&app.db)
     .await
     .unwrap();
-    assert!(phone.starts_with("deleted-"));
-    assert_eq!((pseudo, first_name, last_name), (None, None, None));
-    assert!(is_deleted);
+    assert!(shell.phone.starts_with("deleted-"));
     assert_eq!(
-        identity_key.as_deref(),
+        (shell.pseudo, shell.first_name, shell.last_name),
+        (None, None, None)
+    );
+    assert!(shell.is_deleted);
+    assert_eq!(
+        shell.proof_identity_key.as_deref(),
         Some(api::user::identity::identity_key(&leaver_phone, "Test").as_str())
     );
     assert_eq!(
-        phone_trunc.as_deref(),
+        shell.proof_phone_trunc.as_deref(),
         Some(&leaver_phone[..leaver_phone.len() - 2])
     );
 
