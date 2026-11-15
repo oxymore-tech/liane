@@ -76,8 +76,6 @@ export type LianeDetail = Liane & {
   members: LianeMember[] | null;
 };
 
-export type MyLiane = Liane & { membership: Membership };
-
 export type LianeInput = {
   name: string;
   stop_ids: string[];
@@ -103,3 +101,148 @@ export type User = {
   is_admin: boolean;
   is_signed_up: boolean;
 };
+
+export type MyLiane = Liane & {
+  membership: Membership;
+  /** Messages des autres membres arrivés depuis la dernière lecture. */
+  unread_count: number;
+};
+
+export type TripDirection = "Outbound" | "Return";
+
+export type TripState = "Planned" | "Started" | "Finished" | "Canceled";
+
+export type TripRole = "Driver" | "Passenger";
+
+/** Début (« parti », « monté ») ou fin (« arrivé », « descendu ») du trajet d'un occupant. */
+export type GestureKind = "Start" | "End";
+
+export type PositionStatus = "Granted" | "Denied" | "Unavailable";
+
+/** Ce que la preuve du trajet atteste, dit sans jargon. */
+export type Attestation = "Full" | "Partial" | "None";
+
+export type TripStop = { id: string; label: string; city: string };
+
+export type Trip = {
+  id: string;
+  liane: { id: string; name: string; slug: string };
+  driver: PublicUser;
+  departure_time: string;
+  direction: TripDirection;
+  from_stop: TripStop;
+  to_stop: TripStop;
+  seat_count: number;
+  seats_left: number;
+  distance_meters: number;
+  state: TripState;
+  /** À venir ou en cours : ni terminé, ni annulé, ni périmé. */
+  is_open: boolean;
+  my_role: TripRole | null;
+};
+
+export type TripPassenger = {
+  user: PublicUser;
+  from_stop: TripStop;
+  to_stop: TripStop;
+  distance_meters: number;
+  indicative_contribution_cents: number | null;
+  started_at: string | null;
+  ended_at: string | null;
+  attestation: Attestation | null;
+};
+
+export type MyGesture = {
+  kind: GestureKind;
+  recorded_at: string;
+  position_status: PositionStatus;
+};
+
+export type TripDetail = Trip & {
+  driver_started_at: string | null;
+  driver_ended_at: string | null;
+  passengers: TripPassenger[];
+  my_gestures: MyGesture[];
+  next_gesture: GestureKind | null;
+  gesture_window: {
+    start_opens_at: string;
+    start_closes_at: string;
+    end_closes_at: string;
+  };
+  indicative_cents_per_km: number;
+};
+
+export type MyTrips = { upcoming: Trip[]; past: Trip[] };
+
+export type TripInput = {
+  departure_time: string;
+  direction: TripDirection;
+  seat_count: number;
+  from_stop_id: string;
+  to_stop_id: string;
+};
+
+export type GestureInput = {
+  kind: GestureKind;
+  position?: { lat: number; lng: number; accuracy_meters: number | null };
+  position_status?: PositionStatus;
+};
+
+export type ProofClass = "A" | "B" | "C";
+
+export type ProofGesture = {
+  recorded_at: string;
+  position_status: PositionStatus;
+  accuracy_meters: number | null;
+  distance_to_stop_meters: number | null;
+  far_from_stop: boolean;
+};
+
+export type ProofOccupant = {
+  attested: boolean;
+  start: ProofGesture | null;
+  end: ProofGesture | null;
+};
+
+export type ProofDetail = {
+  connection: { attested: boolean; booked_at: string };
+  driver: ProofOccupant;
+  passenger: ProofOccupant;
+  distinct_identities: boolean;
+  warnings: string[];
+  far_from_stop_meters: number;
+};
+
+export type AdminProof = {
+  passenger: PublicUser;
+  from_stop: TripStop;
+  to_stop: TripStop;
+  distance_meters: number;
+  indicative_contribution_cents: number | null;
+  proof_class: ProofClass | null;
+  proof_detail: ProofDetail | null;
+};
+
+export type AdminTrip = Trip & { proofs: AdminProof[] };
+
+export type MessageKind =
+  | "Text"
+  | "MemberJoined"
+  | "MemberLeft"
+  | "TripProposed"
+  | "TripCanceled"
+  | "TripStarted"
+  | "TripFinished";
+
+export type Message = {
+  id: string;
+  liane_id: string;
+  author: PublicUser;
+  kind: MessageKind;
+  text: string;
+  data: { trip_id?: string; departure_time?: string } | null;
+  created_at: string;
+};
+
+/** Du plus récent au plus ancien. */
+export type MessagePage = { messages: Message[]; has_more: boolean };

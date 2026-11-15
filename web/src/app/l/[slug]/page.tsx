@@ -2,9 +2,10 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
-import { getLiane, leaveLiane } from "@/api/lianes";
+import { getLiane, leaveLiane, listMyLianes } from "@/api/lianes";
 import { useAppContext } from "@/components/context-provider";
 import { JoinForm } from "@/components/liane/join-form";
 import { daysLabel, routeLabel, sectionLabel } from "@/components/liane/labels";
@@ -14,6 +15,8 @@ import {
   StopList,
 } from "@/components/liane/liane-summary";
 import { MemberList } from "@/components/liane/member-list";
+import { UnreadBadge } from "@/components/liane/unread-badge";
+import { LianeTrips } from "@/components/trip/liane-trips";
 import { Button, Card, Page } from "@/components/ui";
 
 const RoutePreview = dynamic(() => import("@/components/map/route-preview"), {
@@ -37,6 +40,14 @@ function LianePage() {
     queryFn: () => getLiane(slug),
     enabled: !userLoading,
   });
+
+  const { data: myLianes } = useQuery({
+    queryKey: ["my-lianes", user?.id],
+    queryFn: listMyLianes,
+    enabled: Boolean(user),
+  });
+  const unreadCount =
+    myLianes?.find((mine) => mine.slug === slug)?.unread_count ?? 0;
 
   const loginUrl = `/connexion?retour=${encodeURIComponent(`/l/${slug}?rejoindre=1`)}`;
   const isMember = Boolean(liane?.membership);
@@ -143,6 +154,19 @@ function LianePage() {
             onCancel={() => setFormOpen(false)}
           />
         </Card>
+      )}
+
+      {liane.membership && !formOpen && (
+        <>
+          <Link
+            href={`/l/${slug}/messages`}
+            className="flex min-h-12 items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white px-4 font-semibold shadow-sm"
+          >
+            <span>Messages de la liane</span>
+            <UnreadBadge count={unreadCount} />
+          </Link>
+          <LianeTrips liane={liane} membership={liane.membership} />
+        </>
       )}
 
       <Card>
