@@ -55,9 +55,9 @@ export const stateLabel = (trip: { state: TripState; is_open: boolean }) => {
 
 export const gestureLabel = (role: TripRole, kind: GestureKind) => {
   if (role === "Driver") {
-    return kind === "Start" ? "Je suis parti" : "Je suis arrivé";
+    return kind === "Start" ? "Je démarre" : "J'arrive";
   }
-  return kind === "Start" ? "Je suis monté" : "Je suis descendu";
+  return kind === "Start" ? "Je monte" : "Je descends";
 };
 
 export const gestureDoneLabel = (role: TripRole, kind: GestureKind) => {
@@ -82,10 +82,10 @@ const REFUSALS: Record<string, string> = {
     "Ce trajet a déjà commencé : il ne peut plus être annulé.",
   TripClosed: "Ce trajet n'accepte plus d'inscription.",
   TripFull: "Ce trajet est complet.",
-  AlreadyBooked: "Vous êtes déjà inscrit à ce trajet.",
+  AlreadyBooked: "Vous avez déjà une place sur ce trajet.",
   DriverCannotBook: "Vous conduisez ce trajet.",
   AlreadyOnBoard:
-    "Vous avez déjà indiqué être monté : vous ne pouvez plus vous désinscrire.",
+    "Vous avez déjà indiqué votre montée : vous ne pouvez plus vous désinscrire.",
   TooEarly:
     "C'est trop tôt : revenez dans la demi-heure qui précède le départ.",
   TooLate: "C'est trop tard pour ce trajet.",

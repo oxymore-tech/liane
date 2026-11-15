@@ -3,7 +3,7 @@ use axum::routing::{delete, get, post};
 
 use crate::liane::handler::{
     create, dismiss_report, exclude_member, exclude_reported, find_matches, get_one, join, leave,
-    list, list_all, list_mine, list_reports, preview_route, recompute_route,
+    list, list_all, list_mine, list_reports, near, preview_route, recompute_route,
     recompute_straight_routes, remove, report_member, search, update, update_membership,
 };
 
@@ -19,7 +19,7 @@ mod routing;
 mod service;
 mod slug;
 
-/// Publiques : `GET /`, `GET /search`, `GET /{slug}`. Réservées aux administrateurs :
+/// Publiques : `GET /`, `GET /search`, `GET /near` (lianes qui passent par un point), `GET /{slug}`. Réservées aux administrateurs :
 /// `POST /`, `GET /admin`, `PUT` et `DELETE /{id}`, `/report…`, `DELETE /{id}/member/{user_id}`,
 /// `POST /route_preview` (tracé d'une liste d'arrêts, sans rien enregistrer), `POST /{id}/route`
 /// (recalcul du tracé d'une liane), `POST /admin/recompute_routes` (recalcul des tracés en ligne droite).
@@ -28,6 +28,7 @@ pub fn liane_router() -> Router {
     Router::new()
         .route("/", get(list).post(create))
         .route("/search", get(search))
+        .route("/near", get(near))
         .route("/mine", get(list_mine))
         .route("/admin", get(list_all))
         .route("/admin/recompute_routes", post(recompute_straight_routes))

@@ -172,7 +172,7 @@ async fn a_driver_and_two_passengers_prove_their_trip_at_class_c_and_b() {
         .pushes
         .expect(&driver_device, "Un passager de plus")
         .await;
-    assert!(joined.body.contains("Paula T. s'est inscrit"));
+    assert!(joined.body.contains("Paula T. a réservé une place"));
 
     let (status, booked) = app
         .post(
@@ -228,8 +228,8 @@ async fn a_driver_and_two_passengers_prove_their_trip_at_class_c_and_b() {
     assert!(started["driver_started_at"].is_string());
     assert_eq!(started["my_gestures"][0]["position_status"], "Granted");
     assert!(!started.to_string().contains(&a.lat.to_string()));
-    let departed = app.pushes.expect(&paula_device, "Denis T. est parti").await;
-    assert!(departed.body.contains("Je suis monté"));
+    let departed = app.pushes.expect(&paula_device, "Denis T. a démarré le trajet").await;
+    assert!(departed.body.contains("Je monte"));
 
     let (status, refusal) = gesture(&app, trip_id, &driver, gesture_at("Start", a)).await;
     assert_eq!(
@@ -276,7 +276,7 @@ async fn a_driver_and_two_passengers_prove_their_trip_at_class_c_and_b() {
     assert_eq!(finished["is_open"], false);
     assert!(finished["next_gesture"].is_null());
     app.pushes
-        .expect(&paula_device, "Denis T. est arrivé")
+        .expect(&paula_device, "Denis T. a terminé le trajet")
         .await;
 
     // Un passager peut encore déclarer sa descente après l'arrivée du conducteur.

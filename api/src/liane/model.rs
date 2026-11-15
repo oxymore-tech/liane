@@ -171,6 +171,14 @@ pub struct SearchQuery {
     pub radius: Option<f64>,
 }
 
+/// `radius` en mètres (50 par défaut, 5 000 au plus).
+#[derive(Debug, Deserialize)]
+pub struct NearQuery {
+    pub lat: f64,
+    pub lng: f64,
+    pub radius: Option<f64>,
+}
+
 #[derive(Debug, FromRow)]
 pub struct SearchRow {
     pub liane_id: Uuid,
@@ -190,6 +198,8 @@ pub struct LianeSearchResult {
     pub from_stop_id: Uuid,
     pub to_stop_id: Uuid,
     pub direction: Direction,
+    /// Distance le long du tracé entre l'arrêt de montée et l'arrêt de descente suggérés.
+    pub section_distance_meters: i32,
     pub from_distance_meters: f64,
     pub to_distance_meters: f64,
 }

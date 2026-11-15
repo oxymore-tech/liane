@@ -158,16 +158,16 @@ function Gestures({
 }
 
 function passengerStatus(passenger: TripPassenger) {
-  if (passenger.ended_at) return `descendu à ${timeLabel(passenger.ended_at)}`;
-  if (passenger.started_at) return `monté à ${timeLabel(passenger.started_at)}`;
+  if (passenger.ended_at) return `descente à ${timeLabel(passenger.ended_at)}`;
+  if (passenger.started_at) return `montée à ${timeLabel(passenger.started_at)}`;
   return null;
 }
 
 function driverStatus(trip: TripDetail) {
   if (trip.driver_ended_at)
-    return `arrivé à ${timeLabel(trip.driver_ended_at)}`;
+    return `arrivée à ${timeLabel(trip.driver_ended_at)}`;
   if (trip.driver_started_at) {
-    return `parti à ${timeLabel(trip.driver_started_at)}`;
+    return `départ à ${timeLabel(trip.driver_started_at)}`;
   }
   return null;
 }
@@ -263,7 +263,7 @@ function BookingForm({
 
   return (
     <Card className="flex flex-col gap-3">
-      <h2 className="font-bold">Faire ce trajet comme passager</h2>
+      <h2 className="font-bold">Prendre une place sur ce trajet</h2>
       <label className="text-sm font-medium">
         Je monte à
         <select

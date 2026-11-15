@@ -114,7 +114,7 @@ export type TripState = "Planned" | "Started" | "Finished" | "Canceled";
 
 export type TripRole = "Driver" | "Passenger";
 
-/** Début (« parti », « monté ») ou fin (« arrivé », « descendu ») du trajet d'un occupant. */
+/** Début (« Je démarre », « Je monte ») ou fin (« J'arrive », « Je descends ») du trajet d'un occupant. */
 export type GestureKind = "Start" | "End";
 
 export type PositionStatus = "Granted" | "Denied" | "Unavailable";

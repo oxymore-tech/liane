@@ -9,7 +9,7 @@ use crate::config::Config;
 use crate::error::{AppError, Result};
 use crate::liane::model::{
     Liane, LianeDetail, LianeInput, LianeRequestMatches, LianeSearchResult, Membership,
-    MembershipInput, MyLiane, Report, ReportInput, RoutePreview, RoutePreviewInput,
+    MembershipInput, MyLiane, NearQuery, Report, ReportInput, RoutePreview, RoutePreviewInput,
     RouteRecomputeReport, SearchQuery,
 };
 use crate::liane::{matching, report, service};
@@ -28,6 +28,14 @@ pub async fn search(
 ) -> Result<Json<Vec<LianeSearchResult>>> {
     let results = service::search(&db, &query).await?;
     Ok(Json(results))
+}
+
+pub async fn near(
+    Extension(db): Extension<PgPool>,
+    Query(query): Query<NearQuery>,
+) -> Result<Json<Vec<Liane>>> {
+    let lianes = service::find_near(&db, query.lat, query.lng, query.radius).await?;
+    Ok(Json(lianes))
 }
 
 pub async fn get_one(

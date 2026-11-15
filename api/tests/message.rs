@@ -236,8 +236,8 @@ async fn members_talk_in_their_liane_and_nobody_else_sees_anything() {
     );
     let lines = texts(&page);
     assert!(lines[0].starts_with("Alice T. a annulé le trajet Arrêt 1 → Arrêt 0 du "));
-    assert_eq!(lines[2], "Alice T. est arrivé à Arrêt 1");
-    assert_eq!(lines[3], "Alice T. est parti de Arrêt 0");
+    assert_eq!(lines[2], "Alice T. a terminé le trajet à Arrêt 1");
+    assert_eq!(lines[3], "Alice T. a démarré le trajet de Arrêt 0");
     assert!(lines[4].starts_with("Alice T. propose un trajet Arrêt 0 → Arrêt 1, "));
     assert_eq!(page["messages"][3]["data"]["trip_id"], trip_id);
 
