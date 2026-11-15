@@ -59,6 +59,24 @@ fn is_close(value: &Value, expected: f64) -> bool {
     (value.as_f64().expect("nombre") - expected).abs() < 1e-9
 }
 
+/// Le schéma officiel du corps de `POST /journeys` (registre de preuve de covoiturage, API v3.4) : voir `tests/rpc/README.md`.
+fn registry_schema() -> jsonschema::Validator {
+    let schema: Value =
+        serde_json::from_str(include_str!("rpc/journey-create.v3.4.schema.json")).expect("schéma du registre");
+    jsonschema::options()
+        .should_validate_formats(true)
+        .build(&schema)
+        .expect("schéma du registre utilisable")
+}
+
+fn assert_valid_for_registry(schema: &jsonschema::Validator, journey: &Value) {
+    let errors: Vec<String> = schema
+        .iter_errors(journey)
+        .map(|error| format!("{} : {error}", error.instance_path()))
+        .collect();
+    assert!(errors.is_empty(), "export refusé par le schéma du registre : {errors:#?}\n{journey:#}");
+}
+
 fn has_id(list: &Value, id: &Value) -> bool {
     list.as_array()
         .expect("liste")
@@ -355,46 +373,92 @@ async fn a_driver_and_two_passengers_prove_their_trip_at_class_c_and_b() {
 
     let (status, export) = app.get("/trip/admin/export", Some(&admin)).await;
     assert_eq!(status, StatusCode::OK);
-    let journeys: Vec<&Value> = export
+    let exported: Vec<&Value> = export
         .as_array()
         .unwrap()
         .iter()
-        .filter(|journey| journey["operator_trip_id"] == trip["id"])
+        .filter(|item| item["liane"]["trip_id"] == trip["id"])
         .collect();
-    assert_eq!(journeys.len(), 2);
-    let journey = journeys
+    assert_eq!(exported.len(), 2);
+    assert!(
+        !export.to_string().contains(&paula_phone) && !export.to_string().contains(&driver_phone),
+        "aucun numéro complet ne sort de l'export"
+    );
+
+    // Chaque couple est un corps valide pour POST /journeys du registre (schéma officiel v3.4).
+    let schema = registry_schema();
+    for item in &exported {
+        assert_eq!(item["missing"], json!([]));
+        assert_valid_for_registry(&schema, &item["journey"]);
+    }
+
+    let item = exported
         .iter()
-        .find(|journey| journey["passenger"]["identity"]["operator_user_id"] == paula_id)
+        .find(|item| item["liane"]["passenger_id"] == paula_id)
         .expect("couple conducteur / Paula");
+    let journey = &item["journey"];
     assert_eq!(journey["operator_class"], "C");
     assert_eq!(
         journey["operator_journey_id"],
-        format!("{trip_id}:{paula_id}")
+        format!("{}{}", trip_id.replace('-', ""), paula_id.replace('-', ""))
     );
-    assert_eq!(journey["driver"]["identity"]["phone"], driver_phone);
-    assert_eq!(journey["passenger"]["identity"]["phone"], paula_phone);
+    assert_eq!(journey["operator_trip_id"], trip_id);
+    assert_eq!(journey["incentives"], json!([]));
+    for (occupant, id, phone) in [
+        ("driver", &driver_id, &driver_phone),
+        ("passenger", &paula_id, &paula_phone),
+    ] {
+        let identity = &journey[occupant]["identity"];
+        assert_eq!(identity["operator_user_id"], id.as_str());
+        assert_eq!(identity["phone_trunc"], phone[..phone.len() - 2]);
+        assert_eq!(
+            identity["identity_key"],
+            api::user::identity::identity_key(phone, "Test")
+        );
+        assert!(identity.get("phone").is_none());
+    }
     assert_eq!(journey["distance"], paula_distance);
     assert!(is_close(&journey["start"]["lat"], b.lat));
     assert!(is_close(&journey["start"]["lon"], b.lng));
     assert!(is_close(&journey["end"]["lat"], d.lat));
-    assert!(journey["start"]["datetime"].is_string());
-    assert!(is_close(&journey["driver"]["start"]["lat"], a.lat));
-    assert!(is_close(&journey["driver"]["end"]["lon"], d.lng));
-    assert!(journey["driver"]["revenue"].is_null());
-    assert!(journey["passenger"]["contribution"].is_null());
+    let datetime = journey["start"]["datetime"].as_str().unwrap();
+    assert!(datetime.len() == 20 && datetime.ends_with('Z'), "{datetime}");
+    assert_eq!(journey["driver"]["revenue"], 0);
+    assert_eq!(journey["passenger"]["contribution"], 0);
     assert_eq!(journey["passenger"]["seats"], 1);
+    assert_eq!(item["liane"]["start_time_source"], "PassengerGesture");
+    assert_eq!(item["liane"]["start_position_source"], "PassengerGesture");
+    assert!(is_close(&item["liane"]["driver"]["start"]["lat"], a.lat));
+    assert!(is_close(&item["liane"]["driver"]["end"]["lon"], d.lng));
     assert_eq!(
-        journey["liane"]["indicative_contribution_cents"],
+        item["liane"]["indicative_contribution_cents"],
         expected_cents
     );
+
+    // Le schéma est réellement appliqué : il refuse un champ inconnu, un identifiant avec tirets, un numéro complet.
+    let mut with_extra_field = journey.clone();
+    with_extra_field["liane"] = json!({});
+    assert!(!schema.is_valid(&with_extra_field));
+    let mut with_dashes = journey.clone();
+    with_dashes["operator_journey_id"] = json!(trip_id);
+    assert!(!schema.is_valid(&with_dashes));
+    let mut without_identity_key = journey.clone();
+    without_identity_key["driver"]["identity"]
+        .as_object_mut()
+        .unwrap()
+        .remove("identity_key");
+    assert!(!schema.is_valid(&without_identity_key));
+    let mut with_untruncated_phone = journey.clone();
+    with_untruncated_phone["passenger"]["identity"]["phone_trunc"] = json!("0612345678");
+    assert!(!schema.is_valid(&with_untruncated_phone));
 
     let (_, only_c) = app.get("/trip/admin/export?class=C", Some(&admin)).await;
     let classes: Vec<&Value> = only_c
         .as_array()
         .unwrap()
         .iter()
-        .filter(|journey| journey["operator_trip_id"] == trip["id"])
-        .map(|journey| &journey["operator_class"])
+        .filter(|item| item["liane"]["trip_id"] == trip["id"])
+        .map(|item| &item["journey"]["operator_class"])
         .collect();
     assert_eq!(classes, [&json!("C")]);
 }
@@ -523,7 +587,7 @@ async fn gestures_are_refused_outside_the_time_window_and_on_canceled_trips() {
             .as_array()
             .unwrap()
             .iter()
-            .any(|journey| journey["passenger"]["identity"]["operator_user_id"] == rider_id),
+            .any(|item| item["liane"]["passenger_id"] == rider_id.as_str()),
         "ni un trajet annulé ni un trajet sans aucun geste ne sont exportés"
     );
 }
@@ -619,16 +683,25 @@ async fn positions_are_optional_and_checked_for_plausibility_without_blocking() 
     assert!(warnings.contains(&json!("PassengerTripTooShort")));
 
     let (_, export) = app.get("/trip/admin/export?class=A", Some(&admin)).await;
-    let journey = export
+    let item = export
         .as_array()
         .unwrap()
         .iter()
-        .find(|journey| journey["operator_trip_id"] == trip["id"])
+        .find(|item| item["liane"]["trip_id"] == trip["id"])
         .expect("couple de classe A exporté");
-    assert!(journey["start"]["lat"].is_null());
-    assert!(journey["start"]["datetime"].is_string());
-    assert!(is_close(&journey["driver"]["start"]["lat"], c.lat));
-    assert!(journey["driver"]["end"]["lat"].is_null());
+    // Le passager n'a donné aucune position : le registre reçoit celles des arrêts prévus, et l'export le dit.
+    let extras = &item["liane"];
+    assert!(extras["passenger"]["start"]["lat"].is_null());
+    assert!(is_close(&extras["driver"]["start"]["lat"], c.lat));
+    assert!(extras["driver"]["end"]["lat"].is_null());
+    assert_eq!(extras["start_time_source"], "PassengerGesture");
+    assert_eq!(extras["start_position_source"], "PlannedStop");
+    assert_eq!(extras["end_position_source"], "PlannedStop");
+    let journey = &item["journey"];
+    assert_valid_for_registry(&registry_schema(), journey);
+    assert_eq!(journey["operator_class"], "A");
+    assert!(is_close(&journey["start"]["lat"], c.lat));
+    assert!(is_close(&journey["end"]["lon"], b.lng));
 }
 
 #[tokio::test]

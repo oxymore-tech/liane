@@ -385,6 +385,24 @@ async fn deleting_an_account_erases_it_and_keeps_attested_trips_anonymous() {
     let (_, liane) = app.get(&format!("/liane/{}", liane["slug"].as_str().unwrap()), Some(&driver)).await;
     assert_eq!(liane["member_count"], 1);
 
+    // La preuve reste exportable pour le registre, avec l'identité pseudonymisée gardée à la suppression.
+    let (_, export) = app.get("/trip/admin/export", Some(&admin)).await;
+    let item = export
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|item| item["liane"]["trip_id"] == attested_id)
+        .expect("trajet attesté exporté");
+    assert_eq!(item["missing"], json!([]));
+    let identity = &item["journey"]["passenger"]["identity"];
+    assert_eq!(identity["operator_user_id"], leaver_id.as_str());
+    assert_eq!(
+        identity["identity_key"],
+        api::user::identity::identity_key(&leaver_phone, "Test")
+    );
+    assert_eq!(identity["phone_trunc"], leaver_phone[..leaver_phone.len() - 2]);
+    assert!(!export.to_string().contains(&leaver_phone));
+
     // Le numéro est libre : se réinscrire crée un compte neuf.
     assert_eq!(send_code_from(&app, &leaver_phone, &random_ip()).await, StatusCode::OK);
     let again = app.login(&leaver_phone, &last_code(&app, &leaver_phone)).await;

@@ -220,9 +220,9 @@ const [download] = await Promise.all([
 ]);
 await admin.getByText(/élément\(s\) exporté\(s\)/).waitFor();
 const exported = JSON.parse(readFileSync(await download.path(), "utf8"));
-const mine = exported.filter((journey) => tripUrl.endsWith(journey.operator_trip_id));
-log("export:", exported.length, "couples ; pour le trajet du parcours:", mine.map((journey) => `${journey.operator_class} (départ passager ${journey.start?.lat ?? "sans position"})`).join(", "));
-if (mine.map((journey) => journey.operator_class).sort().join("") !== "BC") problems.push("classes de preuve inattendues pour le trajet du parcours");
+const mine = exported.filter((item) => tripUrl.endsWith(item.liane.trip_id));
+log("export:", exported.length, "couples ; pour le trajet du parcours:", mine.map((item) => `${item.journey?.operator_class ?? "non exportable"} (départ passager ${item.liane.passenger.start?.lat ?? "sans position"}, envoyé ${item.journey?.start.lat})`).join(", "));
+if (mine.map((item) => item.journey?.operator_class).sort().join("") !== "BC") problems.push("classes de preuve inattendues pour le trajet du parcours");
 await top(admin);
 await shot(admin, "22-admin-export");
 
