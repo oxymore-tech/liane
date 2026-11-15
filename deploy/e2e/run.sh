@@ -23,7 +23,7 @@ fi
   while true; do
     if [ -f "$WORK/need-code.txt" ]; then
       sleep 1
-      sg docker -c "docker logs liane-dev-api 2>&1" | grep 'SMS code for' | tail -1 | sed 's/.*: \([0-9]\{6\}\).*/\1/' > "$WORK/code.tmp"
+      sg docker -c "docker logs liane-dev-api 2>&1" | grep 'code for' | tail -1 | sed 's/.*: \([0-9]\{6\}\).*/\1/' > "$WORK/code.tmp"
       rm -f "$WORK/need-code.txt"
       mv "$WORK/code.tmp" "$WORK/code.txt"
     fi

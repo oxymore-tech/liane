@@ -2,16 +2,17 @@
 
 use std::env::var;
 use std::f64::consts::PI;
+use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use api::config::{Config, Keys};
+use api::auth::sms::{SmsFuture, SmsGateway, SmsSender};
+use api::config::{AuthLimits, Config, Keys, TestAccount};
 use api::notification::Notifier;
 use api::notification::push::{
     PushFuture, PushNotification, PushOutcome, PushSender, PushSubscription,
 };
-use api::router::api_router;
-use axum::Extension;
+use api::router::app;
 use rand::Rng;
 use reqwest::{Method, StatusCode};
 use serde_json::{Value, json};
@@ -30,6 +31,7 @@ pub const TEST_VAPID_PUBLIC_KEY: &str = "cle-publique-vapid-de-test";
 pub struct TestApp {
     pub db: PgPool,
     pub pushes: Arc<RecordingPushSender>,
+    pub sms: Arc<RecordingSmsSender>,
     pub base_url: String,
     client: reqwest::Client,
     origin: (f64, f64),
@@ -99,6 +101,36 @@ impl RecordingPushSender {
     }
 }
 
+/// Le faux fournisseur de SMS des tests : les codes « envoyés » sont gardés en mémoire.
+#[derive(Default)]
+pub struct RecordingSmsSender {
+    sent: Mutex<Vec<(String, String)>>,
+}
+
+impl SmsSender for RecordingSmsSender {
+    fn send_code<'a>(&'a self, phone: &'a str, code: &'a str) -> SmsFuture<'a> {
+        Box::pin(async move {
+            self.sent
+                .lock()
+                .expect("sms")
+                .push((phone.to_string(), code.to_string()));
+            Ok(())
+        })
+    }
+}
+
+impl RecordingSmsSender {
+    pub fn codes_for(&self, phone: &str) -> Vec<String> {
+        self.sent
+            .lock()
+            .expect("sms")
+            .iter()
+            .filter(|(to, _)| to == phone)
+            .map(|(_, code)| code.clone())
+            .collect()
+    }
+}
+
 pub struct Point {
     pub id: Uuid,
     pub lat: f64,
@@ -112,6 +144,18 @@ impl TestApp {
     }
 
     pub async fn spawn_with_osrm(osrm_url: &str) -> Self {
+        Self::spawn_with(osrm_url, generous_limits(), true).await
+    }
+
+    pub async fn spawn_with_limits(auth_limits: AuthLimits) -> Self {
+        Self::spawn_with("", auth_limits, true).await
+    }
+
+    pub async fn spawn_without_test_account() -> Self {
+        Self::spawn_with("", generous_limits(), false).await
+    }
+
+    async fn spawn_with(osrm_url: &str, auth_limits: AuthLimits, with_test_account: bool) -> Self {
         let database_url = var("TEST_DATABASE_URL")
             .expect("TEST_DATABASE_URL doit désigner une base PostgreSQL + PostGIS jetable");
         let db = PgPoolOptions::new()
@@ -131,26 +175,39 @@ impl TestApp {
 
         let config = Config {
             auth_keys: Keys::new(b"integration-test-secret"),
-            sms_api_key: String::new(),
             osrm_url: osrm_url.to_string(),
-            auth_test_account: Some(ADMIN_PHONE.to_string()),
-            auth_test_code: Some(ADMIN_CODE.to_string()),
+            test_account: with_test_account.then(|| TestAccount {
+                phone: ADMIN_PHONE.to_string(),
+                code: ADMIN_CODE.to_string(),
+            }),
+            auth_limits,
+            trusted_proxy_count: 1,
             vapid_public_key: Some(TEST_VAPID_PUBLIC_KEY.to_string()),
         };
         let pushes = Arc::new(RecordingPushSender::default());
-        let app = api_router()
-            .layer(Extension(db.clone()))
-            .layer(Extension(config))
-            .layer(Extension(Notifier::new(pushes.clone())));
+        let sms = Arc::new(RecordingSmsSender::default());
+        let app = app(
+            db.clone(),
+            config,
+            Notifier::new(pushes.clone()),
+            SmsGateway(sms.clone()),
+        );
 
         let listener = TcpListener::bind("127.0.0.1:0").await.expect("port local");
         let base_url = format!("http://{}/api", listener.local_addr().expect("adresse"));
-        tokio::spawn(async move { axum::serve(listener, app).await });
+        tokio::spawn(async move {
+            axum::serve(
+                listener,
+                app.into_make_service_with_connect_info::<SocketAddr>(),
+            )
+            .await
+        });
 
         let mut rng = rand::rng();
         Self {
             db,
             pushes,
+            sms,
             base_url,
             client: reqwest::Client::new(),
             origin: (
@@ -276,7 +333,7 @@ impl TestApp {
         (token, id)
     }
 
-    async fn login(&self, phone: &str, code: &str) -> String {
+    pub async fn login(&self, phone: &str, code: &str) -> String {
         let (status, body) = self
             .post("/auth/login", None, json!({ "phone": phone, "code": code }))
             .await;
@@ -436,4 +493,13 @@ fn fake_route(coordinates: &str) -> Value {
             "legs": legs,
         }],
     })
+}
+
+/// Les tests créent beaucoup de comptes depuis la même adresse : pas de plafond gênant par défaut.
+fn generous_limits() -> AuthLimits {
+    AuthLimits {
+        sms_per_phone: 1_000,
+        sms_per_ip: 1_000_000,
+        failed_logins_per_ip: 1_000_000,
+    }
 }

@@ -11,7 +11,7 @@ import {
   useState,
 } from "react";
 import { api } from "@/api";
-import { getMe } from "@/api/auth";
+import { getMe, logout as logoutSession } from "@/api/auth";
 import type { User } from "@/api/types";
 import { forgetPushSubscription } from "@/components/notifications";
 
@@ -65,6 +65,7 @@ export default function AppProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     await forgetPushSubscription();
+    await logoutSession().catch(() => undefined);
     api.removeToken();
     setUser(null);
     queryClient.clear();

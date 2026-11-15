@@ -3,6 +3,7 @@ pub mod config;
 pub mod db;
 pub mod error;
 pub mod fr_time;
+pub mod health;
 pub mod liane;
 pub mod liane_request;
 pub mod message;

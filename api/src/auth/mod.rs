@@ -6,7 +6,10 @@ use crate::auth::handler::{login, logout, send_code};
 pub mod extractor;
 mod handler;
 pub mod model;
+mod rate_limit;
+pub mod session;
 mod service;
+pub mod sms;
 
 pub fn auth_router() -> Router {
     Router::new()
