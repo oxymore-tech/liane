@@ -20,6 +20,8 @@ export type AppContextProps = {
   loading: boolean;
   refreshUser: () => Promise<User | null>;
   logout: () => void;
+  /** Oublie la session sur cet appareil sans rien demander au serveur (compte supprimé). */
+  forgetUser: () => void;
 };
 
 export const AppContext = createContext<AppContextProps>({
@@ -27,6 +29,7 @@ export const AppContext = createContext<AppContextProps>({
   loading: true,
   refreshUser: async () => null,
   logout: () => {},
+  forgetUser: () => {},
 });
 
 const queryClient = new QueryClient({
@@ -63,21 +66,25 @@ export default function AppProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const logout = useCallback(async () => {
-    await forgetPushSubscription();
-    await logoutSession().catch(() => undefined);
+  const forgetUser = useCallback(() => {
     api.removeToken();
     setUser(null);
     queryClient.clear();
   }, []);
+
+  const logout = useCallback(async () => {
+    await forgetPushSubscription();
+    await logoutSession().catch(() => undefined);
+    forgetUser();
+  }, [forgetUser]);
 
   useEffect(() => {
     refreshUser();
   }, [refreshUser]);
 
   const value = useMemo(
-    () => ({ user, loading, refreshUser, logout }),
-    [user, loading, refreshUser, logout],
+    () => ({ user, loading, refreshUser, logout, forgetUser }),
+    [user, loading, refreshUser, logout, forgetUser],
   );
 
   return (

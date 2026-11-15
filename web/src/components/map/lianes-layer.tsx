@@ -1,15 +1,19 @@
 "use client";
 
+import type { ExpressionSpecification } from "maplibre-gl";
 import { Layer, Source } from "react-map-gl/maplibre";
 import type { Liane } from "@/api/types";
 import {
   LIANE_COLOR,
   LIANE_SELECTED_COLOR,
+  LIANE_SHARED_CASING_COLOR,
   MAP_FONT,
   tilesUrl,
 } from "./map-style";
 
 export const LIANES_TOUCH_LAYER_ID = "lianes-touch";
+/** Largeur de la zone sensible autour d'un trait : un doigt, pas un pixel. */
+export const LIANES_TOUCH_WIDTH_PIXELS = 28;
 
 /** Le nom d'une liane s'affiche au milieu de son tracé. */
 function middleOf(liane: Liane): [number, number] {
@@ -47,7 +51,24 @@ const nameFeatures = (lianes: Liane[]) => ({
   })),
 });
 
-/** Lianes en traits (épaisseur selon le nombre de membres), nom au milieu, arrêts en points. */
+/** Épaisseur d'un tronçon selon le total des membres des lianes qui l'empruntent. */
+const widthByMembers = (thin: number, medium: number, thick: number) =>
+  [
+    "interpolate",
+    ["linear"],
+    ["get", "member_count"],
+    0,
+    thin,
+    5,
+    medium,
+    20,
+    thick,
+  ] as ExpressionSpecification;
+
+/**
+ * Lianes en traits, nom au milieu, arrêts en points. Là où plusieurs lianes empruntent la même route,
+ * les tuiles ne donnent qu'un tronçon : un seul trait, plus épais, bordé d'un liseré foncé.
+ */
 export function LianesLayer({
   lianes,
   selectedSlug,
@@ -60,63 +81,48 @@ export function LianesLayer({
       <Source
         id="lianes"
         type="vector"
-        tiles={[tilesUrl("liane_display")]}
+        tiles={[tilesUrl("liane_segment_display")]}
         minzoom={0}
         maxzoom={14}
       >
         <Layer
           id="lianes-casing"
           type="line"
-          source-layer="liane_display"
+          source-layer="liane_segment_display"
           layout={{ "line-cap": "round", "line-join": "round" }}
           paint={{
-            "line-color": "#ffffff",
-            "line-width": [
-              "interpolate",
-              ["linear"],
-              ["get", "member_count"],
-              0,
-              6,
-              5,
-              10,
-              20,
-              15,
+            "line-color": [
+              "case",
+              [">", ["get", "liane_count"], 1],
+              LIANE_SHARED_CASING_COLOR,
+              "#ffffff",
             ],
+            "line-width": widthByMembers(6, 10, 15),
           }}
         />
         <Layer
           id="lianes-line"
           type="line"
-          source-layer="liane_display"
+          source-layer="liane_segment_display"
           layout={{ "line-cap": "round", "line-join": "round" }}
           paint={{
             "line-color": [
               "case",
-              ["==", ["get", "slug"], selectedSlug ?? ""],
+              ["in", `|${selectedSlug ?? "-"}|`, ["get", "slugs"]],
               LIANE_SELECTED_COLOR,
               LIANE_COLOR,
             ],
-            "line-width": [
-              "interpolate",
-              ["linear"],
-              ["get", "member_count"],
-              0,
-              3,
-              5,
-              7,
-              20,
-              12,
-            ],
+            "line-width": widthByMembers(3, 7, 12),
           }}
         />
         <Layer
           id={LIANES_TOUCH_LAYER_ID}
           type="line"
-          source-layer="liane_display"
+          source-layer="liane_segment_display"
           paint={{
             "line-color": "#000000",
             "line-opacity": 0,
-            "line-width": 28,
+            "line-width": LIANES_TOUCH_WIDTH_PIXELS,
           }}
         />
       </Source>

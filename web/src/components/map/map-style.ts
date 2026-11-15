@@ -5,6 +5,7 @@ export const MAP_FONT = ["Noto Sans Regular"];
 export const HAS_BASEMAP = MAPTILER_KEY !== "";
 export const LIANE_COLOR = "#059669";
 export const LIANE_SELECTED_COLOR = "#7c3aed";
+export const LIANE_SHARED_CASING_COLOR = "#064e3b";
 
 export const DEFAULT_VIEW = { longitude: 3.5, latitude: 44.5, zoom: 8 };
 

@@ -1,6 +1,6 @@
-// Jeu de démonstration : crée quelques lianes en Lozère à partir des points de ralliement de test.
+// Jeu de démonstration : crée quatre lianes en Lozère à partir des points de ralliement de test.
 // Usage : API=http://hote:5000/api node seed-lianes.mjs
-// Le compte de test (AUTH_TEST_ACCOUNT / AUTH_TEST_CODE) doit être administrateur.
+// Le compte de test (AUTH_TEST_ACCOUNT_ENABLED=true, AUTH_TEST_ACCOUNT, AUTH_TEST_CODE) doit être activé.
 // Rejouable : les points ne sont générés que si la base est vide, les lianes déjà présentes sont conservées.
 
 const API = process.env.API ?? "http://localhost:5000/api";
@@ -12,6 +12,8 @@ const LIANES = [
   { name: "Florac – Mende", stops: ["Florac", "Ispagnac", "Balsièges", "Mende"] },
   { name: "Mende – Marvejols", stops: ["Mende", "Barjac", "Chanac", "Marvejols"] },
   { name: "Mende – Langogne", stops: ["Mende", "Badaroux", "Châteauneuf-de-Randon", "Langogne"] },
+  // Partage la route de Florac – Mende jusqu'à Balsièges, puis celle de Mende – Marvejols à partir de Barjac.
+  { name: "Florac – Marvejols", stops: ["Florac", "Ispagnac", "Balsièges", "Barjac", "Marvejols"] },
 ];
 
 let token;

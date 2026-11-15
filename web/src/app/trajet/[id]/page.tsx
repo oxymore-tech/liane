@@ -159,7 +159,8 @@ function Gestures({
 
 function passengerStatus(passenger: TripPassenger) {
   if (passenger.ended_at) return `descente à ${timeLabel(passenger.ended_at)}`;
-  if (passenger.started_at) return `montée à ${timeLabel(passenger.started_at)}`;
+  if (passenger.started_at)
+    return `montée à ${timeLabel(passenger.started_at)}`;
   return null;
 }
 

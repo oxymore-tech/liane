@@ -35,4 +35,4 @@ trap 'kill $CODE_READER 2>/dev/null' EXIT
 
 # Le navigateur partage le réseau du conteneur web : il l'atteint par http://localhost:3000, une origine
 # « sûre », sans quoi il n'y aurait ni géolocalisation ni service worker.
-sg docker -c "$PW --name liane-playwright --network container:liane-dev-web -v $CAPTURES:/captures $IMAGE node $JOURNEY"
+sg docker -c "$PW --name liane-playwright -e ONLY=${ONLY:-} --network container:liane-dev-web -v $CAPTURES:/captures $IMAGE node $JOURNEY"

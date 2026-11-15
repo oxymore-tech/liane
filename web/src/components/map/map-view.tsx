@@ -11,7 +11,8 @@ import {
   NavigationControl,
 } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { getLiane, listLianes } from "@/api/lianes";
+import { getLiane, listLianes, listLianesNear } from "@/api/lianes";
+import type { Liane } from "@/api/types";
 import { useAppContext } from "@/components/context-provider";
 import { memberCountLabel } from "@/components/liane/labels";
 import {
@@ -20,7 +21,11 @@ import {
   StopList,
 } from "@/components/liane/liane-summary";
 import { buttonClass } from "@/components/ui";
-import { LIANES_TOUCH_LAYER_ID, LianesLayer } from "./lianes-layer";
+import {
+  LIANES_TOUCH_LAYER_ID,
+  LIANES_TOUCH_WIDTH_PIXELS,
+  LianesLayer,
+} from "./lianes-layer";
 import { boundsOf, DEFAULT_VIEW, mapStyle } from "./map-style";
 import { PlaceNamesLayer } from "./place-names-layer";
 
@@ -84,10 +89,71 @@ function LianePanel({ slug, onClose }: { slug: string; onClose: () => void }) {
   );
 }
 
+/** Mètres par pixel à une latitude et un zoom donnés (tuiles de 512 pixels). */
+const metersPerPixel = (latitude: number, zoom: number) =>
+  (78271.517 * Math.cos((latitude * Math.PI) / 180)) / 2 ** zoom;
+
+/** Là où plusieurs lianes empruntent la même route, le toucher ne peut pas en désigner une seule. */
+function LianeChoice({
+  lianes,
+  onChoose,
+  onClose,
+}: {
+  lianes: Liane[];
+  onChoose: (slug: string) => void;
+  onClose: () => void;
+}) {
+  return (
+    <section
+      aria-label="Lianes qui passent ici"
+      className="max-h-[60%] overflow-y-auto rounded-t-2xl bg-white p-4 text-gray-900 shadow-[0_-4px_16px_rgba(0,0,0,0.15)]"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-bold">
+            {lianes.length} lianes passent ici
+          </h2>
+          <p className="text-gray-600">Laquelle voulez-vous voir ?</p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Fermer"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-gray-100 text-xl"
+        >
+          ×
+        </button>
+      </div>
+      <ul className="mt-2 divide-y divide-gray-100">
+        {lianes.map((liane) => (
+          <li key={liane.id}>
+            <button
+              type="button"
+              className="flex min-h-14 w-full items-center justify-between gap-3 py-2 text-left"
+              onClick={() => onChoose(liane.slug)}
+            >
+              <span>
+                <span className="block font-semibold">{liane.name}</span>
+                <span className="block text-sm text-gray-500">
+                  {memberCountLabel(liane.member_count)}
+                </span>
+              </span>
+              <span aria-hidden className="text-xl text-emerald-700">
+                ›
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 export default function MapView() {
   const mapRef = useRef<MapRef>(null);
   const { user } = useAppContext();
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
+  const [choices, setChoices] = useState<Liane[] | null>(null);
   const [listOpen, setListOpen] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
   const style = useMemo(mapStyle, []);
@@ -106,13 +172,29 @@ export default function MapView() {
 
   const select = useCallback((slug: string | null) => {
     setSelectedSlug(slug);
+    setChoices(null);
     setListOpen(false);
   }, []);
 
+  /** On demande au serveur quelles lianes passent sous le doigt : une seule s'ouvre, plusieurs se choisissent. */
   const onClick = useCallback(
-    (event: MapLayerMouseEvent) => {
-      const slug = event.features?.[0]?.properties?.slug;
-      select(typeof slug === "string" ? slug : null);
+    async (event: MapLayerMouseEvent) => {
+      if (!event.features?.length) {
+        select(null);
+        return;
+      }
+      const radius =
+        (LIANES_TOUCH_WIDTH_PIXELS / 2) *
+        metersPerPixel(event.lngLat.lat, event.target.getZoom());
+      const touched = await listLianesNear(event.lngLat, radius).catch(
+        () => [],
+      );
+      if (touched.length > 1) {
+        select(null);
+        setChoices(touched);
+      } else {
+        select(touched[0]?.slug ?? null);
+      }
     },
     [select],
   );
@@ -123,6 +205,12 @@ export default function MapView() {
         <span className="rounded-full bg-emerald-700 px-4 py-2 font-bold text-white shadow">
           Liane
         </span>
+        <Link
+          href="/recherche"
+          className="rounded-full bg-white px-4 py-2 font-semibold text-gray-800 shadow"
+        >
+          Rechercher
+        </Link>
         <Link
           href={user ? "/mes-lianes" : "/connexion"}
           className="rounded-full bg-white px-4 py-2 font-semibold text-gray-800 shadow"
@@ -160,7 +248,13 @@ export default function MapView() {
         </MapGL>
       </div>
 
-      {selectedSlug ? (
+      {choices ? (
+        <LianeChoice
+          lianes={choices}
+          onChoose={select}
+          onClose={() => select(null)}
+        />
+      ) : selectedSlug ? (
         <LianePanel slug={selectedSlug} onClose={() => select(null)} />
       ) : (
         <section className="max-h-[50%] overflow-y-auto bg-white px-4 py-3 text-gray-900 shadow-[0_-4px_16px_rgba(0,0,0,0.15)]">
