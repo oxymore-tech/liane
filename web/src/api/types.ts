@@ -13,13 +13,31 @@ export type RallyingPoint = {
 
 export type Direction = "Outbound" | "Return" | "Both";
 
+/** « Straight » : ligne droite entre les arrêts, faute de calcul d'itinéraire. */
+export type RouteSource = "Osrm" | "Straight";
+
+export type RouteLine = { type: "LineString"; coordinates: [number, number][] };
+
+export type RoutePreview = {
+  route: RouteLine;
+  route_source: RouteSource;
+  distance_meters: number;
+  duration_seconds: number | null;
+  stop_distances: number[];
+};
+
 export type Liane = {
   id: string;
   name: string;
   slug: string;
   is_active: boolean;
   stops: RallyingPoint[];
-  route: { type: "LineString"; coordinates: [number, number][] } | null;
+  /** Distance en mètres de chaque arrêt depuis le premier, le long du tracé. */
+  stop_distances: number[];
+  route: RouteLine | null;
+  route_source: RouteSource;
+  distance_meters: number;
+  duration_seconds: number | null;
   member_count: number;
   created_at: string;
   updated_at: string;

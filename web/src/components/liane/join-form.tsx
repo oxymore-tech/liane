@@ -6,7 +6,7 @@ import { joinLiane, updateMembership } from "@/api/lianes";
 import type { Liane, Membership, MembershipInput } from "@/api/types";
 import { useAppContext } from "@/components/context-provider";
 import { Button, Notice } from "@/components/ui";
-import { DAYS, stopName } from "./labels";
+import { DAYS, distanceLabel, sectionDistance, stopName } from "./labels";
 
 type FormState = {
   fromId: string;
@@ -88,6 +88,7 @@ export function JoinForm({
   const [sending, setSending] = useState(false);
 
   const needsName = Boolean(user && !user.is_signed_up);
+  const distance = sectionDistance(liane, state.fromId, state.toId);
   const set = (change: Partial<FormState>) =>
     setState((current) => ({ ...current, ...change }));
 
@@ -183,6 +184,14 @@ export function JoinForm({
           ))}
         </select>
       </label>
+
+      {distance !== null && distance > 0 && (
+        <p className="-mt-2 text-sm text-gray-600">
+          {liane.route_source === "Osrm"
+            ? `Votre trajet : ${distanceLabel(distance)} par la route.`
+            : `Votre trajet : environ ${distanceLabel(distance)} à vol d'oiseau.`}
+        </p>
+      )}
 
       <label className="flex min-h-11 items-center gap-3">
         <input

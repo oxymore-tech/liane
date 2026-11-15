@@ -13,7 +13,8 @@ export const LIANES_TOUCH_LAYER_ID = "lianes-touch";
 
 /** Le nom d'une liane s'affiche au milieu de son tracé. */
 function middleOf(liane: Liane): [number, number] {
-  const line = liane.stops.map((stop) => [stop.lng, stop.lat]);
+  const line =
+    liane.route?.coordinates ?? liane.stops.map((stop) => [stop.lng, stop.lat]);
   const lengths = line
     .slice(1)
     .map((point, index) =>

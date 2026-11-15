@@ -4,9 +4,18 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useState } from "react";
 import { Conflict } from "@/api/exception";
-import { deleteLiane, listAllLianes, updateLiane } from "@/api/lianes";
+import {
+  deleteLiane,
+  listAllLianes,
+  recomputeRoute,
+  updateLiane,
+} from "@/api/lianes";
 import type { Liane } from "@/api/types";
-import { memberCountLabel, stopName } from "@/components/liane/labels";
+import {
+  memberCountLabel,
+  routeLabel,
+  stopName,
+} from "@/components/liane/labels";
 import { Button, buttonClass, Card, Notice } from "@/components/ui";
 
 export default function AdminLianesPage() {
@@ -23,6 +32,21 @@ export default function AdminLianesPage() {
       stop_ids: liane.stops.map((stop) => stop.id),
       is_active: isActive,
     });
+    await refetch();
+  };
+
+  const recompute = async (liane: Liane) => {
+    setError(null);
+    try {
+      const recomputed = await recomputeRoute(liane.id);
+      if (recomputed.route_source === "Straight") {
+        setError(
+          `Le tracé de « ${liane.name} » n'a pas pu être calculé par la route : il reste en ligne droite.`,
+        );
+      }
+    } catch {
+      setError("Le recalcul du tracé n'a pas fonctionné.");
+    }
     await refetch();
   };
 
@@ -77,7 +101,18 @@ export default function AdminLianesPage() {
           <p className="text-sm text-gray-500">
             {memberCountLabel(liane.member_count)} · /l/{liane.slug}
           </p>
-          <div className="flex gap-2">
+          <p className="text-sm text-gray-500">{routeLabel(liane)}</p>
+          {liane.route_source === "Straight" && (
+            <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+              Tracé approximatif : ligne droite entre les arrêts.
+            </p>
+          )}
+          <div className="flex flex-wrap gap-2">
+            {liane.route_source === "Straight" && (
+              <Button variant="secondary" onClick={() => recompute(liane)}>
+                Recalculer le tracé
+              </Button>
+            )}
             <Button
               variant="secondary"
               onClick={() => setActive(liane, !liane.is_active)}

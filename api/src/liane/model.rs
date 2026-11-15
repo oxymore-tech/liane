@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
 
+use crate::liane::routing::RouteSource;
 use crate::liane_request::model::WeekDays;
 use crate::rallying_point::model::RallyingPoint;
 use crate::user::model::{Gender, PublicUser};
@@ -23,6 +24,9 @@ pub struct LianeRow {
     pub slug: String,
     pub is_active: bool,
     pub route: Option<String>,
+    pub route_source: RouteSource,
+    pub distance_meters: i32,
+    pub duration_seconds: Option<i32>,
     pub member_count: i64,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
@@ -31,10 +35,14 @@ pub struct LianeRow {
 #[derive(Debug, FromRow)]
 pub struct LianeStopRow {
     pub liane_id: Uuid,
+    pub distance_meters: i32,
     #[sqlx(flatten)]
     pub point: RallyingPoint,
 }
 
+/// `route_source` vaut `Straight` quand le tracé est la ligne droite entre les arrêts, faute de
+/// réponse du calcul d'itinéraire : distances à vol d'oiseau, pas de durée.
+/// `stop_distances` donne, pour chaque arrêt de `stops`, sa distance en mètres depuis le premier.
 #[derive(Debug, Clone, Serialize)]
 pub struct Liane {
     pub id: Uuid,
@@ -42,7 +50,11 @@ pub struct Liane {
     pub slug: String,
     pub is_active: bool,
     pub stops: Vec<RallyingPoint>,
+    pub stop_distances: Vec<i32>,
     pub route: Option<serde_json::Value>,
+    pub route_source: RouteSource,
+    pub distance_meters: i32,
+    pub duration_seconds: Option<i32>,
     pub member_count: i64,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
@@ -125,6 +137,27 @@ pub struct LianeInput {
 
 fn active_by_default() -> bool {
     true
+}
+
+#[derive(Debug, Deserialize)]
+pub struct RoutePreviewInput {
+    pub stop_ids: Vec<Uuid>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct RoutePreview {
+    pub route: serde_json::Value,
+    pub route_source: RouteSource,
+    pub distance_meters: i32,
+    pub duration_seconds: Option<i32>,
+    pub stop_distances: Vec<i32>,
+}
+
+/// Bilan du recalcul des tracés restés en ligne droite.
+#[derive(Debug, Serialize)]
+pub struct RouteRecomputeReport {
+    pub recomputed: usize,
+    pub still_straight: usize,
 }
 
 #[derive(Debug, Deserialize)]

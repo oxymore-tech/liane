@@ -7,7 +7,7 @@ import { Suspense, useEffect, useState } from "react";
 import { getLiane, leaveLiane } from "@/api/lianes";
 import { useAppContext } from "@/components/context-provider";
 import { JoinForm } from "@/components/liane/join-form";
-import { daysLabel, sectionLabel } from "@/components/liane/labels";
+import { daysLabel, routeLabel, sectionLabel } from "@/components/liane/labels";
 import {
   MemberCount,
   ScheduleTable,
@@ -87,6 +87,7 @@ function LianePage() {
 
       <Card>
         <h2 className="text-xl font-bold">{liane.name}</h2>
+        <p className="text-gray-600">{routeLabel(liane)}</p>
         <MemberCount liane={liane} />
         {!liane.is_active && (
           <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">

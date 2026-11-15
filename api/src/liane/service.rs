@@ -8,8 +8,9 @@ use crate::error::{AppError, Result};
 use crate::liane::model::{
     DaySchedule, Direction, Liane, LianeDetail, LianeInput, LianeMember, LianeRow,
     LianeSearchResult, LianeStopRow, Membership, MembershipInput, MyLiane, MyMembershipRow,
-    SearchQuery, SearchRow,
+    RoutePreview, RouteRecomputeReport, SearchQuery, SearchRow,
 };
+use crate::liane::routing::{self, ComputedRoute, OsrmFailure, Position};
 use crate::liane::slug::unique_slug;
 use crate::rallying_point;
 use crate::rallying_point::model::RallyingPoint;
@@ -17,6 +18,9 @@ use crate::rallying_point::model::RallyingPoint;
 const MAX_NAME_LENGTH: usize = 255;
 const DEFAULT_SEARCH_RADIUS_METERS: f64 = 5_000.0;
 const MAX_SEARCH_RADIUS_METERS: f64 = 30_000.0;
+/// Le tracé routier est stocké entier ; l'API le sert allégé (écart d'environ 5 m au plus),
+/// ce qui divise son poids par quatre sans différence visible sur une carte.
+const SERVED_ROUTE_TOLERANCE_DEGREES: f64 = 0.00005;
 const FOREIGN_KEY_VIOLATION: &str = "23503";
 
 pub async fn list_active(db: &PgPool) -> Result<Vec<Liane>> {
@@ -200,7 +204,16 @@ pub async fn find_by_ids(db: &PgPool, ids: &[Uuid]) -> Result<Vec<Liane>> {
                 l.name,
                 l.slug,
                 l.is_active,
-                ST_AsGeoJSON(l.route) AS route,
+                ST_AsGeoJSON(
+                    CASE
+                        WHEN l.route_source = 'Osrm' THEN ST_Simplify(l.route, $2)
+                        ELSE l.route
+                    END,
+                    5
+                ) AS route,
+                l.route_source,
+                l.distance_meters,
+                l.duration_seconds,
                 (SELECT COUNT(*) FROM liane_member lm WHERE lm.liane_id = l.id) AS member_count,
                 l.created_at,
                 l.updated_at
@@ -210,6 +223,7 @@ pub async fn find_by_ids(db: &PgPool, ids: &[Uuid]) -> Result<Vec<Liane>> {
         "#,
     )
     .bind(ids)
+    .bind(SERVED_ROUTE_TOLERANCE_DEGREES)
     .fetch_all(db)
     .await?;
 
@@ -217,6 +231,7 @@ pub async fn find_by_ids(db: &PgPool, ids: &[Uuid]) -> Result<Vec<Liane>> {
         r#"
             SELECT
                 s.liane_id,
+                s.distance_meters,
                 rp.id,
                 rp.label,
                 ST_Y(rp.location::geometry) AS lat,
@@ -237,23 +252,27 @@ pub async fn find_by_ids(db: &PgPool, ids: &[Uuid]) -> Result<Vec<Liane>> {
     .fetch_all(db)
     .await?;
 
-    let mut stops_by_liane: HashMap<Uuid, Vec<RallyingPoint>> = HashMap::new();
+    let mut stops_by_liane: HashMap<Uuid, (Vec<RallyingPoint>, Vec<i32>)> = HashMap::new();
     for row in stop_rows {
-        stops_by_liane
-            .entry(row.liane_id)
-            .or_default()
-            .push(row.point);
+        let (stops, distances) = stops_by_liane.entry(row.liane_id).or_default();
+        stops.push(row.point);
+        distances.push(row.distance_meters);
     }
 
     rows.into_iter()
         .map(|row| {
+            let (stops, stop_distances) = stops_by_liane.remove(&row.id).unwrap_or_default();
             Ok(Liane {
                 id: row.id,
                 name: row.name,
                 slug: row.slug,
                 is_active: row.is_active,
-                stops: stops_by_liane.remove(&row.id).unwrap_or_default(),
+                stops,
+                stop_distances,
                 route: row.route.as_deref().map(serde_json::from_str).transpose()?,
+                route_source: row.route_source,
+                distance_meters: row.distance_meters,
+                duration_seconds: row.duration_seconds,
                 member_count: row.member_count,
                 created_at: row.created_at,
                 updated_at: row.updated_at,
@@ -262,9 +281,16 @@ pub async fn find_by_ids(db: &PgPool, ids: &[Uuid]) -> Result<Vec<Liane>> {
         .collect()
 }
 
-pub async fn create(db: &PgPool, admin_id: &Uuid, input: &LianeInput) -> Result<Liane> {
+/// Le tracé est calculé avant d'ouvrir la transaction : l'attente d'OSRM ne retient aucun verrou.
+pub async fn create(
+    db: &PgPool,
+    osrm_url: &str,
+    admin_id: &Uuid,
+    input: &LianeInput,
+) -> Result<Liane> {
     let name = validated_name(input)?;
-    validate_stops(db, &input.stop_ids).await?;
+    let positions = validated_stop_positions(db, &input.stop_ids).await?;
+    let route = routing::compute(osrm_url, &positions).await;
 
     let mut tx = db.begin().await?;
     let slug = unique_slug(&mut tx, name).await?;
@@ -283,16 +309,27 @@ pub async fn create(db: &PgPool, admin_id: &Uuid, input: &LianeInput) -> Result<
     .fetch_one(&mut *tx)
     .await?;
 
-    replace_stops(&mut tx, &id, &input.stop_ids).await?;
+    replace_stops(&mut tx, &id, &input.stop_ids, &route).await?;
     tx.commit().await?;
 
     find_one(db, &id).await
 }
 
 /// Le slug ne change pas quand le nom change : les adresses déjà partagées restent valables.
-pub async fn update(db: &PgPool, id: &Uuid, input: &LianeInput) -> Result<Option<Liane>> {
+/// Le tracé n'est recalculé que si les arrêts changent.
+pub async fn update(
+    db: &PgPool,
+    osrm_url: &str,
+    id: &Uuid,
+    input: &LianeInput,
+) -> Result<Option<Liane>> {
     let name = validated_name(input)?;
-    validate_stops(db, &input.stop_ids).await?;
+    let positions = validated_stop_positions(db, &input.stop_ids).await?;
+    let new_route = if find_stop_ids(db, id).await? == input.stop_ids {
+        None
+    } else {
+        Some(routing::compute(osrm_url, &positions).await)
+    };
 
     let mut tx = db.begin().await?;
 
@@ -314,17 +351,77 @@ pub async fn update(db: &PgPool, id: &Uuid, input: &LianeInput) -> Result<Option
         return Ok(None);
     }
 
-    sqlx::query(
-        "SET CONSTRAINTS liane_member_board_stop_fkey, liane_member_alight_stop_fkey DEFERRED",
-    )
-    .execute(&mut *tx)
-    .await?;
-    replace_stops(&mut tx, id, &input.stop_ids).await?;
-    ensure_memberships_still_valid(&mut tx, id).await?;
+    if let Some(route) = new_route {
+        sqlx::query(
+            "SET CONSTRAINTS liane_member_board_stop_fkey, liane_member_alight_stop_fkey DEFERRED",
+        )
+        .execute(&mut *tx)
+        .await?;
+        replace_stops(&mut tx, id, &input.stop_ids, &route).await?;
+        ensure_memberships_still_valid(&mut tx, id).await?;
+    }
 
     tx.commit().await?;
 
     find_one(db, id).await.map(Some)
+}
+
+pub async fn preview_route(db: &PgPool, osrm_url: &str, stop_ids: &[Uuid]) -> Result<RoutePreview> {
+    let positions = validated_stop_positions(db, stop_ids).await?;
+    let route = routing::compute(osrm_url, &positions).await;
+    Ok(RoutePreview {
+        route: route.geojson(),
+        route_source: route.source,
+        distance_meters: route.distance_meters,
+        duration_seconds: route.duration_seconds,
+        stop_distances: route.stop_distances,
+    })
+}
+
+/// Recalcule le tracé d'une liane ; si OSRM ne répond toujours pas, elle repasse en ligne droite.
+pub async fn recompute_route(db: &PgPool, osrm_url: &str, id: &Uuid) -> Result<Option<Liane>> {
+    let stop_ids = find_stop_ids(db, id).await?;
+    if stop_ids.is_empty() {
+        return Ok(None);
+    }
+    let positions = stop_positions(db, &stop_ids).await?;
+    let route = routing::compute(osrm_url, &positions).await;
+    store_route_if_stops_unchanged(db, id, &stop_ids, &route).await?;
+    find_one(db, id).await.map(Some)
+}
+
+/// Recalcule les tracés restés en ligne droite. S'arrête dès qu'OSRM est injoignable ;
+/// une liane qu'OSRM ne sait pas relier (hors de la zone couverte) reste en ligne droite.
+pub async fn recompute_straight_routes(
+    db: &PgPool,
+    osrm_url: &str,
+) -> Result<RouteRecomputeReport> {
+    let ids: Vec<Uuid> =
+        sqlx::query_scalar("SELECT id FROM liane WHERE route_source = 'Straight' ORDER BY id")
+            .fetch_all(db)
+            .await?;
+
+    let mut recomputed = 0;
+    for id in &ids {
+        let stop_ids = find_stop_ids(db, id).await?;
+        let positions = stop_positions(db, &stop_ids).await?;
+        match routing::osrm_route(osrm_url, &positions).await {
+            Ok(route) => {
+                if store_route_if_stops_unchanged(db, id, &stop_ids, &route).await? {
+                    recomputed += 1;
+                }
+            }
+            Err(OsrmFailure::NoRoute(_)) => {}
+            Err(OsrmFailure::Unavailable(reason)) => {
+                tracing::warn!("OSRM unavailable, route recomputation stopped: {reason}");
+                break;
+            }
+        }
+    }
+    Ok(RouteRecomputeReport {
+        recomputed,
+        still_straight: ids.len() - recomputed,
+    })
 }
 
 pub async fn delete(db: &PgPool, id: &Uuid) -> Result<bool> {
@@ -546,24 +643,46 @@ fn validated_name(input: &LianeInput) -> Result<&str> {
     Ok(name)
 }
 
-async fn validate_stops(db: &PgPool, stop_ids: &[Uuid]) -> Result<()> {
+async fn validated_stop_positions(db: &PgPool, stop_ids: &[Uuid]) -> Result<Vec<Position>> {
     let distinct_ids: HashSet<&Uuid> = stop_ids.iter().collect();
     if stop_ids.len() < 2 || distinct_ids.len() != stop_ids.len() {
         return Err(AppError::BadRequest);
     }
 
     let points = rallying_point::service::find_by_ids(db, stop_ids).await?;
-    let all_usable = stop_ids
+    stop_ids
         .iter()
-        .all(|id| points.get(id).is_some_and(|point| point.is_active));
-    if !all_usable {
-        return Err(AppError::BadRequest);
-    }
-    Ok(())
+        .map(|id| match points.get(id) {
+            Some(point) if point.is_active => Ok([point.lng, point.lat]),
+            _ => Err(AppError::BadRequest),
+        })
+        .collect()
 }
 
-/// Le tracé est pour l'instant la ligne brisée reliant les arrêts.
-async fn replace_stops(connection: &mut PgConnection, id: &Uuid, stop_ids: &[Uuid]) -> Result<()> {
+async fn stop_positions(db: &PgPool, stop_ids: &[Uuid]) -> Result<Vec<Position>> {
+    let points = rallying_point::service::find_by_ids(db, stop_ids).await?;
+    Ok(stop_ids
+        .iter()
+        .filter_map(|id| points.get(id).map(|point| [point.lng, point.lat]))
+        .collect())
+}
+
+async fn find_stop_ids(db: &PgPool, id: &Uuid) -> Result<Vec<Uuid>> {
+    let stop_ids = sqlx::query_scalar(
+        "SELECT rallying_point_id FROM liane_stop WHERE liane_id = $1 ORDER BY ordinal",
+    )
+    .bind(id)
+    .fetch_all(db)
+    .await?;
+    Ok(stop_ids)
+}
+
+async fn replace_stops(
+    connection: &mut PgConnection,
+    id: &Uuid,
+    stop_ids: &[Uuid],
+    route: &ComputedRoute,
+) -> Result<()> {
     sqlx::query("DELETE FROM liane_stop WHERE liane_id = $1")
         .bind(id)
         .execute(&mut *connection)
@@ -571,32 +690,89 @@ async fn replace_stops(connection: &mut PgConnection, id: &Uuid, stop_ids: &[Uui
 
     sqlx::query(
         r#"
-            INSERT INTO liane_stop (liane_id, rallying_point_id, ordinal)
-            SELECT $1, stop.id, stop.ordinal - 1
-            FROM unnest($2::uuid[]) WITH ORDINALITY AS stop(id, ordinal)
+            INSERT INTO liane_stop (liane_id, rallying_point_id, ordinal, distance_meters)
+            SELECT $1, stop.id, stop.ordinal - 1, stop.distance_meters
+            FROM unnest($2::uuid[], $3::integer[]) WITH ORDINALITY AS stop(id, distance_meters, ordinal)
         "#,
     )
     .bind(id)
     .bind(stop_ids)
+    .bind(&route.stop_distances)
     .execute(&mut *connection)
     .await?;
 
+    store_route(connection, id, route).await
+}
+
+async fn store_route(
+    connection: &mut PgConnection,
+    id: &Uuid,
+    route: &ComputedRoute,
+) -> Result<()> {
     sqlx::query(
         r#"
             UPDATE liane
-            SET route = (
-                SELECT ST_MakeLine(rp.location::geometry ORDER BY s.ordinal)
-                FROM liane_stop s
-                INNER JOIN rallying_point rp ON rp.id = s.rallying_point_id
-                WHERE s.liane_id = $1
-            )
+            SET route = ST_SetSRID(ST_GeomFromGeoJSON($2), 4326),
+                route_source = $3,
+                distance_meters = $4,
+                duration_seconds = $5,
+                updated_at = NOW()
             WHERE id = $1
         "#,
     )
     .bind(id)
-    .execute(&mut *connection)
+    .bind(route.geojson().to_string())
+    .bind(route.source)
+    .bind(route.distance_meters)
+    .bind(route.duration_seconds)
+    .execute(connection)
     .await?;
     Ok(())
+}
+
+/// Le calcul du tracé a lieu hors transaction : si les arrêts ont changé entre-temps, il est abandonné.
+async fn store_route_if_stops_unchanged(
+    db: &PgPool,
+    id: &Uuid,
+    stop_ids: &[Uuid],
+    route: &ComputedRoute,
+) -> Result<bool> {
+    let mut tx = db.begin().await?;
+
+    let current_stop_ids: Vec<Uuid> = sqlx::query_scalar(
+        r#"
+            SELECT s.rallying_point_id
+            FROM liane_stop s
+            INNER JOIN liane l ON l.id = s.liane_id
+            WHERE s.liane_id = $1
+            ORDER BY s.ordinal
+            FOR UPDATE OF l
+        "#,
+    )
+    .bind(id)
+    .fetch_all(&mut *tx)
+    .await?;
+    if current_stop_ids != stop_ids || route.stop_distances.len() != stop_ids.len() {
+        return Ok(false);
+    }
+
+    sqlx::query(
+        r#"
+            UPDATE liane_stop s
+            SET distance_meters = stop.distance_meters
+            FROM unnest($2::integer[]) WITH ORDINALITY AS stop(distance_meters, ordinal)
+            WHERE s.liane_id = $1
+              AND s.ordinal = stop.ordinal - 1
+        "#,
+    )
+    .bind(id)
+    .bind(&route.stop_distances)
+    .execute(&mut *tx)
+    .await?;
+    store_route(&mut tx, id, route).await?;
+
+    tx.commit().await?;
+    Ok(true)
 }
 
 async fn ensure_memberships_still_valid(connection: &mut PgConnection, id: &Uuid) -> Result<()> {

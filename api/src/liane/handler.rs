@@ -5,10 +5,12 @@ use uuid::Uuid;
 
 use crate::auth::extractor::{AdminUser, OptionalUser};
 use crate::auth::model::AuthUser;
+use crate::config::Config;
 use crate::error::{AppError, Result};
 use crate::liane::model::{
     Liane, LianeDetail, LianeInput, LianeRequestMatches, LianeSearchResult, Membership,
-    MembershipInput, MyLiane, Report, ReportInput, SearchQuery,
+    MembershipInput, MyLiane, Report, ReportInput, RoutePreview, RoutePreviewInput,
+    RouteRecomputeReport, SearchQuery,
 };
 use crate::liane::{matching, report, service};
 
@@ -64,22 +66,55 @@ pub async fn list_all(
 pub async fn create(
     AdminUser(admin): AdminUser,
     Extension(db): Extension<PgPool>,
+    Extension(config): Extension<Config>,
     Json(input): Json<LianeInput>,
 ) -> Result<Json<Liane>> {
-    let liane = service::create(&db, &admin.id, &input).await?;
+    let liane = service::create(&db, &config.osrm_url, &admin.id, &input).await?;
     Ok(Json(liane))
 }
 
 pub async fn update(
     _admin: AdminUser,
     Extension(db): Extension<PgPool>,
+    Extension(config): Extension<Config>,
     Path(id): Path<Uuid>,
     Json(input): Json<LianeInput>,
 ) -> Result<Json<Liane>> {
-    let liane = service::update(&db, &id, &input)
+    let liane = service::update(&db, &config.osrm_url, &id, &input)
         .await?
         .ok_or(AppError::NotFound)?;
     Ok(Json(liane))
+}
+
+pub async fn preview_route(
+    _admin: AdminUser,
+    Extension(db): Extension<PgPool>,
+    Extension(config): Extension<Config>,
+    Json(input): Json<RoutePreviewInput>,
+) -> Result<Json<RoutePreview>> {
+    let preview = service::preview_route(&db, &config.osrm_url, &input.stop_ids).await?;
+    Ok(Json(preview))
+}
+
+pub async fn recompute_route(
+    _admin: AdminUser,
+    Extension(db): Extension<PgPool>,
+    Extension(config): Extension<Config>,
+    Path(id): Path<Uuid>,
+) -> Result<Json<Liane>> {
+    let liane = service::recompute_route(&db, &config.osrm_url, &id)
+        .await?
+        .ok_or(AppError::NotFound)?;
+    Ok(Json(liane))
+}
+
+pub async fn recompute_straight_routes(
+    _admin: AdminUser,
+    Extension(db): Extension<PgPool>,
+    Extension(config): Extension<Config>,
+) -> Result<Json<RouteRecomputeReport>> {
+    let report = service::recompute_straight_routes(&db, &config.osrm_url).await?;
+    Ok(Json(report))
 }
 
 pub async fn remove(
