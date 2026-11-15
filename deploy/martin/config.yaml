@@ -1,3 +1,6 @@
+# Sans cache : le nombre de membres et l'activation d'une liane doivent se voir tout de suite.
+cache_size_mb: 0
+
 postgres:
   connection_string: postgres://${DB_USER}:${DB_PASSWORD}@postgres/liane
   auto_publish: false
