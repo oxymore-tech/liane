@@ -45,6 +45,11 @@ pub async fn generate_points(
     Query(q): Query<GenerateQuery>,
 ) -> Result<Json<serde_json::Value>> {
     let test_only = q.source.as_deref() == Some("test");
+    if generate::has_points_in_use(&db).await? {
+        return Err(AppError::Conflict(
+            "Rallying points are used by lianes or trips and cannot be regenerated".to_string(),
+        ));
+    }
     let count = generate::generate(&db, test_only).await?;
     Ok(Json(serde_json::json!({ "count": count })))
 }

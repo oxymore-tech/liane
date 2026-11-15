@@ -84,7 +84,7 @@ fn load_zipcodes() -> Result<HashMap<String, String>> {
         .from_reader(data.as_bytes());
     let mut map = HashMap::new();
     for result in rdr.deserialize::<ZipCodeEntry>() {
-        let entry = result.map_err(|e| crate::error::AppError::unexpected(e))?;
+        let entry = result.map_err(crate::error::AppError::unexpected)?;
         map.entry(entry.insee).or_insert(entry.zipcode);
     }
     Ok(map)
@@ -307,4 +307,19 @@ pub async fn generate(db: &PgPool, test_only: bool) -> Result<u64> {
     tx.commit().await?;
     info!("rallying points generated: {count}");
     Ok(count)
+}
+
+/// La génération supprime puis recrée tous les points avec de nouveaux identifiants :
+/// elle est refusée dès qu'un point sert d'arrêt à une liane ou à un trajet.
+pub async fn has_points_in_use(db: &PgPool) -> Result<bool> {
+    let in_use = sqlx::query_scalar(
+        r#"
+            SELECT EXISTS (SELECT 1 FROM liane_stop)
+                OR EXISTS (SELECT 1 FROM trip_waypoint)
+                OR EXISTS (SELECT 1 FROM trip_member)
+        "#,
+    )
+    .fetch_one(db)
+    .await?;
+    Ok(in_use)
 }

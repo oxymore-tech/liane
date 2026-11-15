@@ -10,6 +10,12 @@ use crate::rallying_point::model::RallyingPoint;
 #[sqlx(transparent)]
 pub struct WeekDays(String);
 
+impl WeekDays {
+    pub fn has_any_day(&self) -> bool {
+        self.0.contains('1')
+    }
+}
+
 impl TryFrom<String> for WeekDays {
     type Error = String;
 

@@ -1,11 +1,11 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use sqlx::PgPool;
 use uuid::Uuid;
 
 use crate::error::{AppError, Result};
 use crate::liane::model::{
-    Liane, LianeMatch, LianeRequestState, MatchRow, MatchTarget, MatchedRequest,
+    LianeRequestMatches, LianeSearchResult, MatchRow, MatchedRequest, RequestMatch, SearchQuery,
 };
 use crate::liane::service;
 use crate::rallying_point;
@@ -15,49 +15,47 @@ use crate::user::model::PublicUser;
 const MATCH_DISTANCE_METERS: f64 = 2000.0;
 const MIN_SCORE: f64 = 1.0 / 3.0;
 
-pub async fn find_state(
+pub async fn find_matches(
     db: &PgPool,
     user_id: &Uuid,
     liane_request_id: &Uuid,
-) -> Result<LianeRequestState> {
-    let is_owned: bool = sqlx::query_scalar(
-        "SELECT EXISTS (SELECT 1 FROM liane_request WHERE id = $1 AND user_id = $2)",
-    )
-    .bind(liane_request_id)
-    .bind(user_id)
-    .fetch_one(db)
-    .await?;
-
-    if !is_owned {
-        return Err(AppError::NotFound);
-    }
-
-    let attached_liane_id: Option<Uuid> =
-        sqlx::query_scalar("SELECT liane_id FROM liane_member WHERE liane_request_id = $1")
+) -> Result<LianeRequestMatches> {
+    let waypoints: Vec<Uuid> =
+        sqlx::query_scalar("SELECT waypoints FROM liane_request WHERE id = $1 AND user_id = $2")
             .bind(liane_request_id)
+            .bind(user_id)
             .fetch_optional(db)
-            .await?;
-
-    if let Some(liane_id) = attached_liane_id {
-        let liane = service::find(db, user_id, &liane_id)
             .await?
             .ok_or(AppError::NotFound)?;
-        return Ok(LianeRequestState::Attached { liane });
-    }
 
-    let matches = find_matches(db, liane_request_id).await?;
-    Ok(LianeRequestState::Detached { matches })
+    Ok(LianeRequestMatches {
+        lianes: find_lianes(db, &waypoints).await?,
+        requests: find_requests(db, liane_request_id).await?,
+    })
 }
 
-async fn find_matches(db: &PgPool, liane_request_id: &Uuid) -> Result<Vec<LianeMatch>> {
-    let rows = find_match_rows(db, liane_request_id).await?;
+async fn find_lianes(db: &PgPool, waypoints: &[Uuid]) -> Result<Vec<LianeSearchResult>> {
+    let points = rallying_point::service::find_by_ids(db, waypoints).await?;
+    let ends = (
+        waypoints.first().and_then(|id| points.get(id)),
+        waypoints.last().and_then(|id| points.get(id)),
+    );
+    let (Some(from), Some(to)) = ends else {
+        return Ok(Vec::new());
+    };
 
-    let liane_ids: Vec<Uuid> = rows.iter().filter_map(|row| row.liane_id).collect();
-    let mut lianes: HashMap<Uuid, Liane> = service::find_by_ids(db, &liane_ids)
-        .await?
-        .into_iter()
-        .map(|liane| (liane.id, liane))
-        .collect();
+    let query = SearchQuery {
+        from_lat: from.lat,
+        from_lng: from.lng,
+        to_lat: to.lat,
+        to_lng: to.lng,
+        radius: None,
+    };
+    service::search(db, &query).await
+}
+
+async fn find_requests(db: &PgPool, liane_request_id: &Uuid) -> Result<Vec<RequestMatch>> {
+    let rows = find_match_rows(db, liane_request_id).await?;
 
     let waypoint_ids: Vec<Uuid> = rows
         .iter()
@@ -65,32 +63,14 @@ async fn find_matches(db: &PgPool, liane_request_id: &Uuid) -> Result<Vec<LianeM
         .collect();
     let points = rallying_point::service::find_by_ids(db, &waypoint_ids).await?;
 
-    let mut matched_liane_ids = HashSet::new();
-    let mut matches = Vec::new();
-    for row in rows {
-        let target = match row.liane_id {
-            Some(liane_id) => {
-                if !matched_liane_ids.insert(liane_id) {
-                    continue;
-                }
-                let Some(liane) = lianes.remove(&liane_id) else {
-                    continue;
-                };
-                MatchTarget::Liane { liane }
-            }
-            None => MatchTarget::Request {
-                request: to_matched_request(&row, &points),
-            },
-        };
-
-        matches.push(LianeMatch {
+    Ok(rows
+        .iter()
+        .map(|row| RequestMatch {
             score: row.score,
-            common_week_days: row.common_week_days,
-            target,
-        });
-    }
-
-    Ok(matches)
+            common_week_days: row.common_week_days.clone(),
+            request: to_matched_request(row, &points),
+        })
+        .collect())
 }
 
 async fn find_match_rows(db: &PgPool, liane_request_id: &Uuid) -> Result<Vec<MatchRow>> {
@@ -120,7 +100,6 @@ async fn find_match_rows(db: &PgPool, liane_request_id: &Uuid) -> Result<Vec<Mat
                     theirs.return_after,
                     theirs.week_days,
                     (mine.week_days::bit(7) & theirs.week_days::bit(7))::text AS common_week_days,
-                    lm.liane_id,
                     LEAST(
                         1,
                         ST_Length(
@@ -138,16 +117,8 @@ async fn find_match_rows(db: &PgPool, liane_request_id: &Uuid) -> Result<Vec<Mat
                     AND ST_LineLocatePoint(theirs.line, ST_StartPoint(mine.line))
                         < ST_LineLocatePoint(theirs.line, ST_EndPoint(mine.line))
                 INNER JOIN "user" u ON u.id = theirs.user_id
-                LEFT JOIN liane_member lm ON lm.liane_request_id = theirs.id
                 WHERE mine.id = $1
                   AND (mine.week_days::bit(7) & theirs.week_days::bit(7)) <> B'0000000'
-                  AND (lm.liane_id IS NULL OR NOT lm.is_pending)
-                  AND NOT EXISTS (
-                      SELECT 1
-                      FROM liane_member own
-                      WHERE own.liane_id = lm.liane_id
-                        AND own.user_id = mine.user_id
-                  )
             )
             SELECT
                 liane_request_id,
@@ -162,7 +133,6 @@ async fn find_match_rows(db: &PgPool, liane_request_id: &Uuid) -> Result<Vec<Mat
                 return_after,
                 week_days,
                 common_week_days,
-                liane_id,
                 score
             FROM candidate
             WHERE score >= $3

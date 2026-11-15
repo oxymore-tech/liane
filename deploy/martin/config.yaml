@@ -3,17 +3,12 @@ postgres:
   auto_publish: false
 
   functions:
-    #    liane_display:
-    #      schema: public
-    #      function: liane_display
-    #    liane_display_filter:
-    #      schema: public
-    #      function: liane_display_filter
+    liane_display:
+      schema: public
+      function: liane_display
+    liane_stop_display:
+      schema: public
+      function: liane_stop_display
     rallying_point_display:
       schema: public
       function: rallying_point_display
-
-    ## For testing
-#    liane_display_filter_test:
-#      schema: public
-#      function: liane_display_filter_test

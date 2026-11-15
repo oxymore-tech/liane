@@ -55,7 +55,7 @@ where
 }
 
 #[derive(Debug)]
-pub struct AdminUser;
+pub struct AdminUser(pub AuthUser);
 
 impl<S> FromRequestParts<S> for AdminUser
 where
@@ -70,7 +70,7 @@ where
             return Err(AppError::Forbidden);
         }
 
-        Ok(AdminUser)
+        Ok(AdminUser(user))
     }
 }
 
