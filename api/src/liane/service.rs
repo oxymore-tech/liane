@@ -314,9 +314,11 @@ pub async fn update(db: &PgPool, id: &Uuid, input: &LianeInput) -> Result<Option
         return Ok(None);
     }
 
-    sqlx::query("SET CONSTRAINTS liane_member_board_stop_fkey, liane_member_alight_stop_fkey DEFERRED")
-        .execute(&mut *tx)
-        .await?;
+    sqlx::query(
+        "SET CONSTRAINTS liane_member_board_stop_fkey, liane_member_alight_stop_fkey DEFERRED",
+    )
+    .execute(&mut *tx)
+    .await?;
     replace_stops(&mut tx, id, &input.stop_ids).await?;
     ensure_memberships_still_valid(&mut tx, id).await?;
 
@@ -561,11 +563,7 @@ async fn validate_stops(db: &PgPool, stop_ids: &[Uuid]) -> Result<()> {
 }
 
 /// Le tracé est pour l'instant la ligne brisée reliant les arrêts.
-async fn replace_stops(
-    connection: &mut PgConnection,
-    id: &Uuid,
-    stop_ids: &[Uuid],
-) -> Result<()> {
+async fn replace_stops(connection: &mut PgConnection, id: &Uuid, stop_ids: &[Uuid]) -> Result<()> {
     sqlx::query("DELETE FROM liane_stop WHERE liane_id = $1")
         .bind(id)
         .execute(&mut *connection)

@@ -28,7 +28,12 @@ pub async fn search(
                 is_active
             FROM rallying_point
             WHERE is_active = true
-              AND ($1 = '' OR to_tsvector('french', label || ' ' || city) @@ plainto_tsquery('french', $1))
+              AND (
+                  $1 = ''
+                  OR to_tsvector('french', label || ' ' || city) @@ plainto_tsquery('french', $1)
+                  OR city ILIKE $1 || '%'
+                  OR label ILIKE '%' || $1 || '%'
+              )
             ORDER BY location <-> ST_SetSRID(ST_MakePoint($3, $2), 4326)::geography
             LIMIT $4
         "#,

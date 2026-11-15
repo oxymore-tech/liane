@@ -37,7 +37,10 @@ async fn admin_creates_visitor_sees_user_joins_a_section_then_leaves() {
         .iter()
         .map(|stop| stop["id"].as_str().unwrap())
         .collect();
-    let expected: Vec<String> = [a, b, c, d].iter().map(|point| point.id.to_string()).collect();
+    let expected: Vec<String> = [a, b, c, d]
+        .iter()
+        .map(|point| point.id.to_string())
+        .collect();
     assert_eq!(stop_ids, expected);
 
     let search = |from: &common::Point, to: &common::Point| {
@@ -87,7 +90,11 @@ async fn admin_creates_visitor_sees_user_joins_a_section_then_leaves() {
     assert_eq!(status, StatusCode::CONFLICT);
 
     let (status, _) = app
-        .post(&join, Some(&rider), membership(a, d, "1000000", "Both", false))
+        .post(
+            &join,
+            Some(&rider),
+            membership(a, d, "1000000", "Both", false),
+        )
         .await;
     assert_eq!(status, StatusCode::OK);
 
@@ -132,12 +139,20 @@ async fn admin_creates_visitor_sees_user_joins_a_section_then_leaves() {
     assert_eq!(status, StatusCode::UNAUTHORIZED);
 
     let (status, updated) = app
-        .put(&join, Some(&rider), membership(a, c, "0000011", "Return", true))
+        .put(
+            &join,
+            Some(&rider),
+            membership(a, c, "0000011", "Return", true),
+        )
         .await;
     assert_eq!(status, StatusCode::OK);
     assert_eq!(updated["direction"], "Return");
     let (status, _) = app
-        .put(&join, Some(&visitor), membership(a, c, "0000011", "Return", true))
+        .put(
+            &join,
+            Some(&visitor),
+            membership(a, c, "0000011", "Return", true),
+        )
         .await;
     assert_eq!(status, StatusCode::NOT_FOUND);
     let (_, detail) = app.get(&format!("/liane/{slug}"), None).await;
@@ -152,7 +167,11 @@ async fn admin_creates_visitor_sees_user_joins_a_section_then_leaves() {
     assert_eq!(status, StatusCode::OK);
 
     let (status, detail) = app.get(&format!("/liane/{slug}"), None).await;
-    assert_eq!(status, StatusCode::OK, "une liane sans membre continue d'exister");
+    assert_eq!(
+        status,
+        StatusCode::OK,
+        "une liane sans membre continue d'exister"
+    );
     assert_eq!(detail["member_count"], 0);
 }
 
@@ -191,9 +210,17 @@ async fn only_admins_manage_lianes() {
     let path = format!("/liane/{id}");
 
     let (status, _) = app
-        .post("/rallying_point/generate?source=test", Some(&admin), json!({}))
+        .post(
+            "/rallying_point/generate?source=test",
+            Some(&admin),
+            json!({}),
+        )
         .await;
-    assert_eq!(status, StatusCode::CONFLICT, "les arrêts d'une liane protègent les points");
+    assert_eq!(
+        status,
+        StatusCode::CONFLICT,
+        "les arrêts d'une liane protègent les points"
+    );
 
     let (status, _) = app.put(&path, Some(&user), body.clone()).await;
     assert_eq!(status, StatusCode::FORBIDDEN);
@@ -203,13 +230,21 @@ async fn only_admins_manage_lianes() {
     assert_eq!(status, StatusCode::FORBIDDEN);
 
     let (status, _) = app
-        .post(&format!("{path}/membership"), Some(&user), membership(b, c, "1111100", "Both", false))
+        .post(
+            &format!("{path}/membership"),
+            Some(&user),
+            membership(b, c, "1111100", "Both", false),
+        )
         .await;
     assert_eq!(status, StatusCode::OK);
 
     let renamed = unique_name("Autre nom");
     let (status, updated) = app
-        .put(&path, Some(&admin), json!({ "name": renamed, "stop_ids": [d.id, a.id, b.id, c.id] }))
+        .put(
+            &path,
+            Some(&admin),
+            json!({ "name": renamed, "stop_ids": [d.id, a.id, b.id, c.id] }),
+        )
         .await;
     assert_eq!(status, StatusCode::OK, "{updated}");
     assert_eq!(updated["slug"], slug, "le slug reste stable");
@@ -218,15 +253,31 @@ async fn only_admins_manage_lianes() {
 
     for breaking in [json!([a.id, b.id, d.id]), json!([a.id, c.id, b.id])] {
         let (status, _) = app
-            .put(&path, Some(&admin), json!({ "name": renamed, "stop_ids": breaking }))
+            .put(
+                &path,
+                Some(&admin),
+                json!({ "name": renamed, "stop_ids": breaking }),
+            )
             .await;
-        assert_eq!(status, StatusCode::CONFLICT, "un arrêt utilisé par un membre est protégé");
+        assert_eq!(
+            status,
+            StatusCode::CONFLICT,
+            "un arrêt utilisé par un membre est protégé"
+        );
     }
     let (_, detail) = app.get(&format!("/liane/{slug}"), None).await;
-    assert_eq!(detail["stops"].as_array().unwrap().len(), 4, "la modification refusée est annulée");
+    assert_eq!(
+        detail["stops"].as_array().unwrap().len(),
+        4,
+        "la modification refusée est annulée"
+    );
 
     let (status, _) = app
-        .put(&path, Some(&admin), json!({ "name": renamed, "stop_ids": [d.id, a.id, b.id, c.id], "is_active": false }))
+        .put(
+            &path,
+            Some(&admin),
+            json!({ "name": renamed, "stop_ids": [d.id, a.id, b.id, c.id], "is_active": false }),
+        )
         .await;
     assert_eq!(status, StatusCode::OK);
     let (_, public_list) = app.get("/liane", None).await;
@@ -238,12 +289,24 @@ async fn only_admins_manage_lianes() {
     let (status, _) = app.get(&format!("/liane/{slug}"), Some(&admin)).await;
     assert_eq!(status, StatusCode::OK);
     let (status, _) = app.get(&format!("/liane/{slug}"), Some(&user)).await;
-    assert_eq!(status, StatusCode::OK, "un membre voit encore sa liane désactivée");
+    assert_eq!(
+        status,
+        StatusCode::OK,
+        "un membre voit encore sa liane désactivée"
+    );
     let (newcomer, _) = app.new_user("Nina").await;
     let (status, _) = app
-        .post(&format!("{path}/membership"), Some(&newcomer), membership(a, b, "1000000", "Both", false))
+        .post(
+            &format!("{path}/membership"),
+            Some(&newcomer),
+            membership(a, b, "1000000", "Both", false),
+        )
         .await;
-    assert_eq!(status, StatusCode::NOT_FOUND, "on ne rejoint pas une liane désactivée");
+    assert_eq!(
+        status,
+        StatusCode::NOT_FOUND,
+        "on ne rejoint pas une liane désactivée"
+    );
 
     let (status, _) = app.delete(&path, Some(&admin)).await;
     assert_eq!(status, StatusCode::OK);
@@ -260,7 +323,9 @@ async fn a_member_reports_another_and_an_admin_excludes_or_dismisses() {
     let admin = app.admin_token().await;
     let points = app.points(2).await;
     let (a, b) = (&points[0], &points[1]);
-    let liane = app.create_liane(&admin, &unique_name("Signalements"), &[a, b]).await;
+    let liane = app
+        .create_liane(&admin, &unique_name("Signalements"), &[a, b])
+        .await;
     let id = liane["id"].as_str().unwrap();
     let slug = liane["slug"].as_str().unwrap();
 
@@ -270,7 +335,11 @@ async fn a_member_reports_another_and_an_admin_excludes_or_dismisses() {
     let (stranger, stranger_id) = app.new_user("Simon").await;
     for member in [&alice, &bruno, &chloe] {
         let (status, _) = app
-            .post(&format!("/liane/{id}/membership"), Some(member), membership(a, b, "1111100", "Both", false))
+            .post(
+                &format!("/liane/{id}/membership"),
+                Some(member),
+                membership(a, b, "1111100", "Both", false),
+            )
             .await;
         assert_eq!(status, StatusCode::OK);
     }
@@ -280,20 +349,42 @@ async fn a_member_reports_another_and_an_admin_excludes_or_dismisses() {
 
     let (status, _) = app.post(&report(&bruno_id), None, reason.clone()).await;
     assert_eq!(status, StatusCode::UNAUTHORIZED);
-    let (status, _) = app.post(&report(&bruno_id), Some(&stranger), reason.clone()).await;
-    assert_eq!(status, StatusCode::FORBIDDEN, "il faut être membre pour signaler");
-    let (status, _) = app.post(&report(&stranger_id), Some(&alice), reason.clone()).await;
-    assert_eq!(status, StatusCode::NOT_FOUND, "on ne signale qu'un membre de la liane");
-    let (status, _) = app.post(&report(&alice_id), Some(&alice), reason.clone()).await;
+    let (status, _) = app
+        .post(&report(&bruno_id), Some(&stranger), reason.clone())
+        .await;
+    assert_eq!(
+        status,
+        StatusCode::FORBIDDEN,
+        "il faut être membre pour signaler"
+    );
+    let (status, _) = app
+        .post(&report(&stranger_id), Some(&alice), reason.clone())
+        .await;
+    assert_eq!(
+        status,
+        StatusCode::NOT_FOUND,
+        "on ne signale qu'un membre de la liane"
+    );
+    let (status, _) = app
+        .post(&report(&alice_id), Some(&alice), reason.clone())
+        .await;
     assert_eq!(status, StatusCode::BAD_REQUEST, "pas d'auto-signalement");
-    let (status, _) = app.post(&report(&bruno_id), Some(&alice), json!({ "reason": " " })).await;
+    let (status, _) = app
+        .post(&report(&bruno_id), Some(&alice), json!({ "reason": " " }))
+        .await;
     assert_eq!(status, StatusCode::BAD_REQUEST);
 
-    let (status, _) = app.post(&report(&bruno_id), Some(&alice), reason.clone()).await;
+    let (status, _) = app
+        .post(&report(&bruno_id), Some(&alice), reason.clone())
+        .await;
     assert_eq!(status, StatusCode::OK);
-    let (status, _) = app.post(&report(&bruno_id), Some(&alice), reason.clone()).await;
+    let (status, _) = app
+        .post(&report(&bruno_id), Some(&alice), reason.clone())
+        .await;
     assert_eq!(status, StatusCode::CONFLICT, "pas de doublon ouvert");
-    let (status, _) = app.post(&report(&bruno_id), Some(&chloe), reason.clone()).await;
+    let (status, _) = app
+        .post(&report(&bruno_id), Some(&chloe), reason.clone())
+        .await;
     assert_eq!(status, StatusCode::OK);
 
     let (status, _) = app.get("/liane/report", Some(&alice)).await;
@@ -319,25 +410,36 @@ async fn a_member_reports_another_and_an_admin_excludes_or_dismisses() {
     let (status, _) = app.post(&exclude, Some(&admin), json!({})).await;
     assert_eq!(status, StatusCode::OK);
     let (status, _) = app.post(&exclude, Some(&admin), json!({})).await;
-    assert_eq!(status, StatusCode::NOT_FOUND, "un signalement traité ne se traite pas deux fois");
+    assert_eq!(
+        status,
+        StatusCode::NOT_FOUND,
+        "un signalement traité ne se traite pas deux fois"
+    );
 
     let (_, detail) = app.get(&format!("/liane/{slug}"), Some(&alice)).await;
     assert_eq!(detail["member_count"], 2);
     assert!(!detail["members"].to_string().contains(&bruno_id));
     let (_, reports) = app.get("/liane/report", Some(&admin)).await;
     assert!(
-        reports.as_array().unwrap().iter().all(|report| report["liane"]["id"] != liane["id"]),
+        reports
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|report| report["liane"]["id"] != liane["id"]),
         "l'exclusion clôt tous les signalements ouverts sur ce membre"
     );
-    let statuses: Vec<String> =
-        sqlx::query_scalar("SELECT status FROM liane_report WHERE liane_id = $1::uuid ORDER BY created_at")
-            .bind(id)
-            .fetch_all(&app.db)
-            .await
-            .unwrap();
+    let statuses: Vec<String> = sqlx::query_scalar(
+        "SELECT status FROM liane_report WHERE liane_id = $1::uuid ORDER BY created_at",
+    )
+    .bind(id)
+    .fetch_all(&app.db)
+    .await
+    .unwrap();
     assert_eq!(statuses, ["Excluded", "Excluded"]);
 
-    let (status, _) = app.post(&report(&chloe_id), Some(&alice), reason.clone()).await;
+    let (status, _) = app
+        .post(&report(&chloe_id), Some(&alice), reason.clone())
+        .await;
     assert_eq!(status, StatusCode::OK);
     let (_, reports) = app.get("/liane/report", Some(&admin)).await;
     let about_chloe = reports
@@ -346,7 +448,10 @@ async fn a_member_reports_another_and_an_admin_excludes_or_dismisses() {
         .iter()
         .find(|report| report["liane"]["id"] == liane["id"])
         .unwrap();
-    let dismiss = format!("/liane/report/{}/dismiss", about_chloe["id"].as_str().unwrap());
+    let dismiss = format!(
+        "/liane/report/{}/dismiss",
+        about_chloe["id"].as_str().unwrap()
+    );
     let (status, _) = app.post(&dismiss, Some(&alice), json!({})).await;
     assert_eq!(status, StatusCode::FORBIDDEN);
     let (status, _) = app.post(&dismiss, Some(&admin), json!({})).await;
@@ -354,9 +459,16 @@ async fn a_member_reports_another_and_an_admin_excludes_or_dismisses() {
     let (status, _) = app.post(&dismiss, Some(&admin), json!({})).await;
     assert_eq!(status, StatusCode::NOT_FOUND);
     let (_, detail) = app.get(&format!("/liane/{slug}"), None).await;
-    assert_eq!(detail["member_count"], 2, "classer un signalement n'exclut personne");
+    assert_eq!(
+        detail["member_count"], 2,
+        "classer un signalement n'exclut personne"
+    );
     let (status, _) = app.post(&report(&chloe_id), Some(&alice), reason).await;
-    assert_eq!(status, StatusCode::OK, "un nouveau signalement est possible après classement");
+    assert_eq!(
+        status,
+        StatusCode::OK,
+        "un nouveau signalement est possible après classement"
+    );
 
     let direct = format!("/liane/{id}/member/{chloe_id}");
     let (status, _) = app.delete(&direct, Some(&alice)).await;
@@ -378,30 +490,45 @@ async fn tiles_contain_lianes_stops_and_rallying_points() {
     let (unused_x, unused_y) = tile_of(unused, 12);
 
     let tile_size = async |function: &str, x: i32, y: i32, zoom: i32| -> i32 {
-        sqlx::query_scalar(&format!("SELECT COALESCE(length({function}($1, $2, $3)), 0)"))
-            .bind(zoom)
-            .bind(x)
-            .bind(y)
-            .fetch_one(&app.db)
-            .await
-            .unwrap()
+        sqlx::query_scalar(&format!(
+            "SELECT COALESCE(length({function}($1, $2, $3)), 0)"
+        ))
+        .bind(zoom)
+        .bind(x)
+        .bind(y)
+        .fetch_one(&app.db)
+        .await
+        .unwrap()
     };
 
     assert!(tile_size("rallying_point_display", x, y, 10).await > 0);
     assert_eq!(tile_size("liane_display", x, y, 10).await, 0);
     assert_eq!(tile_size("liane_stop_display", x, y, 10).await, 0);
 
-    let liane = app.create_liane(&admin, &unique_name("Tuiles"), &[a, b]).await;
+    let liane = app
+        .create_liane(&admin, &unique_name("Tuiles"), &[a, b])
+        .await;
     assert!(tile_size("liane_display", x, y, 10).await > 0);
     assert!(tile_size("liane_stop_display", x, y, 10).await > 0);
-    assert_eq!(tile_size("liane_stop_display", unused_x, unused_y, 12).await, 0);
+    assert_eq!(
+        tile_size("liane_stop_display", unused_x, unused_y, 12).await,
+        0
+    );
 
     let id = liane["id"].as_str().unwrap();
     let (status, _) = app
-        .put(&format!("/liane/{id}"), Some(&admin), json!({ "name": "Tuiles", "stop_ids": [a.id, b.id], "is_active": false }))
+        .put(
+            &format!("/liane/{id}"),
+            Some(&admin),
+            json!({ "name": "Tuiles", "stop_ids": [a.id, b.id], "is_active": false }),
+        )
         .await;
     assert_eq!(status, StatusCode::OK);
-    assert_eq!(tile_size("liane_display", x, y, 10).await, 0, "une liane désactivée n'est plus sur la carte");
+    assert_eq!(
+        tile_size("liane_display", x, y, 10).await,
+        0,
+        "une liane désactivée n'est plus sur la carte"
+    );
 }
 
 #[tokio::test]
@@ -411,7 +538,9 @@ async fn a_trip_request_gets_suggestions_without_creating_anything() {
     let admin = app.admin_token().await;
     let points = app.points(3).await;
     let (a, b, c) = (&points[0], &points[1], &points[2]);
-    let liane = app.create_liane(&admin, &unique_name("Rapprochement"), &[a, b, c]).await;
+    let liane = app
+        .create_liane(&admin, &unique_name("Rapprochement"), &[a, b, c])
+        .await;
 
     let (mine, _) = app.new_user("Maya").await;
     let (theirs, _) = app.new_user("Théo").await;
@@ -427,7 +556,9 @@ async fn a_trip_request_gets_suggestions_without_creating_anything() {
     };
     let (status, my_request) = app.post("/liane_request", Some(&mine), request(a, c)).await;
     assert_eq!(status, StatusCode::OK, "{my_request}");
-    let (status, their_request) = app.post("/liane_request", Some(&theirs), request(a, c)).await;
+    let (status, their_request) = app
+        .post("/liane_request", Some(&theirs), request(a, c))
+        .await;
     assert_eq!(status, StatusCode::OK);
 
     let path = format!("/liane/match/{}", my_request["id"].as_str().unwrap());
@@ -436,10 +567,21 @@ async fn a_trip_request_gets_suggestions_without_creating_anything() {
     assert_eq!(matches["lianes"][0]["liane"]["id"], liane["id"]);
     assert_eq!(matches["lianes"][0]["direction"], "Outbound");
     assert_eq!(matches["requests"][0]["request"]["id"], their_request["id"]);
-    assert_eq!(matches["requests"][0]["request"]["user"]["pseudo"], "Théo T.");
+    assert_eq!(
+        matches["requests"][0]["request"]["user"]["pseudo"],
+        "Théo T."
+    );
 
     let (status, _) = app.get(&path, Some(&theirs)).await;
-    assert_eq!(status, StatusCode::NOT_FOUND, "on ne consulte que ses propres demandes");
+    assert_eq!(
+        status,
+        StatusCode::NOT_FOUND,
+        "on ne consulte que ses propres demandes"
+    );
     let (_, mine_list) = app.get("/liane/mine", Some(&mine)).await;
-    assert_eq!(mine_list.as_array().unwrap().len(), 0, "le rapprochement ne fait entrer dans aucune liane");
+    assert_eq!(
+        mine_list.as_array().unwrap().len(),
+        0,
+        "le rapprochement ne fait entrer dans aucune liane"
+    );
 }

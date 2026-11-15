@@ -3,7 +3,8 @@ use axum::routing::{delete, get, post};
 
 use crate::liane::handler::{
     create, dismiss_report, exclude_member, exclude_reported, find_matches, get_one, join, leave,
-    list, list_all, list_mine, list_reports, remove, report_member, search, update, update_membership,
+    list, list_all, list_mine, list_reports, remove, report_member, search, update,
+    update_membership,
 };
 
 mod handler;

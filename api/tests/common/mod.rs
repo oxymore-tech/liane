@@ -70,7 +70,10 @@ impl TestApp {
             db,
             base_url,
             client: reqwest::Client::new(),
-            origin: (rng.random_range(-60.0..60.0), rng.random_range(-170.0..170.0)),
+            origin: (
+                rng.random_range(-60.0..60.0),
+                rng.random_range(-170.0..170.0),
+            ),
         }
     }
 
@@ -93,7 +96,10 @@ impl TestApp {
         let response = request.send().await.expect("réponse HTTP");
         let status = response.status();
         let text = response.text().await.expect("corps de réponse");
-        (status, serde_json::from_str(&text).unwrap_or(Value::String(text)))
+        (
+            status,
+            serde_json::from_str(&text).unwrap_or(Value::String(text)),
+        )
     }
 
     pub async fn get(&self, path: &str, token: Option<&str>) -> (StatusCode, Value) {
@@ -118,9 +124,17 @@ impl TestApp {
 
     /// Crée un utilisateur ordinaire par le parcours réel (code lu en base) et renvoie (jeton, id).
     pub async fn new_user(&self, first_name: &str) -> (String, String) {
-        let phone = format!("+336{:08}", rand::rng().random_range(10_000_000..100_000_000));
+        let phone = format!(
+            "+336{:08}",
+            rand::rng().random_range(10_000_000..100_000_000)
+        );
         let (status, _) = self
-            .call(Method::POST, &format!("/auth/sms?phone=%2B{}", &phone[1..]), None, None)
+            .call(
+                Method::POST,
+                &format!("/auth/sms?phone=%2B{}", &phone[1..]),
+                None,
+                None,
+            )
             .await;
         assert_eq!(status, StatusCode::OK);
 
@@ -139,7 +153,10 @@ impl TestApp {
             )
             .await;
         assert_eq!(status, StatusCode::OK);
-        (token, user["id"].as_str().expect("id utilisateur").to_string())
+        (
+            token,
+            user["id"].as_str().expect("id utilisateur").to_string(),
+        )
     }
 
     async fn login(&self, phone: &str, code: &str) -> String {
@@ -179,14 +196,24 @@ impl TestApp {
     pub async fn create_liane(&self, admin: &str, name: &str, stops: &[&Point]) -> Value {
         let stop_ids: Vec<Uuid> = stops.iter().map(|point| point.id).collect();
         let (status, liane) = self
-            .post("/liane", Some(admin), json!({ "name": name, "stop_ids": stop_ids }))
+            .post(
+                "/liane",
+                Some(admin),
+                json!({ "name": name, "stop_ids": stop_ids }),
+            )
             .await;
         assert_eq!(status, StatusCode::OK, "{liane}");
         liane
     }
 }
 
-pub fn membership(board: &Point, alight: &Point, week_days: &str, direction: &str, can_drive: bool) -> Value {
+pub fn membership(
+    board: &Point,
+    alight: &Point,
+    week_days: &str,
+    direction: &str,
+    can_drive: bool,
+) -> Value {
     json!({
         "board_stop_id": board.id,
         "alight_stop_id": alight.id,

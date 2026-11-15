@@ -70,7 +70,10 @@ mod tests {
     #[test]
     fn slug_is_lowercase_ascii_with_hyphens() {
         assert_eq!(slugify("Florac – Mende"), "florac-mende");
-        assert_eq!(slugify("  Vallée Française / Alès "), "vallee-francaise-ales");
+        assert_eq!(
+            slugify("  Vallée Française / Alès "),
+            "vallee-francaise-ales"
+        );
         assert_eq!(slugify("Cœur de Lozère"), "coeur-de-lozere");
     }
 
