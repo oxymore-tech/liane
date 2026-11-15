@@ -109,7 +109,7 @@ export class HttpClient {
   }
 
   private formatUrl(uri: string, { params }: QueryAsOptions) {
-    const url = new URL(uri, this.baseUrl);
+    const url = new URL(`${this.baseUrl}${uri}`, window.location.origin);
     if (params) {
       for (const [k, v] of Object.entries(params)) {
         if (v !== undefined && v !== null) {
@@ -124,6 +124,10 @@ export class HttpClient {
       }
     }
     return url.toString();
+  }
+
+  hasToken() {
+    return Boolean(this.getToken());
   }
 
   private getToken() {
