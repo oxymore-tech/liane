@@ -155,7 +155,8 @@ pub async fn search(db: &PgPool, query: &SearchQuery) -> Result<Vec<LianeSearchR
             } else {
                 Direction::Return
             };
-            let section_distance_meters = section_distance(&liane, &row.from_stop_id, &row.to_stop_id);
+            let section_distance_meters =
+                section_distance(&liane, &row.from_stop_id, &row.to_stop_id);
             Some(LianeSearchResult {
                 section_distance_meters,
                 liane,

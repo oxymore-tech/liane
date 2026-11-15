@@ -444,7 +444,11 @@ fn to_journey(row: ExportRow) -> ExportedJourney {
     let declared =
         |at: Option<DateTime<Utc>>, lat, lon| at.map(|datetime| TimePlace { datetime, lat, lon });
     let driver_gestures = DeclaredGestures {
-        start: declared(row.driver_start_at, row.driver_start_lat, row.driver_start_lng),
+        start: declared(
+            row.driver_start_at,
+            row.driver_start_lat,
+            row.driver_start_lng,
+        ),
         end: declared(row.driver_end_at, row.driver_end_lat, row.driver_end_lng),
     };
     let passenger_gestures = DeclaredGestures {
@@ -453,7 +457,11 @@ fn to_journey(row: ExportRow) -> ExportedJourney {
             row.passenger_start_lat,
             row.passenger_start_lng,
         ),
-        end: declared(row.passenger_end_at, row.passenger_end_lat, row.passenger_end_lng),
+        end: declared(
+            row.passenger_end_at,
+            row.passenger_end_lat,
+            row.passenger_end_lng,
+        ),
     };
 
     let (start_time, start_time_source) = match (row.passenger_start_at, row.driver_start_at) {

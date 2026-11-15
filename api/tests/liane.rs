@@ -617,16 +617,23 @@ async fn lianes_sharing_a_road_share_one_map_segment() {
             .unwrap_or(0.0)
         }
     };
-    let distance = |liane: &serde_json::Value, index: usize| liane["stop_distances"][index].as_f64().unwrap();
+    let distance =
+        |liane: &serde_json::Value, index: usize| liane["stop_distances"][index].as_f64().unwrap();
     let is_about = |length: f64, expected: f64| (length - expected).abs() < expected * 0.01 + 5.0;
 
     // Le tronçon commun (a → b) n'existe qu'une fois, avec les deux lianes ; chaque suite est à part.
     let shared = length_of(ids(&[&through, &forked])).await;
     assert!(is_about(shared, distance(&through, 1)), "{shared}");
     let own = length_of(ids(&[&through])).await;
-    assert!(is_about(own, distance(&through, 2) - distance(&through, 1)), "{own}");
+    assert!(
+        is_about(own, distance(&through, 2) - distance(&through, 1)),
+        "{own}"
+    );
     let fork = length_of(ids(&[&forked])).await;
-    assert!(is_about(fork, distance(&forked, 2) - distance(&forked, 1)), "{fork}");
+    assert!(
+        is_about(fork, distance(&forked, 2) - distance(&forked, 1)),
+        "{fork}"
+    );
 
     // Toucher le tronçon commun donne les deux lianes ; toucher une suite n'en donne qu'une.
     let near = |lat: f64, lng: f64| format!("/liane/near?lat={lat}&lng={lng}&radius=200");
@@ -641,9 +648,12 @@ async fn lianes_sharing_a_road_share_one_map_segment() {
     assert_eq!(found.as_array().unwrap().len(), 0);
 
     // La tuile porte un trait pour le tronçon commun, avec le total des membres et les deux slugs.
-    app.new_member("Uma", through["id"].as_str().unwrap(), a, b).await;
-    app.new_member("Vic", forked["id"].as_str().unwrap(), a, b).await;
-    app.new_member("Wes", forked["id"].as_str().unwrap(), a, &branch).await;
+    app.new_member("Uma", through["id"].as_str().unwrap(), a, b)
+        .await;
+    app.new_member("Vic", forked["id"].as_str().unwrap(), a, b)
+        .await;
+    app.new_member("Wes", forked["id"].as_str().unwrap(), a, &branch)
+        .await;
     let (x, y) = tile_of(a, 10);
     let tile: Vec<u8> = sqlx::query_scalar("SELECT liane_segment_display(10, $1, $2)")
         .bind(x)
@@ -662,14 +672,16 @@ async fn lianes_sharing_a_road_share_one_map_segment() {
         forked["slug"].as_str().unwrap(),
         through["slug"].as_str().unwrap()
     );
-    assert!(text.contains(&both) || text.contains(&both_reversed), "slugs du tronçon commun");
-    let members: i64 = sqlx::query_scalar(
-        "SELECT COUNT(*) FROM liane_member WHERE liane_id = ANY($1)",
-    )
-    .bind(ids(&[&through, &forked]))
-    .fetch_one(&app.db)
-    .await
-    .unwrap();
+    assert!(
+        text.contains(&both) || text.contains(&both_reversed),
+        "slugs du tronçon commun"
+    );
+    let members: i64 =
+        sqlx::query_scalar("SELECT COUNT(*) FROM liane_member WHERE liane_id = ANY($1)")
+            .bind(ids(&[&through, &forked]))
+            .fetch_one(&app.db)
+            .await
+            .unwrap();
     assert_eq!(members, 3);
 
     // Désactiver une liane rend le tronçon à l'autre seule.

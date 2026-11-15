@@ -62,9 +62,16 @@ async fn logging_out_revokes_the_token_of_this_device_only() {
     let app = TestApp::spawn().await;
     let phone = random_phone();
 
-    assert_eq!(send_code_from(&app, &phone, &random_ip()).await, StatusCode::OK);
+    assert_eq!(
+        send_code_from(&app, &phone, &random_ip()).await,
+        StatusCode::OK
+    );
     let (status, body) = app
-        .post("/auth/login", None, json!({ "phone": phone, "code": last_code(&app, &phone) }))
+        .post(
+            "/auth/login",
+            None,
+            json!({ "phone": phone, "code": last_code(&app, &phone) }),
+        )
         .await;
     assert_eq!(status, StatusCode::OK);
     assert_eq!(body["user"]["is_admin"], false);
@@ -72,7 +79,10 @@ async fn logging_out_revokes_the_token_of_this_device_only() {
     assert!(body["user"].get("iat").is_none() && body["user"].get("exp").is_none());
     let first = body["token"]["access_token"].as_str().unwrap().to_string();
 
-    assert_eq!(send_code_from(&app, &phone, &random_ip()).await, StatusCode::OK);
+    assert_eq!(
+        send_code_from(&app, &phone, &random_ip()).await,
+        StatusCode::OK
+    );
     let second = app.login(&phone, &last_code(&app, &phone)).await;
 
     let (status, _) = app.post("/auth/logout", Some(&first), json!({})).await;
@@ -118,7 +128,10 @@ async fn a_code_works_once_expires_and_allows_three_attempts() {
     let code = last_code(&app, &phone);
     assert_eq!(code.len(), 6);
     assert_eq!(login_from(&app, &phone, &code, &ip).await, StatusCode::OK);
-    assert_eq!(login_from(&app, &phone, &code, &ip).await, StatusCode::UNAUTHORIZED);
+    assert_eq!(
+        login_from(&app, &phone, &code, &ip).await,
+        StatusCode::UNAUTHORIZED
+    );
 
     let phone = random_phone();
     assert_eq!(send_code_from(&app, &phone, &ip).await, StatusCode::OK);
@@ -128,18 +141,30 @@ async fn a_code_works_once_expires_and_allows_three_attempts() {
         .await
         .unwrap();
     let code = last_code(&app, &phone);
-    assert_eq!(login_from(&app, &phone, &code, &ip).await, StatusCode::UNAUTHORIZED);
+    assert_eq!(
+        login_from(&app, &phone, &code, &ip).await,
+        StatusCode::UNAUTHORIZED
+    );
 
     let phone = random_phone();
     assert_eq!(send_code_from(&app, &phone, &ip).await, StatusCode::OK);
     let code = last_code(&app, &phone);
     let wrong = if code == "000001" { "000002" } else { "000001" };
     for _ in 0..3 {
-        assert_eq!(login_from(&app, &phone, wrong, &ip).await, StatusCode::UNAUTHORIZED);
+        assert_eq!(
+            login_from(&app, &phone, wrong, &ip).await,
+            StatusCode::UNAUTHORIZED
+        );
     }
-    assert_eq!(login_from(&app, &phone, &code, &ip).await, StatusCode::UNAUTHORIZED);
+    assert_eq!(
+        login_from(&app, &phone, &code, &ip).await,
+        StatusCode::UNAUTHORIZED
+    );
 
-    assert_eq!(send_code_from(&app, "pas un numéro", &ip).await, StatusCode::BAD_REQUEST);
+    assert_eq!(
+        send_code_from(&app, "pas un numéro", &ip).await,
+        StatusCode::BAD_REQUEST
+    );
 }
 
 #[tokio::test]
@@ -153,8 +178,14 @@ async fn sending_codes_is_limited_per_phone_and_per_address() {
     .await;
 
     let phone = random_phone();
-    assert_eq!(send_code_from(&app, &phone, &random_ip()).await, StatusCode::OK);
-    assert_eq!(send_code_from(&app, &phone, &random_ip()).await, StatusCode::OK);
+    assert_eq!(
+        send_code_from(&app, &phone, &random_ip()).await,
+        StatusCode::OK
+    );
+    assert_eq!(
+        send_code_from(&app, &phone, &random_ip()).await,
+        StatusCode::OK
+    );
     assert_eq!(
         send_code_from(&app, &phone, &random_ip()).await,
         StatusCode::TOO_MANY_REQUESTS
@@ -163,12 +194,21 @@ async fn sending_codes_is_limited_per_phone_and_per_address() {
 
     let ip = random_ip();
     for _ in 0..3 {
-        assert_eq!(send_code_from(&app, &random_phone(), &ip).await, StatusCode::OK);
+        assert_eq!(
+            send_code_from(&app, &random_phone(), &ip).await,
+            StatusCode::OK
+        );
     }
     let refused = random_phone();
-    assert_eq!(send_code_from(&app, &refused, &ip).await, StatusCode::TOO_MANY_REQUESTS);
+    assert_eq!(
+        send_code_from(&app, &refused, &ip).await,
+        StatusCode::TOO_MANY_REQUESTS
+    );
     assert!(app.sms.codes_for(&refused).is_empty());
-    assert_eq!(send_code_from(&app, &refused, &random_ip()).await, StatusCode::OK);
+    assert_eq!(
+        send_code_from(&app, &refused, &random_ip()).await,
+        StatusCode::OK
+    );
 
     // Une adresse inventée par le client en tête de X-Forwarded-For ne compte pas.
     let spoofed = format!("{}, {ip}", random_ip());
@@ -193,10 +233,22 @@ async fn wrong_codes_are_limited_per_address() {
     let code = last_code(&app, &phone);
     let wrong = if code == "000001" { "000002" } else { "000001" };
 
-    assert_eq!(login_from(&app, &phone, wrong, &ip).await, StatusCode::UNAUTHORIZED);
-    assert_eq!(login_from(&app, &phone, wrong, &ip).await, StatusCode::UNAUTHORIZED);
-    assert_eq!(login_from(&app, &phone, &code, &ip).await, StatusCode::TOO_MANY_REQUESTS);
-    assert_eq!(login_from(&app, &phone, &code, &random_ip()).await, StatusCode::OK);
+    assert_eq!(
+        login_from(&app, &phone, wrong, &ip).await,
+        StatusCode::UNAUTHORIZED
+    );
+    assert_eq!(
+        login_from(&app, &phone, wrong, &ip).await,
+        StatusCode::UNAUTHORIZED
+    );
+    assert_eq!(
+        login_from(&app, &phone, &code, &ip).await,
+        StatusCode::TOO_MANY_REQUESTS
+    );
+    assert_eq!(
+        login_from(&app, &phone, &code, &random_ip()).await,
+        StatusCode::OK
+    );
 }
 
 #[tokio::test]
@@ -277,45 +329,82 @@ async fn deleting_an_account_erases_it_and_keeps_attested_trips_anonymous() {
     let driver_device = app.subscribe_device(&driver).await;
 
     let (status, _) = app
-        .post(&format!("/liane/{liane_id}/message"), Some(&leaver), json!({ "text": "Bonjour" }))
+        .post(
+            &format!("/liane/{liane_id}/message"),
+            Some(&leaver),
+            json!({ "text": "Bonjour" }),
+        )
         .await;
     assert_eq!(status, StatusCode::OK);
 
     // Un trajet attesté : Léa passagère, montée et descente déclarées.
     let trip_at = |minutes: i64| json!({ "departure_time": (Utc::now() + Duration::minutes(minutes)).to_rfc3339(), "direction": "Outbound", "seat_count": 2 });
     let (status, attested) = app
-        .post(&format!("/liane/{liane_id}/trip"), Some(&driver), trip_at(5))
+        .post(
+            &format!("/liane/{liane_id}/trip"),
+            Some(&driver),
+            trip_at(5),
+        )
         .await;
     assert_eq!(status, StatusCode::OK, "{attested}");
     let attested_id = attested["id"].as_str().unwrap();
     let (status, _) = app
-        .post(&format!("/trip/{attested_id}/passenger"), Some(&leaver), json!({}))
+        .post(
+            &format!("/trip/{attested_id}/passenger"),
+            Some(&leaver),
+            json!({}),
+        )
         .await;
     assert_eq!(status, StatusCode::OK);
-    for (token, kind, point) in [(&driver, "Start", a), (&leaver, "Start", a), (&leaver, "End", b), (&driver, "End", b)] {
+    for (token, kind, point) in [
+        (&driver, "Start", a),
+        (&leaver, "Start", a),
+        (&leaver, "End", b),
+        (&driver, "End", b),
+    ] {
         let (status, body) = app
-            .post(&format!("/trip/{attested_id}/gesture"), Some(token), gesture_at(kind, point))
+            .post(
+                &format!("/trip/{attested_id}/gesture"),
+                Some(token),
+                gesture_at(kind, point),
+            )
             .await;
         assert_eq!(status, StatusCode::OK, "{body}");
     }
 
     // Un trajet à venir que Léa conduit, avec Denis inscrit ; un autre où elle est seulement inscrite.
     let (status, driven) = app
-        .post(&format!("/liane/{liane_id}/trip"), Some(&leaver), trip_at(600))
+        .post(
+            &format!("/liane/{liane_id}/trip"),
+            Some(&leaver),
+            trip_at(600),
+        )
         .await;
     assert_eq!(status, StatusCode::OK, "{driven}");
     let driven_id = driven["id"].as_str().unwrap();
     let (status, _) = app
-        .post(&format!("/trip/{driven_id}/passenger"), Some(&driver), json!({}))
+        .post(
+            &format!("/trip/{driven_id}/passenger"),
+            Some(&driver),
+            json!({}),
+        )
         .await;
     assert_eq!(status, StatusCode::OK);
     let (status, booked) = app
-        .post(&format!("/liane/{liane_id}/trip"), Some(&driver), trip_at(900))
+        .post(
+            &format!("/liane/{liane_id}/trip"),
+            Some(&driver),
+            trip_at(900),
+        )
         .await;
     assert_eq!(status, StatusCode::OK);
     let booked_id = booked["id"].as_str().unwrap();
     let (status, _) = app
-        .post(&format!("/trip/{booked_id}/passenger"), Some(&leaver), json!({}))
+        .post(
+            &format!("/trip/{booked_id}/passenger"),
+            Some(&leaver),
+            json!({}),
+        )
         .await;
     assert_eq!(status, StatusCode::OK);
 
@@ -352,7 +441,10 @@ async fn deleting_an_account_erases_it_and_keeps_attested_trips_anonymous() {
         identity_key.as_deref(),
         Some(api::user::identity::identity_key(&leaver_phone, "Test").as_str())
     );
-    assert_eq!(phone_trunc.as_deref(), Some(&leaver_phone[..leaver_phone.len() - 2]));
+    assert_eq!(
+        phone_trunc.as_deref(),
+        Some(&leaver_phone[..leaver_phone.len() - 2])
+    );
 
     for (table, expected) in [
         ("liane_member", 0),
@@ -371,18 +463,30 @@ async fn deleting_an_account_erases_it_and_keeps_attested_trips_anonymous() {
         assert_eq!(found, expected, "{table}");
     }
     assert_eq!(
-        count(&app, "SELECT COUNT(*) FROM trip WHERE driver_id = $1::uuid", &leaver_id).await,
+        count(
+            &app,
+            "SELECT COUNT(*) FROM trip WHERE driver_id = $1::uuid",
+            &leaver_id
+        )
+        .await,
         0
     );
 
     // Les autres membres voient toujours le trajet attesté, sans nom pour le compte supprimé.
-    let (status, trip) = app.get(&format!("/trip/{attested_id}"), Some(&driver)).await;
+    let (status, trip) = app
+        .get(&format!("/trip/{attested_id}"), Some(&driver))
+        .await;
     assert_eq!(status, StatusCode::OK);
     assert_eq!(trip["passengers"][0]["user"]["id"], leaver_id.as_str());
     assert!(trip["passengers"][0]["user"]["pseudo"].is_null());
     let (status, _) = app.get(&format!("/trip/{driven_id}"), Some(&driver)).await;
     assert_eq!(status, StatusCode::NOT_FOUND);
-    let (_, liane) = app.get(&format!("/liane/{}", liane["slug"].as_str().unwrap()), Some(&driver)).await;
+    let (_, liane) = app
+        .get(
+            &format!("/liane/{}", liane["slug"].as_str().unwrap()),
+            Some(&driver),
+        )
+        .await;
     assert_eq!(liane["member_count"], 1);
 
     // La preuve reste exportable pour le registre, avec l'identité pseudonymisée gardée à la suppression.
@@ -400,12 +504,20 @@ async fn deleting_an_account_erases_it_and_keeps_attested_trips_anonymous() {
         identity["identity_key"],
         api::user::identity::identity_key(&leaver_phone, "Test")
     );
-    assert_eq!(identity["phone_trunc"], leaver_phone[..leaver_phone.len() - 2]);
+    assert_eq!(
+        identity["phone_trunc"],
+        leaver_phone[..leaver_phone.len() - 2]
+    );
     assert!(!export.to_string().contains(&leaver_phone));
 
     // Le numéro est libre : se réinscrire crée un compte neuf.
-    assert_eq!(send_code_from(&app, &leaver_phone, &random_ip()).await, StatusCode::OK);
-    let again = app.login(&leaver_phone, &last_code(&app, &leaver_phone)).await;
+    assert_eq!(
+        send_code_from(&app, &leaver_phone, &random_ip()).await,
+        StatusCode::OK
+    );
+    let again = app
+        .login(&leaver_phone, &last_code(&app, &leaver_phone))
+        .await;
     let (status, me) = app.get("/user/me", Some(&again)).await;
     assert_eq!(status, StatusCode::OK);
     assert_ne!(me["id"], leaver_id.as_str());
@@ -413,7 +525,12 @@ async fn deleting_an_account_erases_it_and_keeps_attested_trips_anonymous() {
 }
 
 /// Un faux Brevo local : garde la requête reçue et répond avec le statut demandé.
-async fn fake_brevo(status: u16) -> (String, std::sync::Arc<std::sync::Mutex<Vec<(Option<String>, Value)>>>) {
+async fn fake_brevo(
+    status: u16,
+) -> (
+    String,
+    std::sync::Arc<std::sync::Mutex<Vec<(Option<String>, Value)>>>,
+) {
     use axum::http::{HeaderMap, StatusCode as Status};
     use axum::routing::post;
 
@@ -425,11 +542,17 @@ async fn fake_brevo(status: u16) -> (String, std::sync::Arc<std::sync::Mutex<Vec
             .and_then(|value| value.to_str().ok())
             .map(str::to_string);
         store.lock().unwrap().push((api_key, body));
-        (Status::from_u16(status).unwrap(), json!({ "messageId": 1 }).to_string())
+        (
+            Status::from_u16(status).unwrap(),
+            json!({ "messageId": 1 }).to_string(),
+        )
     };
     let app = axum::Router::new().route("/v3/transactionalSMS/sms", post(handler));
     let listener = TcpListener::bind("127.0.0.1:0").await.expect("port local");
-    let url = format!("http://{}/v3/transactionalSMS/sms", listener.local_addr().unwrap());
+    let url = format!(
+        "http://{}/v3/transactionalSMS/sms",
+        listener.local_addr().unwrap()
+    );
     tokio::spawn(async move { axum::serve(listener, app).await });
     (url, received)
 }
@@ -439,7 +562,10 @@ async fn brevo_sender_posts_a_transactional_sms() {
     let (url, received) = fake_brevo(201).await;
     let sender = BrevoSmsSender::new(&url, "cle-factice", "Liane");
 
-    sender.send_code("+33612345678", "123456").await.expect("envoi accepté");
+    sender
+        .send_code("+33612345678", "123456")
+        .await
+        .expect("envoi accepté");
 
     let received = received.lock().unwrap();
     let (api_key, body) = &received[0];
@@ -454,11 +580,17 @@ async fn brevo_sender_posts_a_transactional_sms() {
 async fn brevo_sender_reports_a_refusal_without_leaking_the_key() {
     let (url, _) = fake_brevo(401).await;
     let sender = BrevoSmsSender::new(&url, "cle-factice", "Liane");
-    let error = sender.send_code("+33612345678", "123456").await.unwrap_err();
+    let error = sender
+        .send_code("+33612345678", "123456")
+        .await
+        .unwrap_err();
     assert!(error.contains("401"));
     assert!(!error.contains("cle-factice"));
 
     let unreachable = BrevoSmsSender::new("http://127.0.0.1:9/sms", "cle-factice", "Liane");
-    let error = unreachable.send_code("+33612345678", "123456").await.unwrap_err();
+    let error = unreachable
+        .send_code("+33612345678", "123456")
+        .await
+        .unwrap_err();
     assert!(error.contains("unreachable"));
 }

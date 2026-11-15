@@ -61,8 +61,8 @@ fn is_close(value: &Value, expected: f64) -> bool {
 
 /// Le schéma officiel du corps de `POST /journeys` (registre de preuve de covoiturage, API v3.4) : voir `tests/rpc/README.md`.
 fn registry_schema() -> jsonschema::Validator {
-    let schema: Value =
-        serde_json::from_str(include_str!("rpc/journey-create.v3.4.schema.json")).expect("schéma du registre");
+    let schema: Value = serde_json::from_str(include_str!("rpc/journey-create.v3.4.schema.json"))
+        .expect("schéma du registre");
     jsonschema::options()
         .should_validate_formats(true)
         .build(&schema)
@@ -74,7 +74,10 @@ fn assert_valid_for_registry(schema: &jsonschema::Validator, journey: &Value) {
         .iter_errors(journey)
         .map(|error| format!("{} : {error}", error.instance_path()))
         .collect();
-    assert!(errors.is_empty(), "export refusé par le schéma du registre : {errors:#?}\n{journey:#}");
+    assert!(
+        errors.is_empty(),
+        "export refusé par le schéma du registre : {errors:#?}\n{journey:#}"
+    );
 }
 
 fn has_id(list: &Value, id: &Value) -> bool {
@@ -246,7 +249,10 @@ async fn a_driver_and_two_passengers_prove_their_trip_at_class_c_and_b() {
     assert!(started["driver_started_at"].is_string());
     assert_eq!(started["my_gestures"][0]["position_status"], "Granted");
     assert!(!started.to_string().contains(&a.lat.to_string()));
-    let departed = app.pushes.expect(&paula_device, "Denis T. a démarré le trajet").await;
+    let departed = app
+        .pushes
+        .expect(&paula_device, "Denis T. a démarré le trajet")
+        .await;
     assert!(departed.body.contains("Je monte"));
 
     let (status, refusal) = gesture(&app, trip_id, &driver, gesture_at("Start", a)).await;
@@ -422,7 +428,10 @@ async fn a_driver_and_two_passengers_prove_their_trip_at_class_c_and_b() {
     assert!(is_close(&journey["start"]["lon"], b.lng));
     assert!(is_close(&journey["end"]["lat"], d.lat));
     let datetime = journey["start"]["datetime"].as_str().unwrap();
-    assert!(datetime.len() == 20 && datetime.ends_with('Z'), "{datetime}");
+    assert!(
+        datetime.len() == 20 && datetime.ends_with('Z'),
+        "{datetime}"
+    );
     assert_eq!(journey["driver"]["revenue"], 0);
     assert_eq!(journey["passenger"]["contribution"], 0);
     assert_eq!(journey["passenger"]["seats"], 1);

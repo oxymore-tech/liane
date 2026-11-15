@@ -86,7 +86,11 @@ where
 
 /// Chaque mandataire ajoute à la fin de `X-Forwarded-For` l'adresse de qui l'appelle : seules les
 /// `trusted_proxy_count` dernières entrées sont dignes de confiance, le reste vient du client.
-fn client_ip(trusted_proxy_count: usize, forwarded_for: Option<&str>, peer: Option<String>) -> String {
+fn client_ip(
+    trusted_proxy_count: usize,
+    forwarded_for: Option<&str>,
+    peer: Option<String>,
+) -> String {
     let forwarded = forwarded_for.and_then(|header| {
         let hops: Vec<&str> = header.split(',').map(str::trim).collect();
         hops.len()
@@ -144,7 +148,10 @@ mod tests {
     fn the_client_is_the_entry_added_by_the_first_trusted_proxy() {
         assert_eq!(client_ip(1, Some("1.2.3.4"), peer()), "1.2.3.4");
         assert_eq!(client_ip(1, Some("6.6.6.6, 1.2.3.4"), peer()), "1.2.3.4");
-        assert_eq!(client_ip(2, Some("6.6.6.6, 1.2.3.4, 10.0.0.2"), peer()), "1.2.3.4");
+        assert_eq!(
+            client_ip(2, Some("6.6.6.6, 1.2.3.4, 10.0.0.2"), peer()),
+            "1.2.3.4"
+        );
     }
 
     #[test]

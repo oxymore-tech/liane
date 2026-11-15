@@ -132,21 +132,18 @@ impl Settings {
         let vapid_public_key = get("VAPID_PUBLIC_KEY");
         let push = match get("PUSH_PROVIDER").as_deref() {
             None | Some("log") => PushProvider::Log,
-            Some("webpush") => {
-                PushProvider::WebPush {
-                    vapid_public_key: vapid_public_key
-                        .clone()
-                        .ok_or("VAPID_PUBLIC_KEY is required when PUSH_PROVIDER=webpush")?,
-                    vapid_private_key: get("VAPID_PRIVATE_KEY")
-                        .ok_or("VAPID_PRIVATE_KEY is required when PUSH_PROVIDER=webpush")?,
-                    vapid_subject: get("VAPID_SUBJECT")
-                        .ok_or("VAPID_SUBJECT (mailto:… or https://…) is required when PUSH_PROVIDER=webpush")?,
-                }
-            }
+            Some("webpush") => PushProvider::WebPush {
+                vapid_public_key: vapid_public_key
+                    .clone()
+                    .ok_or("VAPID_PUBLIC_KEY is required when PUSH_PROVIDER=webpush")?,
+                vapid_private_key: get("VAPID_PRIVATE_KEY")
+                    .ok_or("VAPID_PRIVATE_KEY is required when PUSH_PROVIDER=webpush")?,
+                vapid_subject: get("VAPID_SUBJECT").ok_or(
+                    "VAPID_SUBJECT (mailto:… or https://…) is required when PUSH_PROVIDER=webpush",
+                )?,
+            },
             Some(other) => {
-                return Err(format!(
-                    "PUSH_PROVIDER must be log or webpush, not {other}"
-                ));
+                return Err(format!("PUSH_PROVIDER must be log or webpush, not {other}"));
             }
         };
 
@@ -270,7 +267,10 @@ mod tests {
 
     #[test]
     fn test_account_needs_the_explicit_switch() {
-        let account = [("AUTH_TEST_ACCOUNT", "+33600000000"), ("AUTH_TEST_CODE", "000000")];
+        let account = [
+            ("AUTH_TEST_ACCOUNT", "+33600000000"),
+            ("AUTH_TEST_CODE", "000000"),
+        ];
         assert_eq!(settings(&account).unwrap().config.test_account, None);
 
         let mut enabled = account.to_vec();
@@ -297,7 +297,10 @@ mod tests {
     #[test]
     fn origins_port_and_limits_are_read() {
         let settings = settings(&[
-            ("CORS_ALLOWED_ORIGINS", "https://liane.app, http://localhost:3000"),
+            (
+                "CORS_ALLOWED_ORIGINS",
+                "https://liane.app, http://localhost:3000",
+            ),
             ("PORT", "8080"),
             ("AUTH_SMS_PER_IP_PER_HOUR", "2"),
             ("TRUSTED_PROXY_COUNT", "1"),

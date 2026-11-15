@@ -52,7 +52,11 @@ async fn main() {
 /// `LOG_FORMAT=json` (par défaut hors compilation de développement) ou `text`.
 fn configure_logger(debug: bool) {
     let level = if debug { Level::DEBUG } else { Level::INFO };
-    let default_format = if cfg!(debug_assertions) { "text" } else { "json" };
+    let default_format = if cfg!(debug_assertions) {
+        "text"
+    } else {
+        "json"
+    };
     let format = var("LOG_FORMAT").unwrap_or_else(|_| default_format.to_string());
 
     if format == "json" {

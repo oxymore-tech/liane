@@ -63,7 +63,10 @@ async fn osrm(osrm_url: &str) -> Check {
     if osrm_url.is_empty() {
         return Check::Disabled;
     }
-    let url = format!("{}/nearest/v1/driving/3.5,44.5", osrm_url.trim_end_matches('/'));
+    let url = format!(
+        "{}/nearest/v1/driving/3.5,44.5",
+        osrm_url.trim_end_matches('/')
+    );
     let answered = reqwest::Client::new()
         .get(url)
         .timeout(OSRM_TIMEOUT)

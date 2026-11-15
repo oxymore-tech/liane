@@ -5,8 +5,8 @@ use uuid::Uuid;
 
 use crate::auth::model::AuthUser;
 use crate::error::{AppError, Result};
-use crate::user::model::{PublicUser, UpdateUser, User};
 use crate::notification::Notifier;
+use crate::user::model::{PublicUser, UpdateUser, User};
 use crate::user::{deletion, service};
 
 pub async fn get_me(auth: AuthUser, Extension(db): Extension<PgPool>) -> Result<Json<User>> {

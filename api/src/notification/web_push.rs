@@ -109,8 +109,12 @@ impl WebPushSender {
         match request.body(payload.content).send().await {
             Ok(response) if response.status().is_success() => PushOutcome::Sent,
             Ok(response) if matches!(response.status().as_u16(), 404 | 410) => PushOutcome::Gone,
-            Ok(response) => PushOutcome::Failed(format!("push service answered {}", response.status())),
-            Err(err) => PushOutcome::Failed(format!("push service unreachable: {}", err.without_url())),
+            Ok(response) => {
+                PushOutcome::Failed(format!("push service answered {}", response.status()))
+            }
+            Err(err) => {
+                PushOutcome::Failed(format!("push service unreachable: {}", err.without_url()))
+            }
         }
     }
 }
@@ -139,10 +143,9 @@ fn base64_url(bytes: &[u8]) -> String {
     const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
     let mut encoded = String::new();
     for chunk in bytes.chunks(3) {
-        let block = chunk
-            .iter()
-            .enumerate()
-            .fold(0u32, |block, (index, byte)| block | (*byte as u32) << (16 - 8 * index));
+        let block = chunk.iter().enumerate().fold(0u32, |block, (index, byte)| {
+            block | (*byte as u32) << (16 - 8 * index)
+        });
         for position in 0..=chunk.len() {
             encoded.push(ALPHABET[(block >> (18 - 6 * position) & 63) as usize] as char);
         }

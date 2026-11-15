@@ -64,9 +64,13 @@ async fn regeneration_updates_points_by_key_without_breaking_lianes() {
     let other = Source::new(&app);
     let label = |name: &str| format!("{name} {}", &source.name[4..12]);
 
-    let report = sync(&app.db, &[&other.name], vec![other.point("x", "Ailleurs", 9)])
-        .await
-        .unwrap();
+    let report = sync(
+        &app.db,
+        &[&other.name],
+        vec![other.point("x", "Ailleurs", 9)],
+    )
+    .await
+    .unwrap();
     assert_eq!(report.inserted, 1);
 
     let first = vec![
@@ -77,17 +81,35 @@ async fn regeneration_updates_points_by_key_without_breaking_lianes() {
     let report = sync(&app.db, &[&source.name], first.clone()).await.unwrap();
     assert_eq!(
         report,
-        SyncReport { count: 3, inserted: 3, ..SyncReport::default() }
+        SyncReport {
+            count: 3,
+            inserted: 3,
+            ..SyncReport::default()
+        }
     );
     let (a_id, _, _, a_lng) = stored(&app, &source, "a").await;
     let (b_id, ..) = stored(&app, &source, "b").await;
 
     let unchanged = sync(&app.db, &[&source.name], first).await.unwrap();
-    assert_eq!(unchanged, SyncReport { count: 3, ..SyncReport::default() });
+    assert_eq!(
+        unchanged,
+        SyncReport {
+            count: 3,
+            ..SyncReport::default()
+        }
+    );
 
     // Une liane, un membre, un trajet et une demande de trajet s'appuient sur Alpha et Bravo.
-    let a = Point { id: a_id, lat: source.lat, lng: a_lng };
-    let b = Point { id: b_id, lat: source.lat, lng: a_lng + 0.1 };
+    let a = Point {
+        id: a_id,
+        lat: source.lat,
+        lng: a_lng,
+    };
+    let b = Point {
+        id: b_id,
+        lat: source.lat,
+        lng: a_lng + 0.1,
+    };
     let liane = app
         .create_liane(&admin, &unique_name("Clé stable"), &[&a, &b])
         .await;
@@ -120,7 +142,9 @@ async fn regeneration_updates_points_by_key_without_breaking_lianes() {
         source.point("c", &label("Charlie"), 2),
         source.point("d", &label("Delta"), 3),
     ];
-    let report = sync(&app.db, &[&source.name], second.clone()).await.unwrap();
+    let report = sync(&app.db, &[&source.name], second.clone())
+        .await
+        .unwrap();
     assert_eq!(
         report,
         SyncReport {
@@ -146,9 +170,22 @@ async fn regeneration_updates_points_by_key_without_breaking_lianes() {
 
     // Le point désactivé n'est plus proposé, mais la liane, le trajet et la demande tiennent toujours.
     let (_, found) = app
-        .get(&format!("/rallying_point?search={}&lat={}&lng={}", &source.name[4..12], source.lat, source.lng), None)
+        .get(
+            &format!(
+                "/rallying_point?search={}&lat={}&lng={}",
+                &source.name[4..12],
+                source.lat,
+                source.lng
+            ),
+            None,
+        )
         .await;
-    let found: Vec<&str> = found.as_array().unwrap().iter().map(|p| p["id"].as_str().unwrap()).collect();
+    let found: Vec<&str> = found
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|p| p["id"].as_str().unwrap())
+        .collect();
     assert!(found.contains(&a_id.to_string().as_str()));
     assert!(!found.contains(&b_id.to_string().as_str()));
 
@@ -159,11 +196,17 @@ async fn regeneration_updates_points_by_key_without_breaking_lianes() {
     assert_eq!(detail["stops"][1]["id"], b_id.to_string());
     assert_eq!(detail["stops"][1]["is_active"], false);
     let (status, _) = app
-        .get(&format!("/trip/{}", trip["id"].as_str().unwrap()), Some(&member))
+        .get(
+            &format!("/trip/{}", trip["id"].as_str().unwrap()),
+            Some(&member),
+        )
         .await;
     assert_eq!(status, StatusCode::OK);
     let (status, kept_request) = app
-        .get(&format!("/liane_request/{}", request["id"].as_str().unwrap()), Some(&member))
+        .get(
+            &format!("/liane_request/{}", request["id"].as_str().unwrap()),
+            Some(&member),
+        )
         .await;
     assert_eq!(status, StatusCode::OK);
     assert_eq!(kept_request["waypoints"].as_array().unwrap().len(), 2);
@@ -186,7 +229,11 @@ async fn regeneration_updates_points_by_key_without_breaking_lianes() {
         .await;
     assert_eq!(status, StatusCode::OK, "{renamed}");
     let (status, _) = app
-        .post("/liane", Some(&admin), json!({ "name": "Refusée", "stop_ids": [a_id, b_id] }))
+        .post(
+            "/liane",
+            Some(&admin),
+            json!({ "name": "Refusée", "stop_ids": [a_id, b_id] }),
+        )
         .await;
     assert_eq!(status, StatusCode::BAD_REQUEST);
 
@@ -194,7 +241,14 @@ async fn regeneration_updates_points_by_key_without_breaking_lianes() {
     let mut third = second;
     third.push(source.point("b", &label("Bravo"), 1));
     let report = sync(&app.db, &[&source.name], third).await.unwrap();
-    assert_eq!(report, SyncReport { count: 4, reactivated: 1, ..SyncReport::default() });
+    assert_eq!(
+        report,
+        SyncReport {
+            count: 4,
+            reactivated: 1,
+            ..SyncReport::default()
+        }
+    );
     let (b_back, _, b_active, _) = stored(&app, &source, "b").await;
     assert_eq!(b_back, b_id);
     assert!(b_active);
@@ -216,7 +270,9 @@ async fn points_generated_before_the_key_get_it_back_and_keep_their_id() {
     let mut point = source.point("a", &label, 0);
     point.lat = legacy.lat;
     point.lng = legacy.lng;
-    let report = sync(&app.db, &[&source.name], vec![point.clone()]).await.unwrap();
+    let report = sync(&app.db, &[&source.name], vec![point.clone()])
+        .await
+        .unwrap();
     assert_eq!(report.adopted, 1);
     assert_eq!(report.inserted, 0);
     let (id, ..) = stored(&app, &source, "a").await;

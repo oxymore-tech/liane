@@ -7,8 +7,8 @@ pub mod extractor;
 mod handler;
 pub mod model;
 mod rate_limit;
-pub mod session;
 mod service;
+pub mod session;
 pub mod sms;
 
 pub fn auth_router() -> Router {
