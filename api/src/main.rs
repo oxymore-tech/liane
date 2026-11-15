@@ -27,12 +27,20 @@ const SHUTDOWN_GRACE: Duration = Duration::from_secs(10);
 struct Args {
     #[arg(short, long)]
     debug: bool,
+    /// Interroge GET /api/health de l'instance locale et sort avec 0 (saine) ou 1 : pour le HEALTHCHECK du conteneur.
+    #[arg(long)]
+    health: bool,
 }
 
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
     dotenv().ok();
+
+    if args.health {
+        std::process::exit(if is_healthy().await { 0 } else { 1 });
+    }
+
     configure_logger(args.debug);
 
     if let Err(err) = try_main().await {
@@ -137,6 +145,16 @@ fn announce(settings: &Settings) {
     if settings.config.osrm_url.is_empty() {
         info!("OSRM_URL is empty: routes are straight lines between stops");
     }
+}
+
+async fn is_healthy() -> bool {
+    let port = var("PORT").unwrap_or_else(|_| "5000".to_string());
+    reqwest::Client::new()
+        .get(format!("http://127.0.0.1:{port}/api/health"))
+        .timeout(Duration::from_secs(3))
+        .send()
+        .await
+        .is_ok_and(|response| response.status().is_success())
 }
 
 async fn shutdown_signals() {

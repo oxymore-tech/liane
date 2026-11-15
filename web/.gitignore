@@ -3,3 +3,8 @@ node_modules/
 public/sw.js
 public/swe-worker-*.js
 .env.local
+
+# Fichiers générés par yarn, tsc et Next
+.yarn/install-state.gz
+next-env.d.ts
+tsconfig.tsbuildinfo

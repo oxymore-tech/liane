@@ -1,9 +1,11 @@
+# Développement local : base et tuiles seulement ; l'API (cargo run) et le site (yarn dev) tournent sur le poste.
+# Les ports ne sont ouverts que sur la machine elle-même (127.0.0.1).
 services:
 
   postgres:
     image: "postgis/postgis:18-3.6"
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     environment:
       POSTGRES_DB: liane
       POSTGRES_USER: liane
@@ -13,10 +15,10 @@ services:
     restart: unless-stopped
 
   martin:
-    image: ghcr.io/maplibre/martin
+    image: ghcr.io/maplibre/martin:1.16.1
     command: ["--config", "/config.yaml"]
     ports:
-      - "3001:3000"
+      - "127.0.0.1:3001:3000"
     volumes:
       - "./martin/config.yaml:/config.yaml:ro"
     environment:

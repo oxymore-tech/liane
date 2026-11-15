@@ -1,0 +1,7 @@
+# Seuls Cargo.toml, Cargo.lock, src/, migrations/ et resources/ entrent dans l'image.
+*
+!Cargo.toml
+!Cargo.lock
+!src/
+!migrations/
+!resources/

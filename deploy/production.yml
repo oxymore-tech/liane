@@ -1,0 +1,162 @@
+# Liane (réécriture Rust + Next.js) en production : base PostgreSQL/PostGIS, API, tuiles Martin, site.
+#
+#   cp production.env.example .env      # puis remplir les valeurs (aucun secret n'est écrit ici)
+#   docker compose -f production.yml --env-file .env up -d --build
+#   docker compose -f production.yml --env-file .env --profile osrm --profile backup up -d   # services facultatifs
+#
+# Rien n'est publié sur l'hôte : seul le reverse proxy Traefik, par le réseau externe TRAEFIK_NETWORK,
+# atteint le site, l'API et les tuiles. La base n'est joignable que des autres services.
+#
+# Le reverse proxy envoie /api à l'API et /tiles à Martin, sans passer par le serveur Next. C'est
+# nécessaire à la limite de débit par adresse IP : l'API lit l'adresse du client dans l'en-tête
+# X-Forwarded-For que Traefik complète (TRUSTED_PROXY_COUNT=1), alors que le serveur Next relaie cet
+# en-tête tel que le client l'a envoyé.
+
+name: liane
+
+x-traefik-router: &traefik
+  traefik.enable: "true"
+  traefik.docker.network: ${TRAEFIK_NETWORK:-traefik}
+
+services:
+
+  postgres:
+    image: postgis/postgis:18-3.6
+    environment:
+      POSTGRES_DB: liane
+      POSTGRES_USER: liane
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD est obligatoire}
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U liane -d liane -h 127.0.0.1"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+    networks: [internal]
+    restart: unless-stopped
+
+  api:
+    image: ${API_IMAGE:-liane-api:latest}
+    build: ../api
+    environment:
+      # Le mot de passe figure dans une URL : lettres et chiffres seulement, ou encodé (%xx).
+      DATABASE_URL: postgres://liane:${DB_PASSWORD}@postgres:5432/liane
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET est obligatoire}
+      SMS_PROVIDER: ${SMS_PROVIDER:?SMS_PROVIDER est obligatoire (brevo en production)}
+      SMS_API_KEY: ${SMS_API_KEY:-}
+      SMS_SENDER: ${SMS_SENDER:-Liane}
+      PUSH_PROVIDER: ${PUSH_PROVIDER:-log}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-}
+      OSRM_URL: ${OSRM_URL:-}
+      TRUSTED_PROXY_COUNT: ${TRUSTED_PROXY_COUNT:-1}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
+      LOG_FORMAT: json
+    depends_on:
+      postgres:
+        condition: service_healthy
+    labels:
+      <<: *traefik
+      traefik.http.routers.liane-api.rule: Host(`${DOMAIN:?DOMAIN est obligatoire}`) && PathPrefix(`/api`)
+      traefik.http.routers.liane-api.entrypoints: ${TRAEFIK_ENTRYPOINT:-websecure}
+      traefik.http.routers.liane-api.tls.certresolver: ${TRAEFIK_CERT_RESOLVER:-letsencrypt}
+      traefik.http.services.liane-api.loadbalancer.server.port: "5000"
+    networks: [internal, proxy]
+    stop_grace_period: 15s
+    restart: unless-stopped
+
+  martin:
+    image: ghcr.io/maplibre/martin:1.16.1
+    command: ["--config", "/config.yaml"]
+    volumes:
+      - ./martin/config.yaml:/config.yaml:ro
+    environment:
+      DB_USER: liane
+      DB_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      api:
+        condition: service_healthy   # l'API crée les fonctions de tuiles (migrations) avant que Martin ne les lise
+    labels:
+      <<: *traefik
+      traefik.http.routers.liane-tiles.rule: Host(`${DOMAIN}`) && PathPrefix(`/tiles`)
+      traefik.http.routers.liane-tiles.entrypoints: ${TRAEFIK_ENTRYPOINT:-websecure}
+      traefik.http.routers.liane-tiles.tls.certresolver: ${TRAEFIK_CERT_RESOLVER:-letsencrypt}
+      traefik.http.routers.liane-tiles.middlewares: liane-tiles-strip
+      traefik.http.middlewares.liane-tiles-strip.stripprefix.prefixes: /tiles
+      traefik.http.services.liane-tiles.loadbalancer.server.port: "3000"
+    networks: [internal, proxy]
+    restart: unless-stopped
+
+  web:
+    image: ${WEB_IMAGE:-liane-web:latest}
+    build:
+      context: ../web
+      args:
+        MAPTILER_KEY: ${MAPTILER_KEY:-}
+    depends_on:
+      - api
+    labels:
+      <<: *traefik
+      traefik.http.routers.liane-web.rule: Host(`${DOMAIN}`)
+      traefik.http.routers.liane-web.entrypoints: ${TRAEFIK_ENTRYPOINT:-websecure}
+      traefik.http.routers.liane-web.tls.certresolver: ${TRAEFIK_CERT_RESOLVER:-letsencrypt}
+      traefik.http.services.liane-web.loadbalancer.server.port: "3000"
+    networks: [internal, proxy]
+    restart: unless-stopped
+
+  # Facultatif (--profile osrm) : calcul des tracés par la route. Sans lui, OSRM_URL reste vide et les
+  # tracés sont des lignes droites. Les données (OSRM_DATA_DIR) sont préparées à part avec osrm-extract,
+  # osrm-partition et osrm-customize ; compter environ 2 Go de mémoire pour l'Occitanie.
+  # Avec ce service : OSRM_URL=http://osrm:5000
+  osrm:
+    profiles: [osrm]
+    image: ghcr.io/project-osrm/osrm-backend:v6.0.0
+    command: ["osrm-routed", "--algorithm", "mld", "/data/${OSRM_DATA_FILE:-occitanie.osrm}"]
+    volumes:
+      - ${OSRM_DATA_DIR:-./osrm-data}:/data:ro
+    networks: [internal]
+    restart: unless-stopped
+
+  # Facultatif (--profile backup) : une sauvegarde par jour dans le volume backup-data, gardée
+  # BACKUP_KEEP_DAYS jours. À compléter par une copie hors du serveur : ce volume est sur le même disque.
+  # Restauration : gunzip -c liane-AAAA-MM-JJ.sql.gz | psql -h postgres -U liane -d liane
+  backup:
+    profiles: [backup]
+    image: postgis/postgis:18-3.6
+    environment:
+      PGPASSWORD: ${DB_PASSWORD}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        while true; do
+          file=/backup/liane-$$(date +%F).sql.gz
+          if pg_dump -h postgres -U liane -d liane --clean --if-exists | gzip > $$file.tmp && [ -s $$file.tmp ]; then
+            mv $$file.tmp $$file
+            echo "backup written: $$file"
+          else
+            rm -f $$file.tmp
+            echo "backup FAILED" >&2
+          fi
+          find /backup -name 'liane-*.sql.gz' -mtime +$$BACKUP_KEEP_DAYS -delete
+          sleep 86400
+        done
+    volumes:
+      - backup-data:/backup
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [internal]
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  backup-data:
+
+networks:
+  internal:
+  proxy:
+    external: true
+    name: ${TRAEFIK_NETWORK:-traefik}

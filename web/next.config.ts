@@ -9,6 +9,8 @@ const withSerwist = withSerwistInit({
 });
 
 const nextConfig: NextConfig = withSerwist({
+  // Sortie autonome (serveur Node sans node_modules) pour l'image Docker : voir web/Dockerfile.
+  output: process.env.NEXT_OUTPUT === "standalone" ? "standalone" : undefined,
   async rewrites() {
     return [
       {
