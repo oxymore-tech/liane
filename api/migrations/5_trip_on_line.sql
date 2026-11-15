@@ -5,12 +5,13 @@
 
 -- Les trajets de l'ancien modèle n'ont ni tronçon ni places : ceux qui ont un conducteur sont
 -- conservés comme annulés, les autres ne sont pas convertibles.
+ALTER TABLE trip DROP COLUMN return_trip_id;
+
 DELETE FROM trip WHERE driver_id IS NULL;
 
 DROP TABLE trip_waypoint;
 
 ALTER TABLE trip
-    DROP COLUMN return_trip_id,
     ADD COLUMN direction        VARCHAR(10),
     ADD COLUMN from_rp_id       UUID REFERENCES rallying_point(id),
     ADD COLUMN to_rp_id         UUID REFERENCES rallying_point(id),

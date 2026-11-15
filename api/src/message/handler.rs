@@ -2,9 +2,11 @@ use std::convert::Infallible;
 use std::time::Duration;
 
 use axum::extract::{Path, Query};
+use axum::http::HeaderName;
+use axum::http::header::CACHE_CONTROL;
+use axum::response::IntoResponse;
 use axum::response::sse::{Event, KeepAlive, Sse};
 use axum::{Extension, Json};
-use futures_util::Stream;
 use futures_util::stream::unfold;
 use sqlx::PgPool;
 use tokio::sync::broadcast::error::RecvError;
@@ -18,6 +20,12 @@ use crate::message::service;
 use crate::notification::Notifier;
 
 const KEEP_ALIVE: Duration = Duration::from_secs(20);
+/// Sans cela, un intermédiaire qui compresse ou met en tampon (le serveur Next, nginx) retient
+/// les messages au lieu de les faire suivre un par un.
+const UNBUFFERED: [(HeaderName, &str); 2] = [
+    (CACHE_CONTROL, "no-cache, no-transform"),
+    (HeaderName::from_static("x-accel-buffering"), "no"),
+];
 
 pub async fn list(
     auth: AuthUser,
@@ -56,7 +64,7 @@ pub async fn stream(
     Extension(db): Extension<PgPool>,
     Extension(notifier): Extension<Notifier>,
     Path(liane_id): Path<Uuid>,
-) -> Result<Sse<impl Stream<Item = std::result::Result<Event, Infallible>>>> {
+) -> Result<impl IntoResponse> {
     let user_id = auth.id;
     service::ensure_member(&db, &liane_id, &user_id).await?;
 
@@ -76,10 +84,11 @@ pub async fn stream(
                     Err(RecvError::Lagged(_)) => Event::default().event("resync").data("{}"),
                     Err(RecvError::Closed) => return None,
                 };
-                return Some((Ok(event), receiver));
+                return Some((Ok::<_, Infallible>(event), receiver));
             }
         }
     });
 
-    Ok(Sse::new(live).keep_alive(KeepAlive::new().interval(KEEP_ALIVE)))
+    let live: Sse<_> = Sse::new(live).keep_alive(KeepAlive::new().interval(KEEP_ALIVE));
+    Ok((UNBUFFERED, live))
 }

@@ -108,6 +108,7 @@ async fn members_talk_in_their_liane_and_nobody_else_sees_anything() {
         .expect("fil en direct");
     assert_eq!(live.status(), StatusCode::OK);
     assert_eq!(live.headers()["content-type"], "text/event-stream");
+    assert_eq!(live.headers()["cache-control"], "no-cache, no-transform");
 
     let (status, sent) = app.post(&messages, Some(&alice), hello).await;
     assert_eq!(status, StatusCode::OK, "{sent}");
