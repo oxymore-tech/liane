@@ -14,6 +14,7 @@ use crate::notification::push::{PushNotification, PushOutcome, PushSender};
 mod handler;
 pub mod push;
 mod subscription;
+pub mod web_push;
 
 const LIVE_EVENT_BUFFER: usize = 256;
 
