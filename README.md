@@ -53,8 +53,9 @@ cd api && cargo run                         # API sur http://localhost:5000, mig
 cd web && yarn install && yarn dev          # site sur http://localhost:3000
 ```
 
-L'API lit sa configuration dans l'environnement (et dans `api/.env` s'il existe). Avec `SMS_PROVIDER=log`, le
-code de connexion est écrit dans le journal de l'API. Les points de ralliement se chargent une fois avec un
+L'API lit sa configuration dans l'environnement et dans le fichier `api/.env` : il doit contenir les variables de
+`deploy/.env.example` (au minimum `DATABASE_URL`, `JWT_SECRET` et `SMS_PROVIDER`, sans quoi l'API refuse de démarrer
+en disant ce qui manque). Avec `SMS_PROVIDER=log`, le code de connexion est écrit dans le journal de l'API. Les points de ralliement se chargent une fois avec un
 compte administrateur : `POST /api/rallying_point/generate` (France entière, 36 000 points, 2 secondes) ou
 `?source=test` (sept départements d'Occitanie). La commande peut être relancée : elle met à jour les points par
 leur clé d'origine sans changer leurs identifiants.
