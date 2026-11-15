@@ -85,7 +85,12 @@ pub async fn list_open(db: &PgPool) -> Result<Vec<Report>> {
 }
 
 /// Exclut le membre signalé et clôt tous les signalements ouverts qui le visent dans cette liane.
-pub async fn exclude(db: &PgPool, admin_id: &Uuid, report_id: &Uuid) -> Result<bool> {
+/// Renvoie la liane et le membre exclu.
+pub async fn exclude(
+    db: &PgPool,
+    admin_id: &Uuid,
+    report_id: &Uuid,
+) -> Result<Option<(Uuid, Uuid)>> {
     let mut tx = db.begin().await?;
 
     let target: Option<(Uuid, Uuid)> = sqlx::query_as(
@@ -101,7 +106,7 @@ pub async fn exclude(db: &PgPool, admin_id: &Uuid, report_id: &Uuid) -> Result<b
     .fetch_optional(&mut *tx)
     .await?;
     let Some((liane_id, reported_id)) = target else {
-        return Ok(false);
+        return Ok(None);
     };
 
     sqlx::query("DELETE FROM liane_member WHERE liane_id = $1 AND user_id = $2")
@@ -128,7 +133,7 @@ pub async fn exclude(db: &PgPool, admin_id: &Uuid, report_id: &Uuid) -> Result<b
     .await?;
 
     tx.commit().await?;
-    Ok(true)
+    Ok(Some((liane_id, reported_id)))
 }
 
 pub async fn dismiss(db: &PgPool, admin_id: &Uuid, report_id: &Uuid) -> Result<bool> {

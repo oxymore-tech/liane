@@ -17,6 +17,11 @@ impl Keys {
     }
 }
 
+/// À VALIDER — barème du partage de frais indicatif, en centimes d'euro par kilomètre, pour la
+/// voiture entière : il est divisé entre les occupants (conducteur compris). Valeur reprise de
+/// l'ancienne application (0,30 €/km). Aucun paiement n'en découle.
+pub const INDICATIVE_COST_SHARING_CENTS_PER_KM: i64 = 30;
+
 #[derive(Clone)]
 pub struct Config {
     pub auth_keys: Keys,
@@ -24,6 +29,9 @@ pub struct Config {
     pub osrm_url: String,
     pub auth_test_account: Option<String>,
     pub auth_test_code: Option<String>,
+    /// Clé publique VAPID donnée aux navigateurs pour s'abonner aux notifications.
+    /// Absente : les notifications ne sont pas proposées.
+    pub vapid_public_key: Option<String>,
 }
 
 impl Config {
@@ -35,6 +43,7 @@ impl Config {
             osrm_url: var("OSRM_URL").unwrap_or_default(),
             auth_test_account: var("AUTH_TEST_ACCOUNT").ok(),
             auth_test_code: var("AUTH_TEST_CODE").ok(),
+            vapid_public_key: var("VAPID_PUBLIC_KEY").ok().filter(|key| !key.is_empty()),
         }
     }
 }

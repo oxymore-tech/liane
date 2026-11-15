@@ -2,8 +2,14 @@
 
 use std::env::var;
 use std::f64::consts::PI;
+use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
 use api::config::{Config, Keys};
+use api::notification::Notifier;
+use api::notification::push::{
+    PushFuture, PushNotification, PushOutcome, PushSender, PushSubscription,
+};
 use api::router::api_router;
 use axum::Extension;
 use rand::Rng;
@@ -16,15 +22,81 @@ use uuid::Uuid;
 
 const ADMIN_PHONE: &str = "+33600000000";
 const ADMIN_CODE: &str = "000000";
+pub const TEST_VAPID_PUBLIC_KEY: &str = "cle-publique-vapid-de-test";
 
 /// Une API complète sur un port local, branchée sur la base `TEST_DATABASE_URL`.
 /// Les tests partagent la base : chacun travaille dans sa propre zone géographique
 /// et ne vérifie que ses propres données.
 pub struct TestApp {
     pub db: PgPool,
-    base_url: String,
+    pub pushes: Arc<RecordingPushSender>,
+    pub base_url: String,
     client: reqwest::Client,
     origin: (f64, f64),
+}
+
+/// Le faux service de push des tests : rien ne sort, chaque notification est gardée en mémoire.
+/// Un appareil dont l'adresse contient « gone » répond qu'il n'existe plus.
+#[derive(Default)]
+pub struct RecordingPushSender {
+    sent: Mutex<Vec<(PushSubscription, PushNotification)>>,
+}
+
+impl PushSender for RecordingPushSender {
+    fn send<'a>(
+        &'a self,
+        subscription: &'a PushSubscription,
+        notification: &'a PushNotification,
+    ) -> PushFuture<'a> {
+        Box::pin(async move {
+            self.sent
+                .lock()
+                .expect("notifications")
+                .push((subscription.clone(), notification.clone()));
+            if subscription.endpoint.contains("gone") {
+                PushOutcome::Gone
+            } else {
+                PushOutcome::Sent
+            }
+        })
+    }
+}
+
+impl RecordingPushSender {
+    /// Notifications envoyées à un appareil, repéré par l'adresse de son abonnement.
+    pub fn sent_to(&self, endpoint: &str) -> Vec<PushNotification> {
+        self.sent
+            .lock()
+            .expect("notifications")
+            .iter()
+            .filter(|(subscription, _)| subscription.endpoint == endpoint)
+            .map(|(_, notification)| notification.clone())
+            .collect()
+    }
+
+    /// Les notifications partent en tâche de fond : attend celle dont le titre contient `title`.
+    pub async fn expect(&self, endpoint: &str, title: &str) -> PushNotification {
+        for _ in 0..100 {
+            let found = self
+                .sent_to(endpoint)
+                .into_iter()
+                .rev()
+                .find(|notification| notification.title.contains(title));
+            if let Some(notification) = found {
+                return notification;
+            }
+            tokio::time::sleep(Duration::from_millis(30)).await;
+        }
+        panic!(
+            "aucune notification « {title} » pour {endpoint} ; reçues : {:?}",
+            self.sent_to(endpoint)
+        );
+    }
+
+    /// Laisse le temps aux envois en cours de se terminer avant de vérifier qu'il n'y a rien eu.
+    pub async fn settle(&self) {
+        tokio::time::sleep(Duration::from_millis(300)).await;
+    }
 }
 
 pub struct Point {
@@ -63,10 +135,13 @@ impl TestApp {
             osrm_url: osrm_url.to_string(),
             auth_test_account: Some(ADMIN_PHONE.to_string()),
             auth_test_code: Some(ADMIN_CODE.to_string()),
+            vapid_public_key: Some(TEST_VAPID_PUBLIC_KEY.to_string()),
         };
+        let pushes = Arc::new(RecordingPushSender::default());
         let app = api_router()
             .layer(Extension(db.clone()))
-            .layer(Extension(config));
+            .layer(Extension(config))
+            .layer(Extension(Notifier::new(pushes.clone())));
 
         let listener = TcpListener::bind("127.0.0.1:0").await.expect("port local");
         let base_url = format!("http://{}/api", listener.local_addr().expect("adresse"));
@@ -75,6 +150,7 @@ impl TestApp {
         let mut rng = rand::rng();
         Self {
             db,
+            pushes,
             base_url,
             client: reqwest::Client::new(),
             origin: (
@@ -164,6 +240,40 @@ impl TestApp {
             token,
             user["id"].as_str().expect("id utilisateur").to_string(),
         )
+    }
+
+    /// Abonne un appareil factice aux notifications et renvoie l'adresse de son abonnement.
+    pub async fn subscribe_device(&self, token: &str) -> String {
+        let endpoint = format!("https://push.invalid/{}", Uuid::now_v7().simple());
+        let (status, _) = self
+            .post(
+                "/push/subscription",
+                Some(token),
+                json!({ "endpoint": endpoint, "keys": { "p256dh": "cle", "auth": "secret" } }),
+            )
+            .await;
+        assert_eq!(status, StatusCode::OK);
+        endpoint
+    }
+
+    /// Un utilisateur qui rejoint une liane sur un tronçon, tous les jours, dans les deux sens.
+    pub async fn new_member(
+        &self,
+        first_name: &str,
+        liane_id: &str,
+        board: &Point,
+        alight: &Point,
+    ) -> (String, String) {
+        let (token, id) = self.new_user(first_name).await;
+        let (status, body) = self
+            .post(
+                &format!("/liane/{liane_id}/membership"),
+                Some(&token),
+                membership(board, alight, "1111111", "Both", true),
+            )
+            .await;
+        assert_eq!(status, StatusCode::OK, "{body}");
+        (token, id)
     }
 
     async fn login(&self, phone: &str, code: &str) -> String {

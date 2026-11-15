@@ -13,6 +13,9 @@ use crate::liane::model::{
     RouteRecomputeReport, SearchQuery,
 };
 use crate::liane::{matching, report, service};
+use crate::message::model::MessageKind;
+use crate::notification::Notifier;
+use crate::trip;
 
 pub async fn list(Extension(db): Extension<PgPool>) -> Result<Json<Vec<Liane>>> {
     let lianes = service::list_active(&db).await?;
@@ -128,10 +131,12 @@ pub async fn remove(
 pub async fn join(
     auth: AuthUser,
     Extension(db): Extension<PgPool>,
+    Extension(notifier): Extension<Notifier>,
     Path(id): Path<Uuid>,
     Json(input): Json<MembershipInput>,
 ) -> Result<Json<Membership>> {
     let membership = service::join(&db, &auth.id, &id, &input).await?;
+    service::announce_membership(&db, &notifier, &id, &auth.id, MessageKind::MemberJoined).await?;
     Ok(Json(membership))
 }
 
@@ -150,17 +155,22 @@ pub async fn update_membership(
 pub async fn leave(
     auth: AuthUser,
     Extension(db): Extension<PgPool>,
+    Extension(notifier): Extension<Notifier>,
     Path(id): Path<Uuid>,
 ) -> Result<()> {
-    found(service::remove_member(&db, &id, &auth.id).await?)
+    found(service::remove_member(&db, &id, &auth.id).await?)?;
+    trip::service::withdraw_member(&db, &notifier, &id, &auth.id).await?;
+    service::announce_membership(&db, &notifier, &id, &auth.id, MessageKind::MemberLeft).await
 }
 
 pub async fn exclude_member(
     _admin: AdminUser,
     Extension(db): Extension<PgPool>,
+    Extension(notifier): Extension<Notifier>,
     Path((id, user_id)): Path<(Uuid, Uuid)>,
 ) -> Result<()> {
-    found(service::remove_member(&db, &id, &user_id).await?)
+    found(service::remove_member(&db, &id, &user_id).await?)?;
+    trip::service::withdraw_member(&db, &notifier, &id, &user_id).await
 }
 
 pub async fn report_member(
@@ -183,9 +193,13 @@ pub async fn list_reports(
 pub async fn exclude_reported(
     AdminUser(admin): AdminUser,
     Extension(db): Extension<PgPool>,
+    Extension(notifier): Extension<Notifier>,
     Path(report_id): Path<Uuid>,
 ) -> Result<()> {
-    found(report::exclude(&db, &admin.id, &report_id).await?)
+    let (liane_id, user_id) = report::exclude(&db, &admin.id, &report_id)
+        .await?
+        .ok_or(AppError::NotFound)?;
+    trip::service::withdraw_member(&db, &notifier, &liane_id, &user_id).await
 }
 
 pub async fn dismiss_report(
