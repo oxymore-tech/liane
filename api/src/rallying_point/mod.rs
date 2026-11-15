@@ -3,7 +3,7 @@ use axum::routing::{get, post};
 
 use crate::rallying_point::handler::{bbox, generate_points, search, snap};
 
-mod generate;
+pub mod generate;
 mod handler;
 pub mod model;
 pub mod service;

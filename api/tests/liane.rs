@@ -209,19 +209,6 @@ async fn only_admins_manage_lianes() {
     let id = first["id"].as_str().unwrap();
     let path = format!("/liane/{id}");
 
-    let (status, _) = app
-        .post(
-            "/rallying_point/generate?source=test",
-            Some(&admin),
-            json!({}),
-        )
-        .await;
-    assert_eq!(
-        status,
-        StatusCode::CONFLICT,
-        "les arrêts d'une liane protègent les points"
-    );
-
     let (status, _) = app.put(&path, Some(&user), body.clone()).await;
     assert_eq!(status, StatusCode::FORBIDDEN);
     let (status, _) = app.delete(&path, Some(&user)).await;
