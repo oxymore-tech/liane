@@ -317,9 +317,8 @@ pub async fn export(db: &PgPool, class: Option<ProofClass>) -> Result<Vec<Export
 }
 
 fn to_journey(row: ExportRow) -> ExportedJourney {
-    let time_place = |at: Option<DateTime<Utc>>, lat, lon| {
-        at.map(|datetime| TimePlace { datetime, lat, lon })
-    };
+    let time_place =
+        |at: Option<DateTime<Utc>>, lat, lon| at.map(|datetime| TimePlace { datetime, lat, lon });
     let passenger_start = time_place(
         row.passenger_start_at,
         row.passenger_start_lat,
@@ -408,7 +407,10 @@ mod tests {
 
     #[test]
     fn both_occupants_attested_with_positions_gives_class_c() {
-        let journey = [located(GestureKind::Start, 0), located(GestureKind::End, 30)];
+        let journey = [
+            located(GestureKind::Start, 0),
+            located(GestureKind::End, 30),
+        ];
         let proof = class_of((&journey, Uuid::nil()), (&journey, Uuid::nil()));
         assert_eq!(proof.class, ProofClass::C);
         assert_eq!(proof.detail["driver"]["attested"], true);
@@ -418,7 +420,10 @@ mod tests {
 
     #[test]
     fn a_single_attested_occupant_gives_class_b() {
-        let complete = [located(GestureKind::Start, 0), located(GestureKind::End, 30)];
+        let complete = [
+            located(GestureKind::Start, 0),
+            located(GestureKind::End, 30),
+        ];
         let without_position = [
             located(GestureKind::Start, 0),
             gesture(GestureKind::End, 30, PositionStatus::Denied, None),

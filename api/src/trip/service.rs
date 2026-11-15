@@ -994,7 +994,14 @@ async fn announce_driver_gesture(
             "Une fois descendu, ouvrez le trajet et touchez « Je suis descendu ».",
         ),
     };
-    announce(db, notifier, trip, message_kind, &format!("{title} {place}")).await?;
+    announce(
+        db,
+        notifier,
+        trip,
+        message_kind,
+        &format!("{title} {place}"),
+    )
+    .await?;
     notifier.push(
         db,
         passenger_ids(detail),

@@ -42,7 +42,11 @@ fn paris_offset_hours(at: DateTime<Utc>) -> i64 {
             .single()
             .expect("valid date")
     };
-    if at >= switch(3) && at < switch(10) { 2 } else { 1 }
+    if at >= switch(3) && at < switch(10) {
+        2
+    } else {
+        1
+    }
 }
 
 fn last_sunday(year: i32, month: u32) -> NaiveDate {
@@ -58,24 +62,43 @@ mod tests {
     use super::*;
 
     fn utc(year: i32, month: u32, day: u32, hour: u32, minute: u32) -> DateTime<Utc> {
-        Utc.with_ymd_and_hms(year, month, day, hour, minute, 0).unwrap()
+        Utc.with_ymd_and_hms(year, month, day, hour, minute, 0)
+            .unwrap()
     }
 
     #[test]
     fn winter_time_is_one_hour_ahead_of_utc() {
-        assert_eq!(day_and_time(utc(2026, 11, 16, 6, 30)), "lundi 16 novembre à 07:30");
+        assert_eq!(
+            day_and_time(utc(2026, 11, 16, 6, 30)),
+            "lundi 16 novembre à 07:30"
+        );
     }
 
     #[test]
     fn summer_time_is_two_hours_ahead_of_utc() {
-        assert_eq!(day_and_time(utc(2026, 7, 14, 22, 5)), "mercredi 15 juillet à 00:05");
+        assert_eq!(
+            day_and_time(utc(2026, 7, 14, 22, 5)),
+            "mercredi 15 juillet à 00:05"
+        );
     }
 
     #[test]
     fn switches_on_the_last_sundays_of_march_and_october() {
-        assert_eq!(day_and_time(utc(2026, 3, 29, 0, 59)), "dimanche 29 mars à 01:59");
-        assert_eq!(day_and_time(utc(2026, 3, 29, 1, 0)), "dimanche 29 mars à 03:00");
-        assert_eq!(day_and_time(utc(2026, 10, 25, 0, 59)), "dimanche 25 octobre à 02:59");
-        assert_eq!(day_and_time(utc(2026, 10, 25, 1, 0)), "dimanche 25 octobre à 02:00");
+        assert_eq!(
+            day_and_time(utc(2026, 3, 29, 0, 59)),
+            "dimanche 29 mars à 01:59"
+        );
+        assert_eq!(
+            day_and_time(utc(2026, 3, 29, 1, 0)),
+            "dimanche 29 mars à 03:00"
+        );
+        assert_eq!(
+            day_and_time(utc(2026, 10, 25, 0, 59)),
+            "dimanche 25 octobre à 02:59"
+        );
+        assert_eq!(
+            day_and_time(utc(2026, 10, 25, 1, 0)),
+            "dimanche 25 octobre à 02:00"
+        );
     }
 }

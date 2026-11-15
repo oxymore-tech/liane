@@ -132,7 +132,8 @@ pub fn next_gesture(
 /// tronçon, divisé par le nombre d'occupants de la voiture (conducteur compris).
 pub fn indicative_contribution_cents(distance_meters: i32, passenger_count: i64) -> i32 {
     let occupants = (passenger_count + 1) as f64;
-    let whole_cost = f64::from(distance_meters) / 1000.0 * INDICATIVE_COST_SHARING_CENTS_PER_KM as f64;
+    let whole_cost =
+        f64::from(distance_meters) / 1000.0 * INDICATIVE_COST_SHARING_CENTS_PER_KM as f64;
     (whole_cost / occupants).round() as i32
 }
 
@@ -157,24 +158,40 @@ mod tests {
         has_started: bool,
         has_ended: bool,
     ) -> Result<(), Refusal> {
-        check_gesture(kind, state, departure(), at(minutes), has_started, has_ended)
+        check_gesture(
+            kind,
+            state,
+            departure(),
+            at(minutes),
+            has_started,
+            has_ended,
+        )
     }
 
     #[test]
     fn start_is_accepted_only_around_the_planned_departure() {
         use GestureKind::Start;
         use TripState::Planned;
-        assert_eq!(check(Start, Planned, -31, false, false), Err(Refusal::TooEarly));
+        assert_eq!(
+            check(Start, Planned, -31, false, false),
+            Err(Refusal::TooEarly)
+        );
         assert_eq!(check(Start, Planned, -30, false, false), Ok(()));
         assert_eq!(check(Start, Planned, 180, false, false), Ok(()));
-        assert_eq!(check(Start, Planned, 181, false, false), Err(Refusal::TooLate));
+        assert_eq!(
+            check(Start, Planned, 181, false, false),
+            Err(Refusal::TooLate)
+        );
     }
 
     #[test]
     fn end_requires_a_start_and_closes_twelve_hours_after_departure() {
         use GestureKind::End;
         use TripState::Started;
-        assert_eq!(check(End, Started, 10, false, false), Err(Refusal::StartFirst));
+        assert_eq!(
+            check(End, Started, 10, false, false),
+            Err(Refusal::StartFirst)
+        );
         assert_eq!(check(End, Started, 10, true, false), Ok(()));
         assert_eq!(check(End, Started, 720, true, false), Ok(()));
         assert_eq!(check(End, Started, 721, true, false), Err(Refusal::TooLate));

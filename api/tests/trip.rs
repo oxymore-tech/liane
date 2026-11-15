@@ -88,7 +88,9 @@ async fn a_driver_and_two_passengers_prove_their_trip_at_class_c_and_b() {
     let paula_device = app.subscribe_device(&paula).await;
 
     let trips_path = format!("/liane/{liane_id}/trip");
-    let (status, _) = app.post(&trips_path, None, trip_input(10, "Outbound", 2)).await;
+    let (status, _) = app
+        .post(&trips_path, None, trip_input(10, "Outbound", 2))
+        .await;
     assert_eq!(status, StatusCode::UNAUTHORIZED);
     let (status, _) = app
         .post(&trips_path, Some(&outsider), trip_input(10, "Outbound", 2))
@@ -139,35 +141,63 @@ async fn a_driver_and_two_passengers_prove_their_trip_at_class_c_and_b() {
     let (status, _) = app.post(&booking, Some(&outsider), json!({})).await;
     assert_eq!(status, StatusCode::FORBIDDEN);
     let (status, refusal) = app.post(&booking, Some(&driver), json!({})).await;
-    assert_eq!((status, refusal), (StatusCode::CONFLICT, json!("DriverCannotBook")));
+    assert_eq!(
+        (status, refusal),
+        (StatusCode::CONFLICT, json!("DriverCannotBook"))
+    );
     let (status, _) = app
-        .post(&booking, Some(&bob), json!({ "from_stop_id": d.id, "to_stop_id": a.id }))
+        .post(
+            &booking,
+            Some(&bob),
+            json!({ "from_stop_id": d.id, "to_stop_id": a.id }),
+        )
         .await;
     assert_eq!(status, StatusCode::BAD_REQUEST);
 
-    let (status, booked) = app.call(reqwest::Method::POST, &booking, Some(&paula), None).await;
+    let (status, booked) = app
+        .call(reqwest::Method::POST, &booking, Some(&paula), None)
+        .await;
     assert_eq!(status, StatusCode::OK, "{booked}");
     assert_eq!(booked["my_role"], "Passenger");
-    assert_eq!(passenger(&booked, &paula_id)["from_stop"]["id"], b.id.to_string());
-    assert_eq!(passenger(&booked, &paula_id)["to_stop"]["id"], d.id.to_string());
+    assert_eq!(
+        passenger(&booked, &paula_id)["from_stop"]["id"],
+        b.id.to_string()
+    );
+    assert_eq!(
+        passenger(&booked, &paula_id)["to_stop"]["id"],
+        d.id.to_string()
+    );
     assert!(booked["next_gesture"] == "Start");
-    let joined = app.pushes.expect(&driver_device, "Un passager de plus").await;
+    let joined = app
+        .pushes
+        .expect(&driver_device, "Un passager de plus")
+        .await;
     assert!(joined.body.contains("Paula T. s'est inscrit"));
 
     let (status, booked) = app
-        .post(&booking, Some(&bob), json!({ "from_stop_id": a.id, "to_stop_id": c.id }))
+        .post(
+            &booking,
+            Some(&bob),
+            json!({ "from_stop_id": a.id, "to_stop_id": c.id }),
+        )
         .await;
     assert_eq!(status, StatusCode::OK, "{booked}");
     assert_eq!(booked["seats_left"], 0);
     let (status, refusal) = app.post(&booking, Some(&paula), json!({})).await;
-    assert_eq!((status, refusal), (StatusCode::CONFLICT, json!("AlreadyBooked")));
+    assert_eq!(
+        (status, refusal),
+        (StatusCode::CONFLICT, json!("AlreadyBooked"))
+    );
     let (status, refusal) = app.post(&booking, Some(&tom), json!({})).await;
     assert_eq!((status, refusal), (StatusCode::CONFLICT, json!("TripFull")));
 
     // 0,30 €/km sur le tronçon du passager, divisé entre les trois occupants.
     let paula_distance = distance_of(3) - distance_of(1);
     let expected_cents = (paula_distance as f64 / 1000.0 * 30.0 / 3.0).round() as i64;
-    assert_eq!(passenger(&booked, &paula_id)["distance_meters"], paula_distance);
+    assert_eq!(
+        passenger(&booked, &paula_id)["distance_meters"],
+        paula_distance
+    );
     assert_eq!(
         passenger(&booked, &paula_id)["indicative_contribution_cents"],
         expected_cents
@@ -178,7 +208,10 @@ async fn a_driver_and_two_passengers_prove_their_trip_at_class_c_and_b() {
     let (status, _) = gesture(&app, trip_id, &tom, gesture_at("Start", a)).await;
     assert_eq!(status, StatusCode::FORBIDDEN);
     let (status, refusal) = gesture(&app, trip_id, &paula, gesture_at("End", d)).await;
-    assert_eq!((status, refusal), (StatusCode::CONFLICT, json!("StartFirst")));
+    assert_eq!(
+        (status, refusal),
+        (StatusCode::CONFLICT, json!("StartFirst"))
+    );
     let (status, _) = gesture(
         &app,
         trip_id,
@@ -199,18 +232,30 @@ async fn a_driver_and_two_passengers_prove_their_trip_at_class_c_and_b() {
     assert!(departed.body.contains("Je suis monté"));
 
     let (status, refusal) = gesture(&app, trip_id, &driver, gesture_at("Start", a)).await;
-    assert_eq!((status, refusal), (StatusCode::CONFLICT, json!("AlreadyDone")));
+    assert_eq!(
+        (status, refusal),
+        (StatusCode::CONFLICT, json!("AlreadyDone"))
+    );
     let (status, refusal) = app.delete(&trip_path, Some(&driver)).await;
-    assert_eq!((status, refusal), (StatusCode::CONFLICT, json!("TripAlreadyStarted")));
+    assert_eq!(
+        (status, refusal),
+        (StatusCode::CONFLICT, json!("TripAlreadyStarted"))
+    );
     let (status, refusal) = app.post(&booking, Some(&tom), json!({})).await;
-    assert_eq!((status, refusal), (StatusCode::CONFLICT, json!("TripClosed")));
+    assert_eq!(
+        (status, refusal),
+        (StatusCode::CONFLICT, json!("TripClosed"))
+    );
 
     let (status, boarded) = gesture(&app, trip_id, &paula, gesture_at("Start", b)).await;
     assert_eq!(status, StatusCode::OK, "{boarded}");
     assert_eq!(boarded["state"], "Started");
     assert!(passenger(&boarded, &paula_id)["started_at"].is_string());
     let (status, refusal) = app.delete(&booking, Some(&paula)).await;
-    assert_eq!((status, refusal), (StatusCode::CONFLICT, json!("AlreadyOnBoard")));
+    assert_eq!(
+        (status, refusal),
+        (StatusCode::CONFLICT, json!("AlreadyOnBoard"))
+    );
 
     // Bob refuse de donner sa position en montant : son geste est accepté quand même.
     let (status, boarded) = gesture(
@@ -230,7 +275,9 @@ async fn a_driver_and_two_passengers_prove_their_trip_at_class_c_and_b() {
     assert_eq!(finished["state"], "Finished");
     assert_eq!(finished["is_open"], false);
     assert!(finished["next_gesture"].is_null());
-    app.pushes.expect(&paula_device, "Denis T. est arrivé").await;
+    app.pushes
+        .expect(&paula_device, "Denis T. est arrivé")
+        .await;
 
     // Un passager peut encore déclarer sa descente après l'arrivée du conducteur.
     let (status, arrived) = gesture(&app, trip_id, &paula, gesture_at("End", d)).await;
@@ -241,7 +288,10 @@ async fn a_driver_and_two_passengers_prove_their_trip_at_class_c_and_b() {
 
     let (_, seen_by_driver) = app.get(&trip_path, Some(&driver)).await;
     assert_eq!(passenger(&seen_by_driver, &paula_id)["attestation"], "Full");
-    assert_eq!(passenger(&seen_by_driver, &bob_id)["attestation"], "Partial");
+    assert_eq!(
+        passenger(&seen_by_driver, &bob_id)["attestation"],
+        "Partial"
+    );
     let (_, seen_by_bob) = app.get(&trip_path, Some(&bob)).await;
     assert_eq!(passenger(&seen_by_bob, &bob_id)["attestation"], "Partial");
     let (_, seen_by_tom) = app.get(&trip_path, Some(&tom)).await;
@@ -285,12 +335,21 @@ async fn a_driver_and_two_passengers_prove_their_trip_at_class_c_and_b() {
             .expect("preuve du passager")
     };
     assert_eq!(proof_of(&paula_id)["proof_class"], "C");
-    assert_eq!(proof_of(&paula_id)["proof_detail"]["driver"]["attested"], true);
-    assert_eq!(proof_of(&paula_id)["proof_detail"]["passenger"]["attested"], true);
+    assert_eq!(
+        proof_of(&paula_id)["proof_detail"]["driver"]["attested"],
+        true
+    );
+    assert_eq!(
+        proof_of(&paula_id)["proof_detail"]["passenger"]["attested"],
+        true
+    );
     assert_eq!(proof_of(&bob_id)["proof_class"], "B");
     let bob_detail = &proof_of(&bob_id)["proof_detail"];
     assert_eq!(bob_detail["passenger"]["attested"], false);
-    assert_eq!(bob_detail["passenger"]["start"]["position_status"], "Denied");
+    assert_eq!(
+        bob_detail["passenger"]["start"]["position_status"],
+        "Denied"
+    );
     assert_eq!(bob_detail["passenger"]["end"]["position_status"], "Granted");
     assert!(!listed.to_string().contains(&paula_phone));
 
@@ -308,7 +367,10 @@ async fn a_driver_and_two_passengers_prove_their_trip_at_class_c_and_b() {
         .find(|journey| journey["passenger"]["identity"]["operator_user_id"] == paula_id)
         .expect("couple conducteur / Paula");
     assert_eq!(journey["operator_class"], "C");
-    assert_eq!(journey["operator_journey_id"], format!("{trip_id}:{paula_id}"));
+    assert_eq!(
+        journey["operator_journey_id"],
+        format!("{trip_id}:{paula_id}")
+    );
     assert_eq!(journey["driver"]["identity"]["phone"], driver_phone);
     assert_eq!(journey["passenger"]["identity"]["phone"], paula_phone);
     assert_eq!(journey["distance"], paula_distance);
@@ -321,7 +383,10 @@ async fn a_driver_and_two_passengers_prove_their_trip_at_class_c_and_b() {
     assert!(journey["driver"]["revenue"].is_null());
     assert!(journey["passenger"]["contribution"].is_null());
     assert_eq!(journey["passenger"]["seats"], 1);
-    assert_eq!(journey["liane"]["indicative_contribution_cents"], expected_cents);
+    assert_eq!(
+        journey["liane"]["indicative_contribution_cents"],
+        expected_cents
+    );
 
     let (_, only_c) = app.get("/trip/admin/export?class=C", Some(&admin)).await;
     let classes: Vec<&Value> = only_c
@@ -368,7 +433,9 @@ async fn gestures_are_refused_outside_the_time_window_and_on_canceled_trips() {
     assert_eq!(status, StatusCode::OK, "{left}");
     assert_eq!(left["seats_left"], 3);
     assert!(left["my_role"].is_null());
-    app.pushes.expect(&driver_device, "Un passager en moins").await;
+    app.pushes
+        .expect(&driver_device, "Un passager en moins")
+        .await;
     let (status, _) = app.delete(&booking, Some(&rider)).await;
     assert_eq!(status, StatusCode::NOT_FOUND);
     let (status, refusal) = gesture(&app, tomorrow_id, &rider, gesture_at("Start", a)).await;
@@ -390,7 +457,9 @@ async fn gestures_are_refused_outside_the_time_window_and_on_canceled_trips() {
     assert_eq!(stale["is_open"], false);
     let (_, mine) = app.get("/trip/mine", Some(&rider)).await;
     assert!(has_id(&mine["past"], &tomorrow["id"]));
-    let (_, upcoming) = app.get(&format!("/liane/{liane_id}/trip"), Some(&rider)).await;
+    let (_, upcoming) = app
+        .get(&format!("/liane/{liane_id}/trip"), Some(&rider))
+        .await;
     assert!(!has_id(&upcoming, &tomorrow["id"]));
 
     // Arrivée trop tardive : treize heures après l'heure prévue.
@@ -423,16 +492,28 @@ async fn gestures_are_refused_outside_the_time_window_and_on_canceled_trips() {
     assert!(warned.body.contains("Diane T. a annulé le trajet"));
 
     let (status, refusal) = app.delete(&canceled_path, Some(&driver)).await;
-    assert_eq!((status, refusal), (StatusCode::CONFLICT, json!("TripCanceled")));
+    assert_eq!(
+        (status, refusal),
+        (StatusCode::CONFLICT, json!("TripCanceled"))
+    );
     for token in [&driver, &rider] {
         let (status, refusal) = gesture(&app, canceled_id, token, gesture_at("Start", a)).await;
-        assert_eq!((status, refusal), (StatusCode::CONFLICT, json!("TripCanceled")));
+        assert_eq!(
+            (status, refusal),
+            (StatusCode::CONFLICT, json!("TripCanceled"))
+        );
     }
     let (status, refusal) = app.delete(&booking, Some(&rider)).await;
-    assert_eq!((status, refusal), (StatusCode::CONFLICT, json!("TripCanceled")));
+    assert_eq!(
+        (status, refusal),
+        (StatusCode::CONFLICT, json!("TripCanceled"))
+    );
     let (tom, _) = app.new_member("Tom", liane_id, a, c).await;
     let (status, refusal) = app.post(&booking, Some(&tom), json!({})).await;
-    assert_eq!((status, refusal), (StatusCode::CONFLICT, json!("TripCanceled")));
+    assert_eq!(
+        (status, refusal),
+        (StatusCode::CONFLICT, json!("TripCanceled"))
+    );
     let (_, mine) = app.get("/trip/mine", Some(&rider)).await;
     assert!(has_id(&mine["past"], &canceled["id"]));
 
@@ -468,13 +549,23 @@ async fn positions_are_optional_and_checked_for_plausibility_without_blocking() 
     assert_eq!(trip["to_stop"]["id"], a.id.to_string());
     let booking = format!("/trip/{trip_id}/passenger");
     let (status, _) = app
-        .post(&booking, Some(&rider), json!({ "from_stop_id": b.id, "to_stop_id": c.id }))
+        .post(
+            &booking,
+            Some(&rider),
+            json!({ "from_stop_id": b.id, "to_stop_id": c.id }),
+        )
         .await;
     assert_eq!(status, StatusCode::BAD_REQUEST);
     let (status, booked) = app.post(&booking, Some(&rider), json!({})).await;
     assert_eq!(status, StatusCode::OK, "{booked}");
-    assert_eq!(passenger(&booked, &rider_id)["from_stop"]["id"], c.id.to_string());
-    assert_eq!(passenger(&booked, &rider_id)["to_stop"]["id"], b.id.to_string());
+    assert_eq!(
+        passenger(&booked, &rider_id)["from_stop"]["id"],
+        c.id.to_string()
+    );
+    assert_eq!(
+        passenger(&booked, &rider_id)["to_stop"]["id"],
+        b.id.to_string()
+    );
 
     // La conductrice déclare son départ à 11 km de l'arrêt prévu, puis son arrivée sans position.
     let (status, started) = gesture(&app, trip_id, &driver, gesture_at("Start", c)).await;
@@ -512,9 +603,17 @@ async fn positions_are_optional_and_checked_for_plausibility_without_blocking() 
     assert_eq!(detail["connection"]["attested"], true);
     assert_eq!(detail["driver"]["attested"], false);
     assert_eq!(detail["driver"]["start"]["far_from_stop"], true);
-    assert!(detail["driver"]["start"]["distance_to_stop_meters"].as_i64().unwrap() > 5_000);
+    assert!(
+        detail["driver"]["start"]["distance_to_stop_meters"]
+            .as_i64()
+            .unwrap()
+            > 5_000
+    );
     assert_eq!(detail["driver"]["end"]["position_status"], "Denied");
-    assert_eq!(detail["passenger"]["start"]["position_status"], "Unavailable");
+    assert_eq!(
+        detail["passenger"]["start"]["position_status"],
+        "Unavailable"
+    );
     let warnings = detail["warnings"].as_array().unwrap();
     assert!(warnings.contains(&json!("DriverStartFarFromStop")));
     assert!(warnings.contains(&json!("PassengerTripTooShort")));
@@ -539,7 +638,9 @@ async fn leaving_a_liane_cancels_planned_trips_and_bookings() {
     let admin = app.admin_token().await;
     let points = app.points(2).await;
     let (a, b) = (&points[0], &points[1]);
-    let liane = app.create_liane(&admin, &unique_name("Départ"), &[a, b]).await;
+    let liane = app
+        .create_liane(&admin, &unique_name("Départ"), &[a, b])
+        .await;
     let liane_id = liane["id"].as_str().unwrap();
     let (driver, _) = app.new_member("Dan", liane_id, a, b).await;
     let (rider, rider_id) = app.new_member("Rita", liane_id, a, b).await;
@@ -560,24 +661,35 @@ async fn leaving_a_liane_cancels_planned_trips_and_bookings() {
         .await;
     assert_eq!(status, StatusCode::OK);
     let (_, after) = app
-        .get(&format!("/trip/{}", driven["id"].as_str().unwrap()), Some(&rider))
+        .get(
+            &format!("/trip/{}", driven["id"].as_str().unwrap()),
+            Some(&rider),
+        )
         .await;
     assert_eq!(after["state"], "Canceled");
     app.pushes.expect(&rider_device, "Trajet annulé").await;
 
     // La passagère est exclue : son inscription à l'autre trajet est retirée.
     let (status, _) = app
-        .delete(&format!("/liane/{liane_id}/member/{rider_id}"), Some(&admin))
+        .delete(
+            &format!("/liane/{liane_id}/member/{rider_id}"),
+            Some(&admin),
+        )
         .await;
     assert_eq!(status, StatusCode::OK);
     let (_, after) = app
-        .get(&format!("/trip/{}", other_trip["id"].as_str().unwrap()), Some(&other))
+        .get(
+            &format!("/trip/{}", other_trip["id"].as_str().unwrap()),
+            Some(&other),
+        )
         .await;
     assert_eq!(after["state"], "Planned");
     assert_eq!(after["seats_left"], 3);
     assert_eq!(after["passengers"], json!([]));
 
     // Une liane qui a des trajets ne se supprime pas : on la désactive.
-    let (status, _) = app.delete(&format!("/liane/{liane_id}"), Some(&admin)).await;
+    let (status, _) = app
+        .delete(&format!("/liane/{liane_id}"), Some(&admin))
+        .await;
     assert_eq!(status, StatusCode::CONFLICT);
 }

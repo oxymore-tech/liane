@@ -49,7 +49,9 @@ pub enum PositionStatus {
 }
 
 /// Classe de preuve d'un couple conducteur/passager au sens du registre de preuve de covoiturage.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, sqlx::Type)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, sqlx::Type,
+)]
 #[sqlx(type_name = "VARCHAR")]
 pub enum ProofClass {
     A,

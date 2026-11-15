@@ -2,8 +2,7 @@ use axum::Router;
 use axum::routing::{get, post};
 
 use crate::trip::handler::{
-    book, cancel, create, export, get_one, list_for_admin, list_mine, list_of_liane,
-    record_gesture,
+    book, cancel, create, export, get_one, list_for_admin, list_mine, list_of_liane, record_gesture,
 };
 
 mod handler;

@@ -95,7 +95,16 @@ pub async fn post_text(
     }
     ensure_member(db, liane_id, user_id).await?;
 
-    let message = insert(db, notifier, liane_id, user_id, MessageKind::Text, text, None).await?;
+    let message = insert(
+        db,
+        notifier,
+        liane_id,
+        user_id,
+        MessageKind::Text,
+        text,
+        None,
+    )
+    .await?;
     mark_read(db, liane_id, user_id).await?;
 
     let liane = liane::find_label(db, liane_id).await?;
