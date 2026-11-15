@@ -105,7 +105,7 @@ function Proof({ proof }: { proof: AdminProof }) {
           </summary>
           <ul className="mt-1 flex flex-col gap-1 pl-3">
             <li>
-              Mise en relation : inscription le{" "}
+              Mise en relation : inscription{" "}
               {tripDateLabel(detail.connection.booked_at).toLowerCase()}
             </li>
             <OccupantLines who="Conducteur" occupant={detail.driver} />
