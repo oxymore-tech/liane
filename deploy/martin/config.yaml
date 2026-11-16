@@ -15,3 +15,6 @@ postgres:
     rallying_point_display:
       schema: public
       function: rallying_point_display
+    liane_segment_display:
+      schema: public
+      function: liane_segment_display

@@ -78,7 +78,8 @@ export function ScheduleTable({
   if (liane.member_count === 0) {
     return (
       <p className="text-sm text-gray-500">
-        Personne n'a encore indiqué ses jours. Soyez le premier.
+        Personne n'a encore indiqué ses jours. Indiquez les vôtres en rejoignant
+        la liane.
       </p>
     );
   }

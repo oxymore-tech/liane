@@ -21,6 +21,8 @@ use crate::rallying_point::model::RallyingPoint;
 const MAX_NAME_LENGTH: usize = 255;
 const DEFAULT_SEARCH_RADIUS_METERS: f64 = 5_000.0;
 const MAX_SEARCH_RADIUS_METERS: f64 = 30_000.0;
+const DEFAULT_NEAR_RADIUS_METERS: f64 = 50.0;
+const MAX_NEAR_RADIUS_METERS: f64 = 5_000.0;
 /// Le tracé routier est stocké entier ; l'API le sert allégé (écart d'environ 5 m au plus),
 /// ce qui divise son poids par quatre sans différence visible sur une carte.
 const SERVED_ROUTE_TOLERANCE_DEGREES: f64 = 0.00005;
@@ -153,7 +155,9 @@ pub async fn search(db: &PgPool, query: &SearchQuery) -> Result<Vec<LianeSearchR
             } else {
                 Direction::Return
             };
+            let section_distance_meters = section_distance(&liane, &row.from_stop_id, &row.to_stop_id);
             Some(LianeSearchResult {
+                section_distance_meters,
                 liane,
                 from_stop_id: row.from_stop_id,
                 to_stop_id: row.to_stop_id,
@@ -163,6 +167,49 @@ pub async fn search(db: &PgPool, query: &SearchQuery) -> Result<Vec<LianeSearchR
             })
         })
         .collect())
+}
+
+/// Les lianes actives dont le tracé passe à moins de `radius` mètres du point, de la plus proche à la plus
+/// lointaine : ce qu'on a touché sur la carte, là où plusieurs lianes partagent la même route.
+pub async fn find_near(db: &PgPool, lat: f64, lng: f64, radius: Option<f64>) -> Result<Vec<Liane>> {
+    let radius = radius
+        .unwrap_or(DEFAULT_NEAR_RADIUS_METERS)
+        .clamp(1.0, MAX_NEAR_RADIUS_METERS);
+    let ids: Vec<Uuid> = sqlx::query_scalar(
+        r#"
+            SELECT l.id
+            FROM liane l
+            CROSS JOIN (SELECT ST_SetSRID(ST_MakePoint($2, $1), 4326)::geography AS touched) search
+            WHERE l.is_active
+              AND ST_DWithin(l.route::geography, search.touched, $3)
+            ORDER BY ST_Distance(l.route::geography, search.touched), l.name
+        "#,
+    )
+    .bind(lat)
+    .bind(lng)
+    .bind(radius)
+    .fetch_all(db)
+    .await?;
+
+    let mut lianes: HashMap<Uuid, Liane> = find_by_ids(db, &ids)
+        .await?
+        .into_iter()
+        .map(|liane| (liane.id, liane))
+        .collect();
+    Ok(ids.iter().filter_map(|id| lianes.remove(id)).collect())
+}
+
+fn section_distance(liane: &Liane, from_stop_id: &Uuid, to_stop_id: &Uuid) -> i32 {
+    let distance_of = |stop_id: &Uuid| {
+        liane
+            .stops
+            .iter()
+            .position(|stop| &stop.id == stop_id)
+            .and_then(|index| liane.stop_distances.get(index))
+            .copied()
+            .unwrap_or(0)
+    };
+    (distance_of(to_stop_id) - distance_of(from_stop_id)).abs()
 }
 
 pub async fn find_detail(

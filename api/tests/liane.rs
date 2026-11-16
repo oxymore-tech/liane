@@ -59,8 +59,16 @@ async fn admin_creates_visitor_sees_user_joins_a_section_then_leaves() {
     assert_eq!(hit["direction"], "Outbound");
     assert_eq!(hit["from_stop_id"], a.id.to_string());
     assert_eq!(hit["to_stop_id"], d.id.to_string());
+    assert_eq!(
+        hit["section_distance_meters"],
+        liane["stop_distances"][3].as_i64().unwrap() - liane["stop_distances"][0].as_i64().unwrap()
+    );
     let (_, found) = app.get(&search(c, b), None).await;
     assert_eq!(found[0]["direction"], "Return");
+    assert_eq!(
+        found[0]["section_distance_meters"],
+        liane["stop_distances"][2].as_i64().unwrap() - liane["stop_distances"][1].as_i64().unwrap()
+    );
     let (_, found) = app.get(&search(a, outside), None).await;
     assert_eq!(found.as_array().unwrap().len(), 0);
 
@@ -571,4 +579,109 @@ async fn a_trip_request_gets_suggestions_without_creating_anything() {
         0,
         "le rapprochement ne fait entrer dans aucune liane"
     );
+}
+
+#[tokio::test]
+#[ignore = "exige TEST_DATABASE_URL"]
+async fn lianes_sharing_a_road_share_one_map_segment() {
+    let app = TestApp::spawn().await;
+    let admin = app.admin_token().await;
+    let points = app.points(3).await;
+    let (a, b, c) = (&points[0], &points[1], &points[2]);
+    let branch = app.point_at("Écart", a.lat + 0.1, b.lng).await;
+
+    let through = app
+        .create_liane(&admin, &unique_name("Tronc"), &[a, b, c])
+        .await;
+    let forked = app
+        .create_liane(&admin, &unique_name("Fourche"), &[a, b, &branch])
+        .await;
+    let ids = |lianes: &[&serde_json::Value]| -> Vec<uuid::Uuid> {
+        let mut ids: Vec<uuid::Uuid> = lianes
+            .iter()
+            .map(|liane| liane["id"].as_str().unwrap().parse().unwrap())
+            .collect();
+        ids.sort();
+        ids
+    };
+    let length_of = |liane_ids: Vec<uuid::Uuid>| {
+        let db = app.db.clone();
+        async move {
+            sqlx::query_scalar::<_, Option<f64>>(
+                "SELECT SUM(ST_Length(geom::geography)) FROM liane_segment WHERE liane_ids = $1",
+            )
+            .bind(liane_ids)
+            .fetch_one(&db)
+            .await
+            .unwrap()
+            .unwrap_or(0.0)
+        }
+    };
+    let distance = |liane: &serde_json::Value, index: usize| liane["stop_distances"][index].as_f64().unwrap();
+    let is_about = |length: f64, expected: f64| (length - expected).abs() < expected * 0.01 + 5.0;
+
+    // Le tronçon commun (a → b) n'existe qu'une fois, avec les deux lianes ; chaque suite est à part.
+    let shared = length_of(ids(&[&through, &forked])).await;
+    assert!(is_about(shared, distance(&through, 1)), "{shared}");
+    let own = length_of(ids(&[&through])).await;
+    assert!(is_about(own, distance(&through, 2) - distance(&through, 1)), "{own}");
+    let fork = length_of(ids(&[&forked])).await;
+    assert!(is_about(fork, distance(&forked, 2) - distance(&forked, 1)), "{fork}");
+
+    // Toucher le tronçon commun donne les deux lianes ; toucher une suite n'en donne qu'une.
+    let near = |lat: f64, lng: f64| format!("/liane/near?lat={lat}&lng={lng}&radius=200");
+    let (status, found) = app.get(&near(a.lat, (a.lng + b.lng) / 2.0), None).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(found.as_array().unwrap().len(), 2);
+    assert!(contains_id(&found, &through["id"]) && contains_id(&found, &forked["id"]));
+    let (_, found) = app.get(&near(c.lat, (b.lng + c.lng) / 2.0), None).await;
+    assert_eq!(found.as_array().unwrap().len(), 1);
+    assert_eq!(found[0]["id"], through["id"]);
+    let (_, found) = app.get(&near(a.lat + 1.0, a.lng), None).await;
+    assert_eq!(found.as_array().unwrap().len(), 0);
+
+    // La tuile porte un trait pour le tronçon commun, avec le total des membres et les deux slugs.
+    app.new_member("Uma", through["id"].as_str().unwrap(), a, b).await;
+    app.new_member("Vic", forked["id"].as_str().unwrap(), a, b).await;
+    app.new_member("Wes", forked["id"].as_str().unwrap(), a, &branch).await;
+    let (x, y) = tile_of(a, 10);
+    let tile: Vec<u8> = sqlx::query_scalar("SELECT liane_segment_display(10, $1, $2)")
+        .bind(x)
+        .bind(y)
+        .fetch_one(&app.db)
+        .await
+        .unwrap();
+    let text = String::from_utf8_lossy(&tile);
+    let both = format!(
+        "|{}|{}|",
+        through["slug"].as_str().unwrap(),
+        forked["slug"].as_str().unwrap()
+    );
+    let both_reversed = format!(
+        "|{}|{}|",
+        forked["slug"].as_str().unwrap(),
+        through["slug"].as_str().unwrap()
+    );
+    assert!(text.contains(&both) || text.contains(&both_reversed), "slugs du tronçon commun");
+    let members: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM liane_member WHERE liane_id = ANY($1)",
+    )
+    .bind(ids(&[&through, &forked]))
+    .fetch_one(&app.db)
+    .await
+    .unwrap();
+    assert_eq!(members, 3);
+
+    // Désactiver une liane rend le tronçon à l'autre seule.
+    let (status, _) = app
+        .put(
+            &format!("/liane/{}", forked["id"].as_str().unwrap()),
+            Some(&admin),
+            json!({ "name": forked["name"], "stop_ids": [a.id, b.id, branch.id], "is_active": false }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(length_of(ids(&[&through, &forked])).await, 0.0);
+    let alone = length_of(ids(&[&through])).await;
+    assert!(is_about(alone, distance(&through, 2)), "{alone}");
 }

@@ -75,7 +75,9 @@ export default function MyLianesPage() {
       {user && <NotificationSettings />}
       {user && (
         <div className="flex items-center justify-between text-sm text-gray-500">
-          <span>Connecté : {user.pseudo ?? user.phone}</span>
+          <Link href="/profil" className="underline">
+            Mon profil : {user.pseudo ?? user.phone}
+          </Link>
           <Button variant="quiet" onClick={logout}>
             Se déconnecter
           </Button>

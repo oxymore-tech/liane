@@ -10,10 +10,10 @@ pub const MAX_SEAT_COUNT: i32 = 8;
 /// Un trajet se propose pour une heure à venir (à quelques minutes près) et pas trop lointaine.
 pub const DEPARTURE_PAST_TOLERANCE_SECONDS: i64 = 5 * 60;
 pub const MAX_DAYS_AHEAD: i64 = 60;
-/// « Je suis parti » / « Je suis monté » : accepté de 30 min avant à 3 h après l'heure de départ prévue.
+/// « Je démarre » / « Je monte » : accepté de 30 min avant à 3 h après l'heure de départ prévue.
 pub const START_OPENS_BEFORE_SECONDS: i64 = 30 * 60;
 pub const START_CLOSES_AFTER_SECONDS: i64 = 3 * 3600;
-/// « Je suis arrivé » / « Je suis descendu » : accepté jusqu'à 12 h après l'heure de départ prévue.
+/// « J'arrive » / « Je descends » : accepté jusqu'à 12 h après l'heure de départ prévue.
 pub const END_CLOSES_AFTER_SECONDS: i64 = 12 * 3600;
 
 /// Le texte est renvoyé tel quel avec le statut 409 : l'interface s'en sert pour expliquer le refus.

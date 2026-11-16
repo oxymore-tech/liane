@@ -3,8 +3,6 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
 
-use crate::user::model::Gender;
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, sqlx::Type)]
 #[sqlx(type_name = "VARCHAR")]
 #[sqlx(rename_all = "PascalCase")]
@@ -29,8 +27,8 @@ pub enum TripRole {
     Passenger,
 }
 
-/// Début (`Start`) ou fin (`End`) du trajet d'un occupant : « Je suis parti » / « Je suis arrivé »
-/// pour le conducteur, « Je suis monté » / « Je suis descendu » pour un passager.
+/// Début (`Start`) ou fin (`End`) du trajet d'un occupant : « Je démarre » / « J'arrive »
+/// pour le conducteur, « Je monte » / « Je descends » pour un passager (formulations sans accord en genre).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, sqlx::Type)]
 #[sqlx(type_name = "VARCHAR")]
 #[sqlx(rename_all = "PascalCase")]
@@ -155,7 +153,6 @@ pub struct TripRow {
     pub liane_slug: String,
     pub driver_id: Uuid,
     pub driver_pseudo: Option<String>,
-    pub driver_gender: Gender,
     pub departure_time: DateTime<Utc>,
     pub direction: TripDirection,
     pub from_id: Uuid,
@@ -188,8 +185,6 @@ pub struct Trip {
     pub state: TripState,
     pub is_open: bool,
     pub my_role: Option<TripRole>,
-    #[serde(skip)]
-    pub driver_is_woman: bool,
 }
 
 #[derive(Debug, Serialize)]

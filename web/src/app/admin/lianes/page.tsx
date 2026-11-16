@@ -108,6 +108,12 @@ export default function AdminLianesPage() {
             </p>
           )}
           <div className="flex flex-wrap gap-2">
+            <Link
+              href={`/admin/lianes/${liane.id}`}
+              className={buttonClass("secondary")}
+            >
+              Modifier
+            </Link>
             {liane.route_source === "Straight" && (
               <Button variant="secondary" onClick={() => recompute(liane)}>
                 Recalculer le tracé

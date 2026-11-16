@@ -3,6 +3,7 @@ import type {
   Liane,
   LianeDetail,
   LianeInput,
+  LianeSearchResult,
   Membership,
   MembershipInput,
   MyLiane,
@@ -66,3 +67,23 @@ export const searchRallyingPoints = (
 
 export const snapRallyingPoint = (lat: number, lng: number) =>
   api.get<RallyingPoint>("/rallying_point/snap", { params: { lat, lng } });
+
+type Place = { lat: number; lng: number };
+
+/** Lianes dont un arrêt est à moins de `radius` mètres du départ et un autre de l'arrivée. */
+export const searchLianes = (from: Place, to: Place, radius: number) =>
+  api.get<LianeSearchResult[]>("/liane/search", {
+    params: {
+      from_lat: from.lat,
+      from_lng: from.lng,
+      to_lat: to.lat,
+      to_lng: to.lng,
+      radius,
+    },
+  });
+
+/** Lianes dont le tracé passe à moins de `radius` mètres du point touché sur la carte. */
+export const listLianesNear = (point: Place, radius: number) =>
+  api.get<Liane[]>("/liane/near", {
+    params: { lat: point.lat, lng: point.lng, radius },
+  });

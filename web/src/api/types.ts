@@ -114,7 +114,7 @@ export type TripState = "Planned" | "Started" | "Finished" | "Canceled";
 
 export type TripRole = "Driver" | "Passenger";
 
-/** Début (« parti », « monté ») ou fin (« arrivé », « descendu ») du trajet d'un occupant. */
+/** Début (« Je démarre », « Je monte ») ou fin (« J'arrive », « Je descends ») du trajet d'un occupant. */
 export type GestureKind = "Start" | "End";
 
 export type PositionStatus = "Granted" | "Denied" | "Unavailable";
@@ -246,3 +246,14 @@ export type Message = {
 
 /** Du plus récent au plus ancien. */
 export type MessagePage = { messages: Message[]; has_more: boolean };
+
+/** Une liane qui passe près du départ et de l'arrivée cherchés, avec les arrêts suggérés. */
+export type LianeSearchResult = {
+  liane: Liane;
+  from_stop_id: string;
+  to_stop_id: string;
+  direction: Direction;
+  section_distance_meters: number;
+  from_distance_meters: number;
+  to_distance_meters: number;
+};

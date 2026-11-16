@@ -88,7 +88,7 @@ await shot(driver, "02-proposer-un-trajet");
 await driver.getByRole("button", { name: "Proposer ce trajet" }).click();
 await driver.waitForURL(/\/trajet\//);
 const tripUrl = driver.url();
-await driver.getByRole("button", { name: "Je suis parti" }).waitFor();
+await driver.getByRole("button", { name: "Je démarre" }).waitFor();
 await shot(driver, "03-trajet-conducteur-avant-depart");
 
 // 3. Paule (passagère, position accordée) s'inscrit
@@ -101,7 +101,7 @@ await paule.getByRole("button", { name: "M'inscrire à ce trajet" }).waitFor();
 log("inscription proposée:", await paule.getByLabel("Je monte à").inputValue() === liane.stops[1].id ? "montée à Ispagnac par défaut" : "montée par défaut inattendue");
 await shot(paule, "05-trajet-inscription");
 await paule.getByRole("button", { name: "M'inscrire à ce trajet" }).click();
-await paule.getByRole("button", { name: "Je suis monté" }).waitFor();
+await paule.getByRole("button", { name: "Je monte", exact: true }).waitFor();
 await shot(paule, "06-trajet-passagere-inscrite");
 
 // 4. Quentin (passager, position refusée) s'inscrit aussi
@@ -109,7 +109,7 @@ const quentin = await newPage("passager sans position");
 await joinLiane(quentin, "Quentin", "Faure", "Florac-Trois-Rivières", "Balsièges", false);
 await quentin.goto(tripUrl);
 await quentin.getByRole("button", { name: "M'inscrire à ce trajet" }).click();
-await quentin.getByRole("button", { name: "Je suis monté" }).waitFor();
+await quentin.getByRole("button", { name: "Je monte", exact: true }).waitFor();
 
 // 5. messages : Paule a le fil ouvert, Denis écrit, le message arrive sans recharger
 await paule.goto(BASE + "/l/florac-mende/messages");
@@ -139,41 +139,41 @@ await quentin.getByRole("heading", { name: "Florac – Mende" }).waitFor();
 await quentin.waitForTimeout(800);
 if ((await quentin.getByText(/messages? non lus?/).count()) !== 0) problems.push("la pastille de non-lus reste après lecture");
 
-// 6. « Je suis parti » : heure et position relevées
+// 6. « Je démarre » : heure et position relevées
 await driver.goto(tripUrl);
 await paule.goto(tripUrl);
-await paule.getByRole("button", { name: "Je suis monté" }).waitFor();
-await driver.getByRole("button", { name: "Je suis parti" }).click();
+await paule.getByRole("button", { name: "Je monte", exact: true }).waitFor();
+await driver.getByRole("button", { name: "Je démarre" }).click();
 await driver.getByText(/Départ déclaré à/).waitFor();
 await driver.getByText("Position enregistrée.").waitFor();
-await driver.getByRole("button", { name: "Je suis arrivé" }).waitFor();
+await driver.getByRole("button", { name: "J'arrive" }).waitFor();
 await shot(driver, "11-trajet-conducteur-parti");
 try {
-  await paule.getByText(/parti à/).waitFor({ timeout: 8000 });
+  await paule.getByText(/départ à/).waitFor({ timeout: 8000 });
   log("départ du conducteur vu en direct par Paule");
 } catch {
   problems.push("le départ du conducteur n'apparaît pas en direct chez la passagère");
 }
 
 // 7. les passagers montent : avec position pour Paule, sans pour Quentin
-await paule.getByRole("button", { name: "Je suis monté" }).click();
+await paule.getByRole("button", { name: "Je monte", exact: true }).click();
 await paule.getByText(/Montée déclarée à/).waitFor();
 await paule.getByText("Position enregistrée.").waitFor();
 await shot(paule, "12-trajet-passagere-montee");
 await quentin.goto(tripUrl);
-await quentin.getByRole("button", { name: "Je suis monté" }).click();
+await quentin.getByRole("button", { name: "Je monte", exact: true }).click();
 await quentin.getByText(/Montée déclarée à/).waitFor();
 await quentin.getByText("Enregistré sans position.").waitFor();
 await shot(quentin, "13-trajet-passager-sans-position");
 
 // 8. arrivée : le conducteur à Mende, Quentin descend à Balsièges, Paule à Mende
-await quentin.getByRole("button", { name: "Je suis descendu" }).click();
+await quentin.getByRole("button", { name: "Je descends" }).click();
 await quentin.getByText(/Descente déclarée à/).waitFor();
 await driver.context().setGeolocation(position("Mende"));
-await driver.getByRole("button", { name: "Je suis arrivé" }).click();
+await driver.getByRole("button", { name: "J'arrive" }).click();
 await driver.getByText(/Arrivée déclarée à/).waitFor();
 await paule.context().setGeolocation(position("Mende"));
-await paule.getByRole("button", { name: "Je suis descendu" }).click();
+await paule.getByRole("button", { name: "Je descends" }).click();
 await paule.getByText(/Descente déclarée à/).waitFor();
 await paule.getByText("Trajet attesté", { exact: false }).first().waitFor();
 await top(paule);

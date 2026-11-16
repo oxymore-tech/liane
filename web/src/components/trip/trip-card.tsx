@@ -29,7 +29,7 @@ export function StateBadge({ trip }: { trip: Trip }) {
 const roleLabel = (trip: Trip) => {
   if (trip.my_role === "Driver") return "Vous conduisez";
   if (trip.my_role === "Passenger") {
-    return `Vous êtes passager · conduit par ${trip.driver.pseudo ?? "un membre"}`;
+    return `Vous avez une place · conduit par ${trip.driver.pseudo ?? "un membre"}`;
   }
   return `Conduit par ${trip.driver.pseudo ?? "un membre"}`;
 };

@@ -22,7 +22,6 @@ use crate::trip::rules::{
     self, END_CLOSES_AFTER_SECONDS, MAX_SEAT_COUNT, MIN_SEAT_COUNT, Refusal,
     START_CLOSES_AFTER_SECONDS,
 };
-use crate::user::model::Gender;
 
 const PAST_TRIPS_LIMIT: i64 = 50;
 const ADMIN_TRIPS_LIMIT: i64 = 200;
@@ -348,7 +347,7 @@ pub async fn book(
             trip,
             "Un passager de plus".to_string(),
             format!(
-                "{} s'est inscrit à votre trajet {} du {}",
+                "{} a réservé une place sur votre trajet {} du {}",
                 passenger_pseudo(&detail, &passenger.id),
                 section(trip),
                 day_and_time(trip.departure_time)
@@ -358,7 +357,7 @@ pub async fn book(
     Ok(detail)
 }
 
-/// Désinscription d'un passager, tant qu'il n'a pas déclaré être monté.
+/// Désinscription d'un passager, tant qu'il n'a pas déclaré sa montée.
 pub async fn unbook(
     db: &PgPool,
     notifier: &Notifier,
@@ -671,7 +670,6 @@ async fn find_trips(db: &PgPool, viewer_id: &Uuid, filter: TripFilter) -> Result
                 l.slug AS liane_slug,
                 t.driver_id,
                 driver.pseudo AS driver_pseudo,
-                driver.gender AS driver_gender,
                 t.departure_time,
                 t.direction,
                 origin.id AS from_id,
@@ -751,7 +749,6 @@ fn to_trip(row: TripRow, viewer_id: &Uuid, now: DateTime<Utc>) -> Trip {
         state: row.state,
         is_open: rules::is_open(row.state, row.departure_time, now),
         my_role,
-        driver_is_woman: matches!(row.driver_gender, Gender::Woman),
     }
 }
 
@@ -970,7 +967,7 @@ async fn announce(
     Ok(())
 }
 
-/// « X est parti » / « X est arrivé » : dans le fil de la liane, et en notification aux passagers.
+/// « X a démarré le trajet » / « X a terminé le trajet » (formulations sans accord en genre) : dans le fil de la liane, et en notification aux passagers.
 async fn announce_driver_gesture(
     db: &PgPool,
     notifier: &Notifier,
@@ -978,19 +975,18 @@ async fn announce_driver_gesture(
     kind: GestureKind,
 ) -> Result<()> {
     let trip = &detail.trip;
-    let agreement = if trip.driver_is_woman { "e" } else { "" };
     let (message_kind, title, place, reminder) = match kind {
         GestureKind::Start => (
             MessageKind::TripStarted,
-            format!("{} est parti{agreement}", pseudo(&trip.driver)),
+            format!("{} a démarré le trajet", pseudo(&trip.driver)),
             format!("de {}", trip.from_stop.name()),
-            "Quand vous montez, ouvrez le trajet et touchez « Je suis monté ».",
+            "Quand vous montez, ouvrez le trajet et touchez « Je monte ».",
         ),
         GestureKind::End => (
             MessageKind::TripFinished,
-            format!("{} est arrivé{agreement}", pseudo(&trip.driver)),
+            format!("{} a terminé le trajet", pseudo(&trip.driver)),
             format!("à {}", trip.to_stop.name()),
-            "Une fois descendu, ouvrez le trajet et touchez « Je suis descendu ».",
+            "À la descente, ouvrez le trajet et touchez « Je descends ».",
         ),
     };
     announce(
