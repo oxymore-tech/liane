@@ -7,6 +7,8 @@ use crate::liane::handler::{
     recompute_straight_routes, remove, report_member, search, update, update_membership,
 };
 
+pub use service::{LianeLabel, find_label, find_member_ids_except, find_member_stops, is_member};
+
 mod handler;
 mod matching;
 pub mod model;

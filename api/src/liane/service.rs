@@ -12,6 +12,9 @@ use crate::liane::model::{
 };
 use crate::liane::routing::{self, ComputedRoute, OsrmFailure, Position};
 use crate::liane::slug::unique_slug;
+use crate::message;
+use crate::message::model::MessageKind;
+use crate::notification::Notifier;
 use crate::rallying_point;
 use crate::rallying_point::model::RallyingPoint;
 
@@ -59,6 +62,7 @@ pub async fn list_mine(db: &PgPool, user_id: &Uuid) -> Result<Vec<MyLiane>> {
     .await?;
 
     let ids: Vec<Uuid> = rows.iter().map(|row| row.liane_id).collect();
+    let unread_counts = message::service::unread_counts(db, user_id).await?;
     let mut memberships: HashMap<Uuid, Membership> = rows
         .into_iter()
         .map(|row| (row.liane_id, row.membership))
@@ -69,7 +73,12 @@ pub async fn list_mine(db: &PgPool, user_id: &Uuid) -> Result<Vec<MyLiane>> {
         .into_iter()
         .filter_map(|liane| {
             let membership = memberships.remove(&liane.id)?;
-            Some(MyLiane { liane, membership })
+            let unread_count = unread_counts.get(&liane.id).copied().unwrap_or(0);
+            Some(MyLiane {
+                liane,
+                membership,
+                unread_count,
+            })
         })
         .collect())
 }
@@ -550,6 +559,68 @@ pub async fn is_member(db: &PgPool, id: &Uuid, user_id: &Uuid) -> Result<bool> {
     .fetch_one(db)
     .await?;
     Ok(is_member)
+}
+
+#[derive(Debug, sqlx::FromRow)]
+pub struct LianeLabel {
+    pub name: String,
+    pub slug: String,
+}
+
+pub async fn find_label(db: &PgPool, id: &Uuid) -> Result<LianeLabel> {
+    sqlx::query_as::<_, LianeLabel>("SELECT name, slug FROM liane WHERE id = $1")
+        .bind(id)
+        .fetch_optional(db)
+        .await?
+        .ok_or(AppError::NotFound)
+}
+
+pub async fn find_member_ids_except(db: &PgPool, id: &Uuid, user_id: &Uuid) -> Result<Vec<Uuid>> {
+    let ids = sqlx::query_scalar(
+        "SELECT user_id FROM liane_member WHERE liane_id = $1 AND user_id <> $2",
+    )
+    .bind(id)
+    .bind(user_id)
+    .fetch_all(db)
+    .await?;
+    Ok(ids)
+}
+
+/// Arrêts de montée et de descente d'un membre, dans le sens aller de la liane.
+pub async fn find_member_stops(
+    db: &PgPool,
+    id: &Uuid,
+    user_id: &Uuid,
+) -> Result<Option<(Uuid, Uuid)>> {
+    let stops = sqlx::query_as(
+        "SELECT board_rp_id, alight_rp_id FROM liane_member WHERE liane_id = $1 AND user_id = $2",
+    )
+    .bind(id)
+    .bind(user_id)
+    .fetch_optional(db)
+    .await?;
+    Ok(stops)
+}
+
+/// « X a rejoint la liane » / « X a quitté la liane » dans le fil de la liane.
+pub async fn announce_membership(
+    db: &PgPool,
+    notifier: &Notifier,
+    id: &Uuid,
+    user_id: &Uuid,
+    kind: MessageKind,
+) -> Result<()> {
+    let pseudo: Option<String> = sqlx::query_scalar(r#"SELECT pseudo FROM "user" WHERE id = $1"#)
+        .bind(user_id)
+        .fetch_one(db)
+        .await?;
+    let who = pseudo.as_deref().unwrap_or("Un membre");
+    let text = match kind {
+        MessageKind::MemberLeft => format!("{who} a quitté la liane"),
+        _ => format!("{who} a rejoint la liane"),
+    };
+    message::service::post_event(db, notifier, id, user_id, kind, &text, None).await?;
+    Ok(())
 }
 
 async fn find_one(db: &PgPool, id: &Uuid) -> Result<Liane> {

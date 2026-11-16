@@ -114,10 +114,12 @@ pub struct LianeMember {
 }
 
 #[derive(Debug, Serialize)]
+/// `unread_count` : messages des autres membres arrivés depuis la dernière lecture du fil.
 pub struct MyLiane {
     #[serde(flatten)]
     pub liane: Liane,
     pub membership: Membership,
+    pub unread_count: i64,
 }
 
 #[derive(Debug, FromRow)]

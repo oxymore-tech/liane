@@ -8,6 +8,7 @@ import { buttonClass, Card, Page } from "@/components/ui";
 
 const TABS = [
   { href: "/admin/lianes", label: "Lianes" },
+  { href: "/admin/trajets", label: "Trajets" },
   { href: "/admin/signalements", label: "Signalements" },
 ];
 

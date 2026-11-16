@@ -6,6 +6,7 @@ use axum::{Extension, Router, http};
 use clap::Parser;
 use dotenvy::dotenv;
 use std::net::SocketAddr;
+use std::sync::Arc;
 use tokio::net::TcpListener;
 use tokio::select;
 use tokio::signal::unix::{SignalKind, signal};
@@ -15,6 +16,8 @@ use tower_http::trace::TraceLayer;
 use tracing::Level;
 
 use api::config::Config;
+use api::notification::Notifier;
+use api::notification::push::LogPushSender;
 
 #[derive(Parser)]
 struct Args {
@@ -67,11 +70,15 @@ async fn try_main() -> Result<()> {
         ])
         .allow_origin(HeaderValue::from_static("http://localhost:3000"));
 
+    // L'envoi réel des notifications push n'est pas branché : elles sont écrites dans le journal.
+    let notifier = Notifier::new(Arc::new(LogPushSender));
+
     let app = Router::new()
         .merge(api_router())
         .layer(trace_layer)
         .layer(cors)
         .layer(Extension(pool))
+        .layer(Extension(notifier))
         .layer(Extension(config));
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 5000));

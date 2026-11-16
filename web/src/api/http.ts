@@ -126,6 +126,15 @@ export class HttpClient {
     return url.toString();
   }
 
+  /** Ouvre une réponse lue au fil de l'eau (Server-Sent Events) ; le statut n'est pas vérifié. */
+  openStream(uri: string, signal: AbortSignal): Promise<Response> {
+    return fetch(this.formatUrl(uri, {}), {
+      headers: this.headers(),
+      signal,
+      cache: "no-store",
+    });
+  }
+
   hasToken() {
     return Boolean(this.getToken());
   }

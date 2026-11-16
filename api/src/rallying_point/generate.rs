@@ -315,7 +315,7 @@ pub async fn has_points_in_use(db: &PgPool) -> Result<bool> {
     let in_use = sqlx::query_scalar(
         r#"
             SELECT EXISTS (SELECT 1 FROM liane_stop)
-                OR EXISTS (SELECT 1 FROM trip_waypoint)
+                OR EXISTS (SELECT 1 FROM trip)
                 OR EXISTS (SELECT 1 FROM trip_member)
         "#,
     )

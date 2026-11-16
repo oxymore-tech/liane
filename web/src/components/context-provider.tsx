@@ -13,6 +13,7 @@ import {
 import { api } from "@/api";
 import { getMe } from "@/api/auth";
 import type { User } from "@/api/types";
+import { forgetPushSubscription } from "@/components/notifications";
 
 export type AppContextProps = {
   user: User | null;
@@ -62,7 +63,8 @@ export default function AppProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    await forgetPushSubscription();
     api.removeToken();
     setUser(null);
     queryClient.clear();
