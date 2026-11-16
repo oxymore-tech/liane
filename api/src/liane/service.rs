@@ -298,7 +298,7 @@ pub async fn create(
     input: &LianeInput,
 ) -> Result<Liane> {
     let name = validated_name(input)?;
-    let positions = validated_stop_positions(db, &input.stop_ids).await?;
+    let positions = validated_stop_positions(db, &input.stop_ids, &[]).await?;
     let route = routing::compute(osrm_url, &positions).await;
 
     let mut tx = db.begin().await?;
@@ -333,8 +333,9 @@ pub async fn update(
     input: &LianeInput,
 ) -> Result<Option<Liane>> {
     let name = validated_name(input)?;
-    let positions = validated_stop_positions(db, &input.stop_ids).await?;
-    let new_route = if find_stop_ids(db, id).await? == input.stop_ids {
+    let current_stop_ids = find_stop_ids(db, id).await?;
+    let positions = validated_stop_positions(db, &input.stop_ids, &current_stop_ids).await?;
+    let new_route = if current_stop_ids == input.stop_ids {
         None
     } else {
         Some(routing::compute(osrm_url, &positions).await)
@@ -376,7 +377,7 @@ pub async fn update(
 }
 
 pub async fn preview_route(db: &PgPool, osrm_url: &str, stop_ids: &[Uuid]) -> Result<RoutePreview> {
-    let positions = validated_stop_positions(db, stop_ids).await?;
+    let positions = validated_stop_positions(db, stop_ids, stop_ids).await?;
     let route = routing::compute(osrm_url, &positions).await;
     Ok(RoutePreview {
         route: route.geojson(),
@@ -714,7 +715,13 @@ fn validated_name(input: &LianeInput) -> Result<&str> {
     Ok(name)
 }
 
-async fn validated_stop_positions(db: &PgPool, stop_ids: &[Uuid]) -> Result<Vec<Position>> {
+/// Un point désactivé (disparu de sa source) reste accepté s'il fait partie de `kept_ids`, les arrêts
+/// actuels de la liane : on peut toujours la modifier.
+async fn validated_stop_positions(
+    db: &PgPool,
+    stop_ids: &[Uuid],
+    kept_ids: &[Uuid],
+) -> Result<Vec<Position>> {
     let distinct_ids: HashSet<&Uuid> = stop_ids.iter().collect();
     if stop_ids.len() < 2 || distinct_ids.len() != stop_ids.len() {
         return Err(AppError::BadRequest);
@@ -724,7 +731,7 @@ async fn validated_stop_positions(db: &PgPool, stop_ids: &[Uuid]) -> Result<Vec<
     stop_ids
         .iter()
         .map(|id| match points.get(id) {
-            Some(point) if point.is_active => Ok([point.lng, point.lat]),
+            Some(point) if point.is_active || kept_ids.contains(id) => Ok([point.lng, point.lat]),
             _ => Err(AppError::BadRequest),
         })
         .collect()

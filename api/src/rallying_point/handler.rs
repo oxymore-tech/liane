@@ -6,7 +6,8 @@ use axum::Extension;
 use crate::auth::extractor::AdminUser;
 use crate::error::{AppError, Result};
 use crate::rallying_point::model::{BboxQuery, GenerateQuery, RallyingPoint, SearchQuery, SnapQuery};
-use crate::rallying_point::{generate, service};
+use crate::rallying_point::generate::{self, SyncReport};
+use crate::rallying_point::service;
 
 pub async fn search(
     Extension(db): Extension<PgPool>,
@@ -43,13 +44,8 @@ pub async fn generate_points(
     _admin: AdminUser,
     Extension(db): Extension<PgPool>,
     Query(q): Query<GenerateQuery>,
-) -> Result<Json<serde_json::Value>> {
+) -> Result<Json<SyncReport>> {
     let test_only = q.source.as_deref() == Some("test");
-    if generate::has_points_in_use(&db).await? {
-        return Err(AppError::Conflict(
-            "Rallying points are used by lianes or trips and cannot be regenerated".to_string(),
-        ));
-    }
-    let count = generate::generate(&db, test_only).await?;
-    Ok(Json(serde_json::json!({ "count": count })))
+    let report = generate::generate(&db, test_only).await?;
+    Ok(Json(report))
 }

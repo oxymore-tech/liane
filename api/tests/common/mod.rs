@@ -217,6 +217,10 @@ impl TestApp {
         }
     }
 
+    pub fn origin(&self) -> (f64, f64) {
+        self.origin
+    }
+
     pub async fn call(
         &self,
         method: Method,

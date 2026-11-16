@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use tracing::info;
 
@@ -10,20 +10,27 @@ use crate::rallying_point::model::RallyingPointKind;
 const MIN_DISTANCE_METERS: f64 = 375.0;
 const EARTH_RADIUS_METERS: f64 = 6_371_000.0;
 
-struct RawPoint {
-    label: String,
-    lat: f64,
-    lng: f64,
-    kind: RallyingPointKind,
-    address: String,
-    zip_code: String,
-    city: String,
-    place_count: Option<i32>,
+const BNLC: &str = "bnlc";
+const TOWN_HALLS: &str = "mairie";
+const CUSTOM: &str = "liane";
+const TEST_DEPARTMENTS: [&str; 7] = ["46", "31", "48", "09", "81", "82", "12"];
+
+/// Un point tel que le donne sa source. `source_key` vaut `<source>:<identifiant dans la source>`.
+#[derive(Debug, Clone)]
+pub struct SourcePoint {
+    pub source_key: String,
+    pub label: String,
+    pub lat: f64,
+    pub lng: f64,
+    pub kind: RallyingPointKind,
+    pub address: String,
+    pub zip_code: String,
+    pub city: String,
+    pub place_count: Option<i32>,
 }
 
 #[derive(Deserialize)]
 struct BnlcEntry {
-    #[allow(dead_code)]
     id_lieu: String,
     nom_lieu: String,
     ad_lieu: String,
@@ -90,7 +97,7 @@ fn load_zipcodes() -> Result<HashMap<String, String>> {
     Ok(map)
 }
 
-fn load_bnlc(zipcodes: &HashMap<String, String>) -> Result<Vec<RawPoint>> {
+fn load_bnlc(zipcodes: &HashMap<String, String>) -> Result<Vec<SourcePoint>> {
     let data = include_str!("../../resources/bnlc.csv");
     let mut rdr = csv::Reader::from_reader(data.as_bytes());
     let mut points = Vec::new();
@@ -121,7 +128,8 @@ fn load_bnlc(zipcodes: &HashMap<String, String>) -> Result<Vec<RawPoint>> {
         let zip_code = zipcodes.get(&e.insee).cloned().unwrap_or_default();
         let place_count = e.nbre_pl.and_then(|s| s.parse::<i32>().ok()).filter(|&n| n > 0);
 
-        points.push(RawPoint {
+        points.push(SourcePoint {
+            source_key: format!("{BNLC}:{}", e.id_lieu),
             label: e.nom_lieu,
             lat: e.y_lat,
             lng: e.x_long,
@@ -135,7 +143,7 @@ fn load_bnlc(zipcodes: &HashMap<String, String>) -> Result<Vec<RawPoint>> {
     Ok(points)
 }
 
-fn load_mairies() -> Result<Vec<RawPoint>> {
+fn load_mairies() -> Result<Vec<SourcePoint>> {
     let data = include_str!("../../resources/mairies.csv");
     let mut rdr = csv::Reader::from_reader(data.as_bytes());
     let mut points = Vec::new();
@@ -158,7 +166,8 @@ fn load_mairies() -> Result<Vec<RawPoint>> {
             continue;
         }
 
-        points.push(RawPoint {
+        points.push(SourcePoint {
+            source_key: format!("{TOWN_HALLS}:{}", e.code_insee),
             label: e.nom_organisme,
             lat,
             lng,
@@ -172,9 +181,10 @@ fn load_mairies() -> Result<Vec<RawPoint>> {
     Ok(points)
 }
 
-fn load_custom() -> Vec<RawPoint> {
+fn load_custom() -> Vec<SourcePoint> {
     vec![
-        RawPoint {
+        SourcePoint {
+            source_key: format!("{CUSTOM}:living-objects"),
             label: "Living Objects".into(),
             lat: 43.567936,
             lng: 1.390924,
@@ -184,7 +194,8 @@ fn load_custom() -> Vec<RawPoint> {
             city: "Toulouse".into(),
             place_count: Some(10),
         },
-        RawPoint {
+        SourcePoint {
+            source_key: format!("{CUSTOM}:michel-labrousse"),
             label: "Michel Labrousse".into(),
             lat: 43.568356,
             lng: 1.386925,
@@ -194,7 +205,8 @@ fn load_custom() -> Vec<RawPoint> {
             city: "Toulouse".into(),
             place_count: None,
         },
-        RawPoint {
+        SourcePoint {
+            source_key: format!("{CUSTOM}:basso-compotes"),
             label: "Basso com'pôtes".into(),
             lat: 43.565190,
             lng: 1.388705,
@@ -207,119 +219,299 @@ fn load_custom() -> Vec<RawPoint> {
     ]
 }
 
-fn cluster(mut points: Vec<RawPoint>) -> Vec<RawPoint> {
-    points.sort_by(|a, b| a.lng.partial_cmp(&b.lng).unwrap());
+/// Ne garde qu'un point par voisinage de 375 m : en partant de l'est, chaque point retenu écarte ses
+/// voisins plus à l'ouest. Le résultat ne dépend que des points donnés, pas de leur ordre d'arrivée.
+fn cluster(mut points: Vec<SourcePoint>) -> Vec<SourcePoint> {
+    points.retain(|point| point.lat.is_finite() && point.lng.is_finite());
+    points.sort_by(|a, b| {
+        a.lng
+            .total_cmp(&b.lng)
+            .then_with(|| a.source_key.cmp(&b.source_key))
+    });
 
-    let mut result: Vec<RawPoint> = Vec::new();
-    let mut used = vec![false; points.len()];
-
+    let mut is_dropped = vec![false; points.len()];
     for i in (0..points.len()).rev() {
-        if used[i] {
+        if is_dropped[i] {
             continue;
         }
-        used[i] = true;
-
-        let mut group = vec![i];
         for j in (0..i).rev() {
-            if used[j] {
-                continue;
-            }
             if (points[i].lng - points[j].lng).abs() > 0.01 {
                 break;
             }
-            if haversine(points[i].lat, points[i].lng, points[j].lat, points[j].lng)
-                <= MIN_DISTANCE_METERS
+            if !is_dropped[j]
+                && haversine(points[i].lat, points[i].lng, points[j].lat, points[j].lng)
+                    <= MIN_DISTANCE_METERS
             {
-                let dominated = group.iter().all(|&k| {
-                    haversine(points[j].lat, points[j].lng, points[k].lat, points[k].lng)
-                        <= MIN_DISTANCE_METERS
-                });
-                if dominated {
-                    used[j] = true;
-                } else {
-                    group.push(j);
-                    used[j] = true;
-                }
+                is_dropped[j] = true;
             }
         }
-
-        result.push(unsafe { std::ptr::read(&points[group[0]]) });
     }
 
-    std::mem::forget(points);
-    result
+    let mut kept: Vec<SourcePoint> = points
+        .into_iter()
+        .zip(is_dropped)
+        .filter_map(|(point, is_dropped)| (!is_dropped).then_some(point))
+        .collect();
+    kept.reverse();
+    kept
 }
 
-pub async fn generate(db: &PgPool, test_only: bool) -> Result<u64> {
+/// Bilan d'une régénération. `count` : points actifs issus des sources traitées.
+/// `adopted` : points d'avant la clé stable qui ont retrouvé la leur (identifiant conservé).
+/// `deactivated_in_use` : parmi les points désactivés, ceux qui servent encore à une liane ou à un trajet.
+#[derive(Debug, Default, PartialEq, Serialize)]
+pub struct SyncReport {
+    pub count: u64,
+    pub inserted: u64,
+    pub updated: u64,
+    pub reactivated: u64,
+    pub deactivated: u64,
+    pub deactivated_in_use: u64,
+    pub adopted: u64,
+}
+
+/// `source=test` : les mairies de sept départements. Sinon : France entière (aires de covoiturage de la
+/// base nationale, mairies, points propres à Liane).
+pub async fn generate(db: &PgPool, test_only: bool) -> Result<SyncReport> {
     info!("generating rallying points...");
 
-    let zipcodes = load_zipcodes()?;
-
-    let mut points = if test_only {
-        let mairies = load_mairies()?;
-        mairies
+    let (sources, points) = if test_only {
+        let town_halls = load_mairies()?
             .into_iter()
-            .filter(|p| {
-                ["46", "31", "48", "09", "81", "82", "12"]
-                    .iter()
-                    .any(|code| p.zip_code.starts_with(code))
-            })
-            .collect()
+            .filter(|p| TEST_DEPARTMENTS.iter().any(|code| p.zip_code.starts_with(code)))
+            .collect();
+        (vec![TOWN_HALLS], town_halls)
     } else {
-        info!("loading BNLC...");
+        let zipcodes = load_zipcodes()?;
         let mut all = load_bnlc(&zipcodes)?;
-        info!("loading mairies...");
         all.extend(load_mairies()?);
-        info!("loading custom points...");
         all.extend(load_custom());
-        all
+        (vec![BNLC, TOWN_HALLS, CUSTOM], all)
     };
 
     info!("clustering {} raw points...", points.len());
-    points = cluster(points);
-    let count = points.len() as u64;
-    info!("inserting {count} points...");
+    let report = sync(db, &sources, cluster(points)).await?;
+    info!("rallying points generated: {report:?}");
+    Ok(report)
+}
 
+/// Aligne les points de ralliement des `sources` sur `points`, par clé stable : crée les nouveaux, met à
+/// jour ceux qui ont changé, réactive ceux qui reviennent, désactive ceux qui ont disparu. Rien n'est
+/// supprimé et aucun identifiant ne change : lianes, trajets et demandes gardent leurs arrêts.
+/// Les points des autres sources et les points sans clé ne sont pas touchés.
+pub async fn sync(db: &PgPool, sources: &[&str], points: Vec<SourcePoint>) -> Result<SyncReport> {
     let mut tx = db.begin().await?;
-    sqlx::query("DELETE FROM rallying_point")
-        .execute(&mut *tx)
-        .await?;
 
-    for p in &points {
+    sqlx::query(
+        r#"
+            CREATE TEMPORARY TABLE source_point (
+                source_key  VARCHAR(80) PRIMARY KEY,
+                label       VARCHAR(255) NOT NULL,
+                location    GEOGRAPHY(Point, 4326) NOT NULL,
+                kind        VARCHAR(50) NOT NULL,
+                address     TEXT NOT NULL,
+                zip_code    VARCHAR(10) NOT NULL,
+                city        VARCHAR(100) NOT NULL,
+                place_count INTEGER
+            ) ON COMMIT DROP
+        "#,
+    )
+    .execute(&mut *tx)
+    .await?;
+
+    for chunk in points.chunks(5_000) {
         sqlx::query(
             r#"
-            INSERT INTO rallying_point (label, location, kind, address, zip_code, city, place_count, is_active)
-            VALUES ($1, ST_SetSRID(ST_MakePoint($3, $2), 4326)::geography, $4, $5, $6, $7, $8, true)
+                INSERT INTO source_point (source_key, label, location, kind, address, zip_code, city, place_count)
+                SELECT key, left(label, 255), ST_SetSRID(ST_MakePoint(lng, lat), 4326)::geography, kind,
+                       address, left(zip_code, 10), left(city, 100), place_count
+                FROM UNNEST($1::varchar[], $2::text[], $3::float8[], $4::float8[], $5::varchar[], $6::text[], $7::text[], $8::text[], $9::int4[])
+                    AS p(key, label, lat, lng, kind, address, zip_code, city, place_count)
+                ON CONFLICT (source_key) DO NOTHING
             "#,
         )
-        .bind(&p.label)
-        .bind(p.lat)
-        .bind(p.lng)
-        .bind(&p.kind)
-        .bind(&p.address)
-        .bind(&p.zip_code)
-        .bind(&p.city)
-        .bind(p.place_count)
+        .bind(chunk.iter().map(|p| p.source_key.clone()).collect::<Vec<_>>())
+        .bind(chunk.iter().map(|p| p.label.clone()).collect::<Vec<_>>())
+        .bind(chunk.iter().map(|p| p.lat).collect::<Vec<_>>())
+        .bind(chunk.iter().map(|p| p.lng).collect::<Vec<_>>())
+        .bind(chunk.iter().map(|p| p.kind.clone()).collect::<Vec<_>>())
+        .bind(chunk.iter().map(|p| p.address.clone()).collect::<Vec<_>>())
+        .bind(chunk.iter().map(|p| p.zip_code.clone()).collect::<Vec<_>>())
+        .bind(chunk.iter().map(|p| p.city.clone()).collect::<Vec<_>>())
+        .bind(chunk.iter().map(|p| p.place_count).collect::<Vec<_>>())
         .execute(&mut *tx)
         .await?;
     }
 
-    tx.commit().await?;
-    info!("rallying points generated: {count}");
-    Ok(count)
-}
-
-/// La génération supprime puis recrée tous les points avec de nouveaux identifiants :
-/// elle est refusée dès qu'un point sert d'arrêt à une liane ou à un trajet.
-pub async fn has_points_in_use(db: &PgPool) -> Result<bool> {
-    let in_use = sqlx::query_scalar(
+    let adopted = sqlx::query(
         r#"
-            SELECT EXISTS (SELECT 1 FROM liane_stop)
-                OR EXISTS (SELECT 1 FROM trip)
-                OR EXISTS (SELECT 1 FROM trip_member)
+            UPDATE rallying_point rp
+            SET source_key = match.source_key
+            FROM (
+                SELECT DISTINCT ON (s.source_key) s.source_key, old.id
+                FROM source_point s
+                INNER JOIN rallying_point old
+                    ON old.source_key IS NULL
+                   AND old.kind = s.kind
+                   AND old.label = s.label
+                   AND ST_DWithin(old.location, s.location, 5)
+                WHERE NOT EXISTS (SELECT 1 FROM rallying_point keyed WHERE keyed.source_key = s.source_key)
+                ORDER BY s.source_key, old.is_active DESC, old.id
+            ) match
+            WHERE rp.id = match.id
         "#,
     )
-    .fetch_one(db)
+    .execute(&mut *tx)
+    .await?
+    .rows_affected();
+
+    let reactivated = sqlx::query(
+        r#"
+            UPDATE rallying_point rp
+            SET is_active = true
+            FROM source_point s
+            WHERE rp.source_key = s.source_key AND NOT rp.is_active
+        "#,
+    )
+    .execute(&mut *tx)
+    .await?
+    .rows_affected();
+
+    let updated = sqlx::query(
+        r#"
+            UPDATE rallying_point rp
+            SET label = s.label,
+                location = s.location,
+                kind = s.kind,
+                address = s.address,
+                zip_code = s.zip_code,
+                city = s.city,
+                place_count = s.place_count
+            FROM source_point s
+            WHERE rp.source_key = s.source_key
+              AND (rp.label, rp.kind, rp.address, rp.zip_code, rp.city, rp.place_count, ST_AsEWKB(rp.location::geometry))
+                  IS DISTINCT FROM
+                  (s.label, s.kind, s.address, s.zip_code, s.city, s.place_count, ST_AsEWKB(s.location::geometry))
+        "#,
+    )
+    .execute(&mut *tx)
+    .await?
+    .rows_affected();
+
+    let inserted = sqlx::query(
+        r#"
+            INSERT INTO rallying_point (source_key, label, location, kind, address, zip_code, city, place_count, is_active)
+            SELECT s.source_key, s.label, s.location, s.kind, s.address, s.zip_code, s.city, s.place_count, true
+            FROM source_point s
+            WHERE NOT EXISTS (SELECT 1 FROM rallying_point rp WHERE rp.source_key = s.source_key)
+        "#,
+    )
+    .execute(&mut *tx)
+    .await?
+    .rows_affected();
+
+    let deactivated: Vec<bool> = sqlx::query_scalar(
+        r#"
+            UPDATE rallying_point rp
+            SET is_active = false
+            WHERE rp.is_active
+              AND split_part(rp.source_key, ':', 1) = ANY($1)
+              AND NOT EXISTS (SELECT 1 FROM source_point s WHERE s.source_key = rp.source_key)
+            RETURNING
+                EXISTS (SELECT 1 FROM liane_stop ls WHERE ls.rallying_point_id = rp.id)
+                OR EXISTS (SELECT 1 FROM trip t WHERE rp.id IN (t.from_rp_id, t.to_rp_id))
+                OR EXISTS (SELECT 1 FROM trip_member tm WHERE rp.id IN (tm.from_rp_id, tm.to_rp_id))
+                OR EXISTS (SELECT 1 FROM liane_request lr WHERE rp.id = ANY(lr.waypoints))
+        "#,
+    )
+    .bind(sources.iter().map(|source| source.to_string()).collect::<Vec<_>>())
+    .fetch_all(&mut *tx)
     .await?;
-    Ok(in_use)
+
+    let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM source_point")
+        .fetch_one(&mut *tx)
+        .await?;
+
+    tx.commit().await?;
+
+    Ok(SyncReport {
+        count: count as u64,
+        inserted,
+        updated,
+        reactivated,
+        deactivated: deactivated.len() as u64,
+        deactivated_in_use: deactivated.iter().filter(|in_use| **in_use).count() as u64,
+        adopted,
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn point(key: &str, lat: f64, lng: f64) -> SourcePoint {
+        SourcePoint {
+            source_key: key.to_string(),
+            label: key.to_string(),
+            lat,
+            lng,
+            kind: RallyingPointKind::TownHall,
+            address: String::new(),
+            zip_code: String::new(),
+            city: String::new(),
+            place_count: None,
+        }
+    }
+
+    fn keys(points: &[SourcePoint]) -> Vec<&str> {
+        let mut keys: Vec<&str> = points.iter().map(|p| p.source_key.as_str()).collect();
+        keys.sort();
+        keys
+    }
+
+    #[test]
+    fn close_points_are_merged_and_the_easternmost_is_kept() {
+        let kept = cluster(vec![
+            point("west", 44.5, 3.5000),
+            point("east", 44.5, 3.5020),
+            point("far", 44.5, 3.6),
+        ]);
+        assert_eq!(keys(&kept), ["east", "far"]);
+    }
+
+    #[test]
+    fn clustering_does_not_depend_on_input_order_and_ignores_invalid_coordinates() {
+        let points = vec![
+            point("a", 44.5, 3.5),
+            point("b", 44.5, 3.5),
+            point("c", 44.5031, 3.5),
+            point("nan", f64::NAN, 3.5),
+            point("d", 45.0, 3.5),
+        ];
+        let mut reversed = points.clone();
+        reversed.reverse();
+        let kept = cluster(points);
+        assert_eq!(keys(&kept), keys(&cluster(reversed)));
+        assert_eq!(keys(&kept), ["c", "d"]);
+    }
+
+    #[test]
+    fn embedded_sources_have_unique_keys_and_the_test_set_keeps_its_size() {
+        let town_halls = load_mairies().unwrap();
+        let test_set: Vec<SourcePoint> = town_halls
+            .iter()
+            .filter(|p| TEST_DEPARTMENTS.iter().any(|code| p.zip_code.starts_with(code)))
+            .cloned()
+            .collect();
+        assert_eq!(cluster(test_set).len(), 2022);
+
+        let mut all = load_bnlc(&load_zipcodes().unwrap()).unwrap();
+        all.extend(town_halls);
+        all.extend(load_custom());
+        let total = all.len();
+        let distinct: std::collections::HashSet<&str> =
+            all.iter().map(|p| p.source_key.as_str()).collect();
+        assert_eq!(distinct.len(), total);
+        assert!(all.iter().all(|p| p.source_key.len() <= 80));
+    }
 }
