@@ -6,7 +6,8 @@ use uuid::Uuid;
 use crate::auth::model::AuthUser;
 use crate::error::{AppError, Result};
 use crate::user::model::{PublicUser, UpdateUser, User};
-use crate::user::service;
+use crate::notification::Notifier;
+use crate::user::{deletion, service};
 
 pub async fn get_me(auth: AuthUser, Extension(db): Extension<PgPool>) -> Result<Json<User>> {
     let user = service::find(&db, &auth.id)
@@ -35,4 +36,12 @@ pub async fn get_user(
         .await?
         .ok_or(AppError::NotFound)?;
     Ok(Json(user))
+}
+
+pub async fn delete_me(
+    auth: AuthUser,
+    Extension(db): Extension<PgPool>,
+    Extension(notifier): Extension<Notifier>,
+) -> Result<()> {
+    deletion::delete_account(&db, &notifier, &auth.id).await
 }

@@ -3,11 +3,15 @@
 
 use std::future::Future;
 use std::pin::Pin;
+use std::sync::Arc;
 
 use serde::Serialize;
 use sqlx::FromRow;
 use tracing::info;
 use uuid::Uuid;
+
+use crate::config::PushProvider;
+use crate::error::{AppError, Result};
 
 #[derive(Debug, Clone, FromRow)]
 pub struct PushSubscription {
@@ -66,5 +70,15 @@ impl PushSender for LogPushSender {
             );
             PushOutcome::Sent
         })
+    }
+}
+
+/// L'expéditeur choisi par la configuration.
+pub fn sender(provider: &PushProvider) -> Result<Arc<dyn PushSender>> {
+    match provider {
+        PushProvider::Log => Ok(Arc::new(LogPushSender)),
+        PushProvider::WebPush { .. } => Err(AppError::Unexpected(
+            "PUSH_PROVIDER=webpush is not available yet".to_string(),
+        )),
     }
 }

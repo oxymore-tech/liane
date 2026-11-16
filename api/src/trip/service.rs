@@ -549,8 +549,7 @@ pub async fn withdraw_member(
     let member = AuthUser {
         id: *user_id,
         is_admin: false,
-        iat: 0,
-        exp: 0,
+        session_id: Uuid::nil(),
     };
 
     let driven: Vec<Uuid> = sqlx::query_scalar(

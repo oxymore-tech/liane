@@ -3,18 +3,11 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use sqlx::migrate::MigrateError;
-use std::cmp::Ordering;
 use std::env::VarError;
 use std::fmt::Debug;
-use std::future::Future;
-use tracing::error;
+use tracing::{error, warn};
 
-pub async fn handle_error<T: Future<Output = Result<()>>>(run: fn() -> T) {
-    if let Err(err) = run().await {
-        error!("{:?}", err);
-        std::process::exit(1);
-    }
-}
+const UNIQUE_VIOLATION: &str = "23505";
 
 #[derive(Clone, Debug)]
 pub enum AppError {
@@ -22,16 +15,16 @@ pub enum AppError {
     Forbidden,
     NotFound,
     BadRequest,
+    TooManyRequests,
+    /// Le texte part dans la réponse : un mot-clé métier, jamais un message de la base.
     Conflict(String),
+    /// Le détail reste dans le journal ; la réponse dit seulement « Internal Server Error ».
     Unexpected(String),
 }
 
 impl AppError {
     pub fn unexpected<E: Debug>(err: E) -> Self {
         Self::Unexpected(format!("{:?}", err))
-    }
-    pub fn conflict<E: Debug>(err: E) -> Self {
-        Self::Conflict(format!("{:?}", err))
     }
 }
 
@@ -43,6 +36,10 @@ impl IntoResponse for AppError {
             AppError::Unauthorized => (StatusCode::UNAUTHORIZED, "Unauthorized".to_string()),
             AppError::Forbidden => (StatusCode::FORBIDDEN, "Forbidden".to_string()),
             AppError::NotFound => (StatusCode::NOT_FOUND, "Not Found".to_string()),
+            AppError::TooManyRequests => (
+                StatusCode::TOO_MANY_REQUESTS,
+                "Too Many Requests".to_string(),
+            ),
             AppError::Conflict(msg) => (StatusCode::CONFLICT, msg),
             AppError::Unexpected(err) => {
                 error!("{}", err);
@@ -72,17 +69,15 @@ impl From<reqwest::Error> for AppError {
 
 impl From<sqlx::Error> for AppError {
     fn from(err: sqlx::Error) -> Self {
-        match err.as_database_error() {
-            Some(db_err) => {
-                if let Some(code) = db_err.code()
-                    && "23505".cmp(&code) == Ordering::Equal
-                {
-                    Self::conflict(db_err)
-                } else {
-                    Self::unexpected(err)
-                }
-            }
-            _ => Self::unexpected(err),
+        let is_unique_violation = err
+            .as_database_error()
+            .and_then(|db_err| db_err.code())
+            .is_some_and(|code| code == UNIQUE_VIOLATION);
+        if is_unique_violation {
+            warn!("unique violation: {err}");
+            Self::Conflict("AlreadyExists".to_string())
+        } else {
+            Self::unexpected(err)
         }
     }
 }
@@ -101,12 +96,6 @@ impl From<serde_json::Error> for AppError {
 
 impl From<MigrateError> for AppError {
     fn from(err: MigrateError) -> Self {
-        Self::unexpected(err)
-    }
-}
-
-impl From<dotenvy::Error> for AppError {
-    fn from(err: dotenvy::Error) -> Self {
         Self::unexpected(err)
     }
 }

@@ -24,3 +24,7 @@ export const updateMe = (firstName: string, lastName: string) =>
       picture_url: null,
     },
   });
+
+export const logout = () => api.post("/auth/logout");
+
+export const deleteMe = () => api.del("/user/me");

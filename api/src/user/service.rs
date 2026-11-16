@@ -19,7 +19,7 @@ pub async fn find(db: &PgPool, id: &Uuid) -> Result<Option<User>> {
                 is_signed_up,
                 created_at
             FROM "user"
-            WHERE id = $1
+            WHERE id = $1 AND deleted_at IS NULL
         "#,
     )
     .bind(id)
@@ -37,7 +37,7 @@ pub async fn find_public(db: &PgPool, id: &Uuid) -> Result<Option<PublicUser>> {
                 gender,
                 picture_url
             FROM "user"
-            WHERE id = $1
+            WHERE id = $1 AND deleted_at IS NULL
         "#,
     )
     .bind(id)
@@ -60,7 +60,7 @@ pub async fn update(db: &PgPool, id: &Uuid, update: &UpdateUser) -> Result<Optio
                 gender = $5,
                 picture_url = $6,
                 is_signed_up = true
-            WHERE id = $1
+            WHERE id = $1 AND deleted_at IS NULL
             RETURNING
                 id,
                 phone,
