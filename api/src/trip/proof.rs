@@ -15,6 +15,7 @@ use uuid::Uuid;
 use crate::error::Result;
 use crate::trip::model::{GestureKind, GestureRow, PositionStatus, ProofClass};
 use crate::trip::rules::{END_CLOSES_AFTER_SECONDS, indicative_contribution_cents};
+use crate::user::identity::{identity_key, phone_trunc};
 
 /// Contrôle de vraisemblance : une position déclarée à plus de 2 km de l'arrêt attendu est signalée
 /// dans la preuve, sans refuser le geste ni changer la classe.
@@ -186,8 +187,16 @@ struct ExportRow {
     planned_departure_time: DateTime<Utc>,
     driver_id: Uuid,
     driver_phone: String,
+    driver_last_name: Option<String>,
+    driver_is_deleted: bool,
+    driver_proof_identity_key: Option<String>,
+    driver_proof_phone_trunc: Option<String>,
     passenger_id: Uuid,
     passenger_phone: String,
+    passenger_last_name: Option<String>,
+    passenger_is_deleted: bool,
+    passenger_proof_identity_key: Option<String>,
+    passenger_proof_phone_trunc: Option<String>,
     seat_count: i32,
     distance_meters: i32,
     proof_class: ProofClass,
@@ -195,6 +204,10 @@ struct ExportRow {
     indicative_contribution_cents: Option<i32>,
     contribution_cents: Option<i32>,
     driver_revenue_cents: Option<i32>,
+    from_stop_lat: f64,
+    from_stop_lng: f64,
+    to_stop_lat: f64,
+    to_stop_lng: f64,
     driver_start_at: Option<DateTime<Utc>>,
     driver_start_lat: Option<f64>,
     driver_start_lng: Option<f64>,
@@ -209,24 +222,80 @@ struct ExportRow {
     passenger_end_lng: Option<f64>,
 }
 
-/// Un couple conducteur/passager, au plus près du schéma « journey » du registre de preuve de
-/// covoiturage : `start` et `end` sont ceux du passager, les montants sont en centimes.
-/// `contribution` et `revenue` restent nuls tant qu'il n'y a pas de paiement ; ce qui n'appartient
-/// pas au schéma du registre est regroupé dans `liane`.
+/// Le registre refuse un trajet de moins d'un kilomètre (règle `distance_too_short` de ses conditions d'utilisation).
+const REGISTRY_MIN_DISTANCE_METERS: i32 = 1_000;
+
+/// Un couple conducteur/passager prêt pour le registre de preuve de covoiturage.
+/// `journey` est le corps de `POST /journeys` de l'API v3.4 du registre, sans champ en plus ni en moins
+/// (le schéma officiel refuse tout champ inconnu) ; il est absent quand une donnée obligatoire manque,
+/// et `missing` dit laquelle. Ce qui n'appartient pas au schéma du registre est dans `liane`.
 #[derive(Debug, Serialize)]
 pub struct ExportedJourney {
-    pub operator_journey_id: String,
-    pub operator_trip_id: Uuid,
-    pub operator_class: ProofClass,
-    pub start: Option<TimePlace>,
-    pub end: Option<TimePlace>,
-    pub distance: i32,
-    pub driver: ExportedDriver,
-    pub passenger: ExportedPassenger,
-    pub incentives: Vec<Value>,
+    pub journey: Option<RegistryJourney>,
+    pub missing: Vec<&'static str>,
     pub liane: ExportedExtras,
 }
 
+/// Schéma `acquisition:create` du registre (https://tech.covoiturage.beta.gouv.fr/source.json, version 3.4).
+/// `start` et `end` sont ceux du passager ; `distance` est en mètres, les montants en centimes d'euro.
+#[derive(Debug, Serialize)]
+pub struct RegistryJourney {
+    pub operator_journey_id: String,
+    pub operator_trip_id: String,
+    pub operator_class: ProofClass,
+    pub incentives: Vec<Value>,
+    pub start: RegistryTimePlace,
+    pub end: RegistryTimePlace,
+    pub distance: i32,
+    pub driver: RegistryDriver,
+    pub passenger: RegistryPassenger,
+}
+
+/// `datetime` : UTC, à la seconde (`2026-11-16T06:30:00Z`).
+#[derive(Debug, Serialize)]
+pub struct RegistryTimePlace {
+    pub datetime: String,
+    pub lat: f64,
+    pub lon: f64,
+}
+
+/// Le numéro complet n'est pas transmis : le registre accepte le numéro tronqué avec l'identifiant de l'usager.
+#[derive(Debug, Serialize)]
+pub struct RegistryIdentity {
+    pub operator_user_id: String,
+    pub identity_key: String,
+    pub phone_trunc: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct RegistryDriver {
+    pub identity: RegistryIdentity,
+    pub revenue: i32,
+}
+
+#[derive(Debug, Serialize)]
+pub struct RegistryPassenger {
+    pub identity: RegistryIdentity,
+    pub contribution: i32,
+    pub seats: i32,
+}
+
+/// D'où viennent l'heure et la position envoyées au registre pour le départ ou l'arrivée du passager.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize)]
+pub enum TimeSource {
+    PassengerGesture,
+    DriverGesture,
+    PlannedDeparture,
+}
+
+/// `PlannedStop` : le passager n'a pas donné sa position, celle de l'arrêt prévu est transmise.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize)]
+pub enum PositionSource {
+    PassengerGesture,
+    PlannedStop,
+}
+
+/// Un geste tel qu'il a été déclaré, avec sa position si elle a été donnée.
 #[derive(Debug, Clone, Serialize)]
 pub struct TimePlace {
     pub datetime: DateTime<Utc>,
@@ -235,38 +304,33 @@ pub struct TimePlace {
 }
 
 #[derive(Debug, Serialize)]
-pub struct ExportedIdentity {
-    pub operator_user_id: Uuid,
-    pub phone: String,
-}
-
-#[derive(Debug, Serialize)]
-pub struct ExportedDriver {
-    pub identity: ExportedIdentity,
+pub struct DeclaredGestures {
     pub start: Option<TimePlace>,
     pub end: Option<TimePlace>,
-    pub revenue: Option<i32>,
 }
 
-#[derive(Debug, Serialize)]
-pub struct ExportedPassenger {
-    pub identity: ExportedIdentity,
-    pub start: Option<TimePlace>,
-    pub end: Option<TimePlace>,
-    pub seats: i32,
-    pub contribution: Option<i32>,
-}
-
+/// `warnings` : ce que le registre refuserait ou signalerait (`DistanceUnderOneKilometer`).
 #[derive(Debug, Serialize)]
 pub struct ExportedExtras {
+    pub trip_id: Uuid,
     pub liane_id: Uuid,
+    pub driver_id: Uuid,
+    pub passenger_id: Uuid,
+    pub operator_class: ProofClass,
     pub planned_departure_time: DateTime<Utc>,
+    pub start_time_source: TimeSource,
+    pub start_position_source: PositionSource,
+    pub end_time_source: Option<TimeSource>,
+    pub end_position_source: PositionSource,
+    pub driver: DeclaredGestures,
+    pub passenger: DeclaredGestures,
     pub indicative_contribution_cents: Option<i32>,
     pub proof_detail: Option<Value>,
+    pub warnings: Vec<&'static str>,
 }
 
 /// Les couples des trajets terminés ou périmés pour lesquels au moins un des deux occupants a déclaré
-/// quelque chose. Contient les numéros de téléphone : réservé à l'export administrateur.
+/// quelque chose. Aucun numéro de téléphone complet n'en sort. Rien n'est envoyé au registre.
 pub async fn export(db: &PgPool, class: Option<ProofClass>) -> Result<Vec<ExportedJourney>> {
     let rows = sqlx::query_as::<_, ExportRow>(
         r#"
@@ -276,8 +340,16 @@ pub async fn export(db: &PgPool, class: Option<ProofClass>) -> Result<Vec<Export
                 t.departure_time AS planned_departure_time,
                 t.driver_id,
                 driver.phone AS driver_phone,
+                driver.last_name AS driver_last_name,
+                driver.deleted_at IS NOT NULL AS driver_is_deleted,
+                driver.proof_identity_key AS driver_proof_identity_key,
+                driver.proof_phone_trunc AS driver_proof_phone_trunc,
                 tm.user_id AS passenger_id,
                 passenger.phone AS passenger_phone,
+                passenger.last_name AS passenger_last_name,
+                passenger.deleted_at IS NOT NULL AS passenger_is_deleted,
+                passenger.proof_identity_key AS passenger_proof_identity_key,
+                passenger.proof_phone_trunc AS passenger_proof_phone_trunc,
                 tm.seat_count,
                 tm.distance_meters,
                 tm.proof_class,
@@ -285,6 +357,10 @@ pub async fn export(db: &PgPool, class: Option<ProofClass>) -> Result<Vec<Export
                 tm.indicative_contribution_cents,
                 tm.contribution_cents,
                 tm.driver_revenue_cents,
+                ST_Y(from_stop.location::geometry) AS from_stop_lat,
+                ST_X(from_stop.location::geometry) AS from_stop_lng,
+                ST_Y(to_stop.location::geometry) AS to_stop_lat,
+                ST_X(to_stop.location::geometry) AS to_stop_lng,
                 ds.recorded_at AS driver_start_at, ds.lat AS driver_start_lat, ds.lng AS driver_start_lng,
                 de.recorded_at AS driver_end_at, de.lat AS driver_end_lat, de.lng AS driver_end_lng,
                 ps.recorded_at AS passenger_start_at, ps.lat AS passenger_start_lat, ps.lng AS passenger_start_lng,
@@ -293,6 +369,8 @@ pub async fn export(db: &PgPool, class: Option<ProofClass>) -> Result<Vec<Export
             INNER JOIN trip t ON t.id = tm.trip_id
             INNER JOIN "user" driver ON driver.id = t.driver_id
             INNER JOIN "user" passenger ON passenger.id = tm.user_id
+            INNER JOIN rallying_point from_stop ON from_stop.id = tm.from_rp_id
+            INNER JOIN rallying_point to_stop ON to_stop.id = tm.to_rp_id
             LEFT JOIN trip_event ds ON ds.trip_id = t.id AND ds.user_id = t.driver_id AND ds.kind = 'Start'
             LEFT JOIN trip_event de ON de.trip_id = t.id AND de.user_id = t.driver_id AND de.kind = 'End'
             LEFT JOIN trip_event ps ON ps.trip_id = t.id AND ps.user_id = tm.user_id AND ps.kind = 'Start'
@@ -316,56 +394,176 @@ pub async fn export(db: &PgPool, class: Option<ProofClass>) -> Result<Vec<Export
     Ok(rows.into_iter().map(to_journey).collect())
 }
 
+/// L'identité pseudonymisée d'un usager : calculée d'après son numéro et son nom, ou celle gardée à la
+/// suppression de son compte.
+struct Identity {
+    user_id: Uuid,
+    identity_key: Option<String>,
+    phone_trunc: Option<String>,
+}
+
+impl Identity {
+    fn of(
+        user_id: Uuid,
+        phone: &str,
+        last_name: Option<&str>,
+        is_deleted: bool,
+        kept_identity_key: Option<String>,
+        kept_phone_trunc: Option<String>,
+    ) -> Self {
+        if is_deleted {
+            return Self {
+                user_id,
+                identity_key: kept_identity_key,
+                phone_trunc: kept_phone_trunc,
+            };
+        }
+        Self {
+            user_id,
+            identity_key: last_name
+                .filter(|last_name| !last_name.trim().is_empty())
+                .map(|last_name| identity_key(phone, last_name)),
+            phone_trunc: Some(phone_trunc(phone)),
+        }
+    }
+
+    fn for_registry(&self) -> Option<RegistryIdentity> {
+        Some(RegistryIdentity {
+            operator_user_id: self.user_id.to_string(),
+            identity_key: self.identity_key.clone()?,
+            phone_trunc: self.phone_trunc.clone()?,
+        })
+    }
+}
+
+fn registry_datetime(datetime: DateTime<Utc>) -> String {
+    datetime.format("%Y-%m-%dT%H:%M:%SZ").to_string()
+}
+
 fn to_journey(row: ExportRow) -> ExportedJourney {
-    let time_place =
+    let declared =
         |at: Option<DateTime<Utc>>, lat, lon| at.map(|datetime| TimePlace { datetime, lat, lon });
-    let passenger_start = time_place(
-        row.passenger_start_at,
+    let driver_gestures = DeclaredGestures {
+        start: declared(row.driver_start_at, row.driver_start_lat, row.driver_start_lng),
+        end: declared(row.driver_end_at, row.driver_end_lat, row.driver_end_lng),
+    };
+    let passenger_gestures = DeclaredGestures {
+        start: declared(
+            row.passenger_start_at,
+            row.passenger_start_lat,
+            row.passenger_start_lng,
+        ),
+        end: declared(row.passenger_end_at, row.passenger_end_lat, row.passenger_end_lng),
+    };
+
+    let (start_time, start_time_source) = match (row.passenger_start_at, row.driver_start_at) {
+        (Some(at), _) => (at, TimeSource::PassengerGesture),
+        (None, Some(at)) => (at, TimeSource::DriverGesture),
+        (None, None) => (row.planned_departure_time, TimeSource::PlannedDeparture),
+    };
+    let (end_time, end_time_source) = match (row.passenger_end_at, row.driver_end_at) {
+        (Some(at), _) => (Some(at), Some(TimeSource::PassengerGesture)),
+        (None, Some(at)) => (Some(at), Some(TimeSource::DriverGesture)),
+        (None, None) => (None, None),
+    };
+    let position = |lat: Option<f64>, lon: Option<f64>, stop: (f64, f64)| match (lat, lon) {
+        (Some(lat), Some(lon)) => ((lat, lon), PositionSource::PassengerGesture),
+        _ => (stop, PositionSource::PlannedStop),
+    };
+    let (start_position, start_position_source) = position(
         row.passenger_start_lat,
         row.passenger_start_lng,
+        (row.from_stop_lat, row.from_stop_lng),
     );
-    let passenger_end = time_place(
-        row.passenger_end_at,
+    let (end_position, end_position_source) = position(
         row.passenger_end_lat,
         row.passenger_end_lng,
+        (row.to_stop_lat, row.to_stop_lng),
     );
 
+    let driver = Identity::of(
+        row.driver_id,
+        &row.driver_phone,
+        row.driver_last_name.as_deref(),
+        row.driver_is_deleted,
+        row.driver_proof_identity_key,
+        row.driver_proof_phone_trunc,
+    )
+    .for_registry();
+    let passenger = Identity::of(
+        row.passenger_id,
+        &row.passenger_phone,
+        row.passenger_last_name.as_deref(),
+        row.passenger_is_deleted,
+        row.passenger_proof_identity_key,
+        row.passenger_proof_phone_trunc,
+    )
+    .for_registry();
+
+    let mut missing = Vec::new();
+    if end_time.is_none() {
+        missing.push("end.datetime");
+    }
+    if driver.is_none() {
+        missing.push("driver.identity");
+    }
+    if passenger.is_none() {
+        missing.push("passenger.identity");
+    }
+    let mut warnings = Vec::new();
+    if row.distance_meters < REGISTRY_MIN_DISTANCE_METERS {
+        warnings.push("DistanceUnderOneKilometer");
+    }
+
+    let journey = match (end_time, driver, passenger) {
+        (Some(end_time), Some(driver), Some(passenger)) => Some(RegistryJourney {
+            operator_journey_id: format!("{}{}", row.trip_id.simple(), row.passenger_id.simple()),
+            operator_trip_id: row.trip_id.to_string(),
+            operator_class: row.proof_class,
+            incentives: Vec::new(),
+            start: RegistryTimePlace {
+                datetime: registry_datetime(start_time),
+                lat: start_position.0,
+                lon: start_position.1,
+            },
+            end: RegistryTimePlace {
+                datetime: registry_datetime(end_time),
+                lat: end_position.0,
+                lon: end_position.1,
+            },
+            distance: row.distance_meters,
+            driver: RegistryDriver {
+                identity: driver,
+                revenue: row.driver_revenue_cents.unwrap_or(0),
+            },
+            passenger: RegistryPassenger {
+                identity: passenger,
+                contribution: row.contribution_cents.unwrap_or(0),
+                seats: row.seat_count,
+            },
+        }),
+        _ => None,
+    };
+
     ExportedJourney {
-        operator_journey_id: format!("{}:{}", row.trip_id, row.passenger_id),
-        operator_trip_id: row.trip_id,
-        operator_class: row.proof_class,
-        start: passenger_start.clone(),
-        end: passenger_end.clone(),
-        distance: row.distance_meters,
-        driver: ExportedDriver {
-            identity: ExportedIdentity {
-                operator_user_id: row.driver_id,
-                phone: row.driver_phone,
-            },
-            start: time_place(
-                row.driver_start_at,
-                row.driver_start_lat,
-                row.driver_start_lng,
-            ),
-            end: time_place(row.driver_end_at, row.driver_end_lat, row.driver_end_lng),
-            revenue: row.driver_revenue_cents,
-        },
-        passenger: ExportedPassenger {
-            identity: ExportedIdentity {
-                operator_user_id: row.passenger_id,
-                phone: row.passenger_phone,
-            },
-            start: passenger_start,
-            end: passenger_end,
-            seats: row.seat_count,
-            contribution: row.contribution_cents,
-        },
-        incentives: Vec::new(),
+        journey,
+        missing,
         liane: ExportedExtras {
+            trip_id: row.trip_id,
             liane_id: row.liane_id,
+            driver_id: row.driver_id,
+            passenger_id: row.passenger_id,
+            operator_class: row.proof_class,
             planned_departure_time: row.planned_departure_time,
+            start_time_source,
+            start_position_source,
+            end_time_source,
+            end_position_source,
+            driver: driver_gestures,
+            passenger: passenger_gestures,
             indicative_contribution_cents: row.indicative_contribution_cents,
             proof_detail: row.proof_detail,
+            warnings,
         },
     }
 }

@@ -1,0 +1,500 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://tech.covoiturage.beta.gouv.fr/source.json#/paths/~1journeys/post/requestBody/content/application~1json/schema",
+  "title": "RPC v3.4 - POST /journeys (acquisition:create) request body",
+  "$comment": "Extrait mecaniquement de https://tech.covoiturage.beta.gouv.fr/source.json (OpenAPI 3.0.1, info.version 3.4, telecharge le 2026-11-15). Seules transformations: $ref resolus en ligne (les mots-cles voisins d'un $ref, ex. description de start/end, sont fusionnes par-dessus), mot-cle OpenAPI 'example' renomme en 'examples: [..]'. Aucune contrainte ajoutee ni retiree. Attention: 'format: datetime' (application_timestamp) n'est pas un format JSON Schema standard; le oneOf de driving_license est reproduit tel quel.",
+  "type": "object",
+  "properties": {
+    "operator_journey_id": {
+      "description": "Identifiant unique du trajet envoyé par l'opérateur.\n",
+      "type": "string",
+      "maxLength": 256,
+      "minLength": 1,
+      "pattern": "^[a-z0-9]{1,256}$"
+    },
+    "operator_trip_id": {
+      "description": "Identifiant généré par l'opérateur pour regrouper des trajets (plusieurs\npassagers avec un même conducteur)\n",
+      "type": "string"
+    },
+    "operator_class": {
+      "description": "Classe de preuve correspondant aux spécifications définies dans\n[Classes de preuve de\ncovoiturage](https://doc.covoiturage.beta.gouv.fr/le-registre-de-preuve-de-covoiturage/classes-de-preuve-and-identite/classes-a-b-c)\n",
+      "enum": [
+        "A",
+        "B",
+        "C"
+      ]
+    },
+    "incentives": {
+      "description": "Tableau reprenant la liste complète des incitations appliquées (ordre\nd'application, montant, identifiant de l'incitateur). Si aucune\nincitation, envoyer un tableau vide.\n\n## Ordre par défaut\n\nPar défaut, l'ordre d'application des politiques incitatives est le suivant :\n\n1. Territoire (AOM, Région, ...)\n2. Sponsors (incitations employeur, CE, etc.)\n3. Opérateur (opération promotionnelle, offres, etc.)\n",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "index",
+          "amount",
+          "siret"
+        ],
+        "properties": {
+          "index": {
+            "description": "Ordre d'application de l'incitation",
+            "type": "number",
+            "examples": [
+              0
+            ],
+            "minimum": 0,
+            "multipleOf": 1
+          },
+          "amount": {
+            "description": "Montant de l'incitation en centimes d'euros",
+            "type": "number",
+            "examples": [
+              100
+            ],
+            "minimum": 0,
+            "multipleOf": 1
+          },
+          "siret": {
+            "description": "Numéro de SIRET de l'entité qui finance l'incitation.\nLe SIRET est un identifiant unique par structure juridique.\nIl est composé de 14 chiffres.\n",
+            "type": "string",
+            "examples": [
+              "11000101300017"
+            ]
+          }
+        }
+      }
+    },
+    "licence_plate": {
+      "description": "Plaque d'immatriculation du véhicule",
+      "type": "string"
+    },
+    "start": {
+      "type": "object",
+      "properties": {
+        "datetime": {
+          "description": "Date et heure du départ/arrivée du passager au format ISO 8601. L'heure\nest exprimée en UTC (YYYY-MM-DDThh:mm:ssZ)\n\nL'heure est exprimée en UTC \\(Coordinated Universal Time\\). UTC n'est\npas ajusté sur l'heure d'été et hiver !\n",
+          "type": "string",
+          "format": "date-time",
+          "examples": [
+            "2021-01-01T11:00:00Z"
+          ]
+        },
+        "lat": {
+          "description": "Latitude comprise entre 90deg et -90deg décimaux en datum WSG-84",
+          "type": "number",
+          "examples": [
+            47.682821
+          ]
+        },
+        "lon": {
+          "description": "Longitude comprise entre 180deg et -180deg décimaux en datum WSG-84",
+          "type": "number",
+          "examples": [
+            -0.557483
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "datetime",
+        "lat",
+        "lon"
+      ],
+      "description": "Position géographique et date de départ du passager"
+    },
+    "end": {
+      "type": "object",
+      "properties": {
+        "datetime": {
+          "description": "Date et heure du départ/arrivée du passager au format ISO 8601. L'heure\nest exprimée en UTC (YYYY-MM-DDThh:mm:ssZ)\n\nL'heure est exprimée en UTC \\(Coordinated Universal Time\\). UTC n'est\npas ajusté sur l'heure d'été et hiver !\n",
+          "type": "string",
+          "format": "date-time",
+          "examples": [
+            "2021-01-01T11:00:00Z"
+          ]
+        },
+        "lat": {
+          "description": "Latitude comprise entre 90deg et -90deg décimaux en datum WSG-84",
+          "type": "number",
+          "examples": [
+            47.682821
+          ]
+        },
+        "lon": {
+          "description": "Longitude comprise entre 180deg et -180deg décimaux en datum WSG-84",
+          "type": "number",
+          "examples": [
+            -0.557483
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "datetime",
+        "lat",
+        "lon"
+      ],
+      "description": "Position géographique et date d'arrivée du passager"
+    },
+    "distance": {
+      "description": "Distance en mètres",
+      "type": "number",
+      "maximum": 1000000,
+      "minimum": 0,
+      "multipleOf": 1
+    },
+    "driver": {
+      "description": "Informations d'identité du conducteur",
+      "type": "object",
+      "properties": {
+        "identity": {
+          "description": "Ces données personnelles permettent d'identifier la personne effectuant\nle covoiturage afin de pouvoir comptabiliser ses trajets et lui\ndistribuer des incitations en fonction des politiques applicables.\n\nDeux options sont disponibles pour la transmission du numéro de\ntéléphone :\n\n- Numéro complet au format ITU E.164 (phone) (ex. +33601020304, +590690101010)\n- Numéro au format ITU E.164 tronqué des 2 derniers chiffres (phone_trunc) (ex. +336010203, +5906901010) + identifiant unique de l'opérateur (operator_user_id)\n",
+          "type": "object",
+          "properties": {
+            "identity_key": {
+              "description": "Correspond au SHA d'une chaîne concaténée tel que : `sha256({phone_number}-{last_name})` où :\n\n- `phone_number` correspond au numéro de téléphone complet au format international sans espace ni tiret. Exemple : `+33601020304`\n- `last_name` correspond au nom de famille complet en majuscule, sans accent ni tiret ni apostrophe :\n   Regexp: `[A-Z ]*`\n\nExemple, M. D'Hérûg-de-l'Hérault ayant le numéro 07 01 02 03 04 doit être formatté comme suit `+33701020304-D HERUG DE L HERAULT`\n",
+              "type": "string",
+              "maxLength": 64,
+              "minLength": 64
+            },
+            "travel_pass": {
+              "description": "Numéro de carte de transport (TCL, Navigo, Trabool, etc.) de l'occupant.\n\nObligatoire si l'information est disponible.\n\nActuellement supporté: navigo\n",
+              "type": "object",
+              "properties": {
+                "name": {
+                  "description": "Nom du titre",
+                  "examples": [
+                    "navigo"
+                  ],
+                  "enum": [
+                    "navigo"
+                  ]
+                },
+                "user_id": {
+                  "description": "Numéro de carte de transport",
+                  "type": "string",
+                  "examples": [
+                    "00-MFR-6782929"
+                  ]
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "user_id"
+              ]
+            },
+            "phone": {
+              "description": "Numéro au format ITU E.164",
+              "type": "string",
+              "examples": [
+                "+33601020304, +590690101010"
+              ]
+            },
+            "phone_trunc": {
+              "description": "Numéro de téléphone au format ITU-T E.164 tronqué des 2 derniers chiffres",
+              "type": "string",
+              "examples": [
+                "+336010203"
+              ],
+              "maxLength": 14,
+              "minLength": 10,
+              "pattern": "^\\+[0-9]{8,12}$"
+            },
+            "application_timestamp": {
+              "description": "Date de signature de l'engagement par le demandeur.",
+              "type": "string",
+              "format": "datetime"
+            },
+            "driving_license": {
+              "description": "Numéro de permis de conduire (également appelé _driving_license_)\ncf https://permisdeconduire.ants.gouv.fr/tout-savoir-sur-le-permis/le-numero-de-dossier-sur-un-permis-au-format-carte-bancaire\n",
+              "oneOf": [
+                {
+                  "type": "string",
+                  "description": "Numéro de permis de conduire composé de 12 chiffres après 1975.",
+                  "examples": [
+                    "051227308989"
+                  ],
+                  "pattern": "^[0-9]{12}$",
+                  "minLength": 12,
+                  "maxLength": 12
+                },
+                {
+                  "type": "string",
+                  "description": "Numéro de permis de conduire composé de 1 à 15 caractères suivis de 4 chiffres avant 1975.",
+                  "examples": [
+                    "822146819"
+                  ],
+                  "pattern": "^[A-Z0-9]{1,15}[0-9]{4}$",
+                  "minLength": 5,
+                  "maxLength": 19
+                },
+                {
+                  "type": "string",
+                  "description": "Numéro de permis de conduire plus anciens composé de 1 à 15 caractères.",
+                  "examples": [
+                    "123456A"
+                  ],
+                  "pattern": "^[A-Z0-9]{1,15}$",
+                  "minLength": 1,
+                  "maxLength": 15
+                },
+                {
+                  "type": "string",
+                  "description": "Numéro de permis étranger préfixé de l'indicatif '99-'.",
+                  "examples": [
+                    "99-X23.46"
+                  ],
+                  "pattern": "^99-.*$",
+                  "minLength": 4,
+                  "maxLength": 64
+                }
+              ]
+            },
+            "operator_user_id": {
+              "description": "Identifiant de l'utilisateur chez l'opérateur. Obligatoire.",
+              "type": "string",
+              "examples": [
+                "d2e8a6c4-9e3a-4b6f-8e8d-9f7a6b5c4d3e"
+              ]
+            },
+            "over_18": {
+              "description": "Applicable seulement au passager.\n\n  - `true` si majeur\n  - `false` si mineur\n  - `null` si non fourni\n\n> info\n> De nombreuses campagnes utilisent cette information pour s'assurer que les bénéficiaires d'incitations sont majeures. La valeur `NULL` les exclues.\n",
+              "enum": [
+                true,
+                false,
+                null
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "operator_user_id",
+            "identity_key",
+            "phone_trunc"
+          ]
+        },
+        "revenue": {
+          "description": "La somme réellement perçue par le conducteur **APRÈS** que toutes\nles incitations (subventions employeurs, promotions opérateurs,\nincitations AOM, etc.), contributions des passagers aient été\nversées et que la commission de l'opérateur soit prise.\n",
+          "type": "number",
+          "minimum": 0,
+          "multipleOf": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "revenue"
+      ]
+    },
+    "passenger": {
+      "description": "Informations d'identité du passager",
+      "type": "object",
+      "properties": {
+        "identity": {
+          "description": "Ces données personnelles permettent d'identifier la personne effectuant\nle covoiturage afin de pouvoir comptabiliser ses trajets et lui\ndistribuer des incitations en fonction des politiques applicables.\n\nDeux options sont disponibles pour la transmission du numéro de\ntéléphone :\n\n- Numéro complet au format ITU E.164 (phone) (ex. +33601020304, +590690101010)\n- Numéro au format ITU E.164 tronqué des 2 derniers chiffres (phone_trunc) (ex. +336010203, +5906901010) + identifiant unique de l'opérateur (operator_user_id)\n",
+          "type": "object",
+          "properties": {
+            "identity_key": {
+              "description": "Correspond au SHA d'une chaîne concaténée tel que : `sha256({phone_number}-{last_name})` où :\n\n- `phone_number` correspond au numéro de téléphone complet au format international sans espace ni tiret. Exemple : `+33601020304`\n- `last_name` correspond au nom de famille complet en majuscule, sans accent ni tiret ni apostrophe :\n   Regexp: `[A-Z ]*`\n\nExemple, M. D'Hérûg-de-l'Hérault ayant le numéro 07 01 02 03 04 doit être formatté comme suit `+33701020304-D HERUG DE L HERAULT`\n",
+              "type": "string",
+              "maxLength": 64,
+              "minLength": 64
+            },
+            "travel_pass": {
+              "description": "Numéro de carte de transport (TCL, Navigo, Trabool, etc.) de l'occupant.\n\nObligatoire si l'information est disponible.\n\nActuellement supporté: navigo\n",
+              "type": "object",
+              "properties": {
+                "name": {
+                  "description": "Nom du titre",
+                  "examples": [
+                    "navigo"
+                  ],
+                  "enum": [
+                    "navigo"
+                  ]
+                },
+                "user_id": {
+                  "description": "Numéro de carte de transport",
+                  "type": "string",
+                  "examples": [
+                    "00-MFR-6782929"
+                  ]
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "user_id"
+              ]
+            },
+            "phone": {
+              "description": "Numéro au format ITU E.164",
+              "type": "string",
+              "examples": [
+                "+33601020304, +590690101010"
+              ]
+            },
+            "phone_trunc": {
+              "description": "Numéro de téléphone au format ITU-T E.164 tronqué des 2 derniers chiffres",
+              "type": "string",
+              "examples": [
+                "+336010203"
+              ],
+              "maxLength": 14,
+              "minLength": 10,
+              "pattern": "^\\+[0-9]{8,12}$"
+            },
+            "application_timestamp": {
+              "description": "Date de signature de l'engagement par le demandeur.",
+              "type": "string",
+              "format": "datetime"
+            },
+            "driving_license": {
+              "description": "Numéro de permis de conduire (également appelé _driving_license_)\ncf https://permisdeconduire.ants.gouv.fr/tout-savoir-sur-le-permis/le-numero-de-dossier-sur-un-permis-au-format-carte-bancaire\n",
+              "oneOf": [
+                {
+                  "type": "string",
+                  "description": "Numéro de permis de conduire composé de 12 chiffres après 1975.",
+                  "examples": [
+                    "051227308989"
+                  ],
+                  "pattern": "^[0-9]{12}$",
+                  "minLength": 12,
+                  "maxLength": 12
+                },
+                {
+                  "type": "string",
+                  "description": "Numéro de permis de conduire composé de 1 à 15 caractères suivis de 4 chiffres avant 1975.",
+                  "examples": [
+                    "822146819"
+                  ],
+                  "pattern": "^[A-Z0-9]{1,15}[0-9]{4}$",
+                  "minLength": 5,
+                  "maxLength": 19
+                },
+                {
+                  "type": "string",
+                  "description": "Numéro de permis de conduire plus anciens composé de 1 à 15 caractères.",
+                  "examples": [
+                    "123456A"
+                  ],
+                  "pattern": "^[A-Z0-9]{1,15}$",
+                  "minLength": 1,
+                  "maxLength": 15
+                },
+                {
+                  "type": "string",
+                  "description": "Numéro de permis étranger préfixé de l'indicatif '99-'.",
+                  "examples": [
+                    "99-X23.46"
+                  ],
+                  "pattern": "^99-.*$",
+                  "minLength": 4,
+                  "maxLength": 64
+                }
+              ]
+            },
+            "operator_user_id": {
+              "description": "Identifiant de l'utilisateur chez l'opérateur. Obligatoire.",
+              "type": "string",
+              "examples": [
+                "d2e8a6c4-9e3a-4b6f-8e8d-9f7a6b5c4d3e"
+              ]
+            },
+            "over_18": {
+              "description": "Applicable seulement au passager.\n\n  - `true` si majeur\n  - `false` si mineur\n  - `null` si non fourni\n\n> info\n> De nombreuses campagnes utilisent cette information pour s'assurer que les bénéficiaires d'incitations sont majeures. La valeur `NULL` les exclues.\n",
+              "enum": [
+                true,
+                false,
+                null
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "operator_user_id",
+            "identity_key",
+            "phone_trunc"
+          ]
+        },
+        "payments": {
+          "description": "Zéro, une ou plusieurs méthodes de paiement utilisées (ex. carte\nemployeur préchargée permettant de payer directement le covoiturage sur\nune application).\n\n> info\n> La prise en charge des frais de transports personnel (carburant et\n> forfait mobilité) pourra prendre la forme d'une solution de paiement\n> spécifique, dématérialisée et prépayée, intitulée « titre-mobilité ».\n>\n> Ainsi, il apparaît comme pertinent de détailler la solution de paiement\n> utilisée dans le cadre d'un trajet covoituré, s'il s'agit de\n> Titre-Mobilité.\n",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "siret",
+              "type",
+              "amount"
+            ],
+            "properties": {
+              "index": {
+                "description": "Ordre d'application",
+                "type": "number",
+                "examples": [
+                  0
+                ],
+                "minimum": 0,
+                "multipleOf": 1
+              },
+              "amount": {
+                "description": "Montant du paiement en centimes d'euros",
+                "type": "number",
+                "examples": [
+                  100
+                ],
+                "minimum": 0,
+                "multipleOf": 1
+              },
+              "siret": {
+                "description": "Numéro de SIRET du payeur",
+                "type": "string",
+                "examples": [
+                  "11000101300017"
+                ]
+              },
+              "type": {
+                "description": "Nom du titre",
+                "type": "string"
+              }
+            }
+          }
+        },
+        "contribution": {
+          "description": "Coût réel total du service pour l'occupant passager en fonction du\nnombre de sièges réservés **APRÈS** que toutes les possibles\nincitations aient été versées (subventions employeurs, promotions\nopérateurs, incitations AOM, etc).\n",
+          "type": "number",
+          "minimum": 0,
+          "multipleOf": 1
+        },
+        "seats": {
+          "description": "Nombre de sièges réservés par l'occupant passager.",
+          "type": "number",
+          "default": 1,
+          "maximum": 8,
+          "minimum": 1,
+          "multipleOf": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "contribution"
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "operator_journey_id",
+    "operator_trip_id",
+    "incentives",
+    "operator_class",
+    "start",
+    "end",
+    "distance",
+    "driver",
+    "passenger"
+  ]
+}

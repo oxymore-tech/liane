@@ -17,7 +17,7 @@ pub fn liane_trip_router() -> Router {
 }
 
 /// `/admin` (trajets avec leur preuve) et `/admin/export` (couples conducteur/passager au format du
-/// registre de preuve de covoiturage, avec les numéros de téléphone) sont réservées aux administrateurs.
+/// registre de preuve de covoiturage, sans numéro de téléphone complet) sont réservées aux administrateurs.
 /// Les autres demandent un compte ; un trajet n'est visible que des membres de sa liane.
 pub fn trip_router() -> Router {
     Router::new()

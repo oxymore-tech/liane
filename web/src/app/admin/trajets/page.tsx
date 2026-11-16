@@ -182,9 +182,11 @@ export default function AdminTripsPage() {
           Exporter les preuves (JSON)
         </Button>
         <p className="text-sm text-gray-500">
-          Un élément par couple conducteur/passager, au format du registre de
-          preuve de covoiturage. Le fichier contient les numéros de téléphone :
-          ne le partagez pas. Rien n'est envoyé au registre.
+          Un élément par couple conducteur/passager. « journey » est au format
+          du registre de preuve de covoiturage (API v3.4) ; il est vide quand
+          une information obligatoire manque, et « missing » dit laquelle. Le
+          fichier contient des positions et des identifiants : ne le partagez
+          pas. Rien n'est envoyé au registre.
         </p>
         {exported !== null && (
           <p className="text-sm text-emerald-700">
