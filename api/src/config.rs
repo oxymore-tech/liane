@@ -86,6 +86,7 @@ pub enum PushProvider {
     Log,
     WebPush {
         vapid_private_key: String,
+        vapid_public_key: String,
         vapid_subject: String,
     },
 }
@@ -132,10 +133,10 @@ impl Settings {
         let push = match get("PUSH_PROVIDER").as_deref() {
             None | Some("log") => PushProvider::Log,
             Some("webpush") => {
-                if vapid_public_key.is_none() {
-                    return Err("VAPID_PUBLIC_KEY is required when PUSH_PROVIDER=webpush".into());
-                }
                 PushProvider::WebPush {
+                    vapid_public_key: vapid_public_key
+                        .clone()
+                        .ok_or("VAPID_PUBLIC_KEY is required when PUSH_PROVIDER=webpush")?,
                     vapid_private_key: get("VAPID_PRIVATE_KEY")
                         .ok_or("VAPID_PRIVATE_KEY is required when PUSH_PROVIDER=webpush")?,
                     vapid_subject: get("VAPID_SUBJECT")

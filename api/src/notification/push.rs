@@ -11,7 +11,8 @@ use tracing::info;
 use uuid::Uuid;
 
 use crate::config::PushProvider;
-use crate::error::{AppError, Result};
+use crate::error::Result;
+use crate::notification::web_push::WebPushSender;
 
 #[derive(Debug, Clone, FromRow)]
 pub struct PushSubscription {
@@ -77,8 +78,14 @@ impl PushSender for LogPushSender {
 pub fn sender(provider: &PushProvider) -> Result<Arc<dyn PushSender>> {
     match provider {
         PushProvider::Log => Ok(Arc::new(LogPushSender)),
-        PushProvider::WebPush { .. } => Err(AppError::Unexpected(
-            "PUSH_PROVIDER=webpush is not available yet".to_string(),
-        )),
+        PushProvider::WebPush {
+            vapid_private_key,
+            vapid_public_key,
+            vapid_subject,
+        } => Ok(Arc::new(WebPushSender::new(
+            vapid_private_key,
+            vapid_public_key,
+            vapid_subject,
+        )?)),
     }
 }
