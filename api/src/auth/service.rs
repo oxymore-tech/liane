@@ -107,15 +107,13 @@ pub async fn logout(db: &PgPool, user_id: &Uuid) -> Result<()> {
 }
 
 fn is_test_login(config: &Config, phone: &str, code: &str) -> bool {
-    let test_account = config.auth_test_account.as_deref().map(|t| normalize_phone(t));
+    let test_account = config.auth_test_account.as_deref().map(normalize_phone);
     let test_code = config.auth_test_code.as_deref();
 
-    match (test_account, test_code) {
-        (Some(ref account), Some(expected_code)) if account == phone && code == expected_code => {
-            true
-        }
-        _ => false,
-    }
+    matches!(
+        (test_account, test_code),
+        (Some(account), Some(expected_code)) if account == phone && code == expected_code
+    )
 }
 
 async fn verify_code(db: &PgPool, phone: &str, code: &str) -> Result<()> {

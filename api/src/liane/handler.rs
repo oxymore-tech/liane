@@ -1,74 +1,168 @@
-use axum::extract::Path;
+use axum::extract::{Path, Query};
 use axum::{Extension, Json};
 use sqlx::PgPool;
 use uuid::Uuid;
 
+use crate::auth::extractor::{AdminUser, OptionalUser};
 use crate::auth::model::AuthUser;
 use crate::error::{AppError, Result};
-use crate::liane::model::{CreateLiane, JoinLiane, Liane, LianeRequestState};
-use crate::liane::{matching, service};
+use crate::liane::model::{
+    Liane, LianeDetail, LianeInput, LianeRequestMatches, LianeSearchResult, Membership,
+    MembershipInput, MyLiane, Report, ReportInput, SearchQuery,
+};
+use crate::liane::{matching, report, service};
 
-pub async fn list(auth: AuthUser, Extension(db): Extension<PgPool>) -> Result<Json<Vec<Liane>>> {
-    let lianes = service::list(&db, &auth.id).await?;
+pub async fn list(Extension(db): Extension<PgPool>) -> Result<Json<Vec<Liane>>> {
+    let lianes = service::list_active(&db).await?;
     Ok(Json(lianes))
 }
 
-pub async fn get_one(
-    auth: AuthUser,
+pub async fn search(
     Extension(db): Extension<PgPool>,
-    Path(id): Path<Uuid>,
-) -> Result<Json<Liane>> {
-    let liane = service::find(&db, &auth.id, &id)
+    Query(query): Query<SearchQuery>,
+) -> Result<Json<Vec<LianeSearchResult>>> {
+    let results = service::search(&db, &query).await?;
+    Ok(Json(results))
+}
+
+pub async fn get_one(
+    OptionalUser(viewer): OptionalUser,
+    Extension(db): Extension<PgPool>,
+    Path(slug): Path<String>,
+) -> Result<Json<LianeDetail>> {
+    let liane = service::find_detail(&db, &slug, viewer.as_ref())
         .await?
         .ok_or(AppError::NotFound)?;
     Ok(Json(liane))
+}
+
+pub async fn list_mine(
+    auth: AuthUser,
+    Extension(db): Extension<PgPool>,
+) -> Result<Json<Vec<MyLiane>>> {
+    let lianes = service::list_mine(&db, &auth.id).await?;
+    Ok(Json(lianes))
 }
 
 pub async fn find_matches(
     auth: AuthUser,
     Extension(db): Extension<PgPool>,
     Path(liane_request_id): Path<Uuid>,
-) -> Result<Json<LianeRequestState>> {
-    let state = matching::find_state(&db, &auth.id, &liane_request_id).await?;
-    Ok(Json(state))
+) -> Result<Json<LianeRequestMatches>> {
+    let matches = matching::find_matches(&db, &auth.id, &liane_request_id).await?;
+    Ok(Json(matches))
+}
+
+pub async fn list_all(
+    _admin: AdminUser,
+    Extension(db): Extension<PgPool>,
+) -> Result<Json<Vec<Liane>>> {
+    let lianes = service::list_all(&db).await?;
+    Ok(Json(lianes))
 }
 
 pub async fn create(
-    auth: AuthUser,
+    AdminUser(admin): AdminUser,
     Extension(db): Extension<PgPool>,
-    Json(input): Json<CreateLiane>,
+    Json(input): Json<LianeInput>,
 ) -> Result<Json<Liane>> {
-    let liane = service::create(&db, &auth.id, &input).await?;
+    let liane = service::create(&db, &admin.id, &input).await?;
     Ok(Json(liane))
+}
+
+pub async fn update(
+    _admin: AdminUser,
+    Extension(db): Extension<PgPool>,
+    Path(id): Path<Uuid>,
+    Json(input): Json<LianeInput>,
+) -> Result<Json<Liane>> {
+    let liane = service::update(&db, &id, &input)
+        .await?
+        .ok_or(AppError::NotFound)?;
+    Ok(Json(liane))
+}
+
+pub async fn remove(
+    _admin: AdminUser,
+    Extension(db): Extension<PgPool>,
+    Path(id): Path<Uuid>,
+) -> Result<()> {
+    found(service::delete(&db, &id).await?)
 }
 
 pub async fn join(
     auth: AuthUser,
     Extension(db): Extension<PgPool>,
     Path(id): Path<Uuid>,
-    Json(input): Json<JoinLiane>,
-) -> Result<Json<Liane>> {
-    let liane = service::join(&db, &auth.id, &id, &input.liane_request_id).await?;
-    Ok(Json(liane))
+    Json(input): Json<MembershipInput>,
+) -> Result<Json<Membership>> {
+    let membership = service::join(&db, &auth.id, &id, &input).await?;
+    Ok(Json(membership))
 }
 
-pub async fn accept(
+pub async fn update_membership(
     auth: AuthUser,
     Extension(db): Extension<PgPool>,
-    Path((id, member_id)): Path<(Uuid, Uuid)>,
-) -> Result<Json<Liane>> {
-    let liane = service::accept(&db, &auth.id, &id, &member_id)
+    Path(id): Path<Uuid>,
+    Json(input): Json<MembershipInput>,
+) -> Result<Json<Membership>> {
+    let membership = service::update_membership(&db, &auth.id, &id, &input)
         .await?
         .ok_or(AppError::NotFound)?;
-    Ok(Json(liane))
+    Ok(Json(membership))
 }
 
-pub async fn remove_member(
+pub async fn leave(
     auth: AuthUser,
     Extension(db): Extension<PgPool>,
-    Path((id, member_id)): Path<(Uuid, Uuid)>,
+    Path(id): Path<Uuid>,
 ) -> Result<()> {
-    if service::remove_member(&db, &auth.id, &id, &member_id).await? {
+    found(service::remove_member(&db, &id, &auth.id).await?)
+}
+
+pub async fn exclude_member(
+    _admin: AdminUser,
+    Extension(db): Extension<PgPool>,
+    Path((id, user_id)): Path<(Uuid, Uuid)>,
+) -> Result<()> {
+    found(service::remove_member(&db, &id, &user_id).await?)
+}
+
+pub async fn report_member(
+    auth: AuthUser,
+    Extension(db): Extension<PgPool>,
+    Path((id, user_id)): Path<(Uuid, Uuid)>,
+    Json(input): Json<ReportInput>,
+) -> Result<()> {
+    report::create(&db, &auth.id, &id, &user_id, &input.reason).await
+}
+
+pub async fn list_reports(
+    _admin: AdminUser,
+    Extension(db): Extension<PgPool>,
+) -> Result<Json<Vec<Report>>> {
+    let reports = report::list_open(&db).await?;
+    Ok(Json(reports))
+}
+
+pub async fn exclude_reported(
+    AdminUser(admin): AdminUser,
+    Extension(db): Extension<PgPool>,
+    Path(report_id): Path<Uuid>,
+) -> Result<()> {
+    found(report::exclude(&db, &admin.id, &report_id).await?)
+}
+
+pub async fn dismiss_report(
+    AdminUser(admin): AdminUser,
+    Extension(db): Extension<PgPool>,
+    Path(report_id): Path<Uuid>,
+) -> Result<()> {
+    found(report::dismiss(&db, &admin.id, &report_id).await?)
+}
+
+fn found(is_found: bool) -> Result<()> {
+    if is_found {
         Ok(())
     } else {
         Err(AppError::NotFound)
