@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use std::env::var;
 use std::f64::consts::PI;
 
@@ -32,7 +34,12 @@ pub struct Point {
 }
 
 impl TestApp {
+    /// Sans OSRM : les tracés sont des lignes droites.
     pub async fn spawn() -> Self {
+        Self::spawn_with_osrm("").await
+    }
+
+    pub async fn spawn_with_osrm(osrm_url: &str) -> Self {
         let database_url = var("TEST_DATABASE_URL")
             .expect("TEST_DATABASE_URL doit désigner une base PostgreSQL + PostGIS jetable");
         let db = PgPoolOptions::new()
@@ -53,7 +60,7 @@ impl TestApp {
         let config = Config {
             auth_keys: Keys::new(b"integration-test-secret"),
             sms_api_key: String::new(),
-            osrm_url: String::new(),
+            osrm_url: osrm_url.to_string(),
             auth_test_account: Some(ADMIN_PHONE.to_string()),
             auth_test_code: Some(ADMIN_CODE.to_string()),
         };
@@ -175,22 +182,26 @@ impl TestApp {
         let mut points = Vec::new();
         for index in 0..count {
             let (lat, lng) = (self.origin.0, self.origin.1 + 0.1 * index as f64);
-            let id: Uuid = sqlx::query_scalar(
-                r#"
-                    INSERT INTO rallying_point (label, location, kind, city)
-                    VALUES ($1, ST_SetSRID(ST_MakePoint($3, $2), 4326)::geography, 'TownHall', $1)
-                    RETURNING id
-                "#,
-            )
-            .bind(format!("Arrêt {index}"))
-            .bind(lat)
-            .bind(lng)
-            .fetch_one(&self.db)
-            .await
-            .expect("point de ralliement");
-            points.push(Point { id, lat, lng });
+            points.push(self.point_at(&format!("Arrêt {index}"), lat, lng).await);
         }
         points
+    }
+
+    pub async fn point_at(&self, label: &str, lat: f64, lng: f64) -> Point {
+        let id: Uuid = sqlx::query_scalar(
+            r#"
+                INSERT INTO rallying_point (label, location, kind, city)
+                VALUES ($1, ST_SetSRID(ST_MakePoint($3, $2), 4326)::geography, 'TownHall', $1)
+                RETURNING id
+            "#,
+        )
+        .bind(label)
+        .bind(lat)
+        .bind(lng)
+        .fetch_one(&self.db)
+        .await
+        .expect("point de ralliement");
+        Point { id, lat, lng }
     }
 
     pub async fn create_liane(&self, admin: &str, name: &str, stops: &[&Point]) -> Value {
@@ -241,4 +252,78 @@ pub fn tile_of(point: &Point, zoom: u32) -> (i32, i32) {
     let lat = point.lat.to_radians();
     let y = (1.0 - (lat.tan() + 1.0 / lat.cos()).ln() / PI) / 2.0 * scale;
     (x.floor() as i32, y.floor() as i32)
+}
+
+/// Ce que répond le faux serveur OSRM des tests.
+#[derive(Clone, Copy)]
+pub enum FakeOsrm {
+    /// Un tracé de trois points par tronçon, 1 000 m et 60 s par tronçon.
+    Route,
+    NoRoute,
+    BrokenGateway,
+    /// Répond après le délai toléré par l'API.
+    TooSlow,
+}
+
+/// Lance un faux serveur OSRM sur un port local et renvoie son URL.
+pub async fn fake_osrm(behaviour: FakeOsrm) -> String {
+    use axum::extract::Path;
+    use axum::http::StatusCode as Status;
+    use axum::routing::get;
+
+    let route = move |Path(coordinates): Path<String>| async move {
+        match behaviour {
+            FakeOsrm::Route => (Status::OK, fake_route(&coordinates).to_string()),
+            FakeOsrm::NoRoute => (
+                Status::BAD_REQUEST,
+                json!({ "code": "NoRoute", "message": "Impossible route between points" })
+                    .to_string(),
+            ),
+            FakeOsrm::BrokenGateway => {
+                (Status::BAD_GATEWAY, "<html>Bad Gateway</html>".to_string())
+            }
+            FakeOsrm::TooSlow => {
+                tokio::time::sleep(std::time::Duration::from_secs(8)).await;
+                (Status::OK, fake_route(&coordinates).to_string())
+            }
+        }
+    };
+    let app = axum::Router::new().route("/route/v1/driving/{coordinates}", get(route));
+
+    let listener = TcpListener::bind("127.0.0.1:0").await.expect("port local");
+    let url = format!("http://{}", listener.local_addr().expect("adresse"));
+    tokio::spawn(async move { axum::serve(listener, app).await });
+    url
+}
+
+fn fake_route(coordinates: &str) -> Value {
+    let stops: Vec<[f64; 2]> = coordinates
+        .split(';')
+        .map(|pair| {
+            let (lng, lat) = pair.split_once(',').expect("lon,lat");
+            [lng.parse().expect("lon"), lat.parse().expect("lat")]
+        })
+        .collect();
+
+    let mut line = vec![stops[0]];
+    for pair in stops.windows(2) {
+        line.push([
+            (pair[0][0] + pair[1][0]) / 2.0,
+            (pair[0][1] + pair[1][1]) / 2.0 + 0.01,
+        ]);
+        line.push(pair[1]);
+    }
+    let leg_count = stops.len() - 1;
+    let legs: Vec<Value> = (0..leg_count)
+        .map(|_| json!({ "distance": 1000.0, "duration": 60.0 }))
+        .collect();
+    json!({
+        "code": "Ok",
+        "routes": [{
+            "distance": 1000.0 * leg_count as f64,
+            "duration": 60.0 * leg_count as f64,
+            "geometry": { "type": "LineString", "coordinates": line },
+            "legs": legs,
+        }],
+    })
 }

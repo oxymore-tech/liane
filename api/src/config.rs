@@ -31,7 +31,8 @@ impl Config {
         Config {
             auth_keys: Keys::new(var("JWT_SECRET").expect("Miss JWT_SECRET").as_bytes()),
             sms_api_key: var("SMS_API_KEY").expect("Miss SMS_API_KEY"),
-            osrm_url: var("OSRM_URL").unwrap_or_else(|_| "http://localhost:5000".to_string()),
+            // Vide : pas de calcul d'itinéraire, les tracés sont des lignes droites entre les arrêts.
+            osrm_url: var("OSRM_URL").unwrap_or_default(),
             auth_test_account: var("AUTH_TEST_ACCOUNT").ok(),
             auth_test_code: var("AUTH_TEST_CODE").ok(),
         }

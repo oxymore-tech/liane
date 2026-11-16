@@ -124,6 +124,9 @@ pick: for (const [fx, fy] of [[0.5, 0.5], [0.3, 0.3], [0.7, 0.3], [0.3, 0.7], [0
   if ((await admin.locator("ol > li").count()) >= 4) { picked = true; log(`arrêt ajouté par toucher en ${fx},${fy}`); break pick; }
 }
 if (!picked) problems.push("aucun toucher sur la carte d'administration n'a ajouté d'arrêt");
+const routeNote = admin.getByText(/Tracé (par la route|approximatif)/);
+await routeNote.waitFor();
+log("aperçu du tracé:", (await routeNote.innerText()).replace(/\n+/g, " "));
 await admin.waitForTimeout(800);
 await admin.screenshot({ path: `${OUT}/12-admin-creation-entier.png`, fullPage: true });
 await shot(admin, "12b-admin-creation-carte");

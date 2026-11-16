@@ -7,11 +7,13 @@ import { type FormEvent, useCallback, useState } from "react";
 import type { MapLayerMouseEvent } from "react-map-gl/maplibre";
 import {
   createLiane,
+  previewRoute,
   searchRallyingPoints,
   snapRallyingPoint,
 } from "@/api/lianes";
+import type { RoutePreview as RoutePreviewData } from "@/api/types";
 import { useDebounce } from "@/components/hooks";
-import { stopName } from "@/components/liane/labels";
+import { routeLabel, stopName } from "@/components/liane/labels";
 import { DEFAULT_VIEW } from "@/components/map/map-style";
 import { RallyingPointsLayer } from "@/components/map/rallying-points-layer";
 import { Button, Card, Notice } from "@/components/ui";
@@ -29,6 +31,48 @@ type Stop = {
 };
 
 const TOUCH_RADIUS_PIXELS = 32;
+
+function RoutePreviewNote({
+  preview,
+  loading,
+  failed,
+}: {
+  preview: RoutePreviewData | undefined;
+  loading: boolean;
+  failed: boolean;
+}) {
+  if (loading) {
+    return <p className="text-sm text-gray-500">Calcul du tracé…</p>;
+  }
+  if (failed) {
+    return (
+      <p className="text-sm text-gray-500">
+        L'aperçu du tracé n'est pas disponible pour l'instant.
+      </p>
+    );
+  }
+  if (!preview) {
+    return (
+      <p className="text-sm text-gray-500">
+        Le tracé par la route s'affiche à partir de deux arrêts.
+      </p>
+    );
+  }
+  if (preview.route_source === "Straight") {
+    return (
+      <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+        Tracé approximatif : le calcul par la route n'a pas abouti, la ligne
+        relie les arrêts en ligne droite ({routeLabel(preview).toLowerCase()}).
+        La liane peut être créée ; son tracé pourra être recalculé plus tard.
+      </p>
+    );
+  }
+  return (
+    <p className="text-sm text-gray-700">
+      Tracé par la route : <strong>{routeLabel(preview)}</strong>
+    </p>
+  );
+}
 
 const fieldClass =
   "mt-1 block w-full min-h-11 rounded-lg border border-gray-300 bg-white px-3 py-2 text-base";
@@ -51,6 +95,18 @@ export default function NewLianePage() {
     queryFn: () => searchRallyingPoints(debouncedSearch, near),
     enabled: debouncedSearch.length >= 2,
   });
+
+  const stopIds = stops.map((stop) => stop.id);
+  const {
+    data: preview,
+    isFetching: previewLoading,
+    isError: previewFailed,
+  } = useQuery({
+    queryKey: ["route-preview", stopIds],
+    queryFn: () => previewRoute(stopIds),
+    enabled: stopIds.length >= 2,
+  });
+  const shownPreview = stopIds.length >= 2 ? preview : undefined;
 
   const addStop = useCallback((stop: Stop) => {
     setStops((current) =>
@@ -96,7 +152,7 @@ export default function NewLianePage() {
     try {
       await createLiane({
         name: name.trim() || suggestedName,
-        stop_ids: stops.map((stop) => stop.id),
+        stop_ids: stopIds,
         is_active: true,
       });
       router.push("/admin/lianes");
@@ -213,13 +269,19 @@ export default function NewLianePage() {
         )}
 
         <div className="h-80 overflow-hidden rounded-xl border border-gray-200">
-          <RoutePreview stops={stops} onClick={onMapClick}>
+          <RoutePreview
+            stops={stops}
+            route={shownPreview?.route.coordinates}
+            onClick={onMapClick}
+          >
             <RallyingPointsLayer />
           </RoutePreview>
         </div>
-        <p className="text-xs text-gray-500">
-          Aperçu du tracé : une ligne droite entre les arrêts pour l'instant.
-        </p>
+        <RoutePreviewNote
+          preview={shownPreview}
+          loading={previewLoading}
+          failed={previewFailed}
+        />
       </Card>
 
       {error && <Notice>{error}</Notice>}

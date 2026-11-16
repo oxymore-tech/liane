@@ -8,6 +8,7 @@ import type {
   MyLiane,
   RallyingPoint,
   Report,
+  RoutePreview,
 } from "./types";
 
 export const listLianes = () => api.get<Liane[]>("/liane");
@@ -32,6 +33,15 @@ export const listAllLianes = () => api.get<Liane[]>("/liane/admin");
 
 export const createLiane = (body: LianeInput) =>
   api.postAs<Liane>("/liane", { body });
+
+/** Tracé, distance et durée pour une suite d'arrêts, sans rien enregistrer. */
+export const previewRoute = (stopIds: string[]) =>
+  api.postAs<RoutePreview>("/liane/route_preview", {
+    body: { stop_ids: stopIds },
+  });
+
+export const recomputeRoute = (id: string) =>
+  api.postAs<Liane>(`/liane/${id}/route`);
 
 export const updateLiane = (id: string, body: LianeInput) =>
   api.putAs<Liane>(`/liane/${id}`, { body });
