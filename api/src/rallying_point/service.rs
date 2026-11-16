@@ -132,8 +132,5 @@ pub async fn find_by_ids(db: &PgPool, ids: &[Uuid]) -> Result<HashMap<Uuid, Rall
     .bind(ids)
     .fetch_all(db)
     .await?;
-    Ok(results
-        .into_iter()
-        .map(|point| (point.id, point))
-        .collect())
+    Ok(results.into_iter().map(|point| (point.id, point)).collect())
 }

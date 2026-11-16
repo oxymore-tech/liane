@@ -80,11 +80,19 @@ async fn the_push_request_is_signed_and_encrypted_for_the_device() {
         &base64_url(&auth_secret),
     );
 
-    assert_eq!(sender().send(&device, &notification()).await, PushOutcome::Sent);
+    assert_eq!(
+        sender().send(&device, &notification()).await,
+        PushOutcome::Sent
+    );
 
     let received = received.lock().unwrap();
     let (headers, body) = &received[0];
-    let header = |name: &str| headers.get(name).and_then(|value| value.to_str().ok()).unwrap_or("");
+    let header = |name: &str| {
+        headers
+            .get(name)
+            .and_then(|value| value.to_str().ok())
+            .unwrap_or("")
+    };
     assert_eq!(header("content-encoding"), "aes128gcm");
     assert_eq!(header("ttl"), "43200");
     assert_eq!(header("urgency"), "normal");
@@ -98,13 +106,18 @@ async fn the_push_request_is_signed_and_encrypted_for_the_device() {
     assert_eq!(key, VAPID_PUBLIC_KEY);
     let point = {
         use base64::Engine;
-        base64::engine::general_purpose::URL_SAFE_NO_PAD.decode(key).unwrap()
+        base64::engine::general_purpose::URL_SAFE_NO_PAD
+            .decode(key)
+            .unwrap()
     };
     let public_key =
-        DecodingKey::from_ec_components(&base64_url(&point[1..33]), &base64_url(&point[33..])).unwrap();
+        DecodingKey::from_ec_components(&base64_url(&point[1..33]), &base64_url(&point[33..]))
+            .unwrap();
     let mut validation = Validation::new(Algorithm::ES256);
     validation.set_audience(&[origin.as_str()]);
-    let claims = decode::<Value>(token, &public_key, &validation).expect("signature et audience").claims;
+    let claims = decode::<Value>(token, &public_key, &validation)
+        .expect("signature et audience")
+        .claims;
     assert_eq!(claims["sub"], SUBJECT);
     let lifetime = claims["exp"].as_i64().unwrap() - chrono::Utc::now().timestamp();
     assert!(lifetime > 0 && lifetime <= 24 * 3600, "exp dans les 24 h");
@@ -124,7 +137,14 @@ async fn the_push_request_is_signed_and_encrypted_for_the_device() {
     );
     assert!(!String::from_utf8_lossy(body).contains("Camille"));
     let (stranger_keys, stranger_secret) = ece::generate_keypair_and_auth_secret().unwrap();
-    assert!(ece::decrypt(&stranger_keys.raw_components().unwrap(), &stranger_secret, body).is_err());
+    assert!(
+        ece::decrypt(
+            &stranger_keys.raw_components().unwrap(),
+            &stranger_secret,
+            body
+        )
+        .is_err()
+    );
 }
 
 #[tokio::test]
@@ -133,28 +153,47 @@ async fn push_service_answers_become_outcomes() {
     let p256dh = base64_url(browser_keys.raw_components().unwrap().public_key());
     let auth = base64_url(&auth_secret);
 
-    for (status, expected) in [(410, Some(PushOutcome::Gone)), (404, Some(PushOutcome::Gone)), (500, None)] {
+    for (status, expected) in [
+        (410, Some(PushOutcome::Gone)),
+        (404, Some(PushOutcome::Gone)),
+        (500, None),
+    ] {
         let (origin, _) = fake_push_service(status).await;
         let outcome = sender()
-            .send(&subscription(&format!("{origin}/push/x"), &p256dh, &auth), &notification())
+            .send(
+                &subscription(&format!("{origin}/push/x"), &p256dh, &auth),
+                &notification(),
+            )
             .await;
         match expected {
             Some(expected) => assert_eq!(outcome, expected),
-            None => assert!(matches!(outcome, PushOutcome::Failed(reason) if reason.contains("500"))),
+            None => {
+                assert!(matches!(outcome, PushOutcome::Failed(reason) if reason.contains("500")))
+            }
         }
     }
 
     let unreachable = subscription("http://127.0.0.1:9/push/x", &p256dh, &auth);
-    assert!(matches!(sender().send(&unreachable, &notification()).await, PushOutcome::Failed(_)));
+    assert!(matches!(
+        sender().send(&unreachable, &notification()).await,
+        PushOutcome::Failed(_)
+    ));
     let (origin, received) = fake_push_service(201).await;
     let broken_keys = subscription(&format!("{origin}/push/x"), "cle", "secret");
-    assert!(matches!(sender().send(&broken_keys, &notification()).await, PushOutcome::Failed(_)));
-    assert!(received.lock().unwrap().is_empty(), "rien ne part sans chiffrement");
+    assert!(matches!(
+        sender().send(&broken_keys, &notification()).await,
+        PushOutcome::Failed(_)
+    ));
+    assert!(
+        received.lock().unwrap().is_empty(),
+        "rien ne part sans chiffrement"
+    );
 }
 
 #[test]
 fn inconsistent_vapid_configuration_is_refused_at_startup() {
-    let other_public = "BH_NzidA9sRdQYPL7m_bS3tYBzM1e-nvE7rPbjx70VRFx_FEzRu9m36HLN_tue659LNpXW6pCyStikYjKIWI5a0";
+    let other_public =
+        "BH_NzidA9sRdQYPL7m_bS3tYBzM1e-nvE7rPbjx70VRFx_FEzRu9m36HLN_tue659LNpXW6pCyStikYjKIWI5a0";
     assert!(WebPushSender::new(VAPID_PRIVATE_KEY, other_public, SUBJECT).is_err());
     assert!(WebPushSender::new("pas-une-cle", VAPID_PUBLIC_KEY, SUBJECT).is_err());
     assert!(WebPushSender::new(VAPID_PRIVATE_KEY, VAPID_PUBLIC_KEY, "exploitant").is_err());

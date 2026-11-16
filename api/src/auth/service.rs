@@ -42,7 +42,13 @@ pub async fn send_code(
     }
 
     let limits = &config.auth_limits;
-    rate_limit::check(db, AuthEvent::SmsSent, Key::Phone(&phone), limits.sms_per_phone).await?;
+    rate_limit::check(
+        db,
+        AuthEvent::SmsSent,
+        Key::Phone(&phone),
+        limits.sms_per_phone,
+    )
+    .await?;
     rate_limit::check(db, AuthEvent::SmsSent, Key::Ip(ip), limits.sms_per_ip).await?;
     rate_limit::record(db, AuthEvent::SmsSent, &phone, ip).await?;
 
@@ -157,13 +163,12 @@ async fn find_or_create_user(db: &PgPool, phone: &str, is_test: bool) -> Result<
         return Ok(user);
     }
 
-    let id: Uuid = sqlx::query_scalar(
-        r#"INSERT INTO "user" (phone, is_admin) VALUES ($1, $2) RETURNING id"#,
-    )
-    .bind(phone)
-    .bind(is_test)
-    .fetch_one(db)
-    .await?;
+    let id: Uuid =
+        sqlx::query_scalar(r#"INSERT INTO "user" (phone, is_admin) VALUES ($1, $2) RETURNING id"#)
+            .bind(phone)
+            .bind(is_test)
+            .fetch_one(db)
+            .await?;
     Ok((id, is_test))
 }
 
@@ -173,9 +178,18 @@ mod tests {
 
     #[test]
     fn french_numbers_become_international() {
-        assert_eq!(normalize_phone("06 12 34 56 78").as_deref(), Some("+33612345678"));
-        assert_eq!(normalize_phone("+33 6 12 34 56 78").as_deref(), Some("+33612345678"));
-        assert_eq!(normalize_phone("33612345678").as_deref(), Some("+33612345678"));
+        assert_eq!(
+            normalize_phone("06 12 34 56 78").as_deref(),
+            Some("+33612345678")
+        );
+        assert_eq!(
+            normalize_phone("+33 6 12 34 56 78").as_deref(),
+            Some("+33612345678")
+        );
+        assert_eq!(
+            normalize_phone("33612345678").as_deref(),
+            Some("+33612345678")
+        );
     }
 
     #[test]

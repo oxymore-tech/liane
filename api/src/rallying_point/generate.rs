@@ -126,7 +126,10 @@ fn load_bnlc(zipcodes: &HashMap<String, String>) -> Result<Vec<SourcePoint>> {
         };
 
         let zip_code = zipcodes.get(&e.insee).cloned().unwrap_or_default();
-        let place_count = e.nbre_pl.and_then(|s| s.parse::<i32>().ok()).filter(|&n| n > 0);
+        let place_count = e
+            .nbre_pl
+            .and_then(|s| s.parse::<i32>().ok())
+            .filter(|&n| n > 0);
 
         points.push(SourcePoint {
             source_key: format!("{BNLC}:{}", e.id_lieu),
@@ -278,7 +281,11 @@ pub async fn generate(db: &PgPool, test_only: bool) -> Result<SyncReport> {
     let (sources, points) = if test_only {
         let town_halls = load_mairies()?
             .into_iter()
-            .filter(|p| TEST_DEPARTMENTS.iter().any(|code| p.zip_code.starts_with(code)))
+            .filter(|p| {
+                TEST_DEPARTMENTS
+                    .iter()
+                    .any(|code| p.zip_code.starts_with(code))
+            })
             .collect();
         (vec![TOWN_HALLS], town_halls)
     } else {
@@ -424,7 +431,12 @@ pub async fn sync(db: &PgPool, sources: &[&str], points: Vec<SourcePoint>) -> Re
                 OR EXISTS (SELECT 1 FROM liane_request lr WHERE rp.id = ANY(lr.waypoints))
         "#,
     )
-    .bind(sources.iter().map(|source| source.to_string()).collect::<Vec<_>>())
+    .bind(
+        sources
+            .iter()
+            .map(|source| source.to_string())
+            .collect::<Vec<_>>(),
+    )
     .fetch_all(&mut *tx)
     .await?;
 
@@ -500,7 +512,11 @@ mod tests {
         let town_halls = load_mairies().unwrap();
         let test_set: Vec<SourcePoint> = town_halls
             .iter()
-            .filter(|p| TEST_DEPARTMENTS.iter().any(|code| p.zip_code.starts_with(code)))
+            .filter(|p| {
+                TEST_DEPARTMENTS
+                    .iter()
+                    .any(|code| p.zip_code.starts_with(code))
+            })
             .cloned()
             .collect();
         assert_eq!(cluster(test_set).len(), 2022);

@@ -1,12 +1,14 @@
-use axum::extract::Query;
-use axum::Json;
-use sqlx::PgPool;
 use axum::Extension;
+use axum::Json;
+use axum::extract::Query;
+use sqlx::PgPool;
 
 use crate::auth::extractor::AdminUser;
 use crate::error::{AppError, Result};
-use crate::rallying_point::model::{BboxQuery, GenerateQuery, RallyingPoint, SearchQuery, SnapQuery};
 use crate::rallying_point::generate::{self, SyncReport};
+use crate::rallying_point::model::{
+    BboxQuery, GenerateQuery, RallyingPoint, SearchQuery, SnapQuery,
+};
 use crate::rallying_point::service;
 
 pub async fn search(

@@ -99,7 +99,10 @@ mod tests {
 
     #[test]
     fn pseudo_is_first_name_and_last_name_initial() {
-        assert_eq!(build_pseudo("Augustin", "gjini"), Some("Augustin G.".to_string()));
+        assert_eq!(
+            build_pseudo("Augustin", "gjini"),
+            Some("Augustin G.".to_string())
+        );
     }
 
     #[test]
