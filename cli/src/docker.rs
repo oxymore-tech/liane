@@ -5,8 +5,8 @@ use std::path::Path;
 use crate::{command, local};
 use anyhow::Result;
 use itertools::Itertools;
-use tokio::fs::File;
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio::fs::{File, OpenOptions, read_to_string};
+use tokio::io::AsyncWriteExt;
 use tracing::info;
 
 use crate::command::Command;
@@ -28,6 +28,9 @@ pub async fn start(env: Env, purge: bool) -> Result<()> {
     docker_compose(env, ["up", "-d", "--build", "--remove-orphans"])
         .status()
         .await?;
+    if env == Env::Local {
+        ensure_test_database(env).await?;
+    }
     info!("Liane {env} env started");
     Ok(())
 }
@@ -47,47 +50,84 @@ pub async fn install(env: Env) -> Result<()> {
     Ok(())
 }
 
+/// Crée deploy/.env depuis deploy/.env.example, ou lui ajoute les variables qui lui manquent.
 async fn ensure_env_file_exists(env: Env) -> Result<()> {
+    let example = read_to_string(format!("{}/deploy/.env.example", env.home())).await?;
     let file = format!("{}/deploy/.env", env.home());
     let path = Path::new(&file);
-    if path.exists() {
-        Ok(())
-    } else {
-        create_env_file(env).await
+    if !path.exists() {
+        return create_env_file(path, &example).await;
     }
+    let current = read_to_string(path).await?;
+    let known = variables(&current).map(|(key, _)| key).collect_vec();
+    let missing = variables(&example)
+        .filter(|(key, _)| !known.contains(key))
+        .collect_vec();
+    if missing.is_empty() {
+        return Ok(());
+    }
+    let mut dest = OpenOptions::new().append(true).open(path).await?;
+    if !current.ends_with('\n') {
+        dest.write_all(b"\n").await?;
+    }
+    for (key, value) in missing {
+        info!("Adding {key}={value} to {file}");
+        dest.write_all(format!("{key}={value}\n").as_bytes())
+            .await?;
+    }
+    dest.flush().await?;
+    Ok(())
 }
 
-async fn create_env_file(env: Env) -> Result<()> {
-    info!("Creating env file for {:?}", env);
-    let example_file = format!("{}/deploy/.env.example", env.home());
-    let env_file = format!("{}/deploy/.env", env.home());
-    let source = Path::new(&example_file);
-    let dest = Path::new(&env_file);
+/// Les lignes `CLÉ=valeur` d'un fichier d'environnement, sans les commentaires.
+fn variables(content: &str) -> impl Iterator<Item = (&str, &str)> {
+    content
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.starts_with('#'))
+        .filter_map(|line| line.split_once('='))
+}
 
-    let source = File::open(source).await?;
-
-    let mut lines = BufReader::new(source).lines();
-
+async fn create_env_file(dest: &Path, example: &str) -> Result<()> {
+    info!("Creating {:?}", dest);
     let mut dest = File::create(dest).await?;
-    while let Some(line) = lines.next_line().await? {
-        let parts = line.split('=').collect_vec();
-        if parts.len() == 2 {
-            let key = parts[0];
-            let default_value = parts[1];
-            println!("> Enter value for {key} : {default_value}");
-            let mut value = String::new();
-            stdin().read_line(&mut value)?;
-            let user_value = if value == "\n" {
-                default_value
-            } else {
-                value.trim()
-            };
-            let line = format!("{}={}\n", key, user_value);
-            dest.write_all(line.as_bytes()).await?;
-        }
+    for (key, default_value) in variables(example) {
+        println!("> Enter value for {key} : {default_value}");
+        let mut value = String::new();
+        stdin().read_line(&mut value)?;
+        let value = value.trim();
+        let value = if value.is_empty() {
+            default_value
+        } else {
+            value
+        };
+        dest.write_all(format!("{key}={value}\n").as_bytes())
+            .await?;
     }
-
     dest.flush().await?;
+    Ok(())
+}
+
+/// Base des tests d'intégration (TEST_DATABASE_URL), créée une fois le serveur prêt.
+async fn ensure_test_database(env: Env) -> Result<()> {
+    let script = "for i in $(seq 60); do pg_isready -q -h 127.0.0.1 -U liane -d liane && break; sleep 1; done; \
+        psql -h 127.0.0.1 -U liane -d liane -Atc \"SELECT 1 FROM pg_database WHERE datname = 'liane_test'\" | grep -q 1 \
+        || createdb -h 127.0.0.1 -U liane liane_test";
+    docker_compose(env, ["exec", "-T", "postgres", "sh", "-c", script])
+        .status()
+        .await?;
+    Ok(())
+}
+
+/// Jeu de démonstration : points de ralliement de test, quatre lianes en Lozère, membres, messages et trajets.
+/// L'API doit tourner, avec le compte de démonstration activé.
+pub async fn seed() -> Result<()> {
+    local!("node", "deploy/demo/seed-lianes.mjs")
+        .status()
+        .await?;
+    local!("node", "deploy/demo/seed-trips.mjs")
+        .status()
+        .await?;
     Ok(())
 }
 

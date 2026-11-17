@@ -1,5 +1,5 @@
 // Parcours « trajets, messages » dans un navigateur sans tête. Lancé par run.sh avec JOURNEY=journey-trips.mjs
-//, après seed-lianes.mjs et seed-trips.sh. Un conducteur et deux passagers, chacun dans
+//, après seed-lianes.mjs et seed-trips.mjs. Un conducteur et deux passagers, chacun dans
 // son navigateur : géolocalisation simulée et accordée pour le conducteur et la première passagère,
 // refusée pour le second passager. Les captures sont préfixées « trips- ».
 import { chromium } from "playwright";

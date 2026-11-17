@@ -5,7 +5,7 @@ use clap::{Command, CommandFactory, Parser, Subcommand};
 use clap_complete::{Generator, Shell, generate};
 use tracing::{Level, error};
 
-use cli::docker::{dump, install, start, stop};
+use cli::docker::{dump, install, seed, start, stop};
 use cli::env::Env;
 use cli::token::generate_token;
 
@@ -55,6 +55,9 @@ pub enum Commands {
         env: Env,
     },
 
+    /// Load demo data through the local API (lianes, members, messages, trips)
+    Seed,
+
     /// Generate a JWT token for a user by phone number
     Token {
         /// Phone number (e.g. +33600000000)
@@ -95,6 +98,8 @@ async fn try_main() -> Result<()> {
         Commands::Dump { env } => {
             dump(env).await?;
         }
+
+        Commands::Seed => seed().await?,
 
         Commands::Token { phone, code } => {
             let token = generate_token(&phone, &code).await?;
