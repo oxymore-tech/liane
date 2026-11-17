@@ -45,20 +45,28 @@ native, un écran pour donner ou retirer le droit administrateur (voir « Admini
 Prérequis : Docker, Rust (édition 2024), Node 24 avec corepack (yarn 4).
 
 ```bash
-cp deploy/.env.example deploy/.env          # valeurs de développement, sans secret
 cd cli && cargo install --path .            # installe la commande « liane »
 liane start                                 # PostgreSQL + PostGIS et Martin (deploy/local.yml)
 
 cd api && cargo run                         # API sur http://localhost:5000, migrations appliquées au démarrage
 cd web && yarn install && yarn dev          # site sur http://localhost:3000
+liane seed                                  # jeu de démonstration : quatre lianes en Lozère, membres, trajets
 ```
 
-L'API lit sa configuration dans l'environnement et dans le fichier `api/.env` : il doit contenir les variables de
-`deploy/.env.example` (au minimum `DATABASE_URL`, `JWT_SECRET` et `SMS_PROVIDER`, sans quoi l'API refuse de démarrer
-en disant ce qui manque). Avec `SMS_PROVIDER=log`, le code de connexion est écrit dans le journal de l'API. Les points de ralliement se chargent une fois avec un
-compte administrateur : `POST /api/rallying_point/generate` (France entière, 36 000 points, 2 secondes) ou
-`?source=test` (sept départements d'Occitanie). La commande peut être relancée : elle met à jour les points par
-leur clé d'origine sans changer leurs identifiants.
+`liane` cherche le dépôt dans `~/workspace/perso/liane`, ou dans `LIANE_HOME`. `liane start` crée `deploy/.env`
+depuis `deploy/.env.example` (ou lui ajoute les variables manquantes) et crée la base `liane_test` des tests.
+`liane start --purge` repart d'une base vide.
+
+L'API lit `api/.env`, puis, en développement, `deploy/.env` pour ce qui n'y figure pas. Avec `SMS_PROVIDER=log`,
+le code de connexion est écrit dans le journal de l'API. Le compte de démonstration (`+33600000000`, code
+`000000`) est administrateur.
+
+Tracé routier (facultatif) : copier les fichiers `occitanie.osrm*` dans `data/osrm`, puis dans `deploy/.env`
+mettre `COMPOSE_PROFILES=osrm` et `OSRM_URL=http://localhost:5001`, et relancer `liane start` et l'API.
+
+`liane seed` charge les points de ralliement de test (sept départements d'Occitanie). Pour la France entière
+(36 000 points, 2 secondes) : `POST /api/rallying_point/generate` avec un compte administrateur. La commande
+peut être relancée : elle met à jour les points par leur clé d'origine sans changer leurs identifiants.
 
 Vérifications :
 

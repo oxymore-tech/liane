@@ -1,10 +1,12 @@
-// Jeu de démonstration, suite de seed-lianes.mjs. Lancé par seed-trips.sh.
+// Jeu de démonstration, suite de seed-lianes.mjs (« liane seed » lance les deux).
 // Sur la liane Florac – Mende : trois membres, quelques messages, un trajet terminé et prouvé
 // (une passagère avec position, un passager qui la refuse), un trajet annulé, deux trajets à venir.
 // Rejouable : si la liane a déjà des trajets à venir, rien n'est ajouté.
-import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 
 const API = process.env.API ?? "http://localhost:5000/api";
+// Les comptes de démonstration se connectent par le parcours réel : leur code est lu dans la base.
+const PSQL = (process.env.PSQL ?? "docker exec liane-local-postgres-1 psql -h 127.0.0.1 -U liane -d liane").split(" ");
 const SLUG = "florac-mende";
 const MEMBERS = {
   camille: { phone: "+33600000101", first: "Camille", last: "Durand", from: "Florac-Trois-Rivières", to: "Mende", canDrive: true },
@@ -26,19 +28,16 @@ async function call(token, method, path, body) {
   return text ? JSON.parse(text) : undefined;
 }
 
-async function smsCode(phone) {
-  rmSync("/work/code.txt", { force: true });
-  writeFileSync("/work/need-code.txt", phone);
-  for (let attempt = 0; attempt < 100; attempt++) {
-    if (existsSync("/work/code.txt")) return readFileSync("/work/code.txt", "utf8").trim();
-    await new Promise((resolve) => setTimeout(resolve, 200));
-  }
-  throw new Error(`Pas de code pour ${phone}`);
+function smsCode(phone) {
+  const query = `SELECT code FROM sms_code WHERE phone = '${phone}' ORDER BY expires_at DESC LIMIT 1`;
+  const code = execFileSync(PSQL[0], [...PSQL.slice(1), "-At", "-c", query], { encoding: "utf8" }).trim();
+  if (!code) throw new Error(`Pas de code pour ${phone}`);
+  return code;
 }
 
 async function login({ phone, first, last }) {
   await call(null, "POST", `/auth/sms?phone=${encodeURIComponent(phone)}`);
-  const { token } = await call(null, "POST", "/auth/login", { phone, code: await smsCode(phone) });
+  const { token } = await call(null, "POST", "/auth/login", { phone, code: smsCode(phone) });
   await call(token.access_token, "PUT", "/user/me", {
     first_name: first,
     last_name: last,

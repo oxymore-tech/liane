@@ -36,6 +36,9 @@ struct Args {
 async fn main() {
     let args = Args::parse();
     dotenv().ok();
+    // En développement, deploy/.env (celui de « liane start ») complète api/.env sans le remplacer.
+    #[cfg(debug_assertions)]
+    dotenvy::from_path(concat!(env!("CARGO_MANIFEST_DIR"), "/../deploy/.env")).ok();
 
     if args.health {
         std::process::exit(if is_healthy().await { 0 } else { 1 });

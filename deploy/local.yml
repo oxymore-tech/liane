@@ -27,3 +27,15 @@ services:
     depends_on:
       - postgres
     restart: unless-stopped
+
+  # Facultatif : tracé routier des lianes. Activé par COMPOSE_PROFILES=osrm dans deploy/.env,
+  # avec OSRM_URL=http://localhost:5001. Les fichiers .osrm sont attendus dans data/osrm.
+  osrm:
+    profiles: [osrm]
+    image: ghcr.io/project-osrm/osrm-backend:v6.0.0
+    command: ["osrm-routed", "--algorithm", "mld", "/data/${OSRM_DATA_FILE:-occitanie.osrm}"]
+    ports:
+      - "127.0.0.1:5001:5000"
+    volumes:
+      - "${LIANE_HOME}/data/osrm:/data:ro"
+    restart: unless-stopped
