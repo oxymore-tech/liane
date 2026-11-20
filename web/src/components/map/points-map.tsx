@@ -10,7 +10,13 @@ import {
 } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { RallyingPoint } from "@/api/types";
-import { boundsOf, DEFAULT_VIEW, MAP_FONT, mapStyle } from "./map-style";
+import {
+  boundsOf,
+  DEFAULT_VIEW,
+  MAP_FONT,
+  mapColors,
+  mapStyle,
+} from "./map-style";
 import { PlaceNamesLayer } from "./place-names-layer";
 
 const POINTS_LAYER_ID = "points-map-circle";
@@ -26,6 +32,7 @@ export default function PointsMap({
   const mapRef = useRef<MapRef>(null);
   const [loaded, setLoaded] = useState(false);
   const style = useMemo(mapStyle, []);
+  const colors = mapColors();
 
   const data = useMemo(
     () => ({
@@ -80,11 +87,11 @@ export default function PointsMap({
             "circle-color": [
               "case",
               ["get", "is_active"],
-              "#065f46",
-              "#9ca3af",
+              colors.liane,
+              colors.gris,
             ],
             "circle-stroke-width": 2,
-            "circle-stroke-color": "#ffffff",
+            "circle-stroke-color": colors.white,
           }}
         />
         <Layer
@@ -99,8 +106,8 @@ export default function PointsMap({
             "text-max-width": 8,
           }}
           paint={{
-            "text-color": "#1f2937",
-            "text-halo-color": "#ffffff",
+            "text-color": colors.encre,
+            "text-halo-color": colors.white,
             "text-halo-width": 1.5,
           }}
         />

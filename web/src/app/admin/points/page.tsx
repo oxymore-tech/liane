@@ -47,7 +47,7 @@ export default function AdminPointsPage() {
           onChange={(event) => setSearch(event.target.value)}
         />
       </label>
-      <div className="h-72 overflow-hidden rounded-xl border border-gray-200 lg:h-96">
+      <div className="h-72 overflow-hidden rounded-card border border-bordure lg:h-96">
         <PointsMap
           points={points ?? []}
           onSelect={(id) => router.push(`/admin/points/${id}`)}
@@ -61,26 +61,24 @@ export default function AdminPointsPage() {
             <h2 className="font-bold">{point.label}</h2>
             <span
               className={`${badgeClass} shrink-0 ${
-                point.is_active
-                  ? "bg-emerald-100 text-emerald-800"
-                  : "bg-gray-200 text-gray-600"
+                point.is_active ? "bg-pale text-liane" : "bg-bordure text-gris"
               }`}
             >
               {point.is_active ? "Actif" : "Désactivé"}
             </span>
           </div>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gris">
             {kindLabel(point.kind)}
             {(point.zip_code || point.city) &&
               ` · ${point.zip_code} ${point.city}`}
           </p>
           <div className="flex flex-wrap items-center gap-2">
             {originLabel(point) && (
-              <span className={`${badgeClass} bg-amber-100 text-amber-900`}>
+              <span className={`${badgeClass} bg-jaune-pale text-encre`}>
                 {originLabel(point)}
               </span>
             )}
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-gris">
               {point.lianes.length === 0
                 ? "Aucune liane ne s'y arrête"
                 : `Arrêt de ${lianeCountLabel(point.lianes.length)} : ${point.lianes.join(", ")}`}

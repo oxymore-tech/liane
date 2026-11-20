@@ -39,7 +39,10 @@ export default function EditPointPage() {
     return (
       <Card className="flex flex-col gap-2">
         <p>Ce point est introuvable.</p>
-        <Link href="/admin/points" className="font-semibold text-emerald-700">
+        <Link
+          href="/admin/points"
+          className="font-semibold text-liane underline underline-offset-4"
+        >
           Retour aux points
         </Link>
       </Card>

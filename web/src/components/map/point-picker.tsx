@@ -8,7 +8,7 @@ import {
   NavigationControl,
 } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { DEFAULT_VIEW, LIANE_COLOR, mapStyle } from "./map-style";
+import { DEFAULT_VIEW, mapColors, mapStyle } from "./map-style";
 import { RallyingPointsLayer } from "./rallying-points-layer";
 
 type Place = { lat: number; lng: number };
@@ -60,7 +60,7 @@ export default function PointPicker({
           longitude={position.lng}
           latitude={position.lat}
           anchor="bottom"
-          color={LIANE_COLOR}
+          color={mapColors().liane}
           draggable
           onDragEnd={(event) => onChange(event.lngLat)}
         />
