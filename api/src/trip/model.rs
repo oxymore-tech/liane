@@ -1,7 +1,10 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
+use sqlx::types::Json;
 use uuid::Uuid;
+
+use crate::trip::proof::ProofDetail;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, sqlx::Type)]
 #[sqlx(type_name = "VARCHAR")]
@@ -206,7 +209,7 @@ pub struct PassengerRow {
     pub distance_meters: i32,
     pub indicative_contribution_cents: Option<i32>,
     pub proof_class: Option<ProofClass>,
-    pub proof_detail: Option<serde_json::Value>,
+    pub proof_detail: Option<Json<ProofDetail>>,
 }
 
 /// `attestation` n'est renseignée que pour le conducteur, le passager lui-même et un administrateur.
@@ -271,7 +274,7 @@ pub struct AdminProof {
     pub distance_meters: i32,
     pub indicative_contribution_cents: Option<i32>,
     pub proof_class: Option<ProofClass>,
-    pub proof_detail: Option<serde_json::Value>,
+    pub proof_detail: Option<ProofDetail>,
 }
 
 #[derive(Debug, Serialize)]

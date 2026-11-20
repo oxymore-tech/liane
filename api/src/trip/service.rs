@@ -1,4 +1,5 @@
 use chrono::{DateTime, Utc};
+use sqlx::types::Json;
 use sqlx::{FromRow, PgPool};
 use uuid::Uuid;
 
@@ -612,7 +613,7 @@ pub async fn list_for_admin(db: &PgPool, admin_id: &Uuid) -> Result<Vec<AdminTri
                 distance_meters: row.distance_meters,
                 indicative_contribution_cents: row.indicative_contribution_cents,
                 proof_class: row.proof_class,
-                proof_detail: row.proof_detail,
+                proof_detail: row.proof_detail.map(|Json(detail)| detail),
             })
             .collect();
         admin_trips.push(AdminTrip { trip, proofs });

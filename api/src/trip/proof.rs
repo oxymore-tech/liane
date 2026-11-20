@@ -7,13 +7,13 @@
 //! par numéro de téléphone, et le conducteur ne peut pas s'inscrire comme passager de son trajet.
 
 use chrono::{DateTime, Utc};
-use serde::Serialize;
-use serde_json::{Value, json};
+use serde::{Deserialize, Serialize};
+use sqlx::types::Json;
 use sqlx::{FromRow, PgPool};
 use uuid::Uuid;
 
 use crate::error::Result;
-use crate::trip::model::{GestureKind, GestureRow, PositionStatus, ProofClass};
+use crate::trip::model::{GestureKind, GestureRow, PositionStatus, ProofClass, TripRole};
 use crate::trip::rules::{END_CLOSES_AFTER_SECONDS, indicative_contribution_cents};
 use crate::user::identity::{identity_key, phone_trunc};
 
@@ -22,6 +22,53 @@ use crate::user::identity::{identity_key, phone_trunc};
 pub const FAR_FROM_STOP_METERS: i32 = 2_000;
 /// De même pour un trajet déclaré terminé moins d'une minute après son début.
 pub const MIN_PLAUSIBLE_DURATION_SECONDS: i64 = 60;
+
+/// Une déclaration invraisemblable, signalée dans la preuve sans changer la classe.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ProofWarning {
+    DriverStartFarFromStop,
+    DriverEndFarFromStop,
+    DriverTripTooShort,
+    PassengerStartFarFromStop,
+    PassengerEndFarFromStop,
+    PassengerTripTooShort,
+}
+
+/// Un geste tel que la preuve le retient. La position elle-même n'y figure pas.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct GestureProof {
+    pub recorded_at: DateTime<Utc>,
+    pub position_status: PositionStatus,
+    pub accuracy_meters: Option<f32>,
+    pub distance_to_stop_meters: Option<i32>,
+    pub far_from_stop: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct OccupantProof {
+    pub attested: bool,
+    pub start: Option<GestureProof>,
+    pub end: Option<GestureProof>,
+}
+
+/// La mise en relation : l'inscription du passager au trajet.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ConnectionProof {
+    pub attested: bool,
+    pub booked_at: DateTime<Utc>,
+}
+
+/// Ce qui justifie la classe de preuve (colonne `trip_member.proof_detail`).
+/// `far_from_stop_meters` : le seuil appliqué au moment du calcul.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ProofDetail {
+    pub connection: ConnectionProof,
+    pub driver: OccupantProof,
+    pub passenger: OccupantProof,
+    pub distinct_identities: bool,
+    pub warnings: Vec<ProofWarning>,
+    pub far_from_stop_meters: i32,
+}
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Occupant<'a> {
@@ -49,34 +96,47 @@ impl<'a> Occupant<'a> {
         has_position(self.start) && has_position(self.end)
     }
 
-    fn warnings(&self, who: &str) -> Vec<String> {
+    fn warnings(&self, role: TripRole) -> Vec<ProofWarning> {
+        let (start_far, end_far, too_short) = match role {
+            TripRole::Driver => (
+                ProofWarning::DriverStartFarFromStop,
+                ProofWarning::DriverEndFarFromStop,
+                ProofWarning::DriverTripTooShort,
+            ),
+            TripRole::Passenger => (
+                ProofWarning::PassengerStartFarFromStop,
+                ProofWarning::PassengerEndFarFromStop,
+                ProofWarning::PassengerTripTooShort,
+            ),
+        };
         let mut warnings = Vec::new();
-        for (gesture, name) in [(self.start, "Start"), (self.end, "End")] {
-            if gesture.is_some_and(is_far_from_stop) {
-                warnings.push(format!("{who}{name}FarFromStop"));
-            }
+        if self.start.is_some_and(is_far_from_stop) {
+            warnings.push(start_far);
+        }
+        if self.end.is_some_and(is_far_from_stop) {
+            warnings.push(end_far);
         }
         if let (Some(start), Some(end)) = (self.start, self.end)
             && (end.recorded_at - start.recorded_at).num_seconds() < MIN_PLAUSIBLE_DURATION_SECONDS
         {
-            warnings.push(format!("{who}TripTooShort"));
+            warnings.push(too_short);
         }
         warnings
     }
 
-    fn detail(&self) -> Value {
-        json!({
-            "attested": self.is_attested(),
-            "start": self.start.map(gesture_detail),
-            "end": self.end.map(gesture_detail),
-        })
+    fn detail(&self) -> OccupantProof {
+        OccupantProof {
+            attested: self.is_attested(),
+            start: self.start.map(gesture_detail),
+            end: self.end.map(gesture_detail),
+        }
     }
 }
 
 #[derive(Debug, PartialEq)]
 pub struct Proof {
     pub class: ProofClass,
-    pub detail: Value,
+    pub detail: ProofDetail,
 }
 
 pub fn assess(driver: Occupant, passenger: Occupant, booked_at: DateTime<Utc>) -> Proof {
@@ -85,19 +145,22 @@ pub fn assess(driver: Occupant, passenger: Occupant, booked_at: DateTime<Utc>) -
         (true, false) | (false, true) => ProofClass::B,
         (false, false) => ProofClass::A,
     };
-    let mut warnings = driver.warnings("Driver");
-    warnings.extend(passenger.warnings("Passenger"));
+    let mut warnings = driver.warnings(TripRole::Driver);
+    warnings.extend(passenger.warnings(TripRole::Passenger));
 
     Proof {
         class,
-        detail: json!({
-            "connection": { "attested": true, "booked_at": booked_at },
-            "driver": driver.detail(),
-            "passenger": passenger.detail(),
-            "distinct_identities": true,
-            "warnings": warnings,
-            "far_from_stop_meters": FAR_FROM_STOP_METERS,
-        }),
+        detail: ProofDetail {
+            connection: ConnectionProof {
+                attested: true,
+                booked_at,
+            },
+            driver: driver.detail(),
+            passenger: passenger.detail(),
+            distinct_identities: true,
+            warnings,
+            far_from_stop_meters: FAR_FROM_STOP_METERS,
+        },
     }
 }
 
@@ -107,14 +170,14 @@ fn is_far_from_stop(gesture: &GestureRow) -> bool {
         .is_some_and(|distance| distance > FAR_FROM_STOP_METERS)
 }
 
-fn gesture_detail(gesture: &GestureRow) -> Value {
-    json!({
-        "recorded_at": gesture.recorded_at,
-        "position_status": gesture.position_status,
-        "accuracy_meters": gesture.accuracy_meters,
-        "distance_to_stop_meters": gesture.distance_to_stop_meters,
-        "far_from_stop": is_far_from_stop(gesture),
-    })
+fn gesture_detail(gesture: &GestureRow) -> GestureProof {
+    GestureProof {
+        recorded_at: gesture.recorded_at,
+        position_status: gesture.position_status,
+        accuracy_meters: gesture.accuracy_meters,
+        distance_to_stop_meters: gesture.distance_to_stop_meters,
+        far_from_stop: is_far_from_stop(gesture),
+    }
 }
 
 pub async fn find_gestures(db: &PgPool, trip_id: &Uuid) -> Result<Vec<GestureRow>> {
@@ -169,7 +232,7 @@ pub async fn refresh(db: &PgPool, trip_id: &Uuid) -> Result<()> {
         .bind(trip_id)
         .bind(passenger_id)
         .bind(proof.class)
-        .bind(&proof.detail)
+        .bind(Json(&proof.detail))
         .bind(indicative_contribution_cents(
             *distance_meters,
             passengers.len() as i64,
@@ -200,7 +263,7 @@ struct ExportRow {
     seat_count: i32,
     distance_meters: i32,
     proof_class: ProofClass,
-    proof_detail: Option<Value>,
+    proof_detail: Option<Json<ProofDetail>>,
     indicative_contribution_cents: Option<i32>,
     contribution_cents: Option<i32>,
     driver_revenue_cents: Option<i32>,
@@ -232,8 +295,25 @@ const REGISTRY_MIN_DISTANCE_METERS: i32 = 1_000;
 #[derive(Debug, Serialize)]
 pub struct ExportedJourney {
     pub journey: Option<RegistryJourney>,
-    pub missing: Vec<&'static str>,
+    pub missing: Vec<MissingField>,
     pub liane: ExportedExtras,
+}
+
+/// Une donnée obligatoire du registre que l'on n'a pas, nommée par son chemin dans `journey`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+pub enum MissingField {
+    #[serde(rename = "end.datetime")]
+    EndDatetime,
+    #[serde(rename = "driver.identity")]
+    DriverIdentity,
+    #[serde(rename = "passenger.identity")]
+    PassengerIdentity,
+}
+
+/// Ce que le registre refuserait ou signalerait.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+pub enum ExportWarning {
+    DistanceUnderOneKilometer,
 }
 
 /// Schéma `acquisition:create` du registre (https://tech.covoiturage.beta.gouv.fr/source.json, version 3.4).
@@ -243,12 +323,21 @@ pub struct RegistryJourney {
     pub operator_journey_id: String,
     pub operator_trip_id: String,
     pub operator_class: ProofClass,
-    pub incentives: Vec<Value>,
+    pub incentives: Vec<RegistryIncentive>,
     pub start: RegistryTimePlace,
     pub end: RegistryTimePlace,
     pub distance: i32,
     pub driver: RegistryDriver,
     pub passenger: RegistryPassenger,
+}
+
+/// Une incitation versée pour le trajet : rang d'application, montant en centimes, SIRET de l'incitateur.
+/// Liane n'en verse aucune : la liste part vide.
+#[derive(Debug, Serialize)]
+pub struct RegistryIncentive {
+    pub index: u32,
+    pub amount: u32,
+    pub siret: String,
 }
 
 /// `datetime` : UTC, à la seconde (`2026-11-16T06:30:00Z`).
@@ -309,7 +398,6 @@ pub struct DeclaredGestures {
     pub end: Option<TimePlace>,
 }
 
-/// `warnings` : ce que le registre refuserait ou signalerait (`DistanceUnderOneKilometer`).
 #[derive(Debug, Serialize)]
 pub struct ExportedExtras {
     pub trip_id: Uuid,
@@ -325,8 +413,8 @@ pub struct ExportedExtras {
     pub driver: DeclaredGestures,
     pub passenger: DeclaredGestures,
     pub indicative_contribution_cents: Option<i32>,
-    pub proof_detail: Option<Value>,
-    pub warnings: Vec<&'static str>,
+    pub proof_detail: Option<ProofDetail>,
+    pub warnings: Vec<ExportWarning>,
 }
 
 /// Les couples des trajets terminés ou périmés pour lesquels au moins un des deux occupants a déclaré
@@ -510,17 +598,17 @@ fn to_journey(row: ExportRow) -> ExportedJourney {
 
     let mut missing = Vec::new();
     if end_time.is_none() {
-        missing.push("end.datetime");
+        missing.push(MissingField::EndDatetime);
     }
     if driver.is_none() {
-        missing.push("driver.identity");
+        missing.push(MissingField::DriverIdentity);
     }
     if passenger.is_none() {
-        missing.push("passenger.identity");
+        missing.push(MissingField::PassengerIdentity);
     }
     let mut warnings = Vec::new();
     if row.distance_meters < REGISTRY_MIN_DISTANCE_METERS {
-        warnings.push("DistanceUnderOneKilometer");
+        warnings.push(ExportWarning::DistanceUnderOneKilometer);
     }
 
     let journey = match (end_time, driver, passenger) {
@@ -570,7 +658,7 @@ fn to_journey(row: ExportRow) -> ExportedJourney {
             driver: driver_gestures,
             passenger: passenger_gestures,
             indicative_contribution_cents: row.indicative_contribution_cents,
-            proof_detail: row.proof_detail,
+            proof_detail: row.proof_detail.map(|Json(detail)| detail),
             warnings,
         },
     }
@@ -619,9 +707,9 @@ mod tests {
         ];
         let proof = class_of((&journey, Uuid::nil()), (&journey, Uuid::nil()));
         assert_eq!(proof.class, ProofClass::C);
-        assert_eq!(proof.detail["driver"]["attested"], true);
-        assert_eq!(proof.detail["passenger"]["attested"], true);
-        assert_eq!(proof.detail["warnings"], json!([]));
+        assert!(proof.detail.driver.attested);
+        assert!(proof.detail.passenger.attested);
+        assert_eq!(proof.detail.warnings, vec![]);
     }
 
     #[test]
@@ -652,9 +740,10 @@ mod tests {
         ];
         let proof = class_of((&denied, Uuid::nil()), (&[], Uuid::nil()));
         assert_eq!(proof.class, ProofClass::A);
-        assert_eq!(proof.detail["connection"]["attested"], true);
-        assert_eq!(proof.detail["driver"]["start"]["position_status"], "Denied");
-        assert!(proof.detail["passenger"]["start"].is_null());
+        assert!(proof.detail.connection.attested);
+        let driver_start = proof.detail.driver.start.unwrap();
+        assert_eq!(driver_start.position_status, PositionStatus::Denied);
+        assert_eq!(proof.detail.passenger.start, None);
     }
 
     #[test]
@@ -673,11 +762,51 @@ mod tests {
         let proof = class_of((&driver, Uuid::nil()), (&passenger, Uuid::nil()));
         assert_eq!(proof.class, ProofClass::C);
         assert_eq!(
-            proof.detail["warnings"],
-            json!(["DriverEndFarFromStop", "PassengerTripTooShort"])
+            proof.detail.warnings,
+            vec![
+                ProofWarning::DriverEndFarFromStop,
+                ProofWarning::PassengerTripTooShort
+            ]
         );
-        assert_eq!(proof.detail["driver"]["end"]["far_from_stop"], true);
-        assert_eq!(proof.detail["passenger"]["start"]["far_from_stop"], false);
+        assert!(proof.detail.driver.end.unwrap().far_from_stop);
+        assert!(!proof.detail.passenger.start.unwrap().far_from_stop);
+    }
+
+    #[test]
+    fn a_detail_stored_before_it_was_typed_is_read_back() {
+        let stored = r#"{
+            "connection": { "attested": true, "booked_at": "2026-11-15T18:02:11.123456Z" },
+            "driver": {
+                "attested": false,
+                "start": {
+                    "recorded_at": "2026-11-16T06:31:00.500Z",
+                    "position_status": "Granted",
+                    "accuracy_meters": 12.300000190734863,
+                    "distance_to_stop_meters": 2001,
+                    "far_from_stop": true
+                },
+                "end": {
+                    "recorded_at": "2026-11-16T07:02:00Z",
+                    "position_status": "Denied",
+                    "accuracy_meters": null,
+                    "distance_to_stop_meters": null,
+                    "far_from_stop": false
+                }
+            },
+            "passenger": { "attested": false, "start": null, "end": null },
+            "distinct_identities": true,
+            "warnings": ["DriverStartFarFromStop"],
+            "far_from_stop_meters": 2000
+        }"#;
+        let detail: ProofDetail = serde_json::from_str(stored).unwrap();
+        assert_eq!(detail.warnings, vec![ProofWarning::DriverStartFarFromStop]);
+        let start = detail.driver.start.clone().unwrap();
+        assert_eq!(start.accuracy_meters, Some(12.3));
+        assert_eq!(detail.passenger.start, None);
+
+        let written = serde_json::to_value(&detail).unwrap();
+        let expected: serde_json::Value = serde_json::from_str(stored).unwrap();
+        assert_eq!(written, expected);
     }
 
     #[test]
@@ -700,6 +829,6 @@ mod tests {
         ];
         let proof = class_of((&gestures, driver_id), (&gestures, passenger_id));
         assert_eq!(proof.class, ProofClass::B);
-        assert_eq!(proof.detail["passenger"]["attested"], false);
+        assert!(!proof.detail.passenger.attested);
     }
 }
