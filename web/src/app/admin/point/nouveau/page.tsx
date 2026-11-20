@@ -18,7 +18,7 @@ export default function NewPointPage() {
       return saveErrorMessage(err);
     }
     await queryClient.invalidateQueries();
-    router.push("/admin/points");
+    router.push("/admin/point");
     return null;
   };
 

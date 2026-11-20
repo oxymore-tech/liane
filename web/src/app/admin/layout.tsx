@@ -7,10 +7,10 @@ import { useAppContext } from "@/components/context-provider";
 import { buttonClass, Card, Page, Tabs } from "@/components/ui";
 
 const TABS = [
-  { href: "/admin/lianes", label: "Lianes" },
-  { href: "/admin/points", label: "Points" },
-  { href: "/admin/trajets", label: "Trajets" },
-  { href: "/admin/signalements", label: "Signalements" },
+  { href: "/admin/liane", label: "Lianes" },
+  { href: "/admin/point", label: "Points" },
+  { href: "/admin/trajet", label: "Trajets" },
+  { href: "/admin/signalement", label: "Signalements" },
 ];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {

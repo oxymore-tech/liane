@@ -442,7 +442,7 @@ export default function TripPage() {
   }
   if (isError) {
     return (
-      <Page title="Trajet" backHref="/mes-trajets" backLabel="Mes trajets">
+      <Page title="Trajet" backHref="/trajet" backLabel="Mes trajets">
         <Card>
           Ce trajet n'existe pas, ou il n'est visible que des membres de sa
           liane.

@@ -79,7 +79,7 @@ export default function AdminLianesPage() {
 
   return (
     <>
-      <Link href="/admin/lianes/nouvelle" className={buttonClass("primary")}>
+      <Link href="/admin/liane/nouvelle" className={buttonClass("primary")}>
         Nouvelle liane
       </Link>
       {error && <Notice>{error}</Notice>}
@@ -116,7 +116,7 @@ export default function AdminLianesPage() {
           )}
           <div className="flex flex-wrap gap-2">
             <Link
-              href={`/admin/lianes/${liane.id}`}
+              href={`/admin/liane/${liane.id}`}
               className={buttonClass("secondary")}
             >
               Modifier

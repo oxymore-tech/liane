@@ -439,14 +439,11 @@ export default function MapView() {
         <Link href="/recherche" className={navActionClass}>
           Rechercher
         </Link>
-        <Link
-          href={user ? "/mes-lianes" : "/connexion"}
-          className={navActionClass}
-        >
+        <Link href={user ? "/liane" : "/connexion"} className={navActionClass}>
           {user ? "Mes lianes" : "Connexion"}
         </Link>
         {user?.is_admin && (
-          <Link href="/admin/lianes" className={navActionClass}>
+          <Link href="/admin/liane" className={navActionClass}>
             Admin
           </Link>
         )}

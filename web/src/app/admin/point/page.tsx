@@ -40,7 +40,7 @@ export default function AdminPointsPage() {
 
   return (
     <>
-      <Link href="/admin/points/nouveau" className={buttonClass("primary")}>
+      <Link href="/admin/point/nouveau" className={buttonClass("primary")}>
         Ajouter un point
       </Link>
       <label className={labelClass}>
@@ -56,7 +56,7 @@ export default function AdminPointsPage() {
       <div className="h-72 overflow-hidden rounded-card border border-bordure lg:h-96">
         <PointsMap
           points={points ?? []}
-          onSelect={(id) => router.push(`/admin/points/${id}`)}
+          onSelect={(id) => router.push(`/admin/point/${id}`)}
         />
       </div>
       {isError && <Notice>La recherche n'a pas fonctionné.</Notice>}
@@ -91,7 +91,7 @@ export default function AdminPointsPage() {
             </span>
           </div>
           <Link
-            href={`/admin/points/${point.id}`}
+            href={`/admin/point/${point.id}`}
             className={`${buttonClass("secondary")} self-start`}
           >
             Modifier

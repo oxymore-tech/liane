@@ -138,14 +138,14 @@ try {
   problems.push("le message de Denis n'est pas arrivé en direct chez Paule");
 }
 await shot(paule, "09-messages-recu-en-direct");
-await quentin.goto(BASE + "/mes-lianes");
+await quentin.goto(BASE + "/liane");
 await quentin.getByRole("heading", { name: "Florac – Mende" }).waitFor();
 const unread = await quentin.getByText(/messages? non lus?/).count();
 if (unread === 0) problems.push("pas de pastille de non-lus dans « Mes lianes »");
 await fullShot(quentin, "10-mes-lianes-non-lus");
 await quentin.getByRole("link", { name: /Messages/ }).click();
 await quentin.getByText("rendez-vous devant la mairie").waitFor();
-await quentin.goto(BASE + "/mes-lianes");
+await quentin.goto(BASE + "/liane");
 await quentin.getByRole("heading", { name: "Florac – Mende" }).waitFor();
 await quentin.waitForTimeout(800);
 if ((await quentin.getByText(/messages? non lus?/).count()) !== 0) problems.push("la pastille de non-lus reste après lecture");
@@ -209,16 +209,16 @@ await driver.getByText("Ce trajet a été annulé par son conducteur.").waitFor(
 await shot(driver, "18-trajet-annule");
 
 // 10. mes trajets
-await driver.goto(BASE + "/mes-trajets");
+await driver.goto(BASE + "/trajet");
 await driver.getByRole("heading", { name: "Passés" }).waitFor();
 await fullShot(driver, "19-mes-trajets-conducteur");
-await paule.goto(BASE + "/mes-trajets");
+await paule.goto(BASE + "/trajet");
 await paule.getByRole("heading", { name: "Passés" }).waitFor();
 await fullShot(paule, "20-mes-trajets-passagere");
 
 // 11. administration : trajets, classes de preuve, export
 const admin = await newPage("admin");
-await admin.goto(BASE + "/admin/trajets");
+await admin.goto(BASE + "/admin/trajet");
 await admin.getByRole("link", { name: "Se connecter" }).click();
 await login(admin, "+33600000000", "000000");
 await admin.waitForURL(/\/admin\/trajets/);

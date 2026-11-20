@@ -38,7 +38,7 @@ export default function MyLianesPage() {
         <Card className="flex flex-col gap-3">
           <p>Connectez-vous pour retrouver vos lianes.</p>
           <Link
-            href="/connexion?retour=%2Fmes-lianes"
+            href="/connexion?retour=%2Fliane"
             className={buttonClass("primary")}
           >
             Se connecter
