@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
 
-use crate::liane::routing::RouteSource;
+use crate::liane::routing::{RouteGeometry, RouteSource};
 use crate::liane_request::model::WeekDays;
 use crate::rallying_point::model::RallyingPoint;
 use crate::user::model::{Gender, PublicUser};
@@ -51,7 +51,7 @@ pub struct Liane {
     pub is_active: bool,
     pub stops: Vec<RallyingPoint>,
     pub stop_distances: Vec<i32>,
-    pub route: Option<serde_json::Value>,
+    pub route: Option<RouteGeometry>,
     pub route_source: RouteSource,
     pub distance_meters: i32,
     pub duration_seconds: Option<i32>,
@@ -148,7 +148,7 @@ pub struct RoutePreviewInput {
 
 #[derive(Debug, Serialize)]
 pub struct RoutePreview {
-    pub route: serde_json::Value,
+    pub route: RouteGeometry,
     pub route_source: RouteSource,
     pub distance_meters: i32,
     pub duration_seconds: Option<i32>,

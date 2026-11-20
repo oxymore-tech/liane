@@ -859,7 +859,7 @@ async fn store_route(
         "#,
     )
     .bind(id)
-    .bind(route.geojson().to_string())
+    .bind(serde_json::to_string(&route.geojson())?)
     .bind(route.source)
     .bind(route.distance_meters)
     .bind(route.duration_seconds)
