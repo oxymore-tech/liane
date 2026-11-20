@@ -10,7 +10,7 @@ import {
 import type { RallyingPointInput } from "@/api/types";
 import { saveErrorMessage } from "@/components/rallying-point/labels";
 import { PointForm } from "@/components/rallying-point/point-form";
-import { Card } from "@/components/ui";
+import { Card, linkClass } from "@/components/ui";
 
 export default function EditPointPage() {
   const { id } = useParams<{ id: string }>();
@@ -39,10 +39,7 @@ export default function EditPointPage() {
     return (
       <Card className="flex flex-col gap-2">
         <p>Ce point est introuvable.</p>
-        <Link
-          href="/admin/points"
-          className="font-semibold text-liane underline underline-offset-4"
-        >
+        <Link href="/admin/points" className={linkClass}>
           Retour aux points
         </Link>
       </Card>

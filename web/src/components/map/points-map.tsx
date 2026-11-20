@@ -31,6 +31,7 @@ export default function PointsMap({
 }) {
   const mapRef = useRef<MapRef>(null);
   const [loaded, setLoaded] = useState(false);
+  const [overPoint, setOverPoint] = useState(false);
   const style = useMemo(mapStyle, []);
   const colors = mapColors();
 
@@ -75,6 +76,9 @@ export default function PointsMap({
         if (id) onSelect(id);
       }}
       onLoad={() => setLoaded(true)}
+      onMouseEnter={() => setOverPoint(true)}
+      onMouseLeave={() => setOverPoint(false)}
+      cursor={overPoint ? "pointer" : "grab"}
     >
       <NavigationControl position="top-right" showCompass={false} />
       <PlaceNamesLayer />

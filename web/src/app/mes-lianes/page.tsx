@@ -16,6 +16,8 @@ import {
   Button,
   buttonClass,
   Card,
+  Chevron,
+  linkClass,
   MascotNote,
   mutedClass,
   Page,
@@ -58,17 +60,25 @@ export default function MyLianesPage() {
       )}
       {lianes?.map((liane) => (
         <Card key={liane.id} className="flex flex-col gap-2">
-          <Link href={`/l/${liane.slug}`} className="block">
-            <h2 className="text-xl font-extrabold">{liane.name}</h2>
-            <p>
-              {sectionLabel(liane, liane.membership)} ·{" "}
-              {daysLabel(liane.membership.week_days)}
-              {liane.membership.can_drive && " · vous pouvez conduire"}
-            </p>
-            <p className={mutedClass}>
-              {memberCountLabel(liane.member_count)}
-              {!liane.is_active && " · liane désactivée"}
-            </p>
+          <Link
+            href={`/l/${liane.slug}`}
+            className="group -m-2 flex items-center gap-2 rounded-field p-2 transition-colors hover:bg-pale active:bg-pousse"
+          >
+            <span className="min-w-0 flex-1">
+              <h2 className="text-xl font-extrabold group-hover:underline">
+                {liane.name}
+              </h2>
+              <p>
+                {sectionLabel(liane, liane.membership)} ·{" "}
+                {daysLabel(liane.membership.week_days)}
+                {liane.membership.can_drive && " · vous pouvez conduire"}
+              </p>
+              <p className={mutedClass}>
+                {memberCountLabel(liane.member_count)}
+                {!liane.is_active && " · liane désactivée"}
+              </p>
+            </span>
+            <Chevron className="-rotate-90" />
           </Link>
           <Link
             href={`/l/${liane.slug}/messages`}
@@ -82,7 +92,7 @@ export default function MyLianesPage() {
       {user && <NotificationSettings />}
       {user && (
         <div className="flex min-h-11 items-center justify-between gap-3 px-1 text-sm">
-          <Link href="/profil" className="text-liane underline">
+          <Link href="/profil" className={linkClass}>
             Mon profil : {user.pseudo ?? user.phone}
           </Link>
           <Button variant="quiet" onClick={logout}>

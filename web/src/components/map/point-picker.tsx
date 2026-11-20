@@ -62,6 +62,7 @@ export default function PointPicker({
           anchor="bottom"
           color={mapColors().liane}
           draggable
+          className="cursor-move"
           onDragEnd={(event) => onChange(event.lngLat)}
         />
       )}
