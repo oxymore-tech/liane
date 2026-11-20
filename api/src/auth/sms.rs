@@ -6,7 +6,7 @@ use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Duration;
 
-use serde_json::json;
+use serde::Serialize;
 use tracing::warn;
 
 use crate::config::SmsProvider;
@@ -57,6 +57,23 @@ pub struct BrevoSmsSender {
     sender: String,
 }
 
+/// Corps de la demande d'envoi d'un SMS transactionnel.
+#[derive(Serialize)]
+struct BrevoSms<'a> {
+    sender: &'a str,
+    recipient: &'a str,
+    content: String,
+    #[serde(rename = "type")]
+    kind: BrevoSmsKind,
+    tag: &'a str,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "lowercase")]
+enum BrevoSmsKind {
+    Transactional,
+}
+
 impl BrevoSmsSender {
     pub fn new(api_url: &str, api_key: &str, sender: &str) -> Self {
         Self {
@@ -76,13 +93,13 @@ impl SmsSender for BrevoSmsSender {
                 .post(&self.api_url)
                 .timeout(SEND_TIMEOUT)
                 .header("api-key", &self.api_key)
-                .json(&json!({
-                    "sender": self.sender,
-                    "recipient": phone.trim_start_matches('+'),
-                    "content": format!("Liane : votre code de connexion est {code}"),
-                    "type": "transactional",
-                    "tag": "auth",
-                }))
+                .json(&BrevoSms {
+                    sender: &self.sender,
+                    recipient: phone.trim_start_matches('+'),
+                    content: format!("Liane : votre code de connexion est {code}"),
+                    kind: BrevoSmsKind::Transactional,
+                    tag: "auth",
+                })
                 .send()
                 .await
                 .map_err(|err| format!("SMS provider unreachable: {}", err.without_url()))?;
