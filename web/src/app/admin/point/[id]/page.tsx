@@ -31,7 +31,7 @@ export default function EditPointPage() {
       return saveErrorMessage(err);
     }
     await queryClient.invalidateQueries();
-    router.push("/admin/points");
+    router.push("/admin/point");
     return null;
   };
 
@@ -39,7 +39,7 @@ export default function EditPointPage() {
     return (
       <Card className="flex flex-col gap-2">
         <p>Ce point est introuvable.</p>
-        <Link href="/admin/points" className={linkClass}>
+        <Link href="/admin/point" className={linkClass}>
           Retour aux points
         </Link>
       </Card>

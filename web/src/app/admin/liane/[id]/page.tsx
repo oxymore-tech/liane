@@ -29,7 +29,7 @@ export default function EditLianePage() {
         : "La liane n'a pas été enregistrée. Vérifiez le nom et les arrêts.";
     }
     await queryClient.invalidateQueries();
-    router.push("/admin/lianes");
+    router.push("/admin/liane");
     return null;
   };
 
@@ -38,7 +38,7 @@ export default function EditLianePage() {
     return (
       <Card className="flex flex-col gap-2">
         <p>Cette liane est introuvable.</p>
-        <Link href="/admin/lianes" className={linkClass}>
+        <Link href="/admin/liane" className={linkClass}>
           Retour aux lianes
         </Link>
       </Card>

@@ -29,7 +29,7 @@ export default function MyTripsPage() {
         <Card className="flex flex-col gap-3">
           <p>Connectez-vous pour retrouver vos trajets.</p>
           <Link
-            href="/connexion?retour=%2Fmes-trajets"
+            href="/connexion?retour=%2Ftrajet"
             className={buttonClass("primary")}
           >
             Se connecter
@@ -49,7 +49,7 @@ export default function MyTripsPage() {
             Aucun trajet à venir. Ouvrez une de vos lianes pour proposer un
             trajet ou vous inscrire à celui d'un autre membre.
           </p>
-          <Link href="/mes-lianes" className={buttonClass("primary")}>
+          <Link href="/liane" className={buttonClass("primary")}>
             Voir mes lianes
           </Link>
         </MascotNote>

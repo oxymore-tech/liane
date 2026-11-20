@@ -144,7 +144,7 @@ await fullShot(member, "11-profil-enregistre");
 await member.goto(BASE + "/l/mende-marvejols?rejoindre=1");
 await member.getByRole("button", { name: "Rejoindre la liane" }).click();
 await member.getByText("Vous êtes membre de cette liane").waitFor();
-await member.goto(BASE + "/mes-lianes");
+await member.goto(BASE + "/liane");
 await member.getByRole("link", { name: /Mon profil/ }).click();
 await member.getByRole("button", { name: "Supprimer mon compte" }).click();
 await member.getByRole("button", { name: "Oui, supprimer définitivement" }).waitFor();

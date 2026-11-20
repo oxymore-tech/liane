@@ -14,7 +14,7 @@ export default function NewLianePage() {
     } catch {
       return "La liane n'a pas été créée. Vérifiez le nom et les arrêts.";
     }
-    router.push("/admin/lianes");
+    router.push("/admin/liane");
     return null;
   };
 

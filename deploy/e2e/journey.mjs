@@ -116,13 +116,13 @@ await main.evaluate((el) => el.scrollTo(0, el.scrollHeight));
 await shot(visitor, "07c-page-liane-bas");
 
 // 4. mes lianes
-await visitor.goto(BASE + "/mes-lianes");
+await visitor.goto(BASE + "/liane");
 await visitor.getByRole("heading", { name: "Florac – Mende" }).waitFor();
 await shot(visitor, "08-mes-lianes");
 
 // 5. administrateur : rejoint aussi, puis création d'une liane
 const admin = await newPage("admin");
-await admin.goto(BASE + "/admin/lianes");
+await admin.goto(BASE + "/admin/liane");
 await shot(admin, "09-admin-sans-compte");
 await admin.getByRole("link", { name: "Se connecter" }).click();
 await login(admin, "+33600000000", "000000");
@@ -206,7 +206,7 @@ if (/Camille|Paul M/.test(publicText)) problems.push("la page publique montre un
 log("page publique:", publicText.replace(/\n+/g, " | ").slice(0, 700));
 
 // 8. traitement du signalement
-await admin.goto(BASE + "/admin/signalements");
+await admin.goto(BASE + "/admin/signalement");
 await admin.getByRole("button", { name: "Exclure de la liane" }).waitFor();
 await shot(admin, "19-admin-signalements");
 await admin.getByRole("button", { name: "Exclure de la liane" }).click();
@@ -238,7 +238,7 @@ await leaveButton.click();
 await confirmWith(visitor, "Quitter la liane");
 await visitor.getByRole("button", { name: "Rejoindre" }).waitFor();
 await shot(visitor, "21-apres-avoir-quitte");
-await admin.goto(BASE + "/admin/lianes");
+await admin.goto(BASE + "/admin/liane");
 const again = admin.locator("section", { has: admin.getByRole("link", { name: "Essai navigateur" }) });
 await again.getByRole("button", { name: "Supprimer" }).click();
 await confirmWith(admin, "Supprimer la liane");
