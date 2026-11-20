@@ -11,6 +11,18 @@ export type RallyingPoint = {
   is_active: boolean;
 };
 
+/**
+ * Un point vu par l'administration. `source` : origine du point, absente s'il a été créé à la main.
+ * `edited_at` : dernière création ou modification à la main. `lianes` : noms des lianes qui s'y arrêtent.
+ */
+export type AdminRallyingPoint = RallyingPoint & {
+  source: string | null;
+  edited_at: string | null;
+  lianes: string[];
+};
+
+export type RallyingPointInput = Omit<RallyingPoint, "id">;
+
 export type Direction = "Outbound" | "Return" | "Both";
 
 /** « Straight » : ligne droite entre les arrêts, faute de calcul d'itinéraire. */
