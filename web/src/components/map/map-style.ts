@@ -3,9 +3,35 @@ import { MAPTILER_KEY, TILES_PATH } from "@/api/env";
 
 export const MAP_FONT = ["Noto Sans Regular"];
 export const HAS_BASEMAP = MAPTILER_KEY !== "";
-export const LIANE_COLOR = "#059669";
-export const LIANE_SELECTED_COLOR = "#7c3aed";
-export const LIANE_SHARED_CASING_COLOR = "#064e3b";
+
+type MapColors = {
+  liane: string;
+  pousse: string;
+  pierre: string;
+  encre: string;
+  gris: string;
+  white: string;
+};
+
+let colors: MapColors | null = null;
+
+/** Les couleurs de la carte sont celles du thème (`@theme` de globals.css), lues une fois dans la page. */
+export function mapColors(): MapColors {
+  if (!colors) {
+    const theme = getComputedStyle(document.documentElement);
+    const color = (name: string) =>
+      theme.getPropertyValue(`--color-${name}`).trim();
+    colors = {
+      liane: color("liane"),
+      pousse: color("pousse"),
+      pierre: color("pierre"),
+      encre: color("encre"),
+      gris: color("gris"),
+      white: color("white"),
+    };
+  }
+  return colors;
+}
 
 export const DEFAULT_VIEW = { longitude: 3.5, latitude: 44.5, zoom: 8 };
 
@@ -16,7 +42,7 @@ export const tilesUrl = (source: string) =>
 /** Sans clé MapTiler, un fond neutre avec des polices servies par l'application. */
 export function mapStyle(): string | StyleSpecification {
   if (HAS_BASEMAP) {
-    return `https://api.maptiler.com/maps/streets-v2/style.json?key=${MAPTILER_KEY}`;
+    return `https://api.maptiler.com/maps/dataviz-light/style.json?key=${MAPTILER_KEY}`;
   }
   return {
     version: 8,
@@ -26,7 +52,7 @@ export function mapStyle(): string | StyleSpecification {
       {
         id: "background",
         type: "background",
-        paint: { "background-color": "#f1f0ea" },
+        paint: { "background-color": mapColors().pierre },
       },
     ],
   };

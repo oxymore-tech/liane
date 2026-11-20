@@ -1,11 +1,12 @@
 "use client";
 
 import { Layer, Source } from "react-map-gl/maplibre";
-import { MAP_FONT, tilesUrl } from "./map-style";
+import { MAP_FONT, mapColors, tilesUrl } from "./map-style";
 
 const RALLYING_POINTS_LAYER_ID = "rallying-points-circle";
 
 export function RallyingPointsLayer() {
+  const colors = mapColors();
   return (
     <Source
       id="rallying_points"
@@ -21,9 +22,9 @@ export function RallyingPointsLayer() {
         minzoom={8}
         paint={{
           "circle-radius": ["interpolate", ["linear"], ["zoom"], 8, 3, 14, 8],
-          "circle-color": "#ffffff",
+          "circle-color": colors.white,
           "circle-stroke-width": 1.5,
-          "circle-stroke-color": "#6b7280",
+          "circle-stroke-color": colors.gris,
         }}
       />
       <Layer
@@ -40,8 +41,8 @@ export function RallyingPointsLayer() {
           "text-max-width": 8,
         }}
         paint={{
-          "text-color": "#4b5563",
-          "text-halo-color": "#ffffff",
+          "text-color": colors.gris,
+          "text-halo-color": colors.white,
           "text-halo-width": 1.2,
         }}
       />

@@ -13,8 +13,8 @@ import type { ReactNode } from "react";
 import {
   boundsOf,
   DEFAULT_VIEW,
-  LIANE_COLOR,
   MAP_FONT,
+  mapColors,
   mapStyle,
 } from "./map-style";
 import { PlaceNamesLayer } from "./place-names-layer";
@@ -37,6 +37,7 @@ export default function RoutePreview({
 }: Props) {
   const mapRef = useRef<MapRef>(null);
   const style = useMemo(mapStyle, []);
+  const colors = mapColors();
   const interactive = Boolean(onClick);
 
   const data = useMemo(
@@ -96,11 +97,18 @@ export default function RoutePreview({
       {children}
       <Source id="route-preview" type="geojson" data={data}>
         <Layer
+          id="route-preview-casing"
+          type="line"
+          filter={["==", ["geometry-type"], "LineString"]}
+          layout={{ "line-cap": "round", "line-join": "round" }}
+          paint={{ "line-color": colors.white, "line-width": 8 }}
+        />
+        <Layer
           id="route-preview-line"
           type="line"
           filter={["==", ["geometry-type"], "LineString"]}
           layout={{ "line-cap": "round", "line-join": "round" }}
-          paint={{ "line-color": LIANE_COLOR, "line-width": 4 }}
+          paint={{ "line-color": colors.liane, "line-width": 4 }}
         />
         <Layer
           id="route-preview-stops"
@@ -108,9 +116,9 @@ export default function RoutePreview({
           filter={["==", ["geometry-type"], "Point"]}
           paint={{
             "circle-radius": 10,
-            "circle-color": "#065f46",
+            "circle-color": colors.liane,
             "circle-stroke-width": 2,
-            "circle-stroke-color": "#ffffff",
+            "circle-stroke-color": colors.white,
           }}
         />
         <Layer
@@ -123,7 +131,7 @@ export default function RoutePreview({
             "text-size": 11,
             "text-allow-overlap": true,
           }}
-          paint={{ "text-color": "#ffffff" }}
+          paint={{ "text-color": colors.white }}
         />
         <Layer
           id="route-preview-labels"
@@ -139,8 +147,8 @@ export default function RoutePreview({
             "text-max-width": 8,
           }}
           paint={{
-            "text-color": "#1f2937",
-            "text-halo-color": "#ffffff",
+            "text-color": colors.encre,
+            "text-halo-color": colors.white,
             "text-halo-width": 1.5,
           }}
         />
