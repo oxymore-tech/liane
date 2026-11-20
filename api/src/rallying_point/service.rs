@@ -6,7 +6,7 @@ use uuid::Uuid;
 use crate::error::{AppError, Result};
 use crate::liane;
 use crate::rallying_point::model::{
-    AdminRallyingPoint, RallyingPoint, RallyingPointInput, RallyingPointKind,
+    AdminRallyingPoint, KindInput, RallyingPoint, RallyingPointInput, RallyingPointKind,
 };
 
 const MAX_LABEL_LENGTH: usize = 255;
@@ -339,8 +339,10 @@ fn validated(input: &RallyingPointInput) -> Result<ValidPoint<'_>> {
     if !(-90.0..=90.0).contains(&input.lat) || !(-180.0..=180.0).contains(&input.lng) {
         return Err(invalid("InvalidPosition"));
     }
-    let kind = serde_json::from_value(serde_json::Value::String(input.kind.clone()))
-        .map_err(|_| invalid("InvalidKind"))?;
+    let kind = match &input.kind {
+        KindInput::Known(kind) => kind.clone(),
+        KindInput::Unknown(_) => return Err(invalid("InvalidKind")),
+    };
     let (address, zip_code, city) = (
         input.address.trim(),
         input.zip_code.trim(),
@@ -377,7 +379,7 @@ mod tests {
             label: " Parking de la gare ".to_string(),
             lat: 44.52,
             lng: 3.5,
-            kind: "Parking".to_string(),
+            kind: KindInput::Known(RallyingPointKind::Parking),
             address: String::new(),
             zip_code: "48000".to_string(),
             city: "Mende".to_string(),
@@ -413,7 +415,10 @@ mod tests {
         assert_eq!(with(|p| p.lat = 91.0), "InvalidPosition");
         assert_eq!(with(|p| p.lng = -180.5), "InvalidPosition");
         assert_eq!(with(|p| p.lat = f64::NAN), "InvalidPosition");
-        assert_eq!(with(|p| p.kind = "Gare".to_string()), "InvalidKind");
+        assert_eq!(
+            with(|p| p.kind = KindInput::Unknown("Gare".to_string())),
+            "InvalidKind"
+        );
         assert_eq!(with(|p| p.zip_code = "x".repeat(11)), "InvalidZipCode");
         assert_eq!(with(|p| p.city = "x".repeat(101)), "InvalidCity");
         assert_eq!(with(|p| p.place_count = Some(-1)), "InvalidPlaceCount");
