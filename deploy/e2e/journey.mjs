@@ -16,7 +16,6 @@ async function newPage(label) {
   page.on("pageerror", (e) => problems.push(`[${label}] pageerror: ${e.message}`));
   page.on("requestfailed", (r) => { if (r.failure()?.errorText !== "net::ERR_ABORTED") problems.push(`[${label}] requestfailed: ${r.url()} ${r.failure()?.errorText}`); });
   page.on("response", (r) => { if (r.status() >= 400) problems.push(`[${label}] http ${r.status()} ${r.request().method()} ${r.url()}`); });
-  page.on("dialog", (d) => d.accept());
   return page;
 }
 const shot = async (page, name) => { await page.waitForTimeout(1200); await page.screenshot({ path: `${OUT}/${name}.png` }); log("capture", name); };
@@ -31,6 +30,18 @@ async function login(page, phone, code) {
   await page.getByRole("button", { name: "Recevoir un code par SMS" }).click();
   await page.getByLabel("Code reçu par SMS").waitFor();
   await page.getByLabel("Code reçu par SMS").fill(code ?? (await smsCode(phone)));
+}
+
+// Répond à une boîte de confirmation de l'application par son bouton d'action.
+async function confirmWith(page, name, role = "alertdialog") {
+  const dialog = page.getByRole(role);
+  await dialog.waitFor();
+  await dialog.getByRole("button", { name, exact: true }).click();
+}
+// Choisit une option d'une liste déroulante désignée par son libellé.
+async function choose(page, label, option) {
+  await page.getByLabel(label).click();
+  await page.getByRole("option", { name: option, exact: true }).click();
 }
 
 // 1. visiteur anonyme : carte
@@ -68,8 +79,24 @@ await visitor.getByRole("button", { name: "Se connecter" }).click();
 await visitor.waitForURL(/\/l\/florac-mende/);
 await visitor.getByLabel("Votre prénom", { exact: true }).fill("Camille");
 await visitor.getByLabel(/^Votre nom/).fill("Durand");
-await visitor.getByLabel("Je monte à").selectOption({ label: "Ispagnac" });
-await visitor.getByLabel("Je descends à").selectOption({ label: "Mende" });
+// la montée est choisie au clavier : Espace ouvre la liste, la flèche descend d'un arrêt, Entrée le retient
+const boardField = visitor.getByLabel("Je monte à");
+await boardField.focus();
+await visitor.keyboard.press("Space");
+await visitor.getByRole("option", { name: "Mairie de Florac-Trois-Rivières", exact: true }).waitFor();
+if (!/Florac-Trois-Rivières/.test(await visitor.getByRole("option", { selected: true }).innerText())) problems.push("liste déroulante : l'arrêt retenu n'est pas marqué à l'ouverture");
+await shot(visitor, "05b-liste-deroulante-ouverte");
+await visitor.keyboard.press("ArrowDown");
+await visitor.keyboard.press("Enter");
+await visitor.getByRole("option").first().waitFor({ state: "detached" });
+if (!/Mairie d'Ispagnac/.test(await boardField.innerText())) problems.push("liste déroulante : le clavier n'a pas retenu Ispagnac");
+if (!(await boardField.evaluate((el) => el === document.activeElement))) problems.push("liste déroulante : le focus n'est pas revenu sur le champ");
+await boardField.press("Space");
+await visitor.getByRole("option").first().waitFor();
+await visitor.keyboard.press("Escape");
+await visitor.getByRole("option").first().waitFor({ state: "detached" });
+if (!/Mairie d'Ispagnac/.test(await boardField.innerText())) problems.push("liste déroulante : Échap a changé le choix");
+await choose(visitor, "Je descends à", "Mairie de Mende");
 await visitor.getByRole("button", { name: "Sam" }).click();
 await visitor.getByLabel("Je peux conduire").check();
 await visitor.getByLabel("Départ vers (facultatif)").fill("07:30");
@@ -106,13 +133,13 @@ await shot(admin, "10-admin-lianes");
 
 await admin.getByRole("link", { name: "Nouvelle liane" }).click();
 await admin.getByLabel("Ajouter un arrêt").fill("Marvejols");
-await admin.getByRole("button", { name: /Mairie de Marvejols/ }).click();
+await admin.getByRole("option", { name: /Mairie de Marvejols/ }).click();
 await admin.getByLabel("Ajouter un arrêt").fill("Chanac");
-await admin.getByRole("button", { name: /Mairie de Chanac/ }).click();
+await admin.getByRole("option", { name: /Mairie de Chanac/ }).click();
 await admin.getByLabel("Ajouter un arrêt").fill("Flor");
-await admin.getByRole("button", { name: /Florac/ }).first().waitFor();
+await admin.getByRole("option", { name: /Florac/ }).first().waitFor();
 await shot(admin, "11-admin-recherche-arret");
-await admin.getByRole("button", { name: /Florac/ }).first().click();
+await admin.getByRole("option", { name: /Florac/ }).first().click();
 // sélection sur la carte : toucher des points jusqu'à obtenir un 4e arrêt
 await admin.locator(".maplibregl-canvas").scrollIntoViewIfNeeded();
 await admin.waitForTimeout(2500);
@@ -183,18 +210,38 @@ await admin.goto(BASE + "/admin/signalements");
 await admin.getByRole("button", { name: "Exclure de la liane" }).waitFor();
 await shot(admin, "19-admin-signalements");
 await admin.getByRole("button", { name: "Exclure de la liane" }).click();
+await confirmWith(admin, "Exclure de la liane");
 await admin.getByText("Aucun signalement à traiter.").waitFor();
 await shot(admin, "20-admin-signalements-vide");
 await visitor.goto(BASE + "/l/florac-mende");
 await visitor.getByText("1 membre", { exact: true }).waitFor();
 
 // 9. nettoyage par l'interface : Camille quitte, l'admin supprime la liane d'essai
-await visitor.getByRole("button", { name: "Quitter la liane" }).click();
+// la boîte de confirmation au clavier : Entrée l'ouvre, le focus y reste, Échap la ferme et rend le focus
+const leaveButton = visitor.getByRole("button", { name: "Quitter la liane" });
+await leaveButton.focus();
+await visitor.keyboard.press("Enter");
+const leaveDialog = visitor.getByRole("alertdialog", { name: "Quitter la liane « Florac – Mende » ?" });
+await leaveDialog.waitFor();
+const focusInDialog = () => leaveDialog.evaluate((el) => el.contains(document.activeElement));
+if (!(await focusInDialog())) problems.push("boîte de confirmation : le focus n'y entre pas à l'ouverture");
+for (let i = 0; i < 4; i++) {
+  await visitor.keyboard.press("Tab");
+  if (!(await focusInDialog())) problems.push("boîte de confirmation : la tabulation sort de la boîte");
+}
+await shot(visitor, "20b-confirmation-quitter");
+await visitor.keyboard.press("Escape");
+await leaveDialog.waitFor({ state: "detached" });
+if (!(await leaveButton.evaluate((el) => el === document.activeElement))) problems.push("boîte de confirmation : le focus n'est pas rendu au bouton d'origine");
+await visitor.getByText("Vous êtes membre de cette liane").waitFor();
+await leaveButton.click();
+await confirmWith(visitor, "Quitter la liane");
 await visitor.getByRole("button", { name: "Rejoindre" }).waitFor();
 await shot(visitor, "21-apres-avoir-quitte");
 await admin.goto(BASE + "/admin/lianes");
 const again = admin.locator("section", { has: admin.getByRole("link", { name: "Essai navigateur" }) });
 await again.getByRole("button", { name: "Supprimer" }).click();
+await confirmWith(admin, "Supprimer la liane");
 await admin.getByRole("link", { name: "Essai navigateur" }).waitFor({ state: "detached" });
 
 await browser.close();
