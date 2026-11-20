@@ -69,6 +69,8 @@ sont alors des lignes droites. Pour un OSRM local, copier les fichiers `occitani
 `liane seed` charge les points de ralliement de test (sept départements d'Occitanie). Pour la France entière
 (36 000 points, 2 secondes) : `POST /api/rallying_point/generate` avec un compte administrateur. La commande
 peut être relancée : elle met à jour les points par leur clé d'origine sans changer leurs identifiants.
+Un administrateur ajoute ou modifie un point dans `/admin/points` (`POST /api/rallying_point`,
+`PUT /api/rallying_point/{id}`) : la régénération ne touche plus à ce point.
 
 Vérifications :
 

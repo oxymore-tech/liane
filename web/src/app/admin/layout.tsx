@@ -8,6 +8,7 @@ import { buttonClass, Card, Page } from "@/components/ui";
 
 const TABS = [
   { href: "/admin/lianes", label: "Lianes" },
+  { href: "/admin/points", label: "Points" },
   { href: "/admin/trajets", label: "Trajets" },
   { href: "/admin/signalements", label: "Signalements" },
 ];
@@ -48,7 +49,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   return (
     <Page title="Administration">
-      <nav className="flex gap-2">
+      <nav className="flex flex-wrap gap-2">
         {TABS.map((tab) => (
           <Link
             key={tab.href}
