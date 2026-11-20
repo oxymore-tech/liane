@@ -61,8 +61,10 @@ L'API lit `api/.env`, puis, en développement, `deploy/.env` pour ce qui n'y fig
 le code de connexion est écrit dans le journal de l'API. Le compte de démonstration (`+33600000000`, code
 `000000`) est administrateur.
 
-Tracé routier (facultatif) : copier les fichiers `occitanie.osrm*` dans `data/osrm`, puis dans `deploy/.env`
-mettre `COMPOSE_PROFILES=osrm` et `OSRM_URL=http://localhost:5001`, et relancer `liane start` et l'API.
+Tracé routier : `liane start` ouvre un tunnel SSH de `localhost:5001` vers le serveur OSRM de gjini.co
+(`OSRM_TUNNEL` dans `deploy/.env`), et `liane stop` le ferme. Sans accès SSH, vider `OSRM_TUNNEL` : les tracés
+sont alors des lignes droites. Pour un OSRM local, copier les fichiers `occitanie.osrm*` dans `data/osrm`, vider
+`OSRM_TUNNEL` et mettre `COMPOSE_PROFILES=osrm`.
 
 `liane seed` charge les points de ralliement de test (sept départements d'Occitanie). Pour la France entière
 (36 000 points, 2 secondes) : `POST /api/rallying_point/generate` avec un compte administrateur. La commande

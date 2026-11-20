@@ -19,3 +19,6 @@ deploy/service-account.json
 
 # SQLx offline mode
 /api/.sqlx/
+
+# API
+api/.env
