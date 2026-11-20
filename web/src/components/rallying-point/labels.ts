@@ -1,7 +1,7 @@
 import { BadRequest, Conflict } from "@/api/exception";
-import type { AdminRallyingPoint } from "@/api/types";
+import type { AdminRallyingPoint, RallyingPointKind } from "@/api/types";
 
-export const KIND_LABELS: Record<string, string> = {
+export const KIND_LABELS: Record<RallyingPointKind, string> = {
   CarpoolArea: "Aire de covoiturage",
   Parking: "Parking",
   RelayParking: "Parking relais",
@@ -12,7 +12,10 @@ export const KIND_LABELS: Record<string, string> = {
   AutoStop: "Auto-stop",
 };
 
-export const kindLabel = (kind: string) => KIND_LABELS[kind] ?? kind;
+export const kindLabel = (kind: RallyingPointKind) => KIND_LABELS[kind];
+
+export const isKind = (value: string): value is RallyingPointKind =>
+  value in KIND_LABELS;
 
 export const originLabel = (point: AdminRallyingPoint) =>
   point.source === null

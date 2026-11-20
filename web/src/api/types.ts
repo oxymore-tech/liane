@@ -1,9 +1,19 @@
+export type RallyingPointKind =
+  | "CarpoolArea"
+  | "HighwayExit"
+  | "Parking"
+  | "Supermarket"
+  | "RelayParking"
+  | "AbandonedRoad"
+  | "AutoStop"
+  | "TownHall";
+
 export type RallyingPoint = {
   id: string;
   label: string;
   lat: number;
   lng: number;
-  kind: string;
+  kind: RallyingPointKind;
   address: string;
   zip_code: string;
   city: string;

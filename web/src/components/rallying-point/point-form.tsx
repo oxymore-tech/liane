@@ -6,10 +6,11 @@ import type {
   AdminRallyingPoint,
   RallyingPoint,
   RallyingPointInput,
+  RallyingPointKind,
 } from "@/api/types";
 import { PlaceField } from "@/components/place-field";
 import { Button, Card, fieldClass, Notice } from "@/components/ui";
-import { KIND_LABELS, lianeCountLabel, quoted } from "./labels";
+import { isKind, KIND_LABELS, lianeCountLabel, quoted } from "./labels";
 
 const PointPicker = dynamic(() => import("@/components/map/point-picker"), {
   ssr: false,
@@ -36,7 +37,9 @@ export function PointForm({
   );
   const [centerPlace, setCenterPlace] = useState<RallyingPoint | null>(null);
   const [label, setLabel] = useState(point?.label ?? "");
-  const [kind, setKind] = useState(point?.kind ?? "CarpoolArea");
+  const [kind, setKind] = useState<RallyingPointKind>(
+    point?.kind ?? "CarpoolArea",
+  );
   const [address, setAddress] = useState(point?.address ?? "");
   const [zipCode, setZipCode] = useState(point?.zip_code ?? "");
   const [city, setCity] = useState(point?.city ?? "");
@@ -166,7 +169,9 @@ export function PointForm({
           <select
             className={fieldClass}
             value={kind}
-            onChange={(event) => setKind(event.target.value)}
+            onChange={(event) => {
+              if (isKind(event.target.value)) setKind(event.target.value);
+            }}
           >
             {Object.entries(KIND_LABELS).map(([value, name]) => (
               <option key={value} value={value}>
