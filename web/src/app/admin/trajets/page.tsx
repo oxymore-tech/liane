@@ -9,6 +9,7 @@ import type {
   AdminTrip,
   ProofGesture,
   ProofOccupant,
+  ProofWarning,
 } from "@/api/types";
 import { distanceLabel } from "@/components/liane/labels";
 import {
@@ -41,7 +42,7 @@ const CLASS_TONES: Record<"A" | "B" | "C", BadgeTone> = {
   C: "pale",
 };
 
-const WARNINGS: Record<string, string> = {
+const WARNINGS: Record<ProofWarning, string> = {
   DriverStartFarFromStop: "Départ du conducteur déclaré loin de l'arrêt",
   DriverEndFarFromStop: "Arrivée du conducteur déclarée loin de l'arrêt",
   PassengerStartFarFromStop: "Montée du passager déclarée loin de l'arrêt",
@@ -122,7 +123,7 @@ function Proof({ proof }: { proof: AdminProof }) {
                 key={warning}
                 className="rounded-field border-l-4 border-jaune bg-jaune-pale px-3 py-1"
               >
-                À vérifier : {WARNINGS[warning] ?? warning}
+                À vérifier : {WARNINGS[warning]}
               </li>
             ))}
           </ul>
