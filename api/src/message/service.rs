@@ -1,11 +1,12 @@
 use std::collections::HashMap;
 
 use sqlx::PgPool;
+use sqlx::types::Json;
 use uuid::Uuid;
 
 use crate::error::{AppError, Result};
 use crate::liane;
-use crate::message::model::{Message, MessageKind, MessagePage, MessageQuery, MessageRow};
+use crate::message::model::{Message, MessageContent, MessagePage, MessageQuery, MessageRow};
 use crate::notification::Notifier;
 use crate::notification::push::PushNotification;
 
@@ -71,14 +72,12 @@ pub async fn list(
     .await?;
 
     let has_more = rows.len() as i64 > limit;
-    Ok(MessagePage {
-        messages: rows
-            .into_iter()
-            .take(limit as usize)
-            .map(Message::from)
-            .collect(),
-        has_more,
-    })
+    let messages = rows
+        .into_iter()
+        .take(limit as usize)
+        .map(Message::try_from)
+        .collect::<Result<Vec<_>>>()?;
+    Ok(MessagePage { messages, has_more })
 }
 
 /// Message écrit par un membre : il part dans le fil, en direct, et en notification aux autres membres.
@@ -95,16 +94,7 @@ pub async fn post_text(
     }
     ensure_member(db, liane_id, user_id).await?;
 
-    let message = insert(
-        db,
-        notifier,
-        liane_id,
-        user_id,
-        MessageKind::Text,
-        text,
-        None,
-    )
-    .await?;
+    let message = insert(db, notifier, liane_id, user_id, &MessageContent::Text, text).await?;
     mark_read(db, liane_id, user_id).await?;
 
     let liane = liane::find_label(db, liane_id).await?;
@@ -131,11 +121,10 @@ pub async fn post_event(
     notifier: &Notifier,
     liane_id: &Uuid,
     actor_id: &Uuid,
-    kind: MessageKind,
+    content: &MessageContent,
     text: &str,
-    data: Option<serde_json::Value>,
 ) -> Result<Message> {
-    insert(db, notifier, liane_id, actor_id, kind, text, data).await
+    insert(db, notifier, liane_id, actor_id, content, text).await
 }
 
 pub async fn mark_read(db: &PgPool, liane_id: &Uuid, user_id: &Uuid) -> Result<()> {
@@ -177,9 +166,8 @@ async fn insert(
     notifier: &Notifier,
     liane_id: &Uuid,
     user_id: &Uuid,
-    kind: MessageKind,
+    content: &MessageContent,
     text: &str,
-    data: Option<serde_json::Value>,
 ) -> Result<Message> {
     let row = sqlx::query_as::<_, MessageRow>(&format!(
         r#"
@@ -195,13 +183,13 @@ async fn insert(
     ))
     .bind(liane_id)
     .bind(user_id)
-    .bind(kind)
+    .bind(content.kind())
     .bind(text)
-    .bind(data)
+    .bind(content.trip().map(Json))
     .fetch_one(db)
     .await?;
 
-    let message = Message::from(row);
+    let message = Message::try_from(row)?;
     notifier.publish_message(&message);
     Ok(message)
 }

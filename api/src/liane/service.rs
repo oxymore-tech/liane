@@ -13,7 +13,7 @@ use crate::liane::model::{
 use crate::liane::routing::{self, ComputedRoute, OsrmFailure, Position};
 use crate::liane::slug::unique_slug;
 use crate::message;
-use crate::message::model::MessageKind;
+use crate::message::model::MessageContent;
 use crate::notification::Notifier;
 use crate::rallying_point;
 use crate::rallying_point::model::RallyingPoint;
@@ -651,24 +651,36 @@ pub async fn find_member_stops(
     Ok(stops)
 }
 
+#[derive(Debug, Clone, Copy)]
+pub enum MembershipChange {
+    Joined,
+    Left,
+}
+
 /// « X a rejoint la liane » / « X a quitté la liane » dans le fil de la liane.
 pub async fn announce_membership(
     db: &PgPool,
     notifier: &Notifier,
     id: &Uuid,
     user_id: &Uuid,
-    kind: MessageKind,
+    change: MembershipChange,
 ) -> Result<()> {
     let pseudo: Option<String> = sqlx::query_scalar(r#"SELECT pseudo FROM "user" WHERE id = $1"#)
         .bind(user_id)
         .fetch_one(db)
         .await?;
     let who = pseudo.as_deref().unwrap_or("Un membre");
-    let text = match kind {
-        MessageKind::MemberLeft => format!("{who} a quitté la liane"),
-        _ => format!("{who} a rejoint la liane"),
+    let (content, text) = match change {
+        MembershipChange::Joined => (
+            MessageContent::MemberJoined,
+            format!("{who} a rejoint la liane"),
+        ),
+        MembershipChange::Left => (
+            MessageContent::MemberLeft,
+            format!("{who} a quitté la liane"),
+        ),
     };
-    message::service::post_event(db, notifier, id, user_id, kind, &text, None).await?;
+    message::service::post_event(db, notifier, id, user_id, &content, &text).await?;
     Ok(())
 }
 

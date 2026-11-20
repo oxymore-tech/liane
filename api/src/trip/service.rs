@@ -1,5 +1,4 @@
 use chrono::{DateTime, Utc};
-use serde_json::json;
 use sqlx::{FromRow, PgPool};
 use uuid::Uuid;
 
@@ -9,7 +8,7 @@ use crate::error::{AppError, Result};
 use crate::fr_time::day_and_time;
 use crate::liane;
 use crate::message;
-use crate::message::model::MessageKind;
+use crate::message::model::{MessageContent, TripReference};
 use crate::notification::Notifier;
 use crate::notification::push::PushNotification;
 use crate::trip::model::{
@@ -111,7 +110,8 @@ pub async fn create(
         section(trip),
         day_and_time(trip.departure_time)
     );
-    announce(db, notifier, trip, MessageKind::TripProposed, &text).await?;
+    let content = MessageContent::TripProposed(trip_reference(trip));
+    announce(db, notifier, trip, &content, &text).await?;
     notifier.push(
         db,
         liane::find_member_ids_except(db, liane_id, &driver.id).await?,
@@ -255,7 +255,8 @@ pub async fn cancel(
         section(trip),
         day_and_time(trip.departure_time)
     );
-    announce(db, notifier, trip, MessageKind::TripCanceled, &text).await?;
+    let content = MessageContent::TripCanceled(trip_reference(trip));
+    announce(db, notifier, trip, &content, &text).await?;
     notifier.push(
         db,
         passenger_ids(&detail),
@@ -951,20 +952,19 @@ async fn announce(
     db: &PgPool,
     notifier: &Notifier,
     trip: &Trip,
-    kind: MessageKind,
+    content: &MessageContent,
     text: &str,
 ) -> Result<()> {
-    message::service::post_event(
-        db,
-        notifier,
-        &trip.liane.id,
-        &trip.driver.id,
-        kind,
-        text,
-        Some(json!({ "trip_id": trip.id, "departure_time": trip.departure_time })),
-    )
-    .await?;
+    message::service::post_event(db, notifier, &trip.liane.id, &trip.driver.id, content, text)
+        .await?;
     Ok(())
+}
+
+fn trip_reference(trip: &Trip) -> TripReference {
+    TripReference {
+        trip_id: trip.id,
+        departure_time: trip.departure_time,
+    }
 }
 
 /// « X a démarré le trajet » / « X a terminé le trajet » (formulations sans accord en genre) : dans le fil de la liane, et en notification aux passagers.
@@ -975,28 +975,21 @@ async fn announce_driver_gesture(
     kind: GestureKind,
 ) -> Result<()> {
     let trip = &detail.trip;
-    let (message_kind, title, place, reminder) = match kind {
+    let (content, title, place, reminder) = match kind {
         GestureKind::Start => (
-            MessageKind::TripStarted,
+            MessageContent::TripStarted(trip_reference(trip)),
             format!("{} a démarré le trajet", pseudo(&trip.driver)),
             format!("de {}", trip.from_stop.name()),
             "Quand vous montez, ouvrez le trajet et touchez « Je monte ».",
         ),
         GestureKind::End => (
-            MessageKind::TripFinished,
+            MessageContent::TripFinished(trip_reference(trip)),
             format!("{} a terminé le trajet", pseudo(&trip.driver)),
             format!("à {}", trip.to_stop.name()),
             "À la descente, ouvrez le trajet et touchez « Je descends ».",
         ),
     };
-    announce(
-        db,
-        notifier,
-        trip,
-        message_kind,
-        &format!("{title} {place}"),
-    )
-    .await?;
+    announce(db, notifier, trip, &content, &format!("{title} {place}")).await?;
     notifier.push(
         db,
         passenger_ids(detail),
