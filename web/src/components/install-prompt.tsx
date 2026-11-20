@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { buttonClass } from "@/components/ui";
 
 type Platform = "ios" | "android" | "desktop" | "unknown";
 
@@ -35,19 +36,19 @@ export const InstallPrompt = () => {
       <InstallPWAButton platform={platform} />
 
       {platform === "ios" && (
-        <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-xl p-4 border border-gray-200">
+        <div className="rounded-card border border-bordure bg-white p-4">
           <button
             type="button"
             onClick={() => setShowInstructions(!showInstructions)}
-            className="w-full flex items-center justify-between text-left font-semibold text-gray-800"
+            className="w-full flex items-center justify-between text-left font-semibold text-liane"
           >
             <span>Comment installer sur iOS ?</span>
             <span className="text-xl">{showInstructions ? "-" : "+"}</span>
           </button>
 
           {showInstructions && (
-            <div className="mt-3 pt-3 border-t border-gray-200">
-              <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700">
+            <div className="mt-3 pt-3 border-t border-bordure">
+              <ol className="list-decimal list-inside space-y-2 text-sm text-encre">
                 <li>
                   Appuyez sur le bouton <strong>Partager</strong> (en bas de
                   Safari)
@@ -66,22 +67,22 @@ export const InstallPrompt = () => {
       )}
 
       {platform === "android" && (
-        <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-xl p-4 border border-gray-200">
+        <div className="rounded-card border border-bordure bg-white p-4">
           <button
             type="button"
             onClick={() => setShowInstructions(!showInstructions)}
-            className="w-full flex items-center justify-between text-left font-semibold text-gray-800"
+            className="w-full flex items-center justify-between text-left font-semibold text-liane"
           >
             <span>Installation alternative</span>
             <span className="text-xl">{showInstructions ? "-" : "+"}</span>
           </button>
 
           {showInstructions && (
-            <div className="mt-3 pt-3 border-t border-gray-200">
-              <p className="text-sm text-gray-700 mb-2">
+            <div className="mt-3 pt-3 border-t border-bordure">
+              <p className="text-sm text-encre mb-2">
                 Si le bouton ne fonctionne pas :
               </p>
-              <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700">
+              <ol className="list-decimal list-inside space-y-2 text-sm text-encre">
                 <li>Appuyez sur le menu (3 points en haut a droite)</li>
                 <li>
                   Selectionnez <strong>"Installer l'application"</strong> ou{" "}
@@ -159,7 +160,7 @@ function InstallPWAButton({ platform }: { platform: Platform }) {
       type="button"
       onClick={handleInstall}
       disabled={isInstalling}
-      className="px-6 py-4 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors shadow-xl disabled:opacity-50 disabled:cursor-not-allowed font-bold text-lg flex items-center justify-center gap-2"
+      className={buttonClass("primary")}
     >
       {text}
     </button>

@@ -6,7 +6,7 @@ import {
   getPushConfig,
   savePushSubscription,
 } from "@/api/push";
-import { Button, Card, Notice } from "@/components/ui";
+import { Button, Card, mutedClass, Notice } from "@/components/ui";
 
 /**
  * `needs-install` : sur iPhone, les notifications n'existent que si le site a été ajouté à l'écran d'accueil.
@@ -128,7 +128,7 @@ export function NotificationSettings() {
       <h2 className="font-bold">Notifications</h2>
       {status === "off" && (
         <>
-          <p className="text-sm text-gray-600">
+          <p className={mutedClass}>
             Pour être prévenu sur ce téléphone d'un nouveau trajet, d'un message
             ou d'un départ.
           </p>
@@ -139,7 +139,7 @@ export function NotificationSettings() {
       )}
       {status === "on" && (
         <>
-          <p className="text-sm text-gray-600">
+          <p className={mutedClass}>
             Les notifications sont activées sur cet appareil.
           </p>
           <Button variant="secondary" disabled={busy} onClick={disable}>
@@ -148,20 +148,20 @@ export function NotificationSettings() {
         </>
       )}
       {status === "blocked" && (
-        <p className="text-sm text-gray-600">
+        <p className={mutedClass}>
           Les notifications sont bloquées pour ce site. Vous pouvez les
           autoriser dans les réglages de votre navigateur.
         </p>
       )}
       {status === "needs-install" && (
-        <p className="text-sm text-gray-600">
+        <p className={mutedClass}>
           Sur iPhone, les notifications ne fonctionnent que si Liane est sur
           votre écran d'accueil : dans Safari, touchez « Partager », puis « Sur
           l'écran d'accueil », et ouvrez Liane depuis sa nouvelle icône.
         </p>
       )}
       {status === "unsupported" && (
-        <p className="text-sm text-gray-600">
+        <p className={mutedClass}>
           Ce navigateur ne permet pas de recevoir des notifications.
         </p>
       )}

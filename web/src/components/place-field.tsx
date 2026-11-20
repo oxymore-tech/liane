@@ -6,7 +6,7 @@ import { searchRallyingPoints } from "@/api/lianes";
 import type { RallyingPoint } from "@/api/types";
 import { useDebounce } from "@/components/hooks";
 import { DEFAULT_VIEW } from "@/components/map/map-style";
-import { fieldClass } from "@/components/ui";
+import { fieldClass, mutedClass, suggestionsClass } from "@/components/ui";
 
 const NEAR = { lat: DEFAULT_VIEW.latitude, lng: DEFAULT_VIEW.longitude };
 
@@ -52,9 +52,9 @@ export function PlaceField({
         />
       </label>
       {!value && search.length >= 2 && places && (
-        <ul className="mt-1 divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white">
+        <ul className={suggestionsClass}>
           {places.length === 0 && (
-            <li className="px-3 py-2 text-sm text-gray-500">
+            <li className={`${mutedClass} px-3 py-2`}>
               Aucun lieu trouvé. Essayez le nom de la commune.
             </li>
           )}
@@ -69,7 +69,7 @@ export function PlaceField({
                 }}
               >
                 {place.label}
-                <span className="block text-xs text-gray-500">
+                <span className="block text-xs text-gris">
                   {place.zip_code} {place.city}
                 </span>
               </button>

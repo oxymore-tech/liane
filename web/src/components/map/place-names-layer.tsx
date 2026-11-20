@@ -1,11 +1,12 @@
 "use client";
 
 import { Layer, Source } from "react-map-gl/maplibre";
-import { HAS_BASEMAP, MAP_FONT, tilesUrl } from "./map-style";
+import { HAS_BASEMAP, MAP_FONT, mapColors, tilesUrl } from "./map-style";
 
 /** Sans fond de carte, les noms des communes (points de ralliement) servent de repères. */
 export function PlaceNamesLayer() {
   if (HAS_BASEMAP) return null;
+  const colors = mapColors();
   return (
     <Source
       id="place_names"
@@ -27,8 +28,8 @@ export function PlaceNamesLayer() {
           "text-padding": 12,
         }}
         paint={{
-          "text-color": "#9ca3af",
-          "text-halo-color": "#f1f0ea",
+          "text-color": colors.gris,
+          "text-halo-color": colors.pierre,
           "text-halo-width": 1,
         }}
       />

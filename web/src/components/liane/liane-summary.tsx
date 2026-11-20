@@ -1,4 +1,5 @@
 import type { DaySchedule, Liane } from "@/api/types";
+import { cn } from "@/components/utils";
 import {
   DAYS,
   firstStopName,
@@ -8,9 +9,7 @@ import {
 } from "./labels";
 
 export function MemberCount({ liane }: { liane: Liane }) {
-  return (
-    <p className="text-gray-600">{memberCountLabel(liane.member_count)}</p>
-  );
+  return <p className="text-gris">{memberCountLabel(liane.member_count)}</p>;
 }
 
 export function StopList({
@@ -25,12 +24,18 @@ export function StopList({
       {liane.stops.map((stop, index) => (
         <li key={stop.id} className="flex items-stretch gap-3">
           <span className="flex w-4 flex-col items-center">
+            <span className={cn("w-[3px] flex-1", index > 0 && "bg-liane")} />
             <span
-              className={`w-0.5 flex-1 ${index === 0 ? "bg-transparent" : "bg-emerald-600"}`}
+              className={cn(
+                "h-4 w-4 rounded-full border-[3px] border-liane",
+                highlighted.includes(stop.id) ? "bg-pousse" : "bg-white",
+              )}
             />
-            <span className="h-3 w-3 rounded-full border-2 border-emerald-700 bg-white" />
             <span
-              className={`w-0.5 flex-1 ${index === liane.stops.length - 1 ? "bg-transparent" : "bg-emerald-600"}`}
+              className={cn(
+                "w-[3px] flex-1",
+                index < liane.stops.length - 1 && "bg-liane",
+              )}
             />
           </span>
           <span className="py-1.5">
@@ -41,7 +46,7 @@ export function StopList({
             >
               {stopName(stop)}
             </span>
-            <span className="block text-sm text-gray-500">{stop.label}</span>
+            <span className="block text-sm text-gris">{stop.label}</span>
           </span>
         </li>
       ))}
@@ -51,12 +56,12 @@ export function StopList({
 
 function Cell({ members, drivers }: { members: number; drivers: number }) {
   if (members === 0) {
-    return <td className="px-2 py-1.5 text-center text-gray-300">–</td>;
+    return <td className="px-2 py-1.5 text-center text-gris">–</td>;
   }
   return (
     <td className="px-2 py-1.5 text-center">
       <span className="font-semibold">{members}</span>
-      <span className="block text-xs text-gray-500">
+      <span className="block text-xs text-gris">
         {drivers === 0
           ? "aucun conducteur"
           : drivers === 1
@@ -77,7 +82,7 @@ export function ScheduleTable({
 }) {
   if (liane.member_count === 0) {
     return (
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-gris">
         Personne n'a encore indiqué ses jours. Indiquez les vôtres en rejoignant
         la liane.
       </p>
@@ -89,7 +94,7 @@ export function ScheduleTable({
         Nombre de membres par jour et par sens
       </caption>
       <thead>
-        <tr className="text-xs text-gray-500">
+        <tr className="text-xs text-gris">
           <th className="py-1 text-left font-medium">Jour</th>
           <th className="px-2 py-1 font-medium">
             {firstStopName(liane)} → {lastStopName(liane)}
@@ -101,7 +106,7 @@ export function ScheduleTable({
       </thead>
       <tbody>
         {schedule.map((day) => (
-          <tr key={day.day} className="border-t border-gray-100">
+          <tr key={day.day} className="border-t border-bordure">
             <th className="py-1.5 text-left font-medium">{DAYS[day.day]}</th>
             <Cell
               members={day.outbound_members}

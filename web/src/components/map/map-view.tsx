@@ -13,6 +13,7 @@ import {
 import "maplibre-gl/dist/maplibre-gl.css";
 import { getLiane, listLianes, listLianesNear } from "@/api/lianes";
 import type { Liane } from "@/api/types";
+import { Logo } from "@/components/brand";
 import { useAppContext } from "@/components/context-provider";
 import { memberCountLabel } from "@/components/liane/labels";
 import {
@@ -20,7 +21,8 @@ import {
   ScheduleTable,
   StopList,
 } from "@/components/liane/liane-summary";
-import { buttonClass } from "@/components/ui";
+import { buttonClass, listClass, mutedClass } from "@/components/ui";
+import { cn } from "@/components/utils";
 import {
   LIANES_TOUCH_LAYER_ID,
   LIANES_TOUCH_WIDTH_PIXELS,
@@ -28,6 +30,29 @@ import {
 } from "./lianes-layer";
 import { boundsOf, DEFAULT_VIEW, mapStyle } from "./map-style";
 import { PlaceNamesLayer } from "./place-names-layer";
+
+/** Sur grand écran, la fiche flotte à gauche de la carte : le cadrage lui laisse la place. */
+const WIDE_SCREEN = "(min-width: 1024px)";
+const PANEL_WIDTH_PIXELS = 416;
+
+const panelClass =
+  "overflow-y-auto rounded-t-card border-t border-bordure bg-white p-4 text-encre lg:absolute lg:bottom-4 lg:left-4 lg:max-h-[calc(100%-6rem)] lg:w-[26rem] lg:rounded-card lg:border";
+
+const navLinkClass =
+  "flex min-h-11 items-center rounded-full border border-bordure bg-white px-3.5 text-sm font-semibold text-liane sm:px-4 sm:text-base";
+
+function CloseButton({ onClose }: { onClose: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClose}
+      aria-label="Fermer"
+      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-pale text-xl text-liane"
+    >
+      ×
+    </button>
+  );
+}
 
 function LianePanel({ slug, onClose }: { slug: string; onClose: () => void }) {
   const { data: liane, isError } = useQuery({
@@ -38,24 +63,17 @@ function LianePanel({ slug, onClose }: { slug: string; onClose: () => void }) {
   return (
     <section
       aria-label="Fiche de la liane"
-      className="max-h-[70%] overflow-y-auto rounded-t-2xl bg-white p-4 text-gray-900 shadow-[0_-4px_16px_rgba(0,0,0,0.15)]"
+      className={cn(panelClass, "max-h-[70%]")}
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold">{liane?.name ?? "…"}</h2>
+          <h2 className="text-2xl font-extrabold">{liane?.name ?? "…"}</h2>
           {liane && <MemberCount liane={liane} />}
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Fermer"
-          className="flex h-11 w-11 items-center justify-center rounded-full bg-gray-100 text-xl"
-        >
-          ×
-        </button>
+        <CloseButton onClose={onClose} />
       </div>
       {isError && (
-        <p className="mt-2 text-gray-600">Cette liane est introuvable.</p>
+        <p className="mt-2 text-gris">Cette liane est introuvable.</p>
       )}
       {liane && (
         <div className="mt-3 flex flex-col gap-4">
@@ -106,25 +124,18 @@ function LianeChoice({
   return (
     <section
       aria-label="Lianes qui passent ici"
-      className="max-h-[60%] overflow-y-auto rounded-t-2xl bg-white p-4 text-gray-900 shadow-[0_-4px_16px_rgba(0,0,0,0.15)]"
+      className={cn(panelClass, "max-h-[60%]")}
     >
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-xl font-bold">
             {lianes.length} lianes passent ici
           </h2>
-          <p className="text-gray-600">Laquelle voulez-vous voir ?</p>
+          <p className="text-gris">Laquelle voulez-vous voir ?</p>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Fermer"
-          className="flex h-11 w-11 items-center justify-center rounded-full bg-gray-100 text-xl"
-        >
-          ×
-        </button>
+        <CloseButton onClose={onClose} />
       </div>
-      <ul className="mt-2 divide-y divide-gray-100">
+      <ul className={cn(listClass, "mt-2")}>
         {lianes.map((liane) => (
           <li key={liane.id}>
             <button
@@ -134,11 +145,11 @@ function LianeChoice({
             >
               <span>
                 <span className="block font-semibold">{liane.name}</span>
-                <span className="block text-sm text-gray-500">
+                <span className={cn(mutedClass, "block")}>
                   {memberCountLabel(liane.member_count)}
                 </span>
               </span>
-              <span aria-hidden className="text-xl text-emerald-700">
+              <span aria-hidden className="text-xl text-liane">
                 ›
               </span>
             </button>
@@ -166,7 +177,16 @@ export default function MapView() {
     if (!mapLoaded || !lianes) return;
     const bounds = boundsOf(lianes.flatMap((liane) => liane.stops));
     if (bounds) {
-      mapRef.current?.fitBounds(bounds, { padding: 48, duration: 0 });
+      const besidePanel = window.matchMedia(WIDE_SCREEN).matches;
+      mapRef.current?.fitBounds(bounds, {
+        padding: {
+          top: 72,
+          bottom: 48,
+          right: 48,
+          left: besidePanel ? PANEL_WIDTH_PIXELS + 64 : 48,
+        },
+        duration: 0,
+      });
     }
   }, [mapLoaded, lianes]);
 
@@ -201,27 +221,21 @@ export default function MapView() {
 
   return (
     <div className="relative flex flex-1 flex-col overflow-hidden">
-      <nav className="absolute left-3 top-3 z-10 flex flex-wrap gap-2 pr-14">
-        <span className="rounded-full bg-emerald-700 px-4 py-2 font-bold text-white shadow">
-          Liane
+      <nav className="absolute left-3 right-3 top-3 z-10 flex flex-wrap gap-2">
+        <span className={navLinkClass}>
+          <Logo className="h-[18px] sm:h-5" />
         </span>
-        <Link
-          href="/recherche"
-          className="rounded-full bg-white px-4 py-2 font-semibold text-gray-800 shadow"
-        >
+        <Link href="/recherche" className={navLinkClass}>
           Rechercher
         </Link>
         <Link
           href={user ? "/mes-lianes" : "/connexion"}
-          className="rounded-full bg-white px-4 py-2 font-semibold text-gray-800 shadow"
+          className={navLinkClass}
         >
           {user ? "Mes lianes" : "Connexion"}
         </Link>
         {user?.is_admin && (
-          <Link
-            href="/admin/lianes"
-            className="rounded-full bg-white px-4 py-2 font-semibold text-gray-800 shadow"
-          >
+          <Link href="/admin/lianes" className={navLinkClass}>
             Admin
           </Link>
         )}
@@ -239,10 +253,11 @@ export default function MapView() {
           cursor="auto"
         >
           <GeolocateControl
+            position="bottom-right"
             positionOptions={{ enableHighAccuracy: true }}
             trackUserLocation
           />
-          <NavigationControl position="top-right" showCompass={false} />
+          <NavigationControl position="bottom-right" showCompass={false} />
           <PlaceNamesLayer />
           <LianesLayer lianes={lianes ?? []} selectedSlug={selectedSlug} />
         </MapGL>
@@ -257,7 +272,7 @@ export default function MapView() {
       ) : selectedSlug ? (
         <LianePanel slug={selectedSlug} onClose={() => select(null)} />
       ) : (
-        <section className="max-h-[50%] overflow-y-auto bg-white px-4 py-3 text-gray-900 shadow-[0_-4px_16px_rgba(0,0,0,0.15)]">
+        <section className={cn(panelClass, "max-h-[50%] py-2")}>
           <button
             type="button"
             className="flex min-h-11 w-full items-center justify-between text-left font-semibold"
@@ -274,13 +289,13 @@ export default function MapView() {
                     : `${lianes.length} lianes – touchez-en une sur la carte`}
             </span>
             {lianes && lianes.length > 0 && (
-              <span className="text-emerald-700">
+              <span className="text-liane underline">
                 {listOpen ? "Fermer" : "Liste"}
               </span>
             )}
           </button>
           {listOpen && (
-            <ul className="mt-1 divide-y divide-gray-100">
+            <ul className={cn(listClass, "mt-1")}>
               {lianes?.map((liane) => (
                 <li key={liane.id}>
                   <button
@@ -289,7 +304,7 @@ export default function MapView() {
                     onClick={() => select(liane.slug)}
                   >
                     <span className="font-medium">{liane.name}</span>
-                    <span className="text-sm text-gray-500">
+                    <span className={mutedClass}>
                       {memberCountLabel(liane.member_count)}
                     </span>
                   </button>

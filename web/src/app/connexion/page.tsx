@@ -4,10 +4,18 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { type FormEvent, Suspense, useState } from "react";
 import { login, sendCode } from "@/api/auth";
 import { useAppContext } from "@/components/context-provider";
-import { Button, Card, Notice, Page } from "@/components/ui";
+import {
+  Button,
+  Card,
+  fieldClass,
+  labelClass,
+  MascotNote,
+  Notice,
+  Page,
+} from "@/components/ui";
+import { cn } from "@/components/utils";
 
-const fieldClass =
-  "mt-1 block w-full min-h-11 rounded-lg border border-gray-300 bg-white px-3 py-2 text-lg";
+const phoneFieldClass = cn(fieldClass, "text-lg");
 
 const safeReturnPath = (path: string | null) =>
   path?.startsWith("/") && !path.startsWith("//") ? path : "/";
@@ -54,7 +62,7 @@ function LoginPage() {
     >
       <Card>
         <form onSubmit={submit} className="flex flex-col gap-4">
-          <label className="text-sm font-medium">
+          <label className={labelClass}>
             Votre numéro de téléphone
             <input
               type="tel"
@@ -62,20 +70,20 @@ function LoginPage() {
               autoComplete="tel"
               required
               placeholder="06 12 34 56 78"
-              className={fieldClass}
+              className={phoneFieldClass}
               value={phone}
               disabled={codeSent}
               onChange={(event) => setPhone(event.target.value)}
             />
           </label>
           {codeSent && (
-            <label className="text-sm font-medium">
+            <label className={labelClass}>
               Code reçu par SMS
               <input
                 inputMode="numeric"
                 autoComplete="one-time-code"
                 required
-                className={fieldClass}
+                className={phoneFieldClass}
                 value={code}
                 onChange={(event) => setCode(event.target.value)}
               />
@@ -98,9 +106,12 @@ function LoginPage() {
           )}
         </form>
       </Card>
-      <p className="text-sm text-gray-500">
-        Pas besoin de mot de passe : un code vous est envoyé à chaque connexion.
-      </p>
+      <MascotNote>
+        <p className="text-sm">
+          Pas besoin de mot de passe : un code vous est envoyé à chaque
+          connexion.
+        </p>
+      </MascotNote>
     </Page>
   );
 }

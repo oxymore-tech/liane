@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { dismissReport, excludeReported, listReports } from "@/api/lianes";
 import type { Report } from "@/api/types";
-import { Button, Card } from "@/components/ui";
+import { Button, Card, linkClass, mutedClass } from "@/components/ui";
 
 const formatDate = (date: string) =>
   new Date(date).toLocaleDateString("fr-FR", {
@@ -42,19 +42,19 @@ export default function AdminReportsPage() {
               {report.reported.pseudo ?? "Membre sans nom"}
             </span>{" "}
             est signalé dans{" "}
-            <Link href={`/l/${report.liane.slug}`} className="underline">
+            <Link href={`/l/${report.liane.slug}`} className={linkClass}>
               {report.liane.name}
             </Link>
           </p>
-          <blockquote className="rounded-lg bg-gray-50 px-3 py-2 text-gray-800">
+          <blockquote className="rounded-field bg-pierre px-3 py-2 text-encre">
             {report.reason}
           </blockquote>
-          <p className="text-sm text-gray-500">
+          <p className={mutedClass}>
             Par {report.reporter.pseudo ?? "un membre sans nom"}, le{" "}
             {formatDate(report.created_at)}
             {!report.reported_is_member && " · a déjà quitté la liane"}
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="danger" onClick={() => exclude(report)}>
               Exclure de la liane
             </Button>

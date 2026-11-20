@@ -10,7 +10,15 @@ import {
   sectionDistance,
   stopName,
 } from "@/components/liane/labels";
-import { Button, fieldClass, Notice } from "@/components/ui";
+import {
+  Button,
+  fieldClass,
+  labelClass,
+  mutedClass,
+  Notice,
+  toggleClass,
+} from "@/components/ui";
+import { cn } from "@/components/utils";
 
 const SEAT_CHOICES = [1, 2, 3, 4, 5, 6];
 const DEFAULT_SEATS = 3;
@@ -110,7 +118,7 @@ export function TripForm({
   return (
     <form onSubmit={submit} className="flex flex-col gap-4">
       <fieldset>
-        <legend className="text-sm font-medium">Dans quel sens ?</legend>
+        <legend className={labelClass}>Dans quel sens ?</legend>
         <div className="mt-1 grid grid-cols-1 gap-2">
           {(["Outbound", "Return"] as const).map((choice) => (
             <button
@@ -118,11 +126,10 @@ export function TripForm({
               type="button"
               aria-pressed={direction === choice}
               onClick={() => changeDirection(choice)}
-              className={`min-h-11 rounded-lg border px-3 text-left font-semibold ${
-                direction === choice
-                  ? "border-emerald-600 bg-emerald-600 text-white"
-                  : "border-gray-300 bg-white text-gray-700"
-              }`}
+              className={cn(
+                toggleClass(direction === choice),
+                "px-3 text-left text-base",
+              )}
             >
               {choice === "Outbound"
                 ? `${firstStopName(liane)} → ${lastStopName(liane)}`
@@ -133,7 +140,7 @@ export function TripForm({
       </fieldset>
 
       <div className="grid grid-cols-2 gap-3">
-        <label className="text-sm font-medium">
+        <label className={labelClass}>
           Jour
           <input
             type="date"
@@ -144,7 +151,7 @@ export function TripForm({
             onChange={(event) => setDate(event.target.value)}
           />
         </label>
-        <label className="text-sm font-medium">
+        <label className={labelClass}>
           Heure de départ
           <input
             type="time"
@@ -156,7 +163,7 @@ export function TripForm({
         </label>
       </div>
 
-      <label className="text-sm font-medium">
+      <label className={labelClass}>
         Je pars de
         <select
           className={fieldClass}
@@ -173,7 +180,7 @@ export function TripForm({
         </select>
       </label>
 
-      <label className="text-sm font-medium">
+      <label className={labelClass}>
         Je vais jusqu'à
         <select
           className={fieldClass}
@@ -191,14 +198,14 @@ export function TripForm({
       </label>
 
       {distance !== null && distance > 0 && (
-        <p className="-mt-2 text-sm text-gray-600">
+        <p className={`${mutedClass} -mt-2`}>
           {liane.route_source === "Osrm"
             ? `${distanceLabel(distance)} par la route.`
             : `Environ ${distanceLabel(distance)} à vol d'oiseau.`}
         </p>
       )}
 
-      <label className="text-sm font-medium">
+      <label className={labelClass}>
         Places pour des passagers
         <select
           className={fieldClass}

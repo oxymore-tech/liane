@@ -19,6 +19,7 @@ import type {
   TripDetail,
   TripPassenger,
 } from "@/api/types";
+import { LianeSymbol } from "@/components/brand";
 import { useAppContext } from "@/components/context-provider";
 import { distanceLabel, stopName } from "@/components/liane/labels";
 import {
@@ -39,9 +40,14 @@ import {
   buttonClass,
   Card,
   fieldClass,
+  labelClass,
+  linkClass,
+  listClass,
+  mutedClass,
   Notice,
   Page,
 } from "@/components/ui";
+import { cn } from "@/components/utils";
 
 const REFRESH_INTERVAL_MS = 30_000;
 
@@ -56,26 +62,26 @@ function Summary({ trip }: { trip: TripDetail }) {
   return (
     <Card className="flex flex-col gap-1">
       <div className="flex items-start justify-between gap-2">
-        <h2 className="text-xl font-bold">{tripSection(trip)}</h2>
+        <h2 className="text-2xl font-extrabold">{tripSection(trip)}</h2>
         <StateBadge trip={trip} />
       </div>
       <p className="text-lg">{tripDateLabel(trip.departure_time)}</p>
-      <p className="text-gray-600">
+      <p className="text-gris">
         {trip.my_role === "Driver"
           ? "Vous conduisez"
           : `Conduit par ${trip.driver.pseudo ?? "un membre"}`}
         {" · "}
         {distanceLabel(trip.distance_meters)}
       </p>
-      <p className="text-sm text-gray-500">
+      <p className={mutedClass}>
         Liane{" "}
-        <Link href={`/l/${trip.liane.slug}`} className="underline">
+        <Link href={`/l/${trip.liane.slug}`} className={linkClass}>
           {trip.liane.name}
         </Link>
         {trip.is_open && trip.state === "Planned" && ` · ${seatsLabel(trip)}`}
       </p>
       {trip.state === "Canceled" && (
-        <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-red-800">
+        <p className="mt-2 rounded-field border border-rouge bg-white px-3 py-2 text-rouge">
           Ce trajet a été annulé par son conducteur.
         </p>
       )}
@@ -110,7 +116,10 @@ function Gestures({
     <Card className="flex flex-col gap-3">
       {trip.my_gestures.map((gesture) => (
         <p key={gesture.kind} className="flex items-start gap-2">
-          <span aria-hidden className="font-bold text-emerald-700">
+          <span
+            aria-hidden
+            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-pale text-sm font-bold text-liane"
+          >
             ✓
           </span>
           <span>
@@ -118,7 +127,7 @@ function Gestures({
               {gestureDoneLabel(role, gesture.kind)} à{" "}
               {timeLabel(gesture.recorded_at)}
             </span>
-            <span className="block text-sm text-gray-600">
+            <span className={cn(mutedClass, "block")}>
               {gesture.position_status === "Granted"
                 ? "Position enregistrée."
                 : "Enregistré sans position."}
@@ -133,21 +142,25 @@ function Gestures({
             type="button"
             disabled={busy}
             onClick={() => trip.next_gesture && onDeclare(trip.next_gesture)}
-            className="min-h-20 w-full rounded-2xl bg-emerald-600 px-4 py-5 text-2xl font-bold text-white shadow-md transition-colors hover:bg-emerald-700 disabled:opacity-60"
+            className={cn(
+              buttonClass("key"),
+              "min-h-20 w-full gap-3 text-2xl font-extrabold tracking-tight",
+            )}
           >
             {busy ? "Un instant…" : gestureLabel(role, trip.next_gesture)}
+            <LianeSymbol className="h-6" />
           </button>
-          <p className="text-sm text-gray-600">
+          <Notice tone="info">
             Au moment où vous touchez ce bouton, nous relevons l'heure et, si
             vous l'acceptez, votre position, une seule fois : c'est ce qui
             atteste que le trajet a eu lieu. Vous n'êtes jamais suivi pendant le
             trajet.
-          </p>
+          </Notice>
         </>
       )}
 
       {isTooEarly && (
-        <p className="text-gray-700">
+        <p>
           Le bouton « {gestureLabel(role, "Start")} » apparaîtra ici à partir de{" "}
           {timeLabel(trip.gesture_window.start_opens_at)}, une demi-heure avant
           le départ.
@@ -184,13 +197,13 @@ function Participants({
   return (
     <Card>
       <h2 className="mb-1 font-bold">Qui fait ce trajet</h2>
-      <ul className="flex flex-col divide-y divide-gray-100">
+      <ul className={listClass}>
         <li className="py-2">
           <span className="font-semibold">
             {trip.driver.pseudo ?? "Un membre"}
             {trip.driver.id === currentUserId && " (vous)"}
           </span>
-          <span className="block text-sm text-gray-600">
+          <span className={cn(mutedClass, "block")}>
             Conduit · {tripSection(trip)}
             {driver && ` · ${driver}`}
           </span>
@@ -203,7 +216,7 @@ function Participants({
                 {passenger.user.pseudo ?? "Un membre"}
                 {passenger.user.id === currentUserId && " (vous)"}
               </span>
-              <span className="block text-sm text-gray-600">
+              <span className={cn(mutedClass, "block")}>
                 Passager · {tripSection(passenger)}
                 {status && ` · ${status}`}
               </span>
@@ -212,9 +225,7 @@ function Participants({
         })}
       </ul>
       {trip.passengers.length === 0 && (
-        <p className="text-sm text-gray-500">
-          Aucun passager inscrit pour l'instant.
-        </p>
+        <p className={mutedClass}>Aucun passager inscrit pour l'instant.</p>
       )}
     </Card>
   );
@@ -265,7 +276,7 @@ function BookingForm({
   return (
     <Card className="flex flex-col gap-3">
       <h2 className="font-bold">Prendre une place sur ce trajet</h2>
-      <label className="text-sm font-medium">
+      <label className={labelClass}>
         Je monte à
         <select
           className={fieldClass}
@@ -279,7 +290,7 @@ function BookingForm({
           ))}
         </select>
       </label>
-      <label className="text-sm font-medium">
+      <label className={labelClass}>
         Je descends à
         <select
           className={fieldClass}
@@ -299,7 +310,7 @@ function BookingForm({
       <Button disabled={sending || !isValid} onClick={submit}>
         M'inscrire à ce trajet
       </Button>
-      <p className="text-sm text-gray-500">
+      <p className={mutedClass}>
         Votre place est réservée tout de suite, le conducteur est prévenu.
       </p>
     </Card>
@@ -321,20 +332,21 @@ function Outcome({ trip }: { trip: TripDetail }) {
         return (
           <div key={passenger.user.id}>
             <p
-              className={`font-semibold ${
-                attestation === "Full" ? "text-emerald-700" : "text-amber-800"
-              }`}
+              className={cn(
+                "font-semibold",
+                attestation === "Full"
+                  ? "text-liane"
+                  : "rounded-field border-l-4 border-jaune bg-jaune-pale px-3 py-1",
+              )}
             >
               {attestation === "Full" && "✓ "}
               {attestationLabel(attestation)}
               {trip.my_role === "Driver" &&
                 ` avec ${passenger.user.pseudo ?? "un passager"}`}
             </p>
-            <p className="text-sm text-gray-600">
-              {ATTESTATION_DETAILS[attestation]}
-            </p>
+            <p className={mutedClass}>{ATTESTATION_DETAILS[attestation]}</p>
             {passenger.indicative_contribution_cents !== null && (
-              <p className="mt-1 text-sm text-gray-600">
+              <p className="mt-1 text-sm text-gris">
                 Partage des frais indicatif pour{" "}
                 {distanceLabel(passenger.distance_meters)} :{" "}
                 <span className="font-semibold">
@@ -345,7 +357,7 @@ function Outcome({ trip }: { trip: TripDetail }) {
           </div>
         );
       })}
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-gris">
         Le partage des frais est donné à titre indicatif : rien n'est payé dans
         l'application, arrangez-vous entre vous.
       </p>
@@ -453,7 +465,7 @@ export default function TripPage() {
   if (!trip || !user) {
     return (
       <Page title="Trajet">
-        <p className="text-gray-500">Chargement…</p>
+        <p className="text-gris">Chargement…</p>
       </Page>
     );
   }
@@ -487,7 +499,7 @@ export default function TripPage() {
         trip.seats_left === 0 && <Card>Ce trajet est complet.</Card>}
       <Participants trip={trip} currentUserId={user.id} />
       {trip.is_open && myBooking?.indicative_contribution_cents != null && (
-        <p className="px-1 text-sm text-gray-600">
+        <p className="px-1 text-sm text-gris">
           Partage des frais indicatif pour votre trajet (
           {distanceLabel(myBooking.distance_meters)}) :{" "}
           <span className="font-semibold">

@@ -11,6 +11,8 @@ import {
   buttonClass,
   Card,
   fieldClass,
+  labelClass,
+  mutedClass,
   Notice,
   Page,
 } from "@/components/ui";
@@ -44,12 +46,12 @@ function NameForm() {
     <Card>
       <form onSubmit={submit} className="flex flex-col gap-3">
         <h2 className="text-lg font-bold">Mon nom</h2>
-        <p className="text-sm text-gray-600">
+        <p className={mutedClass}>
           Les autres membres de vos lianes voient votre prénom et l'initiale de
           votre nom{user?.pseudo ? ` : ${user.pseudo}` : ""}. Votre numéro de
           téléphone ne leur est jamais montré.
         </p>
-        <label className="text-sm font-medium">
+        <label className={labelClass}>
           Prénom
           <input
             className={fieldClass}
@@ -61,7 +63,7 @@ function NameForm() {
             }}
           />
         </label>
-        <label className="text-sm font-medium">
+        <label className={labelClass}>
           Nom
           <input
             className={fieldClass}
@@ -79,7 +81,7 @@ function NameForm() {
           </Notice>
         )}
         {status === "saved" && (
-          <output className="text-sm font-semibold text-emerald-700">
+          <output className="rounded-field bg-pale px-3 py-2 text-sm font-semibold text-liane">
             C'est enregistré.
           </output>
         )}
@@ -126,12 +128,12 @@ function DeleteAccount() {
         </Button>
       ) : (
         <>
-          <p className="text-sm text-gray-700">
+          <p className="text-sm">
             Votre nom, votre numéro de téléphone et vos messages sont effacés.
             Vous quittez toutes vos lianes ; les trajets à venir que vous
             conduisez sont annulés et leurs passagers prévenus.
           </p>
-          <p className="text-sm text-gray-700">
+          <p className="text-sm">
             Les trajets déjà faits et confirmés restent enregistrés sans votre
             nom, comme preuve de covoiturage. C'est définitif.
           </p>
@@ -181,7 +183,7 @@ export default function ProfilePage() {
           <NameForm />
           <Card className="flex flex-col gap-3">
             <h2 className="text-lg font-bold">Ma connexion</h2>
-            <p className="text-sm text-gray-600">Téléphone : {user.phone}</p>
+            <p className={mutedClass}>Téléphone : {user.phone}</p>
             <Button variant="secondary" onClick={logout}>
               Se déconnecter
             </Button>

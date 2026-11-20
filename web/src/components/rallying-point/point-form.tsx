@@ -111,7 +111,7 @@ export function PointForm({
           {point ? "Modifier le point" : "Nouveau point"}
         </h2>
         {lianes.length > 0 && (
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gris">
             Arrêt de {lianeCountLabel(lianes.length)} : {quoted(lianes)}.
           </p>
         )}
@@ -121,20 +121,20 @@ export function PointForm({
           value={centerPlace}
           onChange={center}
         />
-        <div className="h-80 overflow-hidden rounded-xl border border-gray-200 lg:h-96">
+        <div className="h-80 overflow-hidden rounded-card border border-bordure lg:h-96">
           <PointPicker
             position={position}
             center={centerPlace}
             onChange={setPosition}
           />
         </div>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-gris">
           {position
             ? `Position : ${coordinatesLabel(position)}. Touchez la carte ou déplacez le repère pour la changer.`
             : "Touchez la carte à l'endroit du point."}
         </p>
         {hasMoved && (
-          <div className="flex flex-col gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          <div className="flex flex-col gap-2 rounded-lg bg-jaune-pale px-3 py-2 text-sm text-encre">
             <p>
               Le point a été déplacé.
               {lianes.length > 0 && ` ${recomputeWarning}`}

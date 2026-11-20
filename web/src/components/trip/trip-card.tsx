@@ -1,29 +1,23 @@
 import Link from "next/link";
 import type { Trip } from "@/api/types";
-import { Card } from "@/components/ui";
+import { Badge, type BadgeTone, Card, mutedClass } from "@/components/ui";
 import { seatsLabel, stateLabel, tripDateLabel, tripSection } from "./labels";
 
-const STATE_STYLES = {
-  Planned: "bg-emerald-100 text-emerald-800",
-  Started: "bg-amber-100 text-amber-900",
-  Finished: "bg-gray-200 text-gray-700",
-  Canceled: "bg-red-100 text-red-800",
+const STATE_TONES: Record<Trip["state"], BadgeTone> = {
+  Planned: "pale",
+  Started: "selected",
+  Finished: "neutral",
+  Canceled: "danger",
 };
 
 export function StateBadge({ trip }: { trip: Trip }) {
-  const style =
+  const tone =
     trip.state === "Canceled"
-      ? STATE_STYLES.Canceled
+      ? STATE_TONES.Canceled
       : trip.is_open
-        ? STATE_STYLES[trip.state]
-        : STATE_STYLES.Finished;
-  return (
-    <span
-      className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${style}`}
-    >
-      {stateLabel(trip)}
-    </span>
-  );
+        ? STATE_TONES[trip.state]
+        : STATE_TONES.Finished;
+  return <Badge tone={tone}>{stateLabel(trip)}</Badge>;
 }
 
 const roleLabel = (trip: Trip) => {
@@ -49,13 +43,11 @@ export function TripCard({
           <StateBadge trip={trip} />
         </div>
         <p>{tripSection(trip)}</p>
-        <p className="text-sm text-gray-600">
+        <p className={mutedClass}>
           {roleLabel(trip)}
           {trip.is_open && trip.state === "Planned" && ` · ${seatsLabel(trip)}`}
         </p>
-        {showLiane && (
-          <p className="text-sm text-gray-500">Liane {trip.liane.name}</p>
-        )}
+        {showLiane && <p className={mutedClass}>Liane {trip.liane.name}</p>}
       </Card>
     </Link>
   );

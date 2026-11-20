@@ -18,7 +18,16 @@ import {
   tripSection,
 } from "@/components/trip/labels";
 import { StateBadge } from "@/components/trip/trip-card";
-import { Button, Card, Notice } from "@/components/ui";
+import {
+  Badge,
+  type BadgeTone,
+  Button,
+  Card,
+  listClass,
+  mutedClass,
+  Notice,
+} from "@/components/ui";
+import { cn } from "@/components/utils";
 
 const CLASS_MEANINGS = {
   A: "Mise en relation seule",
@@ -26,10 +35,10 @@ const CLASS_MEANINGS = {
   C: "Trajet des deux occupants attesté",
 };
 
-const CLASS_STYLES = {
-  A: "bg-gray-200 text-gray-700",
-  B: "bg-amber-100 text-amber-900",
-  C: "bg-emerald-100 text-emerald-800",
+const CLASS_TONES: Record<"A" | "B" | "C", BadgeTone> = {
+  A: "neutral",
+  B: "warning",
+  C: "pale",
 };
 
 const WARNINGS: Record<string, string> = {
@@ -84,23 +93,21 @@ function Proof({ proof }: { proof: AdminProof }) {
           <span className="font-semibold">
             {proof.passenger.pseudo ?? "Passager"}
           </span>
-          <span className="block text-sm text-gray-600">
+          <span className={cn(mutedClass, "block")}>
             {tripSection(proof)} · {distanceLabel(proof.distance_meters)}
             {proof.indicative_contribution_cents !== null &&
               ` · partage indicatif ${euros(proof.indicative_contribution_cents)}`}
           </span>
         </span>
         {proof.proof_class && (
-          <span
-            className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-bold ${CLASS_STYLES[proof.proof_class]}`}
-          >
+          <Badge tone={CLASS_TONES[proof.proof_class]} className="font-bold">
             Classe {proof.proof_class}
-          </span>
+          </Badge>
         )}
       </div>
       {proof.proof_class && detail && (
-        <details className="mt-1 text-sm text-gray-700">
-          <summary className="cursor-pointer text-gray-600">
+        <details className="mt-1 text-sm">
+          <summary className="flex min-h-11 cursor-pointer items-center text-liane underline">
             {CLASS_MEANINGS[proof.proof_class]} – voir le détail
           </summary>
           <ul className="mt-1 flex flex-col gap-1 pl-3">
@@ -111,7 +118,10 @@ function Proof({ proof }: { proof: AdminProof }) {
             <OccupantLines who="Conducteur" occupant={detail.driver} />
             <OccupantLines who="Passager" occupant={detail.passenger} />
             {detail.warnings.map((warning) => (
-              <li key={warning} className="text-amber-800">
+              <li
+                key={warning}
+                className="rounded-field border-l-4 border-jaune bg-jaune-pale px-3 py-1"
+              >
                 À vérifier : {WARNINGS[warning] ?? warning}
               </li>
             ))}
@@ -126,20 +136,23 @@ function TripProofs({ trip }: { trip: AdminTrip }) {
   return (
     <Card className="flex flex-col gap-1">
       <div className="flex items-start justify-between gap-2">
-        <Link href={`/trajet/${trip.id}`} className="font-bold underline">
+        <Link
+          href={`/trajet/${trip.id}`}
+          className="font-bold tracking-tight text-liane underline"
+        >
           {tripDateLabel(trip.departure_time)}
         </Link>
         <StateBadge trip={trip} />
       </div>
       <p>{tripSection(trip)}</p>
-      <p className="text-sm text-gray-600">
+      <p className={mutedClass}>
         Liane {trip.liane.name} · conduit par{" "}
         {trip.driver.pseudo ?? "un membre"}
       </p>
       {trip.proofs.length === 0 ? (
-        <p className="text-sm text-gray-500">Aucun passager inscrit.</p>
+        <p className={mutedClass}>Aucun passager inscrit.</p>
       ) : (
-        <ul className="flex flex-col divide-y divide-gray-100">
+        <ul className={listClass}>
           {trip.proofs.map((proof) => (
             <Proof key={proof.passenger.id} proof={proof} />
           ))}
@@ -181,7 +194,7 @@ export default function AdminTripsPage() {
         <Button variant="secondary" onClick={download}>
           Exporter les preuves (JSON)
         </Button>
-        <p className="text-sm text-gray-500">
+        <p className={mutedClass}>
           Un élément par couple conducteur/passager. « journey » est au format
           du registre de preuve de covoiturage (API v3.4) ; il est vide quand
           une information obligatoire manque, et « missing » dit laquelle. Le
@@ -189,9 +202,7 @@ export default function AdminTripsPage() {
           pas. Rien n'est envoyé au registre.
         </p>
         {exported !== null && (
-          <p className="text-sm text-emerald-700">
-            {exported} élément(s) exporté(s).
-          </p>
+          <Notice tone="info">{exported} élément(s) exporté(s).</Notice>
         )}
         {error && <Notice>{error}</Notice>}
       </Card>

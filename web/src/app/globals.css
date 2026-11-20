@@ -1,1 +1,60 @@
 @import "tailwindcss";
+
+@theme static {
+  --color-*: initial;
+  --color-white: #ffffff;
+  --color-liane: #04483a;
+  --color-pousse: #bff08a;
+  --color-pale: #e3f1ea;
+  --color-pierre: #f5f4f0;
+  --color-bordure: #e2e0d8;
+  --color-encre: #0b1f1b;
+  --color-gris: #5f6b65;
+  --color-jaune: #ffb545;
+  --color-jaune-pale: #fff1d6;
+  --color-orange: #d9480f;
+  --color-rouge: #c62828;
+  --color-mascotte: #ff5b22;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --radius-card: 20px;
+  --radius-field: 12px;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-pierre);
+    color: var(--color-encre);
+  }
+
+  h1,
+  h2,
+  h3 {
+    color: var(--color-liane);
+    letter-spacing: -0.02em;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-liane);
+    outline-offset: 2px;
+  }
+
+  input,
+  select,
+  textarea {
+    accent-color: var(--color-liane);
+  }
+
+  ::placeholder {
+    color: var(--color-gris);
+    opacity: 1;
+  }
+}
+
+input[type="search"]::-webkit-search-cancel-button {
+  filter: grayscale(1) brightness(0.5);
+}
+
+.maplibregl-map {
+  font-family: inherit;
+}

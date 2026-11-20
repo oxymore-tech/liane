@@ -3,13 +3,7 @@
 import type { ExpressionSpecification } from "maplibre-gl";
 import { Layer, Source } from "react-map-gl/maplibre";
 import type { Liane } from "@/api/types";
-import {
-  LIANE_COLOR,
-  LIANE_SELECTED_COLOR,
-  LIANE_SHARED_CASING_COLOR,
-  MAP_FONT,
-  tilesUrl,
-} from "./map-style";
+import { MAP_FONT, mapColors, tilesUrl } from "./map-style";
 
 export const LIANES_TOUCH_LAYER_ID = "lianes-touch";
 /** Largeur de la zone sensible autour d'un trait : un doigt, pas un pixel. */
@@ -67,7 +61,8 @@ const widthByMembers = (thin: number, medium: number, thick: number) =>
 
 /**
  * Lianes en traits, nom au milieu, arrêts en points. Là où plusieurs lianes empruntent la même route,
- * les tuiles ne donnent qu'un tronçon : un seul trait, plus épais, bordé d'un liseré foncé.
+ * les tuiles ne donnent qu'un tronçon : un seul trait, plus épais. La liane choisie est plus épaisse
+ * encore, avec un filet vert pousse en son milieu.
  */
 export function LianesLayer({
   lianes,
@@ -76,6 +71,12 @@ export function LianesLayer({
   lianes: Liane[];
   selectedSlug: string | null;
 }) {
+  const colors = mapColors();
+  const isSelected: ExpressionSpecification = [
+    "in",
+    `|${selectedSlug ?? "-"}|`,
+    ["get", "slugs"],
+  ];
   return (
     <>
       <Source
@@ -91,13 +92,12 @@ export function LianesLayer({
           source-layer="liane_segment_display"
           layout={{ "line-cap": "round", "line-join": "round" }}
           paint={{
-            "line-color": [
-              "case",
-              [">", ["get", "liane_count"], 1],
-              LIANE_SHARED_CASING_COLOR,
-              "#ffffff",
+            "line-color": colors.white,
+            "line-width": [
+              "+",
+              widthByMembers(7, 11, 16),
+              ["case", isSelected, 5, 0],
             ],
-            "line-width": widthByMembers(6, 10, 15),
           }}
         />
         <Layer
@@ -106,21 +106,28 @@ export function LianesLayer({
           source-layer="liane_segment_display"
           layout={{ "line-cap": "round", "line-join": "round" }}
           paint={{
-            "line-color": [
-              "case",
-              ["in", `|${selectedSlug ?? "-"}|`, ["get", "slugs"]],
-              LIANE_SELECTED_COLOR,
-              LIANE_COLOR,
+            "line-color": colors.liane,
+            "line-width": [
+              "+",
+              widthByMembers(4, 7, 12),
+              ["case", isSelected, 5, 0],
             ],
-            "line-width": widthByMembers(3, 7, 12),
           }}
+        />
+        <Layer
+          id="lianes-selected"
+          type="line"
+          source-layer="liane_segment_display"
+          filter={isSelected}
+          layout={{ "line-cap": "round", "line-join": "round" }}
+          paint={{ "line-color": colors.pousse, "line-width": 3 }}
         />
         <Layer
           id={LIANES_TOUCH_LAYER_ID}
           type="line"
           source-layer="liane_segment_display"
           paint={{
-            "line-color": "#000000",
+            "line-color": colors.encre,
             "line-opacity": 0,
             "line-width": LIANES_TOUCH_WIDTH_PIXELS,
           }}
@@ -139,9 +146,9 @@ export function LianesLayer({
           source-layer="liane_stop_display"
           paint={{
             "circle-radius": ["interpolate", ["linear"], ["zoom"], 6, 3, 12, 7],
-            "circle-color": "#ffffff",
-            "circle-stroke-width": 2,
-            "circle-stroke-color": "#065f46",
+            "circle-color": colors.white,
+            "circle-stroke-width": 2.5,
+            "circle-stroke-color": colors.liane,
           }}
         />
         <Layer
@@ -158,8 +165,8 @@ export function LianesLayer({
             "text-max-width": 8,
           }}
           paint={{
-            "text-color": "#1f2937",
-            "text-halo-color": "#ffffff",
+            "text-color": colors.encre,
+            "text-halo-color": colors.white,
             "text-halo-width": 1.5,
           }}
         />
@@ -179,13 +186,8 @@ export function LianesLayer({
             "symbol-sort-key": ["-", ["get", "member_count"]],
           }}
           paint={{
-            "text-color": [
-              "case",
-              ["==", ["get", "slug"], selectedSlug ?? ""],
-              LIANE_SELECTED_COLOR,
-              "#065f46",
-            ],
-            "text-halo-color": "#ffffff",
+            "text-color": colors.liane,
+            "text-halo-color": colors.white,
             "text-halo-width": 2,
           }}
         />

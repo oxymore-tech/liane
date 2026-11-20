@@ -4,7 +4,15 @@ import { type FormEvent, useState } from "react";
 import { Conflict } from "@/api/exception";
 import { reportMember } from "@/api/lianes";
 import type { Liane, LianeMember } from "@/api/types";
-import { Button, Notice } from "@/components/ui";
+import {
+  Button,
+  fieldClass,
+  labelClass,
+  listClass,
+  mutedClass,
+  Notice,
+} from "@/components/ui";
+import { cn } from "@/components/utils";
 import { daysLabel, sectionLabel } from "./labels";
 
 function ReportForm({
@@ -35,10 +43,10 @@ function ReportForm({
 
   return (
     <form onSubmit={submit} className="mt-2 flex flex-col gap-2">
-      <label className="text-sm font-medium">
+      <label className={labelClass}>
         Que s'est-il passé ?
         <textarea
-          className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-base"
+          className={fieldClass}
           rows={3}
           maxLength={500}
           required
@@ -46,7 +54,7 @@ function ReportForm({
           onChange={(event) => setReason(event.target.value)}
         />
       </label>
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-gris">
         Votre message est lu par un animateur de Liane, pas par le membre.
       </p>
       {error && <Notice>{error}</Notice>}
@@ -77,7 +85,7 @@ export function MemberList({
   const [reportedIds, setReportedIds] = useState<string[]>([]);
 
   return (
-    <ul className="flex flex-col divide-y divide-gray-100">
+    <ul className={listClass}>
       {members.map((member) => {
         const isMe = member.user.id === currentUserId;
         return (
@@ -88,7 +96,7 @@ export function MemberList({
                   {member.user.pseudo ?? "Membre"}
                   {isMe && " (vous)"}
                 </span>
-                <span className="block text-sm text-gray-600">
+                <span className={cn(mutedClass, "block")}>
                   {sectionLabel(liane, member)} · {daysLabel(member.week_days)}
                   {member.can_drive && " · peut conduire"}
                 </span>
@@ -96,7 +104,7 @@ export function MemberList({
               {canReport && !isMe && reportingId !== member.user.id && (
                 <Button
                   variant="quiet"
-                  className="text-sm font-normal"
+                  className="min-h-11 shrink-0 text-sm font-normal"
                   onClick={() => setReportingId(member.user.id)}
                 >
                   Signaler
@@ -104,9 +112,9 @@ export function MemberList({
               )}
             </div>
             {reportedIds.includes(member.user.id) && (
-              <p className="mt-1 text-sm text-emerald-700">
+              <Notice tone="info" className="mt-1">
                 Signalement envoyé. Un animateur va regarder.
-              </p>
+              </Notice>
             )}
             {reportingId === member.user.id && (
               <ReportForm
