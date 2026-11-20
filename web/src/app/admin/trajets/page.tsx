@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  Disclosure,
+  DisclosureButton,
+  DisclosurePanel,
+} from "@headlessui/react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useState } from "react";
@@ -12,18 +17,15 @@ import type {
   ProofWarning,
 } from "@/api/types";
 import { distanceLabel } from "@/components/liane/labels";
-import {
-  euros,
-  timeLabel,
-  tripDateLabel,
-  tripSection,
-} from "@/components/trip/labels";
+import { PointRoute } from "@/components/rallying-point/point-name";
+import { euros, timeLabel, tripDateLabel } from "@/components/trip/labels";
 import { StateBadge } from "@/components/trip/trip-card";
 import {
   Badge,
   type BadgeTone,
   Button,
   Card,
+  Chevron,
   listClass,
   mutedClass,
   Notice,
@@ -95,7 +97,8 @@ function Proof({ proof }: { proof: AdminProof }) {
             {proof.passenger.pseudo ?? "Passager"}
           </span>
           <span className={cn(mutedClass, "block")}>
-            {tripSection(proof)} · {distanceLabel(proof.distance_meters)}
+            <PointRoute from={proof.from_stop} to={proof.to_stop} /> ·{" "}
+            {distanceLabel(proof.distance_meters)}
             {proof.indicative_contribution_cents !== null &&
               ` · partage indicatif ${euros(proof.indicative_contribution_cents)}`}
           </span>
@@ -107,11 +110,12 @@ function Proof({ proof }: { proof: AdminProof }) {
         )}
       </div>
       {proof.proof_class && detail && (
-        <details className="mt-1 text-sm">
-          <summary className="flex min-h-11 cursor-pointer items-center text-liane underline">
+        <Disclosure as="div" className="mt-1 text-sm">
+          <DisclosureButton className="group flex min-h-11 w-full items-center justify-between gap-2 text-left font-semibold text-liane underline underline-offset-2 hover:decoration-2">
             {CLASS_MEANINGS[proof.proof_class]} – voir le détail
-          </summary>
-          <ul className="mt-1 flex flex-col gap-1 pl-3">
+            <Chevron className="group-data-open:rotate-180" />
+          </DisclosureButton>
+          <DisclosurePanel as="ul" className="mt-1 flex flex-col gap-1 pl-3">
             <li>
               Mise en relation : inscription{" "}
               {tripDateLabel(detail.connection.booked_at).toLowerCase()}
@@ -126,8 +130,8 @@ function Proof({ proof }: { proof: AdminProof }) {
                 À vérifier : {WARNINGS[warning]}
               </li>
             ))}
-          </ul>
-        </details>
+          </DisclosurePanel>
+        </Disclosure>
       )}
     </li>
   );
@@ -139,13 +143,15 @@ function TripProofs({ trip }: { trip: AdminTrip }) {
       <div className="flex items-start justify-between gap-2">
         <Link
           href={`/trajet/${trip.id}`}
-          className="font-bold tracking-tight text-liane underline"
+          className="font-bold tracking-tight text-liane underline underline-offset-2 hover:decoration-2"
         >
           {tripDateLabel(trip.departure_time)}
         </Link>
         <StateBadge trip={trip} />
       </div>
-      <p>{tripSection(trip)}</p>
+      <p>
+        <PointRoute from={trip.from_stop} to={trip.to_stop} />
+      </p>
       <p className={mutedClass}>
         Liane {trip.liane.name} · conduit par{" "}
         {trip.driver.pseudo ?? "un membre"}
@@ -170,9 +176,11 @@ export default function AdminTripsPage() {
   });
   const [error, setError] = useState<string | null>(null);
   const [exported, setExported] = useState<number | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   const download = async () => {
     setError(null);
+    setExporting(true);
     try {
       const journeys = await exportProofs();
       const file = new Blob([JSON.stringify(journeys, null, 2)], {
@@ -187,12 +195,13 @@ export default function AdminTripsPage() {
     } catch {
       setError("L'export n'a pas fonctionné.");
     }
+    setExporting(false);
   };
 
   return (
     <>
       <Card className="flex flex-col gap-2">
-        <Button variant="secondary" onClick={download}>
+        <Button variant="secondary" loading={exporting} onClick={download}>
           Exporter les preuves (JSON)
         </Button>
         <p className={mutedClass}>
@@ -203,7 +212,7 @@ export default function AdminTripsPage() {
           pas. Rien n'est envoyé au registre.
         </p>
         {exported !== null && (
-          <Notice tone="info">{exported} élément(s) exporté(s).</Notice>
+          <Notice tone="success">{exported} élément(s) exporté(s).</Notice>
         )}
         {error && <Notice>{error}</Notice>}
       </Card>

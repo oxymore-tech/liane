@@ -6,12 +6,6 @@ import type {
   TripRole,
   TripState,
 } from "@/api/types";
-import { stopName } from "@/components/liane/labels";
-
-export const tripSection = (trip: {
-  from_stop: { city: string; label: string };
-  to_stop: { city: string; label: string };
-}) => `${stopName(trip.from_stop)} → ${stopName(trip.to_stop)}`;
 
 export const timeLabel = (iso: string) =>
   new Date(iso).toLocaleTimeString("fr-FR", {

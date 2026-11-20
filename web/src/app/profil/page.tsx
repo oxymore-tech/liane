@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useState } from "react";
 import { deleteMe, updateMe } from "@/api/auth";
 import { useAppContext } from "@/components/context-provider";
+import { ConfirmDialog } from "@/components/dialog";
 import { MyTabs } from "@/components/my-tabs";
 import {
   Button,
@@ -81,15 +82,12 @@ function NameForm() {
           </Notice>
         )}
         {status === "saved" && (
-          <output className="rounded-field bg-pale px-3 py-2 text-sm font-semibold text-liane">
-            C'est enregistré.
-          </output>
+          <Notice tone="success">C'est enregistré.</Notice>
         )}
         <Button
           type="submit"
-          disabled={
-            status === "saving" || !firstName.trim() || !lastName.trim()
-          }
+          loading={status === "saving"}
+          disabled={!firstName.trim() || !lastName.trim()}
         >
           Enregistrer
         </Button>
@@ -102,17 +100,14 @@ function DeleteAccount() {
   const router = useRouter();
   const { forgetUser } = useAppContext();
   const [confirming, setConfirming] = useState(false);
-  const [sending, setSending] = useState(false);
   const [failed, setFailed] = useState(false);
 
   const remove = async () => {
-    setSending(true);
     setFailed(false);
     try {
       await deleteMe();
     } catch {
       setFailed(true);
-      setSending(false);
       return;
     }
     forgetUser();
@@ -122,36 +117,29 @@ function DeleteAccount() {
   return (
     <Card className="flex flex-col gap-3">
       <h2 className="text-lg font-bold">Supprimer mon compte</h2>
-      {!confirming ? (
-        <Button variant="danger" onClick={() => setConfirming(true)}>
-          Supprimer mon compte
-        </Button>
-      ) : (
-        <>
-          <p className="text-sm">
-            Votre nom, votre numéro de téléphone et vos messages sont effacés.
-            Vous quittez toutes vos lianes ; les trajets à venir que vous
-            conduisez sont annulés et leurs passagers prévenus.
-          </p>
-          <p className="text-sm">
-            Les trajets déjà faits et confirmés restent enregistrés sans votre
-            nom, comme preuve de covoiturage. C'est définitif.
-          </p>
-          {failed && (
-            <Notice>La suppression n'a pas fonctionné. Réessayez.</Notice>
-          )}
-          <Button variant="danger" disabled={sending} onClick={remove}>
-            Oui, supprimer définitivement
-          </Button>
-          <Button
-            variant="secondary"
-            disabled={sending}
-            onClick={() => setConfirming(false)}
-          >
-            Non, garder mon compte
-          </Button>
-        </>
-      )}
+      <Button variant="danger" onClick={() => setConfirming(true)}>
+        Supprimer mon compte
+      </Button>
+      <ConfirmDialog
+        open={confirming}
+        onClose={() => setConfirming(false)}
+        onConfirm={remove}
+        title="Supprimer mon compte ?"
+        confirmLabel="Oui, supprimer définitivement"
+        cancelLabel="Non, garder mon compte"
+        destructive
+        error={failed ? "La suppression n'a pas fonctionné. Réessayez." : null}
+      >
+        <p>
+          Votre nom, votre numéro de téléphone et vos messages sont effacés.
+          Vous quittez toutes vos lianes ; les trajets à venir que vous
+          conduisez sont annulés et leurs passagers prévenus.
+        </p>
+        <p>
+          Les trajets déjà faits et confirmés restent enregistrés sans votre
+          nom, comme preuve de covoiturage. C'est définitif.
+        </p>
+      </ConfirmDialog>
     </Card>
   );
 }

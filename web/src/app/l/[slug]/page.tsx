@@ -7,8 +7,13 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { getLiane, leaveLiane, listMyLianes } from "@/api/lianes";
 import { useAppContext } from "@/components/context-provider";
+import { ConfirmDialog } from "@/components/dialog";
 import { JoinForm } from "@/components/liane/join-form";
-import { daysLabel, routeLabel, sectionLabel } from "@/components/liane/labels";
+import {
+  daysLabel,
+  memberSection,
+  routeLabel,
+} from "@/components/liane/labels";
 import {
   MemberCount,
   ScheduleTable,
@@ -16,6 +21,7 @@ import {
 } from "@/components/liane/liane-summary";
 import { MemberList } from "@/components/liane/member-list";
 import { UnreadBadge } from "@/components/liane/unread-badge";
+import { PointRoute } from "@/components/rallying-point/point-name";
 import { LianeTrips } from "@/components/trip/liane-trips";
 import { Button, buttonClass, Card, Notice, Page } from "@/components/ui";
 
@@ -30,6 +36,7 @@ function LianePage() {
   const queryClient = useQueryClient();
   const { user, loading: userLoading } = useAppContext();
   const [formOpen, setFormOpen] = useState(false);
+  const [leaving, setLeaving] = useState(false);
 
   const {
     data: liane,
@@ -69,9 +76,9 @@ function LianePage() {
   };
 
   const leave = async () => {
-    if (!liane || !window.confirm(`Quitter la liane « ${liane.name} » ?`))
-      return;
+    if (!liane) return;
     await leaveLiane(liane.id);
+    setLeaving(false);
     await refresh();
   };
 
@@ -110,7 +117,7 @@ function LianePage() {
           <div className="mt-3 rounded-field bg-pale p-3 text-liane">
             <p className="font-semibold">Vous êtes membre de cette liane</p>
             <p className="text-sm">
-              {sectionLabel(liane, liane.membership)} ·{" "}
+              <PointRoute {...memberSection(liane, liane.membership)} /> ·{" "}
               {daysLabel(liane.membership.week_days)}
               {liane.membership.can_drive && " · vous pouvez conduire"}
             </p>
@@ -118,9 +125,23 @@ function LianePage() {
               <Button variant="secondary" onClick={() => setFormOpen(true)}>
                 Modifier
               </Button>
-              <Button variant="danger" onClick={leave}>
+              <Button variant="danger" onClick={() => setLeaving(true)}>
                 Quitter la liane
               </Button>
+              <ConfirmDialog
+                open={leaving}
+                onClose={() => setLeaving(false)}
+                onConfirm={leave}
+                title={`Quitter la liane « ${liane.name} » ?`}
+                confirmLabel="Quitter la liane"
+                cancelLabel="Rester membre"
+                destructive
+              >
+                <p>
+                  Vous ne verrez plus ses trajets ni ses messages. Vous pourrez
+                  la rejoindre à nouveau.
+                </p>
+              </ConfirmDialog>
             </div>
           </div>
         )}

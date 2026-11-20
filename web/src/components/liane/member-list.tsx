@@ -4,6 +4,8 @@ import { type FormEvent, useState } from "react";
 import { Conflict } from "@/api/exception";
 import { reportMember } from "@/api/lianes";
 import type { Liane, LianeMember } from "@/api/types";
+import { Modal } from "@/components/dialog";
+import { PointRoute } from "@/components/rallying-point/point-name";
 import {
   Button,
   fieldClass,
@@ -13,7 +15,7 @@ import {
   Notice,
 } from "@/components/ui";
 import { cn } from "@/components/utils";
-import { daysLabel, sectionLabel } from "./labels";
+import { daysLabel, memberSection } from "./labels";
 
 function ReportForm({
   liane,
@@ -26,13 +28,16 @@ function ReportForm({
 }) {
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
+    setSending(true);
     try {
       await reportMember(liane.id, member.user.id, reason);
       onClose(true);
     } catch (err) {
+      setSending(false);
       setError(
         err instanceof Conflict
           ? "Vous avez déjà signalé ce membre. Un animateur va regarder."
@@ -54,16 +59,16 @@ function ReportForm({
           onChange={(event) => setReason(event.target.value)}
         />
       </label>
-      <p className="text-xs text-gris">
+      <p className={mutedClass}>
         Votre message est lu par un animateur de Liane, pas par le membre.
       </p>
       {error && <Notice>{error}</Notice>}
-      <div className="flex gap-2">
-        <Button type="submit" disabled={!reason.trim()}>
-          Envoyer
-        </Button>
+      <div className="mt-2 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <Button variant="secondary" onClick={() => onClose(false)}>
           Annuler
+        </Button>
+        <Button type="submit" loading={sending} disabled={!reason.trim()}>
+          Envoyer
         </Button>
       </div>
     </form>
@@ -83,6 +88,11 @@ export function MemberList({
 }) {
   const [reportingId, setReportingId] = useState<string | null>(null);
   const [reportedIds, setReportedIds] = useState<string[]>([]);
+  const reporting = members.find((member) => member.user.id === reportingId);
+  const closeReport = (sent: boolean) => {
+    if (sent && reportingId) setReportedIds((ids) => [...ids, reportingId]);
+    setReportingId(null);
+  };
 
   return (
     <ul className={listClass}>
@@ -97,11 +107,12 @@ export function MemberList({
                   {isMe && " (vous)"}
                 </span>
                 <span className={cn(mutedClass, "block")}>
-                  {sectionLabel(liane, member)} · {daysLabel(member.week_days)}
+                  <PointRoute {...memberSection(liane, member)} /> ·{" "}
+                  {daysLabel(member.week_days)}
                   {member.can_drive && " · peut conduire"}
                 </span>
               </div>
-              {canReport && !isMe && reportingId !== member.user.id && (
+              {canReport && !isMe && (
                 <Button
                   variant="quiet"
                   className="min-h-11 shrink-0 text-sm font-normal"
@@ -116,19 +127,18 @@ export function MemberList({
                 Signalement envoyé. Un animateur va regarder.
               </Notice>
             )}
-            {reportingId === member.user.id && (
-              <ReportForm
-                liane={liane}
-                member={member}
-                onClose={(sent) => {
-                  setReportingId(null);
-                  if (sent) setReportedIds((ids) => [...ids, member.user.id]);
-                }}
-              />
-            )}
           </li>
         );
       })}
+      <Modal
+        open={reporting !== undefined}
+        onClose={() => closeReport(false)}
+        title={`Signaler ${reporting?.user.pseudo ?? "ce membre"}`}
+      >
+        {reporting && (
+          <ReportForm liane={liane} member={reporting} onClose={closeReport} />
+        )}
+      </Modal>
     </ul>
   );
 }

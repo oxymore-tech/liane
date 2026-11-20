@@ -4,20 +4,20 @@ import { useQuery } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import { type FormEvent, useCallback, useState } from "react";
 import type { MapLayerMouseEvent } from "react-map-gl/maplibre";
-import {
-  previewRoute,
-  searchRallyingPoints,
-  snapRallyingPoint,
-} from "@/api/lianes";
+import { previewRoute, snapRallyingPoint } from "@/api/lianes";
 import type {
   Liane,
   LianeInput,
   RoutePreview as RoutePreviewData,
 } from "@/api/types";
-import { useDebounce } from "@/components/hooks";
-import { routeLabel, stopName } from "@/components/liane/labels";
+import { routeLabel } from "@/components/liane/labels";
 import { DEFAULT_VIEW } from "@/components/map/map-style";
-import { RallyingPointsLayer } from "@/components/map/rallying-points-layer";
+import {
+  RALLYING_POINTS_LAYER_ID,
+  RallyingPointsLayer,
+} from "@/components/map/rallying-points-layer";
+import { PlaceField } from "@/components/place-field";
+import { PointName, pointName } from "@/components/rallying-point/point-name";
 import {
   Button,
   Card,
@@ -25,8 +25,8 @@ import {
   labelClass,
   mutedClass,
   Notice,
-  suggestionsClass,
 } from "@/components/ui";
+import { cn } from "@/components/utils";
 
 const RoutePreview = dynamic(() => import("@/components/map/route-preview"), {
   ssr: false,
@@ -41,6 +41,12 @@ type Stop = {
 };
 
 const TOUCH_RADIUS_PIXELS = 32;
+
+/** Le nom proposé pour une liane relie ses communes de départ et d'arrivée. */
+const communeOf = (stop: Stop) => stop.city || stop.label;
+
+const stopActionClass =
+  "h-11 w-11 shrink-0 rounded-full text-lg text-liane transition-colors not-disabled:hover:bg-white not-disabled:active:bg-bordure disabled:opacity-30";
 
 function RoutePreviewNote({
   preview,
@@ -98,20 +104,13 @@ export function LianeForm({
 }) {
   const [name, setName] = useState(liane?.name ?? "");
   const [stops, setStops] = useState<Stop[]>(liane?.stops ?? []);
-  const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
-  const debouncedSearch = useDebounce(search.trim(), 300);
 
   const near = stops[stops.length - 1] ?? {
     lat: DEFAULT_VIEW.latitude,
     lng: DEFAULT_VIEW.longitude,
   };
-  const { data: results } = useQuery({
-    queryKey: ["rallying-points", debouncedSearch, near.lat, near.lng],
-    queryFn: () => searchRallyingPoints(debouncedSearch, near),
-    enabled: debouncedSearch.length >= 2,
-  });
 
   const stopIds = stops.map((stop) => stop.id);
   const {
@@ -131,7 +130,6 @@ export function LianeForm({
         ? current
         : [...current, stop],
     );
-    setSearch("");
   }, []);
 
   /** Un point de ralliement est petit sous le doigt : on prend le plus proche du toucher. */
@@ -159,7 +157,7 @@ export function LianeForm({
 
   const suggestedName =
     stops.length >= 2
-      ? `${stopName(stops[0])} – ${stopName(stops[stops.length - 1])}`
+      ? `${communeOf(stops[0])} – ${communeOf(stops[stops.length - 1])}`
       : "";
 
   const submit = async (event: FormEvent) => {
@@ -211,83 +209,57 @@ export function LianeForm({
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-liane text-xs font-bold text-white">
                 {index + 1}
               </span>
-              <span className="min-w-0 flex-1">
-                {stopName(stop)}
-                <span className="block text-xs text-gris">{stop.label}</span>
+              <PointName point={stop} className="min-w-0 flex-1" />
+              <span className="flex shrink-0">
+                <button
+                  type="button"
+                  aria-label={`Monter ${pointName(stop)}`}
+                  className={stopActionClass}
+                  disabled={index === 0}
+                  onClick={() => move(index, -1)}
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Descendre ${pointName(stop)}`}
+                  className={stopActionClass}
+                  disabled={index === stops.length - 1}
+                  onClick={() => move(index, 1)}
+                >
+                  ↓
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Retirer ${pointName(stop)}`}
+                  className={cn(stopActionClass, "text-rouge")}
+                  onClick={() =>
+                    setStops((current) =>
+                      current.filter((existing) => existing.id !== stop.id),
+                    )
+                  }
+                >
+                  ×
+                </button>
               </span>
-              <button
-                type="button"
-                aria-label={`Monter ${stopName(stop)}`}
-                className="h-11 w-11 shrink-0 text-lg text-liane disabled:opacity-30"
-                disabled={index === 0}
-                onClick={() => move(index, -1)}
-              >
-                ↑
-              </button>
-              <button
-                type="button"
-                aria-label={`Descendre ${stopName(stop)}`}
-                className="h-11 w-11 shrink-0 text-lg text-liane disabled:opacity-30"
-                disabled={index === stops.length - 1}
-                onClick={() => move(index, 1)}
-              >
-                ↓
-              </button>
-              <button
-                type="button"
-                aria-label={`Retirer ${stopName(stop)}`}
-                className="h-11 w-11 shrink-0 text-lg text-rouge"
-                onClick={() =>
-                  setStops((current) =>
-                    current.filter((existing) => existing.id !== stop.id),
-                  )
-                }
-              >
-                ×
-              </button>
             </li>
           ))}
         </ol>
 
-        <label className={labelClass}>
-          Ajouter un arrêt
-          <input
-            type="search"
-            className={fieldClass}
-            value={search}
-            placeholder="Nom de la commune"
-            onChange={(event) => setSearch(event.target.value)}
-          />
-        </label>
-        {debouncedSearch.length >= 2 && results && (
-          <ul className={suggestionsClass}>
-            {results.length === 0 && (
-              <li className={`${mutedClass} px-3 py-2`}>
-                Aucun point de ralliement trouvé.
-              </li>
-            )}
-            {results.map((point) => (
-              <li key={point.id}>
-                <button
-                  type="button"
-                  className="min-h-11 w-full px-3 py-2 text-left"
-                  onClick={() => addStop(point)}
-                >
-                  {point.label}
-                  <span className="block text-xs text-gris">
-                    {point.zip_code} {point.city}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+        <PlaceField
+          label="Ajouter un arrêt"
+          placeholder="Nom de la commune"
+          value={null}
+          near={near}
+          onChange={(place) => place && addStop(place)}
+        />
 
         <div className="h-80 overflow-hidden rounded-card border border-bordure">
           <RoutePreview
             stops={stops}
             route={shownPreview?.route.coordinates}
             onClick={onMapClick}
+            clickableLayerIds={[RALLYING_POINTS_LAYER_ID]}
           >
             <RallyingPointsLayer />
           </RoutePreview>
@@ -300,7 +272,7 @@ export function LianeForm({
       </Card>
 
       {error && <Notice>{error}</Notice>}
-      <Button type="submit" disabled={sending || stops.length < 2}>
+      <Button type="submit" loading={sending} disabled={stops.length < 2}>
         {liane ? "Enregistrer" : "Créer la liane"}
       </Button>
     </form>

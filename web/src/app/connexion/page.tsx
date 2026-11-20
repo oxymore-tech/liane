@@ -1,16 +1,16 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { type FormEvent, Suspense, useState } from "react";
+import { type FormEvent, Suspense, useId, useState } from "react";
 import { login, sendCode } from "@/api/auth";
 import { useAppContext } from "@/components/context-provider";
 import {
   Button,
   Card,
+  FieldError,
   fieldClass,
   labelClass,
   MascotNote,
-  Notice,
   Page,
 } from "@/components/ui";
 import { cn } from "@/components/utils";
@@ -29,6 +29,9 @@ function LoginPage() {
   const [codeSent, setCodeSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const errorId = useId();
+  const phoneError = error && !codeSent ? error : null;
+  const codeError = error && codeSent ? error : null;
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -62,35 +65,44 @@ function LoginPage() {
     >
       <Card>
         <form onSubmit={submit} className="flex flex-col gap-4">
-          <label className={labelClass}>
-            Votre numéro de téléphone
-            <input
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              required
-              placeholder="06 12 34 56 78"
-              className={phoneFieldClass}
-              value={phone}
-              disabled={codeSent}
-              onChange={(event) => setPhone(event.target.value)}
-            />
-          </label>
-          {codeSent && (
+          <div>
             <label className={labelClass}>
-              Code reçu par SMS
+              Votre numéro de téléphone
               <input
-                inputMode="numeric"
-                autoComplete="one-time-code"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
                 required
+                placeholder="06 12 34 56 78"
                 className={phoneFieldClass}
-                value={code}
-                onChange={(event) => setCode(event.target.value)}
+                value={phone}
+                disabled={codeSent}
+                onChange={(event) => setPhone(event.target.value)}
+                aria-invalid={phoneError ? true : undefined}
+                aria-describedby={phoneError ? errorId : undefined}
               />
             </label>
+            {phoneError && <FieldError id={errorId}>{phoneError}</FieldError>}
+          </div>
+          {codeSent && (
+            <div>
+              <label className={labelClass}>
+                Code reçu par SMS
+                <input
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  required
+                  className={phoneFieldClass}
+                  value={code}
+                  onChange={(event) => setCode(event.target.value)}
+                  aria-invalid={codeError ? true : undefined}
+                  aria-describedby={codeError ? errorId : undefined}
+                />
+              </label>
+              {codeError && <FieldError id={errorId}>{codeError}</FieldError>}
+            </div>
           )}
-          {error && <Notice>{error}</Notice>}
-          <Button type="submit" disabled={sending}>
+          <Button type="submit" loading={sending}>
             {codeSent ? "Se connecter" : "Recevoir un code par SMS"}
           </Button>
           {codeSent && (
@@ -98,6 +110,7 @@ function LoginPage() {
               variant="quiet"
               onClick={() => {
                 setCodeSent(false);
+                setError(null);
                 setCode("");
               }}
             >

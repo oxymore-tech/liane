@@ -21,7 +21,6 @@ async function newPage(label, options = {}) {
   page.on("pageerror", (e) => problems.push(`[${label}] pageerror: ${e.message}`));
   page.on("requestfailed", (r) => { if (r.failure()?.errorText !== "net::ERR_ABORTED") problems.push(`[${label}] requestfailed: ${r.url()} ${r.failure()?.errorText}`); });
   page.on("response", (r) => { if (r.status() >= 400) problems.push(`[${label}] http ${r.status()} ${r.request().method()} ${r.url()}`); });
-  page.on("dialog", (d) => d.accept());
   return page;
 }
 const shot = async (page, name) => { await page.waitForTimeout(1200); await page.screenshot({ path: `${OUT}/trips-${name}.png` }); log("capture", `trips-${name}`); };
@@ -40,6 +39,17 @@ async function login(page, phone, code) {
   await page.getByLabel("Code reçu par SMS").fill(code ?? (await smsCode(phone)));
   await page.getByRole("button", { name: "Se connecter" }).click();
 }
+// Répond à une boîte de confirmation de l'application par son bouton d'action.
+async function confirmWith(page, name, role = "alertdialog") {
+  const dialog = page.getByRole(role);
+  await dialog.waitFor();
+  await dialog.getByRole("button", { name, exact: true }).click();
+}
+// Choisit une option d'une liste déroulante désignée par son libellé.
+async function choose(page, label, option) {
+  await page.getByLabel(label).click();
+  await page.getByRole("option", { name: option, exact: true }).click();
+}
 const randomPhone = () => "06" + String(Math.floor(Math.random() * 1e8)).padStart(8, "0");
 async function joinLiane(page, firstName, lastName, from, to, canDrive) {
   await page.goto(BASE + "/l/florac-mende?rejoindre=1");
@@ -48,8 +58,8 @@ async function joinLiane(page, firstName, lastName, from, to, canDrive) {
   await page.waitForURL(/\/l\/florac-mende/);
   await page.getByLabel("Votre prénom", { exact: true }).fill(firstName);
   await page.getByLabel(/^Votre nom/).fill(lastName);
-  await page.getByLabel("Je monte à").selectOption({ label: from });
-  await page.getByLabel("Je descends à").selectOption({ label: to });
+  await choose(page, "Je monte à", labelOf(from));
+  await choose(page, "Je descends à", labelOf(to));
   if (canDrive) await page.getByLabel("Je peux conduire").check();
   await page.getByRole("button", { name: "Rejoindre la liane" }).click();
   await page.getByText("Vous êtes membre de cette liane").waitFor();
@@ -70,6 +80,7 @@ async function proposeTrip(page, minutes) {
 }
 
 const liane = await (await fetch(`${API}/liane/florac-mende`)).json();
+const labelOf = (city) => liane.stops.find((s) => s.city === city).label;
 const position = (city) => { const stop = liane.stops.find((s) => s.city === city); return { latitude: stop.lat, longitude: stop.lng, accuracy: 20 }; };
 const located = (city) => ({ geolocation: position(city), permissions: ["geolocation"] });
 
@@ -98,7 +109,7 @@ await paule.getByRole("link", { name: /Conduit par Denis R\./ }).scrollIntoViewI
 await shot(paule, "04-liane-trajet-propose");
 await paule.getByRole("link", { name: /Conduit par Denis R\./ }).click();
 await paule.getByRole("button", { name: "M'inscrire à ce trajet" }).waitFor();
-log("inscription proposée:", await paule.getByLabel("Je monte à").inputValue() === liane.stops[1].id ? "montée à Ispagnac par défaut" : "montée par défaut inattendue");
+log("inscription proposée:", (await paule.getByLabel("Je monte à").innerText()).trim() === liane.stops[1].label ? "montée à Ispagnac par défaut" : "montée par défaut inattendue");
 await shot(paule, "05-trajet-inscription");
 await paule.getByRole("button", { name: "M'inscrire à ce trajet" }).click();
 await paule.getByRole("button", { name: "Je monte", exact: true }).waitFor();
@@ -193,6 +204,7 @@ await driver.waitForURL(/\/trajet\//);
 await driver.getByText(/apparaîtra ici à partir de/).waitFor();
 await shot(driver, "17-trajet-demain-trop-tot");
 await driver.getByRole("button", { name: "Annuler ce trajet" }).click();
+await confirmWith(driver, "Annuler le trajet");
 await driver.getByText("Ce trajet a été annulé par son conducteur.").waitFor();
 await shot(driver, "18-trajet-annule");
 
@@ -212,7 +224,8 @@ await login(admin, "+33600000000", "000000");
 await admin.waitForURL(/\/admin\/trajets/);
 await admin.getByRole("button", { name: "Exporter les preuves (JSON)" }).waitFor();
 await admin.getByText("Classe C").first().waitFor();
-await admin.locator("details").first().locator("summary").click();
+await admin.getByRole("button", { name: /voir le détail/ }).first().click();
+await admin.getByText(/^Mise en relation : inscription/).first().waitFor();
 await fullShot(admin, "21-admin-trajets");
 const [download] = await Promise.all([
   admin.waitForEvent("download"),

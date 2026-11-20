@@ -1,9 +1,9 @@
 "use client";
 
 import { Layer, Source } from "react-map-gl/maplibre";
-import { MAP_FONT, mapColors, tilesUrl } from "./map-style";
+import { MAP_FONT, mapColors, POINT_TEXT_FIELD, tilesUrl } from "./map-style";
 
-const RALLYING_POINTS_LAYER_ID = "rallying-points-circle";
+export const RALLYING_POINTS_LAYER_ID = "rallying-points-circle";
 
 export function RallyingPointsLayer() {
   const colors = mapColors();
@@ -33,7 +33,7 @@ export function RallyingPointsLayer() {
         source-layer="rallying_point_display"
         minzoom={9}
         layout={{
-          "text-field": ["get", "city"],
+          "text-field": POINT_TEXT_FIELD,
           "text-font": MAP_FONT,
           "text-size": 11,
           "text-offset": [0, 0.9],

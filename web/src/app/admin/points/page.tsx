@@ -13,7 +13,13 @@ import {
   lianeCountLabel,
   originLabel,
 } from "@/components/rallying-point/labels";
-import { buttonClass, Card, fieldClass, Notice } from "@/components/ui";
+import {
+  buttonClass,
+  Card,
+  fieldClass,
+  labelClass,
+  Notice,
+} from "@/components/ui";
 
 const PointsMap = dynamic(() => import("@/components/map/points-map"), {
   ssr: false,
@@ -37,7 +43,7 @@ export default function AdminPointsPage() {
       <Link href="/admin/points/nouveau" className={buttonClass("primary")}>
         Ajouter un point
       </Link>
-      <label className="text-sm font-medium">
+      <label className={labelClass}>
         Chercher un point
         <input
           type="search"

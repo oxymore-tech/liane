@@ -49,6 +49,32 @@
     color: var(--color-gris);
     opacity: 1;
   }
+
+  /* Tout ce qui se clique le montre. */
+  button,
+  a[href],
+  select,
+  summary,
+  label[for],
+  label:has(input[type="checkbox"], input[type="radio"]),
+  input[type="checkbox"],
+  input[type="radio"],
+  [role="button"],
+  [role="option"],
+  [role="radio"],
+  [role="switch"] {
+    cursor: pointer;
+  }
+
+  :disabled,
+  [aria-disabled="true"],
+  [data-disabled] {
+    cursor: not-allowed;
+  }
+
+  [aria-busy="true"] {
+    cursor: progress;
+  }
 }
 
 input[type="search"]::-webkit-search-cancel-button {
@@ -57,4 +83,25 @@ input[type="search"]::-webkit-search-cancel-button {
 
 .maplibregl-map {
   font-family: inherit;
+}
+
+/* Repère déplaçable d'une carte. */
+.maplibregl-marker.cursor-move {
+  cursor: move;
+}
+
+/* Popover de la carte, aux formes des cartes de l'application. */
+.maplibregl-popup .maplibregl-popup-content {
+  border: 1px solid var(--color-liane);
+  border-radius: var(--radius-field);
+  box-shadow: none;
+  padding: 12px;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.4;
+  color: var(--color-encre);
+}
+
+.maplibregl-popup .maplibregl-popup-tip {
+  display: none;
 }

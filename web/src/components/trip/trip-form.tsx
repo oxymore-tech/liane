@@ -1,17 +1,15 @@
 "use client";
 
-import { type FormEvent, useState } from "react";
+import { Field, Label, Radio, RadioGroup } from "@headlessui/react";
+import { type FormEvent, useId, useState } from "react";
 import { createTrip } from "@/api/trips";
 import type { Liane, Membership, TripDetail, TripDirection } from "@/api/types";
-import {
-  distanceLabel,
-  firstStopName,
-  lastStopName,
-  sectionDistance,
-  stopName,
-} from "@/components/liane/labels";
+import { distanceLabel, sectionDistance } from "@/components/liane/labels";
+import { PointName, PointRoute } from "@/components/rallying-point/point-name";
+import { SelectField } from "@/components/select-field";
 import {
   Button,
+  FieldError,
   fieldClass,
   labelClass,
   mutedClass,
@@ -24,6 +22,9 @@ const SEAT_CHOICES = [1, 2, 3, 4, 5, 6];
 const DEFAULT_SEATS = 3;
 const DEFAULT_TIME = "07:30";
 
+/** `field` désigne le champ fautif ; sans lui, l'erreur concerne tout le formulaire. */
+type FormError = { field?: "time" | "section"; message: string };
+
 const pad = (value: number) => String(value).padStart(2, "0");
 
 const localDate = (date: Date) =>
@@ -34,6 +35,11 @@ const tomorrow = () => {
   date.setDate(date.getDate() + 1);
   return localDate(date);
 };
+
+const stopOption = (stop: { id: string; city: string; label: string }) => ({
+  value: stop.id,
+  content: <PointName point={stop} />,
+});
 
 /** Le tronçon habituel du membre, pris dans le sens du trajet. */
 const usualSection = (membership: Membership, direction: TripDirection) =>
@@ -66,13 +72,18 @@ export function TripForm({
     )?.slice(0, 5) ?? DEFAULT_TIME,
   );
   const [seats, setSeats] = useState(DEFAULT_SEATS);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<FormError | null>(null);
   const [sending, setSending] = useState(false);
+  const errorId = useId();
+  const timeError = error?.field === "time" ? error.message : null;
 
   const stops =
     direction === "Outbound" ? liane.stops : [...liane.stops].reverse();
   const indexOf = (id: string) => stops.findIndex((stop) => stop.id === id);
   const distance = sectionDistance(liane, section.fromId, section.toId);
+
+  const first = liane.stops[0];
+  const last = liane.stops[liane.stops.length - 1];
 
   const changeDirection = (next: TripDirection) => {
     setDirection(next);
@@ -83,17 +94,22 @@ export function TripForm({
     event.preventDefault();
     const departure = new Date(`${date}T${time}`);
     if (Number.isNaN(departure.getTime())) {
-      setError("Indiquez le jour et l'heure du départ.");
+      setError({
+        field: "time",
+        message: "Indiquez le jour et l'heure du départ.",
+      });
       return;
     }
     if (departure.getTime() < Date.now()) {
-      setError("Cette heure est déjà passée.");
+      setError({ field: "time", message: "Cette heure est déjà passée." });
       return;
     }
     if (indexOf(section.fromId) >= indexOf(section.toId)) {
-      setError(
-        "L'arrivée doit se trouver après le départ, dans le sens choisi.",
-      );
+      setError({
+        field: "section",
+        message:
+          "L'arrivée doit se trouver après le départ, dans le sens choisi.",
+      });
       return;
     }
     setSending(true);
@@ -108,36 +124,43 @@ export function TripForm({
       });
       onDone(trip);
     } catch {
-      setError(
-        "Le trajet n'a pas été enregistré. Vérifiez le jour et l'heure.",
-      );
+      setError({
+        message:
+          "Le trajet n'a pas été enregistré. Vérifiez le jour et l'heure.",
+      });
       setSending(false);
     }
   };
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-4">
-      <fieldset>
-        <legend className={labelClass}>Dans quel sens ?</legend>
-        <div className="mt-1 grid grid-cols-1 gap-2">
+      <Field>
+        <Label className={labelClass}>Dans quel sens ?</Label>
+        <RadioGroup
+          value={direction}
+          onChange={changeDirection}
+          className="mt-1 grid grid-cols-1 gap-2"
+        >
           {(["Outbound", "Return"] as const).map((choice) => (
-            <button
+            <Radio
               key={choice}
-              type="button"
-              aria-pressed={direction === choice}
-              onClick={() => changeDirection(choice)}
+              value={choice}
               className={cn(
                 toggleClass(direction === choice),
-                "px-3 text-left text-base",
+                "flex items-center px-3 py-2 text-left text-base",
               )}
             >
-              {choice === "Outbound"
-                ? `${firstStopName(liane)} → ${lastStopName(liane)}`
-                : `${lastStopName(liane)} → ${firstStopName(liane)}`}
-            </button>
+              <span>
+                {choice === "Outbound" ? (
+                  <PointRoute from={first} to={last} />
+                ) : (
+                  <PointRoute from={last} to={first} />
+                )}
+              </span>
+            </Radio>
           ))}
-        </div>
-      </fieldset>
+        </RadioGroup>
+      </Field>
 
       <div className="grid grid-cols-2 gap-3">
         <label className={labelClass}>
@@ -149,6 +172,8 @@ export function TripForm({
             min={localDate(new Date())}
             value={date}
             onChange={(event) => setDate(event.target.value)}
+            aria-invalid={timeError ? true : undefined}
+            aria-describedby={timeError ? errorId : undefined}
           />
         </label>
         <label className={labelClass}>
@@ -159,43 +184,31 @@ export function TripForm({
             required
             value={time}
             onChange={(event) => setTime(event.target.value)}
+            aria-invalid={timeError ? true : undefined}
+            aria-describedby={timeError ? errorId : undefined}
           />
         </label>
+        {timeError && (
+          <div className="col-span-2 -mt-2">
+            <FieldError id={errorId}>{timeError}</FieldError>
+          </div>
+        )}
       </div>
 
-      <label className={labelClass}>
-        Je pars de
-        <select
-          className={fieldClass}
-          value={section.fromId}
-          onChange={(event) =>
-            setSection({ ...section, fromId: event.target.value })
-          }
-        >
-          {stops.slice(0, -1).map((stop) => (
-            <option key={stop.id} value={stop.id}>
-              {stopName(stop)}
-            </option>
-          ))}
-        </select>
-      </label>
+      <SelectField
+        label="Je pars de"
+        value={section.fromId}
+        options={stops.slice(0, -1).map(stopOption)}
+        onChange={(fromId) => setSection({ ...section, fromId })}
+      />
 
-      <label className={labelClass}>
-        Je vais jusqu'à
-        <select
-          className={fieldClass}
-          value={section.toId}
-          onChange={(event) =>
-            setSection({ ...section, toId: event.target.value })
-          }
-        >
-          {stops.slice(1).map((stop) => (
-            <option key={stop.id} value={stop.id}>
-              {stopName(stop)}
-            </option>
-          ))}
-        </select>
-      </label>
+      <SelectField
+        label="Je vais jusqu'à"
+        value={section.toId}
+        options={stops.slice(1).map(stopOption)}
+        onChange={(toId) => setSection({ ...section, toId })}
+        error={error?.field === "section" ? error.message : null}
+      />
 
       {distance !== null && distance > 0 && (
         <p className={`${mutedClass} -mt-2`}>
@@ -205,25 +218,32 @@ export function TripForm({
         </p>
       )}
 
-      <label className={labelClass}>
-        Places pour des passagers
-        <select
-          className={fieldClass}
+      <Field>
+        <Label className={labelClass}>Places pour des passagers</Label>
+        <RadioGroup
           value={seats}
-          onChange={(event) => setSeats(Number(event.target.value))}
+          onChange={setSeats}
+          className="mt-1 grid grid-cols-6 gap-1"
         >
           {SEAT_CHOICES.map((count) => (
-            <option key={count} value={count}>
+            <Radio
+              key={count}
+              value={count}
+              className={cn(
+                toggleClass(seats === count),
+                "flex items-center justify-center text-base",
+              )}
+            >
               {count}
-            </option>
+            </Radio>
           ))}
-        </select>
-      </label>
+        </RadioGroup>
+      </Field>
 
-      {error && <Notice>{error}</Notice>}
+      {error && !error.field && <Notice>{error.message}</Notice>}
 
       <div className="flex gap-3">
-        <Button type="submit" disabled={sending} className="flex-1">
+        <Button type="submit" loading={sending} className="flex-1">
           Proposer ce trajet
         </Button>
         <Button variant="secondary" onClick={onCancel}>

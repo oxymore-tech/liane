@@ -1,15 +1,25 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useId, useState } from "react";
 import type {
   AdminRallyingPoint,
   RallyingPoint,
   RallyingPointInput,
   RallyingPointKind,
 } from "@/api/types";
+import { ConfirmDialog } from "@/components/dialog";
 import { PlaceField } from "@/components/place-field";
-import { Button, Card, fieldClass, Notice } from "@/components/ui";
+import { SelectField } from "@/components/select-field";
+import {
+  Button,
+  Card,
+  checkboxClass,
+  FieldError,
+  fieldClass,
+  labelClass,
+  Notice,
+} from "@/components/ui";
 import { isKind, KIND_LABELS, lianeCountLabel, quoted } from "./labels";
 
 const PointPicker = dynamic(() => import("@/components/map/point-picker"), {
@@ -17,6 +27,17 @@ const PointPicker = dynamic(() => import("@/components/map/point-picker"), {
 });
 
 type Place = { lat: number; lng: number };
+
+/** `field` désigne le champ fautif ; sans lui, l'erreur concerne tout le formulaire. */
+type FormError = {
+  field?: "position" | "label" | "placeCount";
+  message: string;
+};
+
+const KIND_OPTIONS = Object.entries(KIND_LABELS).map(([value, name]) => ({
+  value,
+  content: name,
+}));
 
 const coordinatesLabel = (place: Place) =>
   `${place.lat.toFixed(5)}, ${place.lng.toFixed(5)}`;
@@ -47,8 +68,12 @@ export function PointForm({
     point?.place_count?.toString() ?? "",
   );
   const [isActive, setIsActive] = useState(point?.is_active ?? true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<FormError | null>(null);
   const [sending, setSending] = useState(false);
+  const [confirmingMove, setConfirmingMove] = useState(false);
+  const errorId = useId();
+  const errorOf = (field: FormError["field"]) =>
+    error && error.field === field ? error.message : null;
 
   const lianes = point?.lianes ?? [];
   const hasMoved =
@@ -65,29 +90,37 @@ export function PointForm({
     }
   };
 
-  const submit = async (event: FormEvent) => {
+  const places = placeCount.trim() === "" ? null : Number(placeCount);
+
+  const submit = (event: FormEvent) => {
     event.preventDefault();
-    const places = placeCount.trim() === "" ? null : Number(placeCount);
     if (!position) {
-      setError("Touchez la carte pour placer le point.");
+      setError({
+        field: "position",
+        message: "Touchez la carte pour placer le point.",
+      });
       return;
     }
     if (label.trim() === "") {
-      setError("Donnez un libellé au point.");
+      setError({ field: "label", message: "Donnez un libellé au point." });
       return;
     }
     if (places !== null && (!Number.isInteger(places) || places < 0)) {
-      setError("Le nombre de places doit être un nombre positif ou nul.");
+      setError({
+        field: "placeCount",
+        message: "Le nombre de places doit être un nombre positif ou nul.",
+      });
       return;
     }
-    if (
-      hasMoved &&
-      lianes.length > 0 &&
-      !window.confirm(`Ce point est déplacé. ${recomputeWarning} Continuer ?`)
-    ) {
+    if (hasMoved && lianes.length > 0) {
+      setConfirmingMove(true);
       return;
     }
+    save();
+  };
 
+  const save = async () => {
+    if (!position) return;
     setSending(true);
     setError(null);
     const failure = await onSave({
@@ -101,8 +134,9 @@ export function PointForm({
       place_count: places,
       is_active: isActive,
     });
+    setConfirmingMove(false);
     if (failure) {
-      setError(failure);
+      setError({ message: failure });
       setSending(false);
     }
   };
@@ -136,6 +170,11 @@ export function PointForm({
             ? `Position : ${coordinatesLabel(position)}. Touchez la carte ou déplacez le repère pour la changer.`
             : "Touchez la carte à l'endroit du point."}
         </p>
+        {errorOf("position") && (
+          <FieldError id={`${errorId}-position`}>
+            {errorOf("position")}
+          </FieldError>
+        )}
         {hasMoved && (
           <div className="flex flex-col gap-2 rounded-lg bg-jaune-pale px-3 py-2 text-sm text-encre">
             <p>
@@ -154,33 +193,34 @@ export function PointForm({
       </Card>
 
       <Card className="flex flex-col gap-3">
-        <label className="text-sm font-medium">
-          Libellé
-          <input
-            className={fieldClass}
-            value={label}
-            maxLength={255}
-            placeholder="Aire de covoiturage de la gare"
-            onChange={(event) => setLabel(event.target.value)}
-          />
-        </label>
-        <label className="text-sm font-medium">
-          Type
-          <select
-            className={fieldClass}
-            value={kind}
-            onChange={(event) => {
-              if (isKind(event.target.value)) setKind(event.target.value);
-            }}
-          >
-            {Object.entries(KIND_LABELS).map(([value, name]) => (
-              <option key={value} value={value}>
-                {name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="text-sm font-medium">
+        <div>
+          <label className={labelClass}>
+            Libellé
+            <input
+              className={fieldClass}
+              value={label}
+              maxLength={255}
+              placeholder="Aire de covoiturage de la gare"
+              onChange={(event) => setLabel(event.target.value)}
+              aria-invalid={errorOf("label") ? true : undefined}
+              aria-describedby={
+                errorOf("label") ? `${errorId}-label` : undefined
+              }
+            />
+          </label>
+          {errorOf("label") && (
+            <FieldError id={`${errorId}-label`}>{errorOf("label")}</FieldError>
+          )}
+        </div>
+        <SelectField
+          label="Type"
+          value={kind}
+          options={KIND_OPTIONS}
+          onChange={(value) => {
+            if (isKind(value)) setKind(value);
+          }}
+        />
+        <label className={labelClass}>
           Adresse
           <input
             className={fieldClass}
@@ -190,7 +230,7 @@ export function PointForm({
           />
         </label>
         <div className="flex gap-3">
-          <label className="w-32 text-sm font-medium">
+          <label className={`${labelClass} w-32`}>
             Code postal
             <input
               className={fieldClass}
@@ -200,7 +240,7 @@ export function PointForm({
               onChange={(event) => setZipCode(event.target.value)}
             />
           </label>
-          <label className="flex-1 text-sm font-medium">
+          <label className={`${labelClass} flex-1`}>
             Commune
             <input
               className={fieldClass}
@@ -210,21 +250,32 @@ export function PointForm({
             />
           </label>
         </div>
-        <label className="text-sm font-medium">
-          Nombre de places (facultatif)
-          <input
-            type="number"
-            inputMode="numeric"
-            className={fieldClass}
-            value={placeCount}
-            onChange={(event) => setPlaceCount(event.target.value)}
-          />
-        </label>
+        <div>
+          <label className={labelClass}>
+            Nombre de places (facultatif)
+            <input
+              type="number"
+              inputMode="numeric"
+              className={fieldClass}
+              value={placeCount}
+              onChange={(event) => setPlaceCount(event.target.value)}
+              aria-invalid={errorOf("placeCount") ? true : undefined}
+              aria-describedby={
+                errorOf("placeCount") ? `${errorId}-places` : undefined
+              }
+            />
+          </label>
+          {errorOf("placeCount") && (
+            <FieldError id={`${errorId}-places`}>
+              {errorOf("placeCount")}
+            </FieldError>
+          )}
+        </div>
         {point && (
           <label className="flex min-h-11 items-center gap-3">
             <input
               type="checkbox"
-              className="h-5 w-5"
+              className={checkboxClass}
               checked={isActive}
               onChange={(event) => setIsActive(event.target.checked)}
             />
@@ -233,10 +284,19 @@ export function PointForm({
         )}
       </Card>
 
-      {error && <Notice>{error}</Notice>}
-      <Button type="submit" disabled={sending}>
+      {error && !error.field && <Notice>{error.message}</Notice>}
+      <Button type="submit" loading={sending}>
         {point ? "Enregistrer" : "Créer le point"}
       </Button>
+      <ConfirmDialog
+        open={confirmingMove}
+        onClose={() => setConfirmingMove(false)}
+        onConfirm={save}
+        title="Ce point est déplacé"
+        confirmLabel="Enregistrer le déplacement"
+      >
+        <p>{recomputeWarning}</p>
+      </ConfirmDialog>
     </form>
   );
 }

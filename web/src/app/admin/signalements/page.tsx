@@ -2,8 +2,10 @@
 
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { useState } from "react";
 import { dismissReport, excludeReported, listReports } from "@/api/lianes";
 import type { Report } from "@/api/types";
+import { ConfirmDialog } from "@/components/dialog";
 import { Button, Card, linkClass, mutedClass } from "@/components/ui";
 
 const formatDate = (date: string) =>
@@ -19,17 +21,20 @@ export default function AdminReportsPage() {
     queryFn: listReports,
   });
 
+  const [toExclude, setToExclude] = useState<Report | null>(null);
+  const [dismissingId, setDismissingId] = useState<string | null>(null);
+
   const exclude = async (report: Report) => {
-    const name = report.reported.pseudo ?? "ce membre";
-    if (!window.confirm(`Exclure ${name} de « ${report.liane.name} » ?`))
-      return;
     await excludeReported(report.id);
     await refetch();
+    setToExclude(null);
   };
 
   const dismiss = async (report: Report) => {
+    setDismissingId(report.id);
     await dismissReport(report.id);
     await refetch();
+    setDismissingId(null);
   };
 
   return (
@@ -55,15 +60,31 @@ export default function AdminReportsPage() {
             {!report.reported_is_member && " · a déjà quitté la liane"}
           </p>
           <div className="flex flex-wrap gap-2">
-            <Button variant="danger" onClick={() => exclude(report)}>
+            <Button variant="danger" onClick={() => setToExclude(report)}>
               Exclure de la liane
             </Button>
-            <Button variant="secondary" onClick={() => dismiss(report)}>
+            <Button
+              variant="secondary"
+              loading={dismissingId === report.id}
+              onClick={() => dismiss(report)}
+            >
               Classer
             </Button>
           </div>
         </Card>
       ))}
+      <ConfirmDialog
+        open={toExclude !== null}
+        onClose={() => setToExclude(null)}
+        onConfirm={() => (toExclude ? exclude(toExclude) : undefined)}
+        title={`Exclure ${toExclude?.reported.pseudo ?? "ce membre"} de « ${toExclude?.liane.name} » ?`}
+        confirmLabel="Exclure de la liane"
+        destructive
+      >
+        <p>
+          Ce membre quitte la liane et ses inscriptions aux trajets à venir.
+        </p>
+      </ConfirmDialog>
     </>
   );
 }
