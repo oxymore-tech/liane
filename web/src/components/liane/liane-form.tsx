@@ -18,7 +18,15 @@ import { useDebounce } from "@/components/hooks";
 import { routeLabel, stopName } from "@/components/liane/labels";
 import { DEFAULT_VIEW } from "@/components/map/map-style";
 import { RallyingPointsLayer } from "@/components/map/rallying-points-layer";
-import { Button, Card, fieldClass, Notice } from "@/components/ui";
+import {
+  Button,
+  Card,
+  fieldClass,
+  labelClass,
+  mutedClass,
+  Notice,
+  suggestionsClass,
+} from "@/components/ui";
 
 const RoutePreview = dynamic(() => import("@/components/map/route-preview"), {
   ssr: false,
@@ -44,34 +52,34 @@ function RoutePreviewNote({
   failed: boolean;
 }) {
   if (loading) {
-    return <p className="text-sm text-gray-500">Calcul du tracé…</p>;
+    return <p className={mutedClass}>Calcul du tracé…</p>;
   }
   if (failed) {
     return (
-      <p className="text-sm text-gray-500">
+      <p className={mutedClass}>
         L'aperçu du tracé n'est pas disponible pour l'instant.
       </p>
     );
   }
   if (!preview) {
     return (
-      <p className="text-sm text-gray-500">
+      <p className={mutedClass}>
         Le tracé par la route s'affiche à partir de deux arrêts.
       </p>
     );
   }
   if (preview.route_source === "Straight") {
     return (
-      <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+      <Notice tone="warning">
         Tracé approximatif : le calcul par la route n'a pas abouti, la ligne
         relie les arrêts en ligne droite ({routeLabel(preview).toLowerCase()}).
         La liane peut être enregistrée ; son tracé pourra être recalculé plus
         tard.
-      </p>
+      </Notice>
     );
   }
   return (
-    <p className="text-sm text-gray-700">
+    <p className="text-sm">
       Tracé par la route : <strong>{routeLabel(preview)}</strong>
     </p>
   );
@@ -175,7 +183,7 @@ export function LianeForm({
         <h2 className="text-lg font-bold">
           {liane ? "Modifier la liane" : "Nouvelle liane"}
         </h2>
-        <label className="text-sm font-medium">
+        <label className={labelClass}>
           Nom de la liane
           <input
             className={fieldClass}
@@ -189,7 +197,7 @@ export function LianeForm({
       <Card className="flex flex-col gap-3">
         <h2 className="font-bold">Arrêts, dans l'ordre</h2>
         {stops.length === 0 && (
-          <p className="text-sm text-gray-500">
+          <p className={mutedClass}>
             Cherchez une commune ou touchez un point sur la carte. Il faut au
             moins deux arrêts.
           </p>
@@ -198,21 +206,19 @@ export function LianeForm({
           {stops.map((stop, index) => (
             <li
               key={stop.id}
-              className="flex items-center gap-2 rounded-lg bg-gray-50 px-2 py-1"
+              className="flex items-center gap-2 rounded-field bg-pierre px-2 py-1"
             >
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-700 text-xs font-bold text-white">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-liane text-xs font-bold text-white">
                 {index + 1}
               </span>
-              <span className="flex-1">
+              <span className="min-w-0 flex-1">
                 {stopName(stop)}
-                <span className="block text-xs text-gray-500">
-                  {stop.label}
-                </span>
+                <span className="block text-xs text-gris">{stop.label}</span>
               </span>
               <button
                 type="button"
                 aria-label={`Monter ${stopName(stop)}`}
-                className="h-11 w-9 text-lg disabled:opacity-30"
+                className="h-11 w-11 shrink-0 text-lg text-liane disabled:opacity-30"
                 disabled={index === 0}
                 onClick={() => move(index, -1)}
               >
@@ -221,7 +227,7 @@ export function LianeForm({
               <button
                 type="button"
                 aria-label={`Descendre ${stopName(stop)}`}
-                className="h-11 w-9 text-lg disabled:opacity-30"
+                className="h-11 w-11 shrink-0 text-lg text-liane disabled:opacity-30"
                 disabled={index === stops.length - 1}
                 onClick={() => move(index, 1)}
               >
@@ -230,7 +236,7 @@ export function LianeForm({
               <button
                 type="button"
                 aria-label={`Retirer ${stopName(stop)}`}
-                className="h-11 w-9 text-lg text-red-700"
+                className="h-11 w-11 shrink-0 text-lg text-rouge"
                 onClick={() =>
                   setStops((current) =>
                     current.filter((existing) => existing.id !== stop.id),
@@ -243,7 +249,7 @@ export function LianeForm({
           ))}
         </ol>
 
-        <label className="text-sm font-medium">
+        <label className={labelClass}>
           Ajouter un arrêt
           <input
             type="search"
@@ -254,9 +260,9 @@ export function LianeForm({
           />
         </label>
         {debouncedSearch.length >= 2 && results && (
-          <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200">
+          <ul className={suggestionsClass}>
             {results.length === 0 && (
-              <li className="px-3 py-2 text-sm text-gray-500">
+              <li className={`${mutedClass} px-3 py-2`}>
                 Aucun point de ralliement trouvé.
               </li>
             )}
@@ -268,7 +274,7 @@ export function LianeForm({
                   onClick={() => addStop(point)}
                 >
                   {point.label}
-                  <span className="block text-xs text-gray-500">
+                  <span className="block text-xs text-gris">
                     {point.zip_code} {point.city}
                   </span>
                 </button>
@@ -277,7 +283,7 @@ export function LianeForm({
           </ul>
         )}
 
-        <div className="h-80 overflow-hidden rounded-xl border border-gray-200">
+        <div className="h-80 overflow-hidden rounded-card border border-bordure">
           <RoutePreview
             stops={stops}
             route={shownPreview?.route.coordinates}

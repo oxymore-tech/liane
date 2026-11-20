@@ -17,7 +17,7 @@ import {
 import { MemberList } from "@/components/liane/member-list";
 import { UnreadBadge } from "@/components/liane/unread-badge";
 import { LianeTrips } from "@/components/trip/liane-trips";
-import { Button, Card, Page } from "@/components/ui";
+import { Button, buttonClass, Card, Notice, Page } from "@/components/ui";
 
 const RoutePreview = dynamic(() => import("@/components/map/route-preview"), {
   ssr: false,
@@ -85,38 +85,36 @@ function LianePage() {
   if (!liane) {
     return (
       <Page title="Liane">
-        <p className="text-gray-500">Chargement…</p>
+        <p className="text-gris">Chargement…</p>
       </Page>
     );
   }
 
   return (
     <Page title={liane.name}>
-      <div className="h-48 overflow-hidden rounded-xl border border-gray-200">
+      <div className="h-48 overflow-hidden rounded-card border border-bordure lg:h-72">
         <RoutePreview stops={liane.stops} route={liane.route?.coordinates} />
       </div>
 
       <Card>
-        <h2 className="text-xl font-bold">{liane.name}</h2>
-        <p className="text-gray-600">{routeLabel(liane)}</p>
+        <h2 className="text-2xl font-extrabold">{liane.name}</h2>
+        <p className="text-gris">{routeLabel(liane)}</p>
         <MemberCount liane={liane} />
         {!liane.is_active && (
-          <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          <Notice tone="warning" className="mt-2">
             Cette liane est désactivée : elle n'apparaît plus sur la carte.
-          </p>
+          </Notice>
         )}
 
         {liane.membership && !formOpen && (
-          <div className="mt-3 rounded-lg bg-emerald-50 px-3 py-2">
-            <p className="font-semibold text-emerald-900">
-              Vous êtes membre de cette liane
-            </p>
-            <p className="text-sm text-emerald-900">
+          <div className="mt-3 rounded-field bg-pale p-3 text-liane">
+            <p className="font-semibold">Vous êtes membre de cette liane</p>
+            <p className="text-sm">
               {sectionLabel(liane, liane.membership)} ·{" "}
               {daysLabel(liane.membership.week_days)}
               {liane.membership.can_drive && " · vous pouvez conduire"}
             </p>
-            <div className="mt-2 flex gap-3">
+            <div className="mt-3 flex flex-wrap gap-2">
               <Button variant="secondary" onClick={() => setFormOpen(true)}>
                 Modifier
               </Button>
@@ -136,7 +134,7 @@ function LianePage() {
           </Button>
         )}
         {!isMember && !formOpen && !user && liane.is_active && (
-          <p className="mt-2 text-center text-sm text-gray-500">
+          <p className="mt-2 text-center text-sm text-gris">
             Il faut un compte pour rejoindre. C'est gratuit.
           </p>
         )}
@@ -160,7 +158,7 @@ function LianePage() {
         <>
           <Link
             href={`/l/${slug}/messages`}
-            className="flex min-h-12 items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white px-4 font-semibold shadow-sm"
+            className={`${buttonClass("secondary")} justify-between`}
           >
             <span>Messages de la liane</span>
             <UnreadBadge count={unreadCount} />

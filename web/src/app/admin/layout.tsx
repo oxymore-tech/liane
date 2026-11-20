@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { useAppContext } from "@/components/context-provider";
-import { buttonClass, Card, Page } from "@/components/ui";
+import { buttonClass, Card, Page, Tabs } from "@/components/ui";
 
 const TABS = [
   { href: "/admin/lianes", label: "Lianes" },
@@ -20,7 +20,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   if (loading) {
     return (
       <Page title="Administration">
-        <p className="text-gray-500">Chargement…</p>
+        <p className="text-gris">Chargement…</p>
       </Page>
     );
   }
@@ -49,22 +49,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   return (
     <Page title="Administration">
-      <nav className="flex flex-wrap gap-2">
-        {TABS.map((tab) => (
-          <Link
-            key={tab.href}
-            href={tab.href}
-            aria-current={pathname.startsWith(tab.href) ? "page" : undefined}
-            className={`rounded-full px-4 py-2 font-semibold ${
-              pathname.startsWith(tab.href)
-                ? "bg-emerald-700 text-white"
-                : "border border-gray-300 bg-white text-gray-700"
-            }`}
-          >
-            {tab.label}
-          </Link>
-        ))}
-      </nav>
+      <Tabs tabs={TABS} isCurrent={(href) => pathname.startsWith(href)} />
       {children}
     </Page>
   );

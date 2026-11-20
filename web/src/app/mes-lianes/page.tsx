@@ -12,7 +12,14 @@ import {
 import { UnreadBadge } from "@/components/liane/unread-badge";
 import { MyTabs } from "@/components/my-tabs";
 import { NotificationSettings } from "@/components/notifications";
-import { Button, buttonClass, Card, Page } from "@/components/ui";
+import {
+  Button,
+  buttonClass,
+  Card,
+  MascotNote,
+  mutedClass,
+  Page,
+} from "@/components/ui";
 
 export default function MyLianesPage() {
   const { user, loading, logout } = useAppContext();
@@ -42,30 +49,30 @@ export default function MyLianesPage() {
     <Page title="Mes lianes">
       <MyTabs />
       {lianes?.length === 0 && (
-        <Card className="flex flex-col gap-3">
+        <MascotNote>
           <p>Vous n'avez rejoint aucune liane pour l'instant.</p>
           <Link href="/" className={buttonClass("primary")}>
             Voir les lianes sur la carte
           </Link>
-        </Card>
+        </MascotNote>
       )}
       {lianes?.map((liane) => (
         <Card key={liane.id} className="flex flex-col gap-2">
           <Link href={`/l/${liane.slug}`} className="block">
-            <h2 className="text-lg font-bold">{liane.name}</h2>
+            <h2 className="text-xl font-extrabold">{liane.name}</h2>
             <p>
               {sectionLabel(liane, liane.membership)} ·{" "}
               {daysLabel(liane.membership.week_days)}
               {liane.membership.can_drive && " · vous pouvez conduire"}
             </p>
-            <p className="text-sm text-gray-500">
+            <p className={mutedClass}>
               {memberCountLabel(liane.member_count)}
               {!liane.is_active && " · liane désactivée"}
             </p>
           </Link>
           <Link
             href={`/l/${liane.slug}/messages`}
-            className="flex min-h-11 items-center justify-between gap-2 rounded-lg border border-gray-300 px-3 font-semibold text-gray-800"
+            className={`${buttonClass("secondary")} justify-between`}
           >
             <span>Messages</span>
             <UnreadBadge count={liane.unread_count} />
@@ -74,8 +81,8 @@ export default function MyLianesPage() {
       ))}
       {user && <NotificationSettings />}
       {user && (
-        <div className="flex items-center justify-between text-sm text-gray-500">
-          <Link href="/profil" className="underline">
+        <div className="flex min-h-11 items-center justify-between gap-3 px-1 text-sm">
+          <Link href="/profil" className="text-liane underline">
             Mon profil : {user.pseudo ?? user.phone}
           </Link>
           <Button variant="quiet" onClick={logout}>

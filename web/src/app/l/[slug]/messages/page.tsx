@@ -20,7 +20,19 @@ import {
 import type { Message } from "@/api/types";
 import { useAppContext } from "@/components/context-provider";
 import { tripDateLabel } from "@/components/trip/labels";
-import { Button, buttonClass, Card, Notice, Page } from "@/components/ui";
+import {
+  Button,
+  backLinkClass,
+  buttonClass,
+  Card,
+  fieldClass,
+  headerClass,
+  linkClass,
+  MascotNote,
+  Notice,
+  Page,
+} from "@/components/ui";
+import { cn } from "@/components/utils";
 
 const MAX_LENGTH = 2000;
 
@@ -30,20 +42,17 @@ const byDate = (a: Message, b: Message) =>
 
 function EventLine({ message }: { message: Message }) {
   return (
-    <li className="self-center px-4 text-center text-sm text-gray-500">
+    <li className="self-center px-4 text-center text-sm text-gris">
       {message.text}
       {message.data?.trip_id && (
         <>
           {" · "}
-          <Link
-            href={`/trajet/${message.data.trip_id}`}
-            className="font-semibold text-emerald-700 underline"
-          >
+          <Link href={`/trajet/${message.data.trip_id}`} className={linkClass}>
             Voir le trajet
           </Link>
         </>
       )}
-      <span className="block text-xs text-gray-400">
+      <span className="block text-xs text-gris">
         {tripDateLabel(message.created_at)}
       </span>
     </li>
@@ -56,20 +65,21 @@ function Bubble({ message, isMine }: { message: Message; isMine: boolean }) {
       className={`flex max-w-[85%] flex-col ${isMine ? "items-end self-end" : "items-start self-start"}`}
     >
       {!isMine && (
-        <span className="px-1 text-xs font-semibold text-gray-600">
+        <span className="px-1 text-xs font-semibold text-gris">
           {message.author.pseudo ?? "Un membre"}
         </span>
       )}
       <p
-        className={`whitespace-pre-wrap break-words rounded-2xl px-3 py-2 ${
+        className={cn(
+          "whitespace-pre-wrap break-words rounded-card px-4 py-2",
           isMine
-            ? "bg-emerald-600 text-white"
-            : "border border-gray-200 bg-white text-gray-900"
-        }`}
+            ? "bg-liane text-white"
+            : "border border-bordure bg-white text-encre",
+        )}
       >
         {message.text}
       </p>
-      <span className="px-1 text-xs text-gray-400">
+      <span className="px-1 text-xs text-gris">
         {tripDateLabel(message.created_at)}
       </span>
     </li>
@@ -185,12 +195,12 @@ export default function MessagesPage() {
   }
 
   return (
-    <main className="flex flex-1 flex-col overflow-hidden bg-gray-50 text-gray-900">
-      <header className="flex items-center gap-3 border-b border-gray-200 bg-white px-4 py-3">
-        <Link href={`/l/${slug}`} className="font-semibold text-emerald-700">
+    <main className="flex flex-1 flex-col overflow-hidden bg-pierre text-encre">
+      <header className={headerClass}>
+        <Link href={`/l/${slug}`} className={backLinkClass}>
           ← Liane
         </Link>
-        <h1 className="truncate text-lg font-bold">
+        <h1 className="min-w-0 flex-1 truncate text-lg font-extrabold">
           {liane ? `Messages · ${liane.name}` : "Messages"}
         </h1>
       </header>
@@ -205,8 +215,10 @@ export default function MessagesPage() {
             </li>
           )}
           {loaded && messages.length === 0 && (
-            <li className="self-center text-gray-500">
-              Aucun message pour l'instant.
+            <li>
+              <MascotNote>
+                <p>Aucun message pour l'instant.</p>
+              </MascotNote>
             </li>
           )}
           {messages.map((message) =>
@@ -226,7 +238,7 @@ export default function MessagesPage() {
 
       <form
         onSubmit={submit}
-        className="border-t border-gray-200 bg-white px-3 py-2"
+        className="border-t border-bordure bg-white px-3 py-2"
       >
         {error && <Notice>{error}</Notice>}
         <div className="mx-auto flex w-full max-w-xl items-end gap-2">
@@ -236,7 +248,7 @@ export default function MessagesPage() {
               rows={1}
               maxLength={MAX_LENGTH}
               placeholder="Écrire aux membres de la liane"
-              className="block max-h-32 min-h-11 w-full rounded-2xl border border-gray-300 px-3 py-2 text-base"
+              className={cn(fieldClass, "mt-0 max-h-32 resize-none")}
               value={text}
               onChange={(event) => setText(event.target.value)}
             />

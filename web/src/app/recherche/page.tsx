@@ -11,7 +11,15 @@ import {
   stopName,
 } from "@/components/liane/labels";
 import { PlaceField } from "@/components/place-field";
-import { buttonClass, Card, Notice, Page } from "@/components/ui";
+import {
+  buttonClass,
+  Card,
+  MascotNote,
+  mutedClass,
+  Notice,
+  Page,
+} from "@/components/ui";
+import { cn } from "@/components/utils";
 
 /** Un arrêt compte comme « près » du lieu cherché jusqu'à cette distance à vol d'oiseau. */
 const SEARCH_RADIUS_METERS = 10_000;
@@ -35,7 +43,7 @@ function StopLine({
   return (
     <p>
       {verb} <strong>{stopName(stop)}</strong>
-      <span className="block text-sm text-gray-500">
+      <span className={cn(mutedClass, "block")}>
         {stop.label}
         {distanceMeters > SAME_PLACE_METERS &&
           ` · à ${distanceLabel(distanceMeters)} de ${stopName(place)}`}
@@ -57,10 +65,8 @@ function Result({
   return (
     <Card className="flex flex-col gap-2">
       <div>
-        <h2 className="text-lg font-bold">{liane.name}</h2>
-        <p className="text-sm text-gray-500">
-          {memberCountLabel(liane.member_count)}
-        </p>
+        <h2 className="text-xl font-extrabold">{liane.name}</h2>
+        <p className={mutedClass}>{memberCountLabel(liane.member_count)}</p>
       </div>
       <StopLine
         verb="Montez à"
@@ -76,7 +82,7 @@ function Result({
         distanceMeters={result.to_distance_meters}
         place={to}
       />
-      <p className="text-sm text-gray-700">
+      <p className="text-sm">
         Tronçon de {distanceLabel(result.section_distance_meters)}
         {liane.route_source === "Straight" && " à vol d'oiseau"}
       </p>
@@ -125,14 +131,14 @@ export default function SearchPage() {
       {from && to && isFetching && <Card>Recherche…</Card>}
       {isError && <Notice>La recherche n'a pas fonctionné. Réessayez.</Notice>}
       {from && to && !isFetching && results?.length === 0 && (
-        <Card className="flex flex-col gap-3">
+        <MascotNote>
           <p className="font-semibold">
             Aucune liane ne passe par là pour l'instant.
           </p>
           <Link href="/" className={buttonClass("secondary")}>
             Voir toutes les lianes sur la carte
           </Link>
-        </Card>
+        </MascotNote>
       )}
       {from &&
         to &&

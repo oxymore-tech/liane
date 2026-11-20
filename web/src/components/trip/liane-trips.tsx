@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { listLianeTrips } from "@/api/trips";
 import type { Liane, Membership } from "@/api/types";
-import { Button, Card } from "@/components/ui";
+import { Button, Card, sectionTitleClass } from "@/components/ui";
 import { TripCard } from "./trip-card";
 import { TripForm } from "./trip-form";
 
@@ -26,9 +26,9 @@ export function LianeTrips({
 
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="px-1 text-lg font-bold">Prochains trajets</h2>
+      <h2 className={sectionTitleClass}>Prochains trajets</h2>
       {trips?.length === 0 && (
-        <p className="px-1 text-gray-600">
+        <p className="px-1 text-gris">
           Aucun trajet prévu pour l'instant. Proposez le vôtre : les autres
           membres sont prévenus.
         </p>

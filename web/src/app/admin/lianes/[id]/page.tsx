@@ -8,7 +8,7 @@ import { listAllLianes, updateLiane } from "@/api/lianes";
 import type { LianeInput } from "@/api/types";
 import { memberCountLabel } from "@/components/liane/labels";
 import { LianeForm } from "@/components/liane/liane-form";
-import { Card } from "@/components/ui";
+import { Card, linkClass, mutedClass } from "@/components/ui";
 
 export default function EditLianePage() {
   const { id } = useParams<{ id: string }>();
@@ -38,7 +38,7 @@ export default function EditLianePage() {
     return (
       <Card className="flex flex-col gap-2">
         <p>Cette liane est introuvable.</p>
-        <Link href="/admin/lianes" className="font-semibold text-emerald-700">
+        <Link href="/admin/lianes" className={linkClass}>
           Retour aux lianes
         </Link>
       </Card>
@@ -47,7 +47,7 @@ export default function EditLianePage() {
 
   return (
     <>
-      <p className="text-sm text-gray-600">
+      <p className={mutedClass}>
         {memberCountLabel(liane.member_count)} · l'adresse /l/{liane.slug} ne
         change pas quand le nom change.
         {liane.member_count > 0 &&

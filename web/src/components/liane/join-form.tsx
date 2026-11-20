@@ -5,7 +5,15 @@ import { updateMe } from "@/api/auth";
 import { joinLiane, updateMembership } from "@/api/lianes";
 import type { Liane, Membership, MembershipInput } from "@/api/types";
 import { useAppContext } from "@/components/context-provider";
-import { Button, Notice } from "@/components/ui";
+import {
+  Button,
+  checkboxClass,
+  fieldClass,
+  labelClass,
+  mutedClass,
+  Notice,
+  toggleClass,
+} from "@/components/ui";
 import { DAYS, distanceLabel, sectionDistance, stopName } from "./labels";
 
 type FormState = {
@@ -65,9 +73,6 @@ function toMembershipInput(liane: Liane, state: FormState): MembershipInput {
     return_time: followsLine ? backAt : leaveAt,
   };
 }
-
-const fieldClass =
-  "mt-1 block w-full min-h-11 rounded-lg border border-gray-300 bg-white px-3 py-2 text-base";
 
 export function JoinForm({
   liane,
@@ -131,7 +136,7 @@ export function JoinForm({
     <form onSubmit={submit} className="flex flex-col gap-4">
       {needsName && (
         <fieldset className="flex flex-col gap-3">
-          <label className="text-sm font-medium">
+          <label className={labelClass}>
             Votre prénom
             <input
               className={fieldClass}
@@ -140,7 +145,7 @@ export function JoinForm({
               autoComplete="given-name"
             />
           </label>
-          <label className="text-sm font-medium">
+          <label className={labelClass}>
             Votre nom
             <input
               className={fieldClass}
@@ -148,14 +153,14 @@ export function JoinForm({
               onChange={(event) => setLastName(event.target.value)}
               autoComplete="family-name"
             />
-            <span className="mt-1 block text-xs font-normal text-gray-500">
+            <span className="mt-1 block text-xs font-normal text-gris">
               Les autres membres voient votre prénom et l'initiale de votre nom.
             </span>
           </label>
         </fieldset>
       )}
 
-      <label className="text-sm font-medium">
+      <label className={labelClass}>
         Je monte à
         <select
           className={fieldClass}
@@ -170,7 +175,7 @@ export function JoinForm({
         </select>
       </label>
 
-      <label className="text-sm font-medium">
+      <label className={labelClass}>
         Je descends à
         <select
           className={fieldClass}
@@ -186,7 +191,7 @@ export function JoinForm({
       </label>
 
       {distance !== null && distance > 0 && (
-        <p className="-mt-2 text-sm text-gray-600">
+        <p className={`${mutedClass} -mt-2`}>
           {liane.route_source === "Osrm"
             ? `Votre trajet : ${distanceLabel(distance)} par la route.`
             : `Votre trajet : environ ${distanceLabel(distance)} à vol d'oiseau.`}
@@ -196,7 +201,7 @@ export function JoinForm({
       <label className="flex min-h-11 items-center gap-3">
         <input
           type="checkbox"
-          className="h-5 w-5"
+          className={checkboxClass}
           checked={state.alsoBack}
           onChange={(event) => set({ alsoBack: event.target.checked })}
         />
@@ -204,7 +209,7 @@ export function JoinForm({
       </label>
 
       <fieldset>
-        <legend className="text-sm font-medium">Mes jours</legend>
+        <legend className={labelClass}>Mes jours</legend>
         <div className="mt-1 grid grid-cols-7 gap-1">
           {DAYS.map((day, index) => (
             <button
@@ -218,11 +223,7 @@ export function JoinForm({
                   ),
                 })
               }
-              className={`min-h-11 rounded-lg border text-sm font-semibold ${
-                state.weekDays[index]
-                  ? "border-emerald-600 bg-emerald-600 text-white"
-                  : "border-gray-300 bg-white text-gray-600"
-              }`}
+              className={toggleClass(state.weekDays[index])}
             >
               {day}
             </button>
@@ -233,7 +234,7 @@ export function JoinForm({
       <label className="flex min-h-11 items-center gap-3">
         <input
           type="checkbox"
-          className="h-5 w-5"
+          className={checkboxClass}
           checked={state.canDrive}
           onChange={(event) => set({ canDrive: event.target.checked })}
         />
@@ -241,7 +242,7 @@ export function JoinForm({
       </label>
 
       <div className="grid grid-cols-2 gap-3">
-        <label className="text-sm font-medium">
+        <label className={labelClass}>
           Départ vers (facultatif)
           <input
             type="time"
@@ -251,7 +252,7 @@ export function JoinForm({
           />
         </label>
         {state.alsoBack && (
-          <label className="text-sm font-medium">
+          <label className={labelClass}>
             Retour vers (facultatif)
             <input
               type="time"
