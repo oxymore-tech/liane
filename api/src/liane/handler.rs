@@ -13,7 +13,6 @@ use crate::liane::model::{
     RouteRecomputeReport, SearchQuery,
 };
 use crate::liane::{matching, report, service};
-use crate::message::model::MessageKind;
 use crate::notification::Notifier;
 use crate::trip;
 
@@ -144,7 +143,14 @@ pub async fn join(
     Json(input): Json<MembershipInput>,
 ) -> Result<Json<Membership>> {
     let membership = service::join(&db, &auth.id, &id, &input).await?;
-    service::announce_membership(&db, &notifier, &id, &auth.id, MessageKind::MemberJoined).await?;
+    service::announce_membership(
+        &db,
+        &notifier,
+        &id,
+        &auth.id,
+        service::MembershipChange::Joined,
+    )
+    .await?;
     Ok(Json(membership))
 }
 
@@ -168,7 +174,14 @@ pub async fn leave(
 ) -> Result<()> {
     found(service::remove_member(&db, &id, &auth.id).await?)?;
     trip::service::withdraw_member(&db, &notifier, &id, &auth.id).await?;
-    service::announce_membership(&db, &notifier, &id, &auth.id, MessageKind::MemberLeft).await
+    service::announce_membership(
+        &db,
+        &notifier,
+        &id,
+        &auth.id,
+        service::MembershipChange::Left,
+    )
+    .await
 }
 
 pub async fn exclude_member(

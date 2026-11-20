@@ -1,6 +1,7 @@
 import { api } from "./index";
 import type {
   AdminTrip,
+  ExportedJourney,
   GestureInput,
   MyTrips,
   Trip,
@@ -33,4 +34,5 @@ export const recordGesture = (id: string, body: GestureInput) =>
 export const listAllTrips = () => api.get<AdminTrip[]>("/trip/admin");
 
 /** Couples conducteur/passager au format du registre de preuve ; contient des numéros de téléphone. */
-export const exportProofs = () => api.get<unknown[]>("/trip/admin/export");
+export const exportProofs = () =>
+  api.get<ExportedJourney[]>("/trip/admin/export");

@@ -35,9 +35,18 @@ pub struct ComputedRoute {
     pub stop_distances: Vec<i32>,
 }
 
+/// Géométrie GeoJSON d'un tracé : `{"type": "LineString", "coordinates": [[lng, lat], …]}`.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum RouteGeometry {
+    LineString { coordinates: Vec<Position> },
+}
+
 impl ComputedRoute {
-    pub fn geojson(&self) -> serde_json::Value {
-        serde_json::json!({ "type": "LineString", "coordinates": self.coordinates })
+    pub fn geojson(&self) -> RouteGeometry {
+        RouteGeometry::LineString {
+            coordinates: self.coordinates.clone(),
+        }
     }
 }
 

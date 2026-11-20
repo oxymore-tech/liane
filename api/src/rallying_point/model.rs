@@ -44,12 +44,20 @@ pub struct AdminRallyingPoint {
     pub lianes: Vec<String>,
 }
 
+/// Un type inconnu est gardé tel quel pour être refusé avec `InvalidKind`, comme les autres champs.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(untagged)]
+pub enum KindInput {
+    Known(RallyingPointKind),
+    Unknown(String),
+}
+
 #[derive(Debug, Deserialize)]
 pub struct RallyingPointInput {
     pub label: String,
     pub lat: f64,
     pub lng: f64,
-    pub kind: String,
+    pub kind: KindInput,
     #[serde(default)]
     pub address: String,
     #[serde(default)]

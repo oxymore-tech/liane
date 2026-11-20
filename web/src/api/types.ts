@@ -1,9 +1,19 @@
+export type RallyingPointKind =
+  | "CarpoolArea"
+  | "HighwayExit"
+  | "Parking"
+  | "Supermarket"
+  | "RelayParking"
+  | "AbandonedRoad"
+  | "AutoStop"
+  | "TownHall";
+
 export type RallyingPoint = {
   id: string;
   label: string;
   lat: number;
   lng: number;
-  kind: string;
+  kind: RallyingPointKind;
   address: string;
   zip_code: string;
   city: string;
@@ -202,6 +212,15 @@ export type GestureInput = {
 
 export type ProofClass = "A" | "B" | "C";
 
+/** Une déclaration invraisemblable, signalée sans changer la classe. */
+export type ProofWarning =
+  | "DriverStartFarFromStop"
+  | "DriverEndFarFromStop"
+  | "DriverTripTooShort"
+  | "PassengerStartFarFromStop"
+  | "PassengerEndFarFromStop"
+  | "PassengerTripTooShort";
+
 export type ProofGesture = {
   recorded_at: string;
   position_status: PositionStatus;
@@ -221,7 +240,7 @@ export type ProofDetail = {
   driver: ProofOccupant;
   passenger: ProofOccupant;
   distinct_identities: boolean;
-  warnings: string[];
+  warnings: ProofWarning[];
   far_from_stop_meters: number;
 };
 
@@ -237,22 +256,98 @@ export type AdminProof = {
 
 export type AdminTrip = Trip & { proofs: AdminProof[] };
 
-export type MessageKind =
-  | "Text"
-  | "MemberJoined"
-  | "MemberLeft"
-  | "TripProposed"
-  | "TripCanceled"
-  | "TripStarted"
-  | "TripFinished";
+/** Corps de `POST /journeys` du registre de preuve de covoiturage (API v3.4). */
+export type RegistryTimePlace = { datetime: string; lat: number; lon: number };
 
-export type Message = {
+export type RegistryIdentity = {
+  operator_user_id: string;
+  identity_key: string;
+  phone_trunc: string;
+};
+
+export type RegistryJourney = {
+  operator_journey_id: string;
+  operator_trip_id: string;
+  operator_class: ProofClass;
+  incentives: { index: number; amount: number; siret: string }[];
+  start: RegistryTimePlace;
+  end: RegistryTimePlace;
+  distance: number;
+  driver: { identity: RegistryIdentity; revenue: number };
+  passenger: {
+    identity: RegistryIdentity;
+    contribution: number;
+    seats: number;
+  };
+};
+
+export type MissingField =
+  | "end.datetime"
+  | "driver.identity"
+  | "passenger.identity";
+
+export type TimeSource =
+  | "PassengerGesture"
+  | "DriverGesture"
+  | "PlannedDeparture";
+
+export type PositionSource = "PassengerGesture" | "PlannedStop";
+
+export type DeclaredGesture = {
+  datetime: string;
+  lat: number | null;
+  lon: number | null;
+};
+
+export type DeclaredGestures = {
+  start: DeclaredGesture | null;
+  end: DeclaredGesture | null;
+};
+
+/**
+ * Un couple conducteur/passager de l'export. `journey` est absent quand une donnée obligatoire
+ * du registre manque ; `missing` dit laquelle. `liane` porte ce qui n'appartient pas au registre.
+ */
+export type ExportedJourney = {
+  journey: RegistryJourney | null;
+  missing: MissingField[];
+  liane: {
+    trip_id: string;
+    liane_id: string;
+    driver_id: string;
+    passenger_id: string;
+    operator_class: ProofClass;
+    planned_departure_time: string;
+    start_time_source: TimeSource;
+    start_position_source: PositionSource;
+    end_time_source: TimeSource | null;
+    end_position_source: PositionSource;
+    driver: DeclaredGestures;
+    passenger: DeclaredGestures;
+    indicative_contribution_cents: number | null;
+    proof_detail: ProofDetail | null;
+    warnings: "DistanceUnderOneKilometer"[];
+  };
+};
+
+/** Le trajet dont parle un message automatique. */
+export type TripReference = { trip_id: string; departure_time: string };
+
+/** `kind` dit ce que porte `data` : rien pour un texte ou une adhésion, le trajet sinon. */
+export type MessageContent =
+  | { kind: "Text" | "MemberJoined" | "MemberLeft"; data?: undefined }
+  | {
+      kind: "TripProposed" | "TripCanceled" | "TripStarted" | "TripFinished";
+      data: TripReference;
+    };
+
+export type MessageKind = MessageContent["kind"];
+
+export type Message = MessageContent & {
   id: string;
   liane_id: string;
   author: PublicUser;
-  kind: MessageKind;
   text: string;
-  data: { trip_id?: string; departure_time?: string } | null;
   created_at: string;
 };
 
