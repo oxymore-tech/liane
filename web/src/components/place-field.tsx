@@ -15,6 +15,11 @@ import type { RallyingPoint } from "@/api/types";
 import { useDebounce } from "@/components/hooks";
 import { DEFAULT_VIEW } from "@/components/map/map-style";
 import {
+  PointName,
+  pointCity,
+  pointName,
+} from "@/components/rallying-point/point-name";
+import {
   fieldClass,
   floatingClass,
   labelClass,
@@ -28,10 +33,9 @@ const DEFAULT_NEAR = {
   lng: DEFAULT_VIEW.longitude,
 };
 
-export const placeName = (place: RallyingPoint) =>
-  place.city && place.city !== place.label
-    ? `${place.city} – ${place.label}`
-    : place.label;
+/** Le lieu choisi, tel qu'il s'écrit dans le champ : son nom, puis sa commune. */
+const placeText = (place: RallyingPoint) =>
+  [pointName(place), pointCity(place)].filter(Boolean).join(", ");
 
 /**
  * Un lieu choisi parmi les communes et points de ralliement, en tapant le début de son nom.
@@ -74,7 +78,7 @@ export function PlaceField({
           className={fieldClass}
           placeholder={placeholder}
           displayValue={(place: RallyingPoint | null) =>
-            place ? placeName(place) : ""
+            place ? placeText(place) : ""
           }
           onChange={(event) => setText(event.target.value)}
         />
@@ -93,12 +97,7 @@ export function PlaceField({
               value={place}
               className={optionClass}
             >
-              <span className="min-w-0 flex-1">
-                {place.label}
-                <span className="block text-sm text-gris">
-                  {place.zip_code} {place.city}
-                </span>
-              </span>
+              <PointName point={place} zipCode className="min-w-0 flex-1" />
             </ComboboxOption>
           ))}
         </ComboboxOptions>

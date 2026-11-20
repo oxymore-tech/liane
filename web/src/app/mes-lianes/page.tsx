@@ -7,11 +7,12 @@ import { useAppContext } from "@/components/context-provider";
 import {
   daysLabel,
   memberCountLabel,
-  sectionLabel,
+  memberSection,
 } from "@/components/liane/labels";
 import { UnreadBadge } from "@/components/liane/unread-badge";
 import { MyTabs } from "@/components/my-tabs";
 import { NotificationSettings } from "@/components/notifications";
+import { PointRoute } from "@/components/rallying-point/point-name";
 import {
   Button,
   buttonClass,
@@ -69,7 +70,7 @@ export default function MyLianesPage() {
                 {liane.name}
               </h2>
               <p>
-                {sectionLabel(liane, liane.membership)} ·{" "}
+                <PointRoute {...memberSection(liane, liane.membership)} /> ·{" "}
                 {daysLabel(liane.membership.week_days)}
                 {liane.membership.can_drive && " · vous pouvez conduire"}
               </p>

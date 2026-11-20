@@ -9,7 +9,11 @@ import { getLiane, leaveLiane, listMyLianes } from "@/api/lianes";
 import { useAppContext } from "@/components/context-provider";
 import { ConfirmDialog } from "@/components/dialog";
 import { JoinForm } from "@/components/liane/join-form";
-import { daysLabel, routeLabel, sectionLabel } from "@/components/liane/labels";
+import {
+  daysLabel,
+  memberSection,
+  routeLabel,
+} from "@/components/liane/labels";
 import {
   MemberCount,
   ScheduleTable,
@@ -17,6 +21,7 @@ import {
 } from "@/components/liane/liane-summary";
 import { MemberList } from "@/components/liane/member-list";
 import { UnreadBadge } from "@/components/liane/unread-badge";
+import { PointRoute } from "@/components/rallying-point/point-name";
 import { LianeTrips } from "@/components/trip/liane-trips";
 import { Button, buttonClass, Card, Notice, Page } from "@/components/ui";
 
@@ -112,7 +117,7 @@ function LianePage() {
           <div className="mt-3 rounded-field bg-pale p-3 text-liane">
             <p className="font-semibold">Vous êtes membre de cette liane</p>
             <p className="text-sm">
-              {sectionLabel(liane, liane.membership)} ·{" "}
+              <PointRoute {...memberSection(liane, liane.membership)} /> ·{" "}
               {daysLabel(liane.membership.week_days)}
               {liane.membership.can_drive && " · vous pouvez conduire"}
             </p>

@@ -27,6 +27,7 @@ import {
   ScheduleTable,
   StopList,
 } from "@/components/liane/liane-summary";
+import { PointName } from "@/components/rallying-point/point-name";
 import {
   Button,
   buttonClass,
@@ -309,8 +310,7 @@ function HoverPopover({
       >
         {hover.stop && (
           <p>
-            <span className="block font-bold">{hover.stop.label}</span>
-            <span className={cn(mutedClass, "block")}>{hover.stop.city}</span>
+            <PointName point={hover.stop} />
           </p>
         )}
         <ul className={listClass}>

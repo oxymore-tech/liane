@@ -1,14 +1,6 @@
-import type { Direction, Liane, Membership, RouteSource } from "@/api/types";
+import type { Liane, Membership, RouteSource } from "@/api/types";
 
 export const DAYS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
-
-export const stopName = (stop: { city: string; label: string }) =>
-  stop.city || stop.label;
-
-export const firstStopName = (liane: Liane) => stopName(liane.stops[0]);
-
-export const lastStopName = (liane: Liane) =>
-  stopName(liane.stops[liane.stops.length - 1]);
 
 export const memberCountLabel = (count: number) =>
   count === 0
@@ -20,25 +12,18 @@ export const memberCountLabel = (count: number) =>
 export const daysLabel = (weekDays: string) =>
   DAYS.filter((_, index) => weekDays[index] === "1").join(", ");
 
-export const directionLabel = (liane: Liane, direction: Direction) => {
-  const outbound = `${firstStopName(liane)} → ${lastStopName(liane)}`;
-  const back = `${lastStopName(liane)} → ${firstStopName(liane)}`;
-  if (direction === "Outbound") return outbound;
-  if (direction === "Return") return back;
-  return "dans les deux sens";
-};
+const UNKNOWN_STOP = { label: "?", city: "" };
 
-/** Le tronçon d'un membre est enregistré dans le sens aller ; on l'affiche dans son sens de trajet. */
-export const sectionLabel = (liane: Liane, membership: Membership) => {
-  const name = (id: string) => {
-    const stop = liane.stops.find((candidate) => candidate.id === id);
-    return stop ? stopName(stop) : "?";
-  };
-  const board = name(membership.board_stop_id);
-  const alight = name(membership.alight_stop_id);
-  if (membership.direction === "Return") return `${alight} → ${board}`;
-  if (membership.direction === "Both") return `${board} ⇄ ${alight}`;
-  return `${board} → ${alight}`;
+/** Le tronçon d'un membre est enregistré dans le sens aller ; on le donne dans son sens de trajet. */
+export const memberSection = (liane: Liane, membership: Membership) => {
+  const stop = (id: string) =>
+    liane.stops.find((candidate) => candidate.id === id) ?? UNKNOWN_STOP;
+  const board = stop(membership.board_stop_id);
+  const alight = stop(membership.alight_stop_id);
+  if (membership.direction === "Return") {
+    return { from: alight, to: board, bothWays: false };
+  }
+  return { from: board, to: alight, bothWays: membership.direction === "Both" };
 };
 
 export const distanceLabel = (meters: number) => {

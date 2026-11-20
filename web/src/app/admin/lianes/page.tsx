@@ -12,11 +12,8 @@ import {
 } from "@/api/lianes";
 import type { Liane } from "@/api/types";
 import { ConfirmDialog } from "@/components/dialog";
-import {
-  memberCountLabel,
-  routeLabel,
-  stopName,
-} from "@/components/liane/labels";
+import { memberCountLabel, routeLabel } from "@/components/liane/labels";
+import { PointName } from "@/components/rallying-point/point-name";
 import {
   Badge,
   Button,
@@ -100,7 +97,14 @@ export default function AdminLianesPage() {
               {liane.is_active ? "Active" : "Désactivée"}
             </Badge>
           </div>
-          <p className="text-sm">{liane.stops.map(stopName).join(" → ")}</p>
+          <p className="text-sm">
+            {liane.stops.map((stop, index) => (
+              <span key={stop.id}>
+                {index > 0 && " → "}
+                <PointName inline point={stop} />
+              </span>
+            ))}
+          </p>
           <p className={mutedClass}>
             {memberCountLabel(liane.member_count)} · /l/{liane.slug}
           </p>

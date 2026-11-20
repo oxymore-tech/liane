@@ -16,10 +16,17 @@ import {
   MAP_FONT,
   mapColors,
   mapStyle,
+  POINT_TEXT_FIELD,
 } from "./map-style";
 import { PlaceNamesLayer } from "./place-names-layer";
 
-type Stop = { id: string; lat: number; lng: number; city: string };
+type Stop = {
+  id: string;
+  lat: number;
+  lng: number;
+  city: string;
+  label: string;
+};
 
 type Props = {
   stops: Stop[];
@@ -59,7 +66,11 @@ export default function RoutePreview({
         },
         ...stops.map((stop, index) => ({
           type: "Feature" as const,
-          properties: { city: stop.city, rank: `${index + 1}` },
+          properties: {
+            label: stop.label,
+            city: stop.city,
+            rank: `${index + 1}`,
+          },
           geometry: {
             type: "Point" as const,
             coordinates: [stop.lng, stop.lat],
@@ -146,7 +157,7 @@ export default function RoutePreview({
           type="symbol"
           filter={["==", ["geometry-type"], "Point"]}
           layout={{
-            "text-field": ["get", "city"],
+            "text-field": POINT_TEXT_FIELD,
             "text-font": MAP_FONT,
             "text-size": 12,
             "text-variable-anchor": ["right", "left", "top", "bottom"],

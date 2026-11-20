@@ -5,12 +5,9 @@ import Link from "next/link";
 import { useState } from "react";
 import { searchLianes } from "@/api/lianes";
 import type { LianeSearchResult, RallyingPoint } from "@/api/types";
-import {
-  distanceLabel,
-  memberCountLabel,
-  stopName,
-} from "@/components/liane/labels";
+import { distanceLabel, memberCountLabel } from "@/components/liane/labels";
 import { PlaceField } from "@/components/place-field";
+import { PointName, pointName } from "@/components/rallying-point/point-name";
 import {
   buttonClass,
   Card,
@@ -42,12 +39,12 @@ function StopLine({
   if (!stop) return null;
   return (
     <p>
-      {verb} <strong>{stopName(stop)}</strong>
-      <span className={cn(mutedClass, "block")}>
-        {stop.label}
-        {distanceMeters > SAME_PLACE_METERS &&
-          ` · à ${distanceLabel(distanceMeters)} de ${stopName(place)}`}
-      </span>
+      {verb} <PointName inline point={stop} />
+      {distanceMeters > SAME_PLACE_METERS && (
+        <span className={cn(mutedClass, "block")}>
+          à {distanceLabel(distanceMeters)} de {pointName(place)}
+        </span>
+      )}
     </p>
   );
 }

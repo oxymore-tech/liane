@@ -5,6 +5,7 @@ import { Conflict } from "@/api/exception";
 import { reportMember } from "@/api/lianes";
 import type { Liane, LianeMember } from "@/api/types";
 import { Modal } from "@/components/dialog";
+import { PointRoute } from "@/components/rallying-point/point-name";
 import {
   Button,
   fieldClass,
@@ -14,7 +15,7 @@ import {
   Notice,
 } from "@/components/ui";
 import { cn } from "@/components/utils";
-import { daysLabel, sectionLabel } from "./labels";
+import { daysLabel, memberSection } from "./labels";
 
 function ReportForm({
   liane,
@@ -106,7 +107,8 @@ export function MemberList({
                   {isMe && " (vous)"}
                 </span>
                 <span className={cn(mutedClass, "block")}>
-                  {sectionLabel(liane, member)} · {daysLabel(member.week_days)}
+                  <PointRoute {...memberSection(liane, member)} /> ·{" "}
+                  {daysLabel(member.week_days)}
                   {member.can_drive && " · peut conduire"}
                 </span>
               </div>

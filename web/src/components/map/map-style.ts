@@ -1,8 +1,31 @@
-import type { StyleSpecification } from "maplibre-gl";
+import type { ExpressionSpecification, StyleSpecification } from "maplibre-gl";
 import { MAPTILER_KEY, TILES_PATH } from "@/api/env";
 
 export const MAP_FONT = ["Noto Sans Regular"];
 export const HAS_BASEMAP = MAPTILER_KEY !== "";
+
+/**
+ * Étiquette d'un point de ralliement sur une carte, comme `PointName` : son nom, puis sa commune
+ * en plus petit si le nom ne la contient pas déjà.
+ */
+export const POINT_TEXT_FIELD: ExpressionSpecification = [
+  "case",
+  [
+    "any",
+    ["==", ["get", "city"], ""],
+    ["in", ["get", "city"], ["get", "label"]],
+  ],
+  ["get", "label"],
+  [
+    "format",
+    ["get", "label"],
+    {},
+    "\n",
+    {},
+    ["get", "city"],
+    { "font-scale": 0.85 },
+  ],
+];
 
 type MapColors = {
   liane: string;

@@ -4,13 +4,8 @@ import { Field, Label, Radio, RadioGroup } from "@headlessui/react";
 import { type FormEvent, useId, useState } from "react";
 import { createTrip } from "@/api/trips";
 import type { Liane, Membership, TripDetail, TripDirection } from "@/api/types";
-import {
-  distanceLabel,
-  firstStopName,
-  lastStopName,
-  sectionDistance,
-  stopName,
-} from "@/components/liane/labels";
+import { distanceLabel, sectionDistance } from "@/components/liane/labels";
+import { PointName, PointRoute } from "@/components/rallying-point/point-name";
 import { SelectField } from "@/components/select-field";
 import {
   Button,
@@ -43,7 +38,7 @@ const tomorrow = () => {
 
 const stopOption = (stop: { id: string; city: string; label: string }) => ({
   value: stop.id,
-  content: stopName(stop),
+  content: <PointName point={stop} />,
 });
 
 /** Le tronçon habituel du membre, pris dans le sens du trajet. */
@@ -86,6 +81,9 @@ export function TripForm({
     direction === "Outbound" ? liane.stops : [...liane.stops].reverse();
   const indexOf = (id: string) => stops.findIndex((stop) => stop.id === id);
   const distance = sectionDistance(liane, section.fromId, section.toId);
+
+  const first = liane.stops[0];
+  const last = liane.stops[liane.stops.length - 1];
 
   const changeDirection = (next: TripDirection) => {
     setDirection(next);
@@ -152,9 +150,13 @@ export function TripForm({
                 "flex items-center px-3 py-2 text-left text-base",
               )}
             >
-              {choice === "Outbound"
-                ? `${firstStopName(liane)} → ${lastStopName(liane)}`
-                : `${lastStopName(liane)} → ${firstStopName(liane)}`}
+              <span>
+                {choice === "Outbound" ? (
+                  <PointRoute from={first} to={last} />
+                ) : (
+                  <PointRoute from={last} to={first} />
+                )}
+              </span>
             </Radio>
           ))}
         </RadioGroup>

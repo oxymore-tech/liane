@@ -22,7 +22,8 @@ import type {
 import { LianeSymbol } from "@/components/brand";
 import { useAppContext } from "@/components/context-provider";
 import { ConfirmDialog } from "@/components/dialog";
-import { distanceLabel, stopName } from "@/components/liane/labels";
+import { distanceLabel } from "@/components/liane/labels";
+import { PointName, PointRoute } from "@/components/rallying-point/point-name";
 import { SelectField } from "@/components/select-field";
 import {
   attestationLabel,
@@ -33,7 +34,6 @@ import {
   seatsLabel,
   timeLabel,
   tripDateLabel,
-  tripSection,
 } from "@/components/trip/labels";
 import { askPosition } from "@/components/trip/position";
 import { StateBadge } from "@/components/trip/trip-card";
@@ -62,7 +62,9 @@ function Summary({ trip }: { trip: TripDetail }) {
   return (
     <Card className="flex flex-col gap-1">
       <div className="flex items-start justify-between gap-2">
-        <h2 className="text-2xl font-extrabold">{tripSection(trip)}</h2>
+        <h2 className="text-2xl font-extrabold">
+          <PointRoute from={trip.from_stop} to={trip.to_stop} />
+        </h2>
         <StateBadge trip={trip} />
       </div>
       <p className="text-lg">{tripDateLabel(trip.departure_time)}</p>
@@ -205,7 +207,7 @@ function Participants({
             {trip.driver.id === currentUserId && " (vous)"}
           </span>
           <span className={cn(mutedClass, "block")}>
-            Conduit · {tripSection(trip)}
+            Conduit · <PointRoute from={trip.from_stop} to={trip.to_stop} />
             {driver && ` · ${driver}`}
           </span>
         </li>
@@ -218,7 +220,8 @@ function Participants({
                 {passenger.user.id === currentUserId && " (vous)"}
               </span>
               <span className={cn(mutedClass, "block")}>
-                Passager · {tripSection(passenger)}
+                Passager ·{" "}
+                <PointRoute from={passenger.from_stop} to={passenger.to_stop} />
                 {status && ` · ${status}`}
               </span>
             </li>
@@ -234,7 +237,7 @@ function Participants({
 
 const stopOption = (stop: { id: string; city: string; label: string }) => ({
   value: stop.id,
-  content: stopName(stop),
+  content: <PointName point={stop} />,
 });
 
 function BookingForm({

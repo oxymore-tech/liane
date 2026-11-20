@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Trip } from "@/api/types";
+import { PointRoute } from "@/components/rallying-point/point-name";
 import {
   Badge,
   type BadgeTone,
@@ -7,7 +8,7 @@ import {
   Chevron,
   mutedClass,
 } from "@/components/ui";
-import { seatsLabel, stateLabel, tripDateLabel, tripSection } from "./labels";
+import { seatsLabel, stateLabel, tripDateLabel } from "./labels";
 
 const STATE_TONES: Record<Trip["state"], BadgeTone> = {
   Planned: "pale",
@@ -49,7 +50,9 @@ export function TripCard({
             <h3 className="font-bold">{tripDateLabel(trip.departure_time)}</h3>
             <StateBadge trip={trip} />
           </div>
-          <p>{tripSection(trip)}</p>
+          <p>
+            <PointRoute from={trip.from_stop} to={trip.to_stop} />
+          </p>
           <p className={mutedClass}>
             {roleLabel(trip)}
             {trip.is_open &&

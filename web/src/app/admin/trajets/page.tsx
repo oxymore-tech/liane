@@ -17,12 +17,8 @@ import type {
   ProofWarning,
 } from "@/api/types";
 import { distanceLabel } from "@/components/liane/labels";
-import {
-  euros,
-  timeLabel,
-  tripDateLabel,
-  tripSection,
-} from "@/components/trip/labels";
+import { PointRoute } from "@/components/rallying-point/point-name";
+import { euros, timeLabel, tripDateLabel } from "@/components/trip/labels";
 import { StateBadge } from "@/components/trip/trip-card";
 import {
   Badge,
@@ -101,7 +97,8 @@ function Proof({ proof }: { proof: AdminProof }) {
             {proof.passenger.pseudo ?? "Passager"}
           </span>
           <span className={cn(mutedClass, "block")}>
-            {tripSection(proof)} · {distanceLabel(proof.distance_meters)}
+            <PointRoute from={proof.from_stop} to={proof.to_stop} /> ·{" "}
+            {distanceLabel(proof.distance_meters)}
             {proof.indicative_contribution_cents !== null &&
               ` · partage indicatif ${euros(proof.indicative_contribution_cents)}`}
           </span>
@@ -152,7 +149,9 @@ function TripProofs({ trip }: { trip: AdminTrip }) {
         </Link>
         <StateBadge trip={trip} />
       </div>
-      <p>{tripSection(trip)}</p>
+      <p>
+        <PointRoute from={trip.from_stop} to={trip.to_stop} />
+      </p>
       <p className={mutedClass}>
         Liane {trip.liane.name} · conduit par{" "}
         {trip.driver.pseudo ?? "un membre"}

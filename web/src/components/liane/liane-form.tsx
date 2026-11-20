@@ -10,13 +10,14 @@ import type {
   LianeInput,
   RoutePreview as RoutePreviewData,
 } from "@/api/types";
-import { routeLabel, stopName } from "@/components/liane/labels";
+import { routeLabel } from "@/components/liane/labels";
 import { DEFAULT_VIEW } from "@/components/map/map-style";
 import {
   RALLYING_POINTS_LAYER_ID,
   RallyingPointsLayer,
 } from "@/components/map/rallying-points-layer";
 import { PlaceField } from "@/components/place-field";
+import { PointName, pointName } from "@/components/rallying-point/point-name";
 import {
   Button,
   Card,
@@ -40,6 +41,9 @@ type Stop = {
 };
 
 const TOUCH_RADIUS_PIXELS = 32;
+
+/** Le nom proposé pour une liane relie ses communes de départ et d'arrivée. */
+const communeOf = (stop: Stop) => stop.city || stop.label;
 
 const stopActionClass =
   "h-11 w-11 shrink-0 rounded-full text-lg text-liane transition-colors not-disabled:hover:bg-white not-disabled:active:bg-bordure disabled:opacity-30";
@@ -153,7 +157,7 @@ export function LianeForm({
 
   const suggestedName =
     stops.length >= 2
-      ? `${stopName(stops[0])} – ${stopName(stops[stops.length - 1])}`
+      ? `${communeOf(stops[0])} – ${communeOf(stops[stops.length - 1])}`
       : "";
 
   const submit = async (event: FormEvent) => {
@@ -205,40 +209,39 @@ export function LianeForm({
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-liane text-xs font-bold text-white">
                 {index + 1}
               </span>
-              <span className="min-w-0 flex-1">
-                {stopName(stop)}
-                <span className="block text-xs text-gris">{stop.label}</span>
+              <PointName point={stop} className="min-w-0 flex-1" />
+              <span className="flex shrink-0">
+                <button
+                  type="button"
+                  aria-label={`Monter ${pointName(stop)}`}
+                  className={stopActionClass}
+                  disabled={index === 0}
+                  onClick={() => move(index, -1)}
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Descendre ${pointName(stop)}`}
+                  className={stopActionClass}
+                  disabled={index === stops.length - 1}
+                  onClick={() => move(index, 1)}
+                >
+                  ↓
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Retirer ${pointName(stop)}`}
+                  className={cn(stopActionClass, "text-rouge")}
+                  onClick={() =>
+                    setStops((current) =>
+                      current.filter((existing) => existing.id !== stop.id),
+                    )
+                  }
+                >
+                  ×
+                </button>
               </span>
-              <button
-                type="button"
-                aria-label={`Monter ${stopName(stop)}`}
-                className={stopActionClass}
-                disabled={index === 0}
-                onClick={() => move(index, -1)}
-              >
-                ↑
-              </button>
-              <button
-                type="button"
-                aria-label={`Descendre ${stopName(stop)}`}
-                className={stopActionClass}
-                disabled={index === stops.length - 1}
-                onClick={() => move(index, 1)}
-              >
-                ↓
-              </button>
-              <button
-                type="button"
-                aria-label={`Retirer ${stopName(stop)}`}
-                className={cn(stopActionClass, "text-rouge")}
-                onClick={() =>
-                  setStops((current) =>
-                    current.filter((existing) => existing.id !== stop.id),
-                  )
-                }
-              >
-                ×
-              </button>
             </li>
           ))}
         </ol>

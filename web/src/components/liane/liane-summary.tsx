@@ -1,12 +1,7 @@
 import type { DaySchedule, Liane } from "@/api/types";
+import { PointName, PointRoute } from "@/components/rallying-point/point-name";
 import { cn } from "@/components/utils";
-import {
-  DAYS,
-  firstStopName,
-  lastStopName,
-  memberCountLabel,
-  stopName,
-} from "./labels";
+import { DAYS, memberCountLabel } from "./labels";
 
 export function MemberCount({ liane }: { liane: Liane }) {
   return <p className="text-gris">{memberCountLabel(liane.member_count)}</p>;
@@ -38,16 +33,7 @@ export function StopList({
               )}
             />
           </span>
-          <span className="py-1.5">
-            <span
-              className={
-                highlighted.includes(stop.id) ? "font-bold" : "font-medium"
-              }
-            >
-              {stopName(stop)}
-            </span>
-            <span className="block text-sm text-gris">{stop.label}</span>
-          </span>
+          <PointName point={stop} className="py-1.5" />
         </li>
       ))}
     </ol>
@@ -88,6 +74,8 @@ export function ScheduleTable({
       </p>
     );
   }
+  const first = liane.stops[0];
+  const last = liane.stops[liane.stops.length - 1];
   return (
     <table className="w-full text-sm">
       <caption className="sr-only">
@@ -97,10 +85,10 @@ export function ScheduleTable({
         <tr className="text-xs text-gris">
           <th className="py-1 text-left font-medium">Jour</th>
           <th className="px-2 py-1 font-medium">
-            {firstStopName(liane)} → {lastStopName(liane)}
+            <PointRoute from={first} to={last} />
           </th>
           <th className="px-2 py-1 font-medium">
-            {lastStopName(liane)} → {firstStopName(liane)}
+            <PointRoute from={last} to={first} />
           </th>
         </tr>
       </thead>

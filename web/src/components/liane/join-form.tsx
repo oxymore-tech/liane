@@ -5,6 +5,7 @@ import { updateMe } from "@/api/auth";
 import { joinLiane, updateMembership } from "@/api/lianes";
 import type { Liane, Membership, MembershipInput } from "@/api/types";
 import { useAppContext } from "@/components/context-provider";
+import { PointName } from "@/components/rallying-point/point-name";
 import { SelectField } from "@/components/select-field";
 import {
   Button,
@@ -16,7 +17,7 @@ import {
   Notice,
   toggleClass,
 } from "@/components/ui";
-import { DAYS, distanceLabel, sectionDistance, stopName } from "./labels";
+import { DAYS, distanceLabel, sectionDistance } from "./labels";
 
 type FormState = {
   fromId: string;
@@ -106,7 +107,7 @@ export function JoinForm({
     setState((current) => ({ ...current, ...change }));
   const stopOptions = liane.stops.map((stop) => ({
     value: stop.id,
-    content: stopName(stop),
+    content: <PointName point={stop} />,
   }));
 
   const submit = async (event: FormEvent) => {
