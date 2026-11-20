@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::io::stdin;
 use std::path::Path;
@@ -11,6 +12,7 @@ use tracing::info;
 
 use crate::command::Command;
 use crate::env::Env;
+use crate::osrm::{OsrmTunnel, close_tunnel};
 
 pub async fn start(env: Env, purge: bool) -> Result<()> {
     if env == Env::Local {
@@ -30,6 +32,9 @@ pub async fn start(env: Env, purge: bool) -> Result<()> {
         .await?;
     if env == Env::Local {
         ensure_test_database(env).await?;
+        if let Some(tunnel) = OsrmTunnel::from_settings(&env_file_settings(env).await?)? {
+            tunnel.open().await?;
+        }
     }
     info!("Liane {env} env started");
     Ok(())
@@ -77,6 +82,13 @@ async fn ensure_env_file_exists(env: Env) -> Result<()> {
     }
     dest.flush().await?;
     Ok(())
+}
+
+async fn env_file_settings(env: Env) -> Result<HashMap<String, String>> {
+    let content = read_to_string(format!("{}/deploy/.env", env.home())).await?;
+    Ok(variables(&content)
+        .map(|(key, value)| (key.to_string(), value.to_string()))
+        .collect())
 }
 
 /// Les lignes `CLÉ=valeur` d'un fichier d'environnement, sans les commentaires.
@@ -157,6 +169,9 @@ pub async fn dump(env: Env) -> Result<()> {
 
 pub async fn stop(env: Env) -> Result<()> {
     docker_compose(env, ["down"]).status().await?;
+    if env == Env::Local {
+        close_tunnel().await;
+    }
     info!("Liane {env} env stopped");
     Ok(())
 }
