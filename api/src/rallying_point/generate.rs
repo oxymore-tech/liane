@@ -305,7 +305,8 @@ pub async fn generate(db: &PgPool, test_only: bool) -> Result<SyncReport> {
 /// Aligne les points de ralliement des `sources` sur `points`, par clé stable : crée les nouveaux, met à
 /// jour ceux qui ont changé, réactive ceux qui reviennent, désactive ceux qui ont disparu. Rien n'est
 /// supprimé et aucun identifiant ne change : lianes, trajets et demandes gardent leurs arrêts.
-/// Les points des autres sources et les points sans clé ne sont pas touchés.
+/// Les points des autres sources et les points sans clé ne sont pas touchés, ni ceux qu'un administrateur
+/// a créés ou modifiés (`edited_at`).
 pub async fn sync(db: &PgPool, sources: &[&str], points: Vec<SourcePoint>) -> Result<SyncReport> {
     let mut tx = db.begin().await?;
 
@@ -359,6 +360,7 @@ pub async fn sync(db: &PgPool, sources: &[&str], points: Vec<SourcePoint>) -> Re
                 FROM source_point s
                 INNER JOIN rallying_point old
                     ON old.source_key IS NULL
+                   AND old.edited_at IS NULL
                    AND old.kind = s.kind
                    AND old.label = s.label
                    AND ST_DWithin(old.location, s.location, 5)
@@ -377,7 +379,7 @@ pub async fn sync(db: &PgPool, sources: &[&str], points: Vec<SourcePoint>) -> Re
             UPDATE rallying_point rp
             SET is_active = true
             FROM source_point s
-            WHERE rp.source_key = s.source_key AND NOT rp.is_active
+            WHERE rp.source_key = s.source_key AND NOT rp.is_active AND rp.edited_at IS NULL
         "#,
     )
     .execute(&mut *tx)
@@ -396,6 +398,7 @@ pub async fn sync(db: &PgPool, sources: &[&str], points: Vec<SourcePoint>) -> Re
                 place_count = s.place_count
             FROM source_point s
             WHERE rp.source_key = s.source_key
+              AND rp.edited_at IS NULL
               AND (rp.label, rp.kind, rp.address, rp.zip_code, rp.city, rp.place_count, ST_AsEWKB(rp.location::geometry))
                   IS DISTINCT FROM
                   (s.label, s.kind, s.address, s.zip_code, s.city, s.place_count, ST_AsEWKB(s.location::geometry))
@@ -422,6 +425,7 @@ pub async fn sync(db: &PgPool, sources: &[&str], points: Vec<SourcePoint>) -> Re
             UPDATE rallying_point rp
             SET is_active = false
             WHERE rp.is_active
+              AND rp.edited_at IS NULL
               AND split_part(rp.source_key, ':', 1) = ANY($1)
               AND NOT EXISTS (SELECT 1 FROM source_point s WHERE s.source_key = rp.source_key)
             RETURNING

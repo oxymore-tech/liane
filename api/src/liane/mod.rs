@@ -8,7 +8,8 @@ use crate::liane::handler::{
 };
 
 pub use service::{
-    LianeLabel, find_label, find_member_ids_except, find_member_stops, is_member, remove_member,
+    LianeLabel, find_label, find_member_ids_except, find_member_stops, is_member,
+    recompute_route as recompute_liane_route, remove_member,
 };
 
 mod handler;

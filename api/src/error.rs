@@ -15,6 +15,8 @@ pub enum AppError {
     Forbidden,
     NotFound,
     BadRequest,
+    /// Comme `BadRequest`, avec un mot-clé dans la réponse qui dit ce qui est refusé.
+    Invalid(String),
     TooManyRequests,
     /// Le texte part dans la réponse : un mot-clé métier, jamais un message de la base.
     Conflict(String),
@@ -49,6 +51,7 @@ impl IntoResponse for AppError {
                 )
             }
             AppError::BadRequest => (StatusCode::BAD_REQUEST, "Bad Request".to_string()),
+            AppError::Invalid(msg) => (StatusCode::BAD_REQUEST, msg),
         };
 
         (status_code, body).into_response()

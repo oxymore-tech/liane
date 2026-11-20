@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
@@ -28,6 +29,41 @@ pub struct RallyingPoint {
     pub city: String,
     pub place_count: Option<i32>,
     pub is_active: bool,
+}
+
+/// Un point vu par l'administration. `source` : origine du point (`bnlc`, `mairie`…), absente s'il a été
+/// créé à la main. `edited_at` : dernière création ou modification à la main. `lianes` : noms des lianes
+/// qui s'y arrêtent.
+#[derive(Debug, Serialize, FromRow)]
+pub struct AdminRallyingPoint {
+    #[sqlx(flatten)]
+    #[serde(flatten)]
+    pub point: RallyingPoint,
+    pub source: Option<String>,
+    pub edited_at: Option<DateTime<Utc>>,
+    pub lianes: Vec<String>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct RallyingPointInput {
+    pub label: String,
+    pub lat: f64,
+    pub lng: f64,
+    pub kind: String,
+    #[serde(default)]
+    pub address: String,
+    #[serde(default)]
+    pub zip_code: String,
+    #[serde(default)]
+    pub city: String,
+    #[serde(default)]
+    pub place_count: Option<i32>,
+    #[serde(default = "active_by_default")]
+    pub is_active: bool,
+}
+
+fn active_by_default() -> bool {
+    true
 }
 
 #[derive(Debug, Deserialize)]
