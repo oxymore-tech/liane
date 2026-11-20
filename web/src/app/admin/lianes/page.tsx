@@ -11,6 +11,7 @@ import {
   updateLiane,
 } from "@/api/lianes";
 import type { Liane } from "@/api/types";
+import { ConfirmDialog } from "@/components/dialog";
 import {
   memberCountLabel,
   routeLabel,
@@ -31,19 +32,25 @@ export default function AdminLianesPage() {
     queryFn: listAllLianes,
   });
   const [error, setError] = useState<string | null>(null);
+  const [toRemove, setToRemove] = useState<Liane | null>(null);
+  /** L'action en cours, « activer:<id> » ou « tracer:<id> » : son bouton le montre. */
+  const [busy, setBusy] = useState<string | null>(null);
 
   const setActive = async (liane: Liane, isActive: boolean) => {
     setError(null);
+    setBusy(`activer:${liane.id}`);
     await updateLiane(liane.id, {
       name: liane.name,
       stop_ids: liane.stops.map((stop) => stop.id),
       is_active: isActive,
-    });
+    }).catch(() => setError("La liane n'a pas été modifiée."));
     await refetch();
+    setBusy(null);
   };
 
   const recompute = async (liane: Liane) => {
     setError(null);
+    setBusy(`tracer:${liane.id}`);
     try {
       const recomputed = await recomputeRoute(liane.id);
       if (recomputed.route_source === "Straight") {
@@ -55,14 +62,10 @@ export default function AdminLianesPage() {
       setError("Le recalcul du tracé n'a pas fonctionné.");
     }
     await refetch();
+    setBusy(null);
   };
 
   const remove = async (liane: Liane) => {
-    const warning =
-      liane.member_count > 0
-        ? `Supprimer « ${liane.name} » et retirer ses ${liane.member_count} membre(s) ?`
-        : `Supprimer « ${liane.name} » ?`;
-    if (!window.confirm(warning)) return;
     setError(null);
     try {
       await deleteLiane(liane.id);
@@ -74,6 +77,7 @@ export default function AdminLianesPage() {
       );
     }
     await refetch();
+    setToRemove(null);
   };
 
   return (
@@ -88,7 +92,7 @@ export default function AdminLianesPage() {
           <div className="flex items-start justify-between gap-2">
             <Link
               href={`/l/${liane.slug}`}
-              className="text-lg font-bold tracking-tight text-liane underline"
+              className="text-lg font-bold tracking-tight text-liane underline underline-offset-2 hover:decoration-2"
             >
               {liane.name}
             </Link>
@@ -114,22 +118,42 @@ export default function AdminLianesPage() {
               Modifier
             </Link>
             {liane.route_source === "Straight" && (
-              <Button variant="secondary" onClick={() => recompute(liane)}>
+              <Button
+                variant="secondary"
+                loading={busy === `tracer:${liane.id}`}
+                onClick={() => recompute(liane)}
+              >
                 Recalculer le tracé
               </Button>
             )}
             <Button
               variant="secondary"
+              loading={busy === `activer:${liane.id}`}
               onClick={() => setActive(liane, !liane.is_active)}
             >
               {liane.is_active ? "Désactiver" : "Activer"}
             </Button>
-            <Button variant="danger" onClick={() => remove(liane)}>
+            <Button variant="danger" onClick={() => setToRemove(liane)}>
               Supprimer
             </Button>
           </div>
         </Card>
       ))}
+      <ConfirmDialog
+        open={toRemove !== null}
+        onClose={() => setToRemove(null)}
+        onConfirm={() => (toRemove ? remove(toRemove) : undefined)}
+        title={`Supprimer « ${toRemove?.name} » ?`}
+        confirmLabel="Supprimer la liane"
+        destructive
+      >
+        {toRemove && toRemove.member_count > 0 && (
+          <p>
+            Ses {toRemove.member_count} membre(s) en seront retirés. C'est
+            définitif.
+          </p>
+        )}
+      </ConfirmDialog>
     </>
   );
 }

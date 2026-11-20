@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Layer,
   Map as MapGL,
@@ -25,6 +25,8 @@ type Props = {
   stops: Stop[];
   route?: [number, number][] | null;
   onClick?: (event: MapLayerMouseEvent) => void;
+  /** Couches dont les éléments se cliquent : le curseur le montre à leur survol. */
+  clickableLayerIds?: string[];
   children?: ReactNode;
 };
 
@@ -33,12 +35,14 @@ export default function RoutePreview({
   stops,
   route,
   onClick,
+  clickableLayerIds,
   children,
 }: Props) {
   const mapRef = useRef<MapRef>(null);
   const style = useMemo(mapStyle, []);
   const colors = mapColors();
   const interactive = Boolean(onClick);
+  const [overClickable, setOverClickable] = useState(false);
 
   const data = useMemo(
     () => ({
@@ -91,7 +95,11 @@ export default function RoutePreview({
       mapStyle={style}
       attributionControl={false}
       interactive={interactive}
+      interactiveLayerIds={clickableLayerIds}
       onClick={onClick}
+      onMouseEnter={() => setOverClickable(true)}
+      onMouseLeave={() => setOverClickable(false)}
+      cursor={overClickable ? "pointer" : interactive ? "grab" : "default"}
     >
       {!interactive && <PlaceNamesLayer />}
       {children}

@@ -132,7 +132,7 @@ export function NotificationSettings() {
             Pour être prévenu sur ce téléphone d'un nouveau trajet, d'un message
             ou d'un départ.
           </p>
-          <Button disabled={busy} onClick={enable}>
+          <Button loading={busy} onClick={enable}>
             Recevoir les notifications
           </Button>
         </>
@@ -142,7 +142,7 @@ export function NotificationSettings() {
           <p className={mutedClass}>
             Les notifications sont activées sur cet appareil.
           </p>
-          <Button variant="secondary" disabled={busy} onClick={disable}>
+          <Button variant="secondary" loading={busy} onClick={disable}>
             Ne plus recevoir de notifications
           </Button>
         </>

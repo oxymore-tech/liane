@@ -7,6 +7,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { getLiane, leaveLiane, listMyLianes } from "@/api/lianes";
 import { useAppContext } from "@/components/context-provider";
+import { ConfirmDialog } from "@/components/dialog";
 import { JoinForm } from "@/components/liane/join-form";
 import { daysLabel, routeLabel, sectionLabel } from "@/components/liane/labels";
 import {
@@ -30,6 +31,7 @@ function LianePage() {
   const queryClient = useQueryClient();
   const { user, loading: userLoading } = useAppContext();
   const [formOpen, setFormOpen] = useState(false);
+  const [leaving, setLeaving] = useState(false);
 
   const {
     data: liane,
@@ -69,9 +71,9 @@ function LianePage() {
   };
 
   const leave = async () => {
-    if (!liane || !window.confirm(`Quitter la liane « ${liane.name} » ?`))
-      return;
+    if (!liane) return;
     await leaveLiane(liane.id);
+    setLeaving(false);
     await refresh();
   };
 
@@ -118,9 +120,23 @@ function LianePage() {
               <Button variant="secondary" onClick={() => setFormOpen(true)}>
                 Modifier
               </Button>
-              <Button variant="danger" onClick={leave}>
+              <Button variant="danger" onClick={() => setLeaving(true)}>
                 Quitter la liane
               </Button>
+              <ConfirmDialog
+                open={leaving}
+                onClose={() => setLeaving(false)}
+                onConfirm={leave}
+                title={`Quitter la liane « ${liane.name} » ?`}
+                confirmLabel="Quitter la liane"
+                cancelLabel="Rester membre"
+                destructive
+              >
+                <p>
+                  Vous ne verrez plus ses trajets ni ses messages. Vous pourrez
+                  la rejoindre à nouveau.
+                </p>
+              </ConfirmDialog>
             </div>
           </div>
         )}

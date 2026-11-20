@@ -3,7 +3,7 @@
 import { Layer, Source } from "react-map-gl/maplibre";
 import { MAP_FONT, mapColors, tilesUrl } from "./map-style";
 
-const RALLYING_POINTS_LAYER_ID = "rallying-points-circle";
+export const RALLYING_POINTS_LAYER_ID = "rallying-points-circle";
 
 export function RallyingPointsLayer() {
   const colors = mapColors();

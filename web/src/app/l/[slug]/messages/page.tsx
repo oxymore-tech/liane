@@ -253,7 +253,11 @@ export default function MessagesPage() {
               onChange={(event) => setText(event.target.value)}
             />
           </label>
-          <Button type="submit" disabled={sending || !text.trim() || !lianeId}>
+          <Button
+            type="submit"
+            loading={sending}
+            disabled={!text.trim() || !lianeId}
+          >
             Envoyer
           </Button>
         </div>

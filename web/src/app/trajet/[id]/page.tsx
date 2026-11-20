@@ -21,7 +21,9 @@ import type {
 } from "@/api/types";
 import { LianeSymbol } from "@/components/brand";
 import { useAppContext } from "@/components/context-provider";
+import { ConfirmDialog } from "@/components/dialog";
 import { distanceLabel, stopName } from "@/components/liane/labels";
+import { SelectField } from "@/components/select-field";
 import {
   attestationLabel,
   euros,
@@ -39,8 +41,6 @@ import {
   Button,
   buttonClass,
   Card,
-  fieldClass,
-  labelClass,
   linkClass,
   listClass,
   mutedClass,
@@ -141,6 +141,7 @@ function Gestures({
           <button
             type="button"
             disabled={busy}
+            aria-busy={busy || undefined}
             onClick={() => trip.next_gesture && onDeclare(trip.next_gesture)}
             className={cn(
               buttonClass("key"),
@@ -231,6 +232,11 @@ function Participants({
   );
 }
 
+const stopOption = (stop: { id: string; city: string; label: string }) => ({
+  value: stop.id,
+  content: stopName(stop),
+});
+
 function BookingForm({
   trip,
   liane,
@@ -276,38 +282,20 @@ function BookingForm({
   return (
     <Card className="flex flex-col gap-3">
       <h2 className="font-bold">Prendre une place sur ce trajet</h2>
-      <label className={labelClass}>
-        Je monte à
-        <select
-          className={fieldClass}
-          value={fromId}
-          onChange={(event) => setFromId(event.target.value)}
-        >
-          {covered.slice(0, -1).map((stop) => (
-            <option key={stop.id} value={stop.id}>
-              {stopName(stop)}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className={labelClass}>
-        Je descends à
-        <select
-          className={fieldClass}
-          value={toId}
-          onChange={(event) => setToId(event.target.value)}
-        >
-          {covered.slice(1).map((stop) => (
-            <option key={stop.id} value={stop.id}>
-              {stopName(stop)}
-            </option>
-          ))}
-        </select>
-      </label>
-      {!isValid && (
-        <Notice>La descente doit se trouver après la montée.</Notice>
-      )}
-      <Button disabled={sending || !isValid} onClick={submit}>
+      <SelectField
+        label="Je monte à"
+        value={fromId}
+        options={covered.slice(0, -1).map(stopOption)}
+        onChange={setFromId}
+      />
+      <SelectField
+        label="Je descends à"
+        value={toId}
+        options={covered.slice(1).map(stopOption)}
+        onChange={setToId}
+        error={isValid ? null : "La descente doit se trouver après la montée."}
+      />
+      <Button loading={sending} disabled={!isValid} onClick={submit}>
         M'inscrire à ce trajet
       </Button>
       <p className={mutedClass}>
@@ -371,6 +359,9 @@ export default function TripPage() {
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState<"unbook" | "cancel" | null>(
+    null,
+  );
 
   const tripKey = ["trip", id, user?.id ?? null];
   const {
@@ -421,20 +412,14 @@ export default function TripPage() {
   const book = (fromId: string, toId: string) =>
     run(() => bookTrip(id, fromId, toId));
 
-  const unbook = () => {
-    if (window.confirm("Vous désinscrire de ce trajet ?")) {
-      run(() => unbookTrip(id));
-    }
+  const unbook = async () => {
+    await run(() => unbookTrip(id));
+    setConfirming(null);
   };
 
-  const cancel = () => {
-    if (
-      window.confirm(
-        "Annuler ce trajet ? Les passagers inscrits sont prévenus.",
-      )
-    ) {
-      run(() => cancelTrip(id));
-    }
+  const cancel = async () => {
+    await run(() => cancelTrip(id));
+    setConfirming(null);
   };
 
   if (!userLoading && !user) {
@@ -509,15 +494,45 @@ export default function TripPage() {
         </p>
       )}
       {canUnbook && (
-        <Button variant="danger" disabled={busy} onClick={unbook}>
+        <Button
+          variant="danger"
+          disabled={busy}
+          onClick={() => setConfirming("unbook")}
+        >
           Me désinscrire
         </Button>
       )}
       {canCancel && (
-        <Button variant="danger" disabled={busy} onClick={cancel}>
+        <Button
+          variant="danger"
+          disabled={busy}
+          onClick={() => setConfirming("cancel")}
+        >
           Annuler ce trajet
         </Button>
       )}
+      <ConfirmDialog
+        open={confirming === "unbook"}
+        onClose={() => setConfirming(null)}
+        onConfirm={unbook}
+        title="Vous désinscrire de ce trajet ?"
+        confirmLabel="Me désinscrire"
+        cancelLabel="Garder ma place"
+        destructive
+      >
+        <p>Votre place est libérée, le conducteur est prévenu.</p>
+      </ConfirmDialog>
+      <ConfirmDialog
+        open={confirming === "cancel"}
+        onClose={() => setConfirming(null)}
+        onConfirm={cancel}
+        title="Annuler ce trajet ?"
+        confirmLabel="Annuler le trajet"
+        cancelLabel="Garder le trajet"
+        destructive
+      >
+        <p>Les passagers inscrits sont prévenus.</p>
+      </ConfirmDialog>
     </Page>
   );
 }

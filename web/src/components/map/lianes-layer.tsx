@@ -6,6 +6,7 @@ import type { Liane } from "@/api/types";
 import { MAP_FONT, mapColors, tilesUrl } from "./map-style";
 
 export const LIANES_TOUCH_LAYER_ID = "lianes-touch";
+export const LIANE_STOPS_LAYER_ID = "liane-stops-circle";
 /** Largeur de la zone sensible autour d'un trait : un doigt, pas un pixel. */
 export const LIANES_TOUCH_WIDTH_PIXELS = 28;
 
@@ -141,7 +142,7 @@ export function LianesLayer({
         maxzoom={14}
       >
         <Layer
-          id="liane-stops-circle"
+          id={LIANE_STOPS_LAYER_ID}
           type="circle"
           source-layer="liane_stop_display"
           paint={{
