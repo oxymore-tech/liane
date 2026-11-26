@@ -22,12 +22,11 @@ import type {
 import { LianeSymbol } from "@/components/brand";
 import { useAppContext } from "@/components/context-provider";
 import { ConfirmDialog } from "@/components/dialog";
-import { distanceLabel } from "@/components/liane/labels";
+import { distanceLabel, sectionDistance } from "@/components/liane/labels";
 import { PointName, PointRoute } from "@/components/rallying-point/point-name";
 import { SelectField } from "@/components/select-field";
 import {
   attestationLabel,
-  euros,
   gestureDoneLabel,
   gestureLabel,
   refusalMessage,
@@ -48,6 +47,7 @@ import {
   Page,
 } from "@/components/ui";
 import { cn } from "@/components/utils";
+import { CostShareNotice } from "@/components/wallet/cost-share-notice";
 
 const REFRESH_INTERVAL_MS = 30_000;
 
@@ -298,6 +298,12 @@ function BookingForm({
         onChange={setToId}
         error={isValid ? null : "La descente doit se trouver après la montée."}
       />
+      {isValid && (
+        <CostShareNotice
+          trip={trip}
+          distanceMeters={sectionDistance(liane, fromId, toId) ?? 0}
+        />
+      )}
       <Button loading={sending} disabled={!isValid} onClick={submit}>
         M'inscrire à ce trajet
       </Button>
@@ -336,22 +342,9 @@ function Outcome({ trip }: { trip: TripDetail }) {
                 ` avec ${passenger.user.pseudo ?? "un passager"}`}
             </p>
             <p className={mutedClass}>{ATTESTATION_DETAILS[attestation]}</p>
-            {passenger.indicative_contribution_cents !== null && (
-              <p className="mt-1 text-sm text-gris">
-                Partage des frais indicatif pour{" "}
-                {distanceLabel(passenger.distance_meters)} :{" "}
-                <span className="font-semibold">
-                  {euros(passenger.indicative_contribution_cents)}
-                </span>
-              </p>
-            )}
           </div>
         );
       })}
-      <p className="text-xs text-gris">
-        Le partage des frais est donné à titre indicatif : rien n'est payé dans
-        l'application, arrangez-vous entre vous.
-      </p>
     </Card>
   );
 }
@@ -486,15 +479,13 @@ export default function TripPage() {
         trip.state === "Planned" &&
         trip.seats_left === 0 && <Card>Ce trajet est complet.</Card>}
       <Participants trip={trip} currentUserId={user.id} />
-      {trip.is_open && myBooking?.indicative_contribution_cents != null && (
-        <p className="px-1 text-sm text-gris">
-          Partage des frais indicatif pour votre trajet (
-          {distanceLabel(myBooking.distance_meters)}) :{" "}
-          <span className="font-semibold">
-            {euros(myBooking.indicative_contribution_cents)}
-          </span>
-          . Rien n'est payé dans l'application.
-        </p>
+      {trip.is_open && trip.my_role && (
+        <div className="px-1">
+          <CostShareNotice
+            trip={trip}
+            distanceMeters={myBooking?.distance_meters ?? trip.distance_meters}
+          />
+        </div>
       )}
       {canUnbook && (
         <Button

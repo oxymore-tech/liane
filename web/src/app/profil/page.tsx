@@ -17,6 +17,7 @@ import {
   Notice,
   Page,
 } from "@/components/ui";
+import { useWallet } from "@/components/wallet/use-wallet";
 
 function NameForm() {
   const { user, refreshUser } = useAppContext();
@@ -144,6 +145,27 @@ function DeleteAccount() {
   );
 }
 
+function WalletCard() {
+  const { data: wallet } = useWallet();
+  if (!wallet || wallet.kind === "Disabled") {
+    return null;
+  }
+  const isOpen = wallet.kind === "Open";
+  return (
+    <Card className="flex flex-col gap-3">
+      <h2 className="text-lg font-bold">Mon porte-monnaie</h2>
+      <p className={mutedClass}>
+        {isOpen
+          ? "Votre porte-monnaie est ouvert : les frais de vos trajets sont partagés et dus en fin de mois."
+          : "Vous n'avez pas de porte-monnaie : vos trajets se font sans partage des frais dans Liane."}
+      </p>
+      <Link href="/porte-monnaie" className={buttonClass("secondary")}>
+        {isOpen ? "Voir mon relevé" : "Découvrir le porte-monnaie"}
+      </Link>
+    </Card>
+  );
+}
+
 export default function ProfilePage() {
   const { user, loading, logout } = useAppContext();
 
@@ -169,6 +191,7 @@ export default function ProfilePage() {
       {user && (
         <>
           <NameForm />
+          <WalletCard />
           <Card className="flex flex-col gap-3">
             <h2 className="text-lg font-bold">Ma connexion</h2>
             <p className={mutedClass}>Téléphone : {user.phone}</p>

@@ -161,6 +161,8 @@ export type Trip = {
   /** À venir ou en cours : ni terminé, ni annulé, ni périmé. */
   is_open: boolean;
   my_role: TripRole | null;
+  /** Le conducteur partage les frais avec les passagers qui ont aussi un porte-monnaie. */
+  driver_has_wallet: boolean;
 };
 
 export type TripPassenger = {
@@ -168,7 +170,6 @@ export type TripPassenger = {
   from_stop: TripStop;
   to_stop: TripStop;
   distance_meters: number;
-  indicative_contribution_cents: number | null;
   started_at: string | null;
   ended_at: string | null;
   attestation: Attestation | null;
@@ -191,7 +192,6 @@ export type TripDetail = Trip & {
     start_closes_at: string;
     end_closes_at: string;
   };
-  indicative_cents_per_km: number;
 };
 
 export type MyTrips = { upcoming: Trip[]; past: Trip[] };
@@ -249,7 +249,6 @@ export type AdminProof = {
   from_stop: TripStop;
   to_stop: TripStop;
   distance_meters: number;
-  indicative_contribution_cents: number | null;
   proof_class: ProofClass | null;
   proof_detail: ProofDetail | null;
 };
@@ -324,7 +323,6 @@ export type ExportedJourney = {
     end_position_source: PositionSource;
     driver: DeclaredGestures;
     passenger: DeclaredGestures;
-    indicative_contribution_cents: number | null;
     proof_detail: ProofDetail | null;
     warnings: "DistanceUnderOneKilometer"[];
   };
@@ -363,4 +361,32 @@ export type LianeSearchResult = {
   section_distance_meters: number;
   from_distance_meters: number;
   to_distance_meters: number;
+};
+
+/** `Disabled` : Liane n'a pas de tarif de partage des frais, personne n'a de porte-monnaie. */
+export type Wallet =
+  | { kind: "Disabled" }
+  | { kind: "Closed"; cents_per_km: number }
+  | { kind: "Open"; cents_per_km: number; opened_at: string };
+
+/** `role` est celui du titulaire du relevé : passager, il doit le montant ; conducteur, il le reçoit. */
+export type StatementEntry = {
+  trip_id: string;
+  role: TripRole;
+  counterpart: PublicUser;
+  departure_time: string;
+  from_stop: TripStop;
+  to_stop: TripStop;
+  distance_meters: number;
+  cents_per_km: number;
+  amount_cents: number;
+};
+
+/** Les trajets d'un mois, dus à `due_on` ; ce qui est dû et ce qui est reçu ne se compensent pas. */
+export type Statement = {
+  month: string;
+  due_on: string;
+  owed_cents: number;
+  received_cents: number;
+  entries: StatementEntry[];
 };

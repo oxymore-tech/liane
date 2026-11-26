@@ -18,7 +18,7 @@ import type {
 } from "@/api/types";
 import { distanceLabel } from "@/components/liane/labels";
 import { PointRoute } from "@/components/rallying-point/point-name";
-import { euros, timeLabel, tripDateLabel } from "@/components/trip/labels";
+import { timeLabel, tripDateLabel } from "@/components/trip/labels";
 import { StateBadge } from "@/components/trip/trip-card";
 import {
   Badge,
@@ -99,8 +99,6 @@ function Proof({ proof }: { proof: AdminProof }) {
           <span className={cn(mutedClass, "block")}>
             <PointRoute from={proof.from_stop} to={proof.to_stop} /> ·{" "}
             {distanceLabel(proof.distance_meters)}
-            {proof.indicative_contribution_cents !== null &&
-              ` · partage indicatif ${euros(proof.indicative_contribution_cents)}`}
           </span>
         </span>
         {proof.proof_class && (
