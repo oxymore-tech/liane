@@ -1,7 +1,9 @@
 // Parcours « trajets, messages » dans un navigateur sans tête. Lancé par run.sh avec JOURNEY=journey-trips.mjs
 //, après seed-lianes.mjs et seed-trips.mjs. Un conducteur et deux passagers, chacun dans
 // son navigateur : géolocalisation simulée et accordée pour le conducteur et la première passagère,
-// refusée pour le second passager. Les captures sont préfixées « trips- ».
+// refusée pour le second passager. Le conducteur et la première passagère ouvrent un porte-monnaie,
+// pas le second passager (l'API doit avoir un tarif : COST_SHARE_CENTS_PER_KM).
+// Les captures sont préfixées « trips- ».
 import { chromium } from "playwright";
 import { existsSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 
@@ -64,6 +66,13 @@ async function joinLiane(page, firstName, lastName, from, to, canDrive) {
   await page.getByRole("button", { name: "Rejoindre la liane" }).click();
   await page.getByText("Vous êtes membre de cette liane").waitFor();
 }
+async function openWallet(page) {
+  await page.goto(BASE + "/profil");
+  await page.getByRole("link", { name: "Découvrir le porte-monnaie" }).click();
+  await page.waitForURL(/\/porte-monnaie$/);
+  await page.getByRole("button", { name: "Ouvrir mon porte-monnaie" }).click();
+  await page.getByText("Votre porte-monnaie est ouvert.").waitFor();
+}
 /** Jour et heure à Paris, dans `minutes` minutes, pour les champs du formulaire. */
 function parisDateTime(minutes) {
   const text = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Paris", dateStyle: "short", timeStyle: "short" }).format(new Date(Date.now() + minutes * 60_000));
@@ -91,6 +100,12 @@ await driver.getByRole("heading", { name: "Prochains trajets" }).waitFor();
 await driver.getByRole("heading", { name: "Prochains trajets" }).scrollIntoViewIfNeeded();
 await shot(driver, "01-liane-prochains-trajets");
 await fullShot(driver, "01b-liane-membre-entiere");
+await driver.goto(BASE + "/porte-monnaie");
+await driver.getByRole("button", { name: "Ouvrir mon porte-monnaie" }).waitFor();
+await fullShot(driver, "01c-porte-monnaie-a-ouvrir");
+await openWallet(driver);
+await driver.getByText("Aucun trajet avec partage des frais ce mois-ci.").waitFor();
+await fullShot(driver, "01d-porte-monnaie-ouvert");
 
 // 2. il propose un trajet qui part dans trois minutes
 const departureTime = await proposeTrip(driver, 3);
@@ -100,25 +115,33 @@ await driver.getByRole("button", { name: "Proposer ce trajet" }).click();
 await driver.waitForURL(/\/trajet\//);
 const tripUrl = driver.url();
 await driver.getByRole("button", { name: "Je démarre" }).waitFor();
+await driver.getByText(/chaque passager qui a un porte-monnaie vous devra/).waitFor();
 await shot(driver, "03-trajet-conducteur-avant-depart");
 
 // 3. Paule (passagère, position accordée) s'inscrit
 const paule = await newPage("passagère", located("Ispagnac"));
 await joinLiane(paule, "Paule", "Vidal", "Ispagnac", "Mende", false);
+await openWallet(paule);
+await paule.goto(BASE + "/l/florac-mende");
 await paule.getByRole("link", { name: /Conduit par Denis R\./ }).scrollIntoViewIfNeeded();
 await shot(paule, "04-liane-trajet-propose");
 await paule.getByRole("link", { name: /Conduit par Denis R\./ }).click();
 await paule.getByRole("button", { name: "M'inscrire à ce trajet" }).waitFor();
 log("inscription proposée:", (await paule.getByLabel("Je monte à").innerText()).trim() === liane.stops[1].label ? "montée à Ispagnac par défaut" : "montée par défaut inattendue");
-await shot(paule, "05-trajet-inscription");
+const announcedShare = (await paule.getByText(/^Partage des frais :/).innerText()).match(/[\d,]+\s€/)?.[0];
+if (!announcedShare) problems.push("pas de montant de partage des frais annoncé à la passagère avant l'inscription");
+await fullShot(paule, "05-trajet-inscription");
 await paule.getByRole("button", { name: "M'inscrire à ce trajet" }).click();
 await paule.getByRole("button", { name: "Je monte", exact: true }).waitFor();
-await shot(paule, "06-trajet-passagere-inscrite");
+await paule.getByText(/^Partage des frais :.*À régler en fin de mois\./).waitFor();
+await fullShot(paule, "06-trajet-passagere-inscrite");
 
 // 4. Quentin (passager, position refusée) s'inscrit aussi
 const quentin = await newPage("passager sans position");
 await joinLiane(quentin, "Quentin", "Faure", "Florac-Trois-Rivières", "Balsièges", false);
 await quentin.goto(tripUrl);
+await quentin.getByText(/Pas de partage des frais dans Liane pour ce trajet : vous n'avez pas de porte-monnaie\./).waitFor();
+await fullShot(quentin, "06b-trajet-sans-porte-monnaie");
 await quentin.getByRole("button", { name: "M'inscrire à ce trajet" }).click();
 await quentin.getByRole("button", { name: "Je monte", exact: true }).waitFor();
 
@@ -196,6 +219,33 @@ await driver.reload();
 await driver.getByText(/Trajet attesté avec Paule V\./).waitFor();
 await driver.getByText(/Trajet attesté en partie avec Quentin F\./).waitFor();
 await fullShot(driver, "16-recap-conducteur");
+
+// 8 bis. relevé du mois : Paule doit sa part, Denis la reçoit, Quentin n'a rien
+await paule.goto(BASE + "/porte-monnaie");
+await paule.getByText("conduit par Denis R.", { exact: false }).waitFor();
+const owed = (await paule.getByText("Vous devez").locator("xpath=following-sibling::p").innerText()).trim();
+if (owed !== announcedShare) problems.push(`relevé de la passagère : ${owed} dû, ${announcedShare} annoncé avant l'inscription`);
+await paule.getByText(/À régler en fin de mois, le \d+/).waitFor();
+await fullShot(paule, "16b-releve-passagere");
+await driver.goto(BASE + "/porte-monnaie");
+await driver.getByText("passager : Paule V.", { exact: false }).waitFor();
+const received = (await driver.getByText("Vous recevez").locator("xpath=following-sibling::p").innerText()).trim();
+if (received !== owed) problems.push(`relevé du conducteur : ${received} à recevoir, ${owed} dû par la passagère`);
+if ((await driver.getByText("Quentin F.").count()) !== 0) problems.push("le relevé du conducteur compte un passager sans porte-monnaie");
+await fullShot(driver, "16c-releve-conducteur");
+await driver.getByRole("button", { name: "Mois précédent" }).click();
+await driver.getByText("Aucun trajet avec partage des frais ce mois-ci.").waitFor();
+await driver.getByText(/^Échéance : le \d+/).waitFor();
+await shot(driver, "16d-releve-mois-precedent");
+await quentin.goto(BASE + "/porte-monnaie");
+await quentin.getByRole("button", { name: "Ouvrir mon porte-monnaie" }).waitFor();
+await quentin.getByText("Aucun trajet avec partage des frais ce mois-ci.").waitFor();
+await paule.getByRole("button", { name: "Fermer mon porte-monnaie" }).click();
+await paule.getByRole("alertdialog").waitFor();
+await shot(paule, "16e-fermer-porte-monnaie");
+await confirmWith(paule, "Fermer mon porte-monnaie");
+await paule.getByRole("button", { name: "Ouvrir mon porte-monnaie" }).waitFor();
+if ((await paule.getByText("conduit par Denis R.", { exact: false }).count()) !== 1) problems.push("fermer le porte-monnaie a effacé ce qui était dû");
 
 // 9. un trajet pour demain : trop tôt pour partir, puis annulation
 await proposeTrip(driver, 24 * 60);

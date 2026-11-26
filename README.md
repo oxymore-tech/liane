@@ -94,6 +94,7 @@ cd web && yarn lint && yarn tsc --noEmit && yarn build
 | `CORS_ALLOWED_ORIGINS` | Origines autorisées, séparées par des virgules | non | aucune |
 | `TRUSTED_PROXY_COUNT` | Nombre de mandataires de confiance devant l'API, pour lire l'adresse du client dans `X-Forwarded-For` | non | `0` |
 | `OSRM_URL` | Serveur OSRM du tracé des lianes | non | vide : lignes droites |
+| `COST_SHARE_CENTS_PER_KM` | Tarif du partage des frais, en centimes par kilomètre parcouru par le passager | non | vide : pas de partage des frais ni de porte-monnaie |
 | `PUSH_PROVIDER` | `log` (rien n'est envoyé) ou `webpush` | non | `log` |
 | `VAPID_PUBLIC_KEY` | Clé publique donnée aux navigateurs ; vide : les notifications ne sont pas proposées | si `webpush` | |
 | `VAPID_PRIVATE_KEY` | Clé privée de signature des envois | si `webpush` | |

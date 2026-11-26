@@ -2,7 +2,6 @@
 
 use chrono::{DateTime, Duration, Utc};
 
-use crate::config::INDICATIVE_COST_SHARING_CENTS_PER_KM;
 use crate::trip::model::{GestureKind, GestureWindow, TripState};
 
 pub const MIN_SEAT_COUNT: i32 = 1;
@@ -128,15 +127,6 @@ pub fn next_gesture(
         })
 }
 
-/// Partage de frais indicatif d'un passager, en centimes : le barème au kilomètre appliqué à son
-/// tronçon, divisé par le nombre d'occupants de la voiture (conducteur compris).
-pub fn indicative_contribution_cents(distance_meters: i32, passenger_count: i64) -> i32 {
-    let occupants = (passenger_count + 1) as f64;
-    let whole_cost =
-        f64::from(distance_meters) / 1000.0 * INDICATIVE_COST_SHARING_CENTS_PER_KM as f64;
-    (whole_cost / occupants).round() as i32
-}
-
 #[cfg(test)]
 mod tests {
     use chrono::TimeZone;
@@ -250,13 +240,5 @@ mod tests {
         assert!(!is_valid_departure(now - Duration::minutes(6), now));
         assert!(is_valid_departure(now + Duration::days(60), now));
         assert!(!is_valid_departure(now + Duration::days(61), now));
-    }
-
-    #[test]
-    fn indicative_contribution_splits_the_cost_between_occupants() {
-        assert_eq!(indicative_contribution_cents(36_000, 1), 540);
-        assert_eq!(indicative_contribution_cents(36_000, 2), 360);
-        assert_eq!(indicative_contribution_cents(10_500, 3), 79);
-        assert_eq!(indicative_contribution_cents(0, 1), 0);
     }
 }

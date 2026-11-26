@@ -5,6 +5,7 @@ use uuid::Uuid;
 
 use crate::auth::extractor::AdminUser;
 use crate::auth::model::AuthUser;
+use crate::config::Config;
 use crate::error::Result;
 use crate::notification::Notifier;
 use crate::trip::model::{
@@ -84,10 +85,19 @@ pub async fn record_gesture(
     auth: AuthUser,
     Extension(db): Extension<PgPool>,
     Extension(notifier): Extension<Notifier>,
+    Extension(config): Extension<Config>,
     Path(id): Path<Uuid>,
     Json(input): Json<GestureInput>,
 ) -> Result<Json<TripDetail>> {
-    let trip = service::record_gesture(&db, &notifier, &id, &auth, &input).await?;
+    let trip = service::record_gesture(
+        &db,
+        &notifier,
+        config.cost_share_cents_per_km,
+        &id,
+        &auth,
+        &input,
+    )
+    .await?;
     Ok(Json(trip))
 }
 

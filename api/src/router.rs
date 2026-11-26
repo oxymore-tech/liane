@@ -13,6 +13,7 @@ use crate::notification::{Notifier, push_router};
 use crate::rallying_point::rallying_point_router;
 use crate::trip::{liane_trip_router, trip_router};
 use crate::user::user_router;
+use crate::wallet::wallet_router;
 
 /// L'API complète. À servir avec `into_make_service_with_connect_info::<SocketAddr>()` :
 /// la limite de débit a besoin de l'adresse du client.
@@ -39,4 +40,5 @@ fn api_router() -> Router {
         .nest("/api/rallying_point", rallying_point_router())
         .nest("/api/trip", trip_router())
         .nest("/api/user", user_router())
+        .nest("/api/wallet", wallet_router())
 }

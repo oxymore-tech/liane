@@ -12,3 +12,4 @@ pub mod rallying_point;
 pub mod router;
 pub mod trip;
 pub mod user;
+pub mod wallet;

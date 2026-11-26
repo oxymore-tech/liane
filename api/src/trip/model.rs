@@ -169,10 +169,12 @@ pub struct TripRow {
     pub distance_meters: i32,
     pub state: TripState,
     pub viewer_is_passenger: bool,
+    pub driver_has_wallet: bool,
 }
 
 /// `from_stop` et `to_stop` sont le départ et l'arrivée du conducteur, dans le sens du trajet.
 /// `is_open` : le trajet est encore à venir ou en cours (ni terminé, ni annulé, ni périmé).
+/// `driver_has_wallet` : le conducteur partage les frais avec les passagers qui ont aussi un porte-monnaie.
 #[derive(Debug, Clone, Serialize)]
 pub struct Trip {
     pub id: Uuid,
@@ -188,6 +190,7 @@ pub struct Trip {
     pub state: TripState,
     pub is_open: bool,
     pub my_role: Option<TripRole>,
+    pub driver_has_wallet: bool,
 }
 
 #[derive(Debug, Serialize)]
@@ -207,7 +210,6 @@ pub struct PassengerRow {
     pub to_label: String,
     pub to_city: String,
     pub distance_meters: i32,
-    pub indicative_contribution_cents: Option<i32>,
     pub proof_class: Option<ProofClass>,
     pub proof_detail: Option<Json<ProofDetail>>,
 }
@@ -219,7 +221,6 @@ pub struct TripPassenger {
     pub from_stop: TripStop,
     pub to_stop: TripStop,
     pub distance_meters: i32,
-    pub indicative_contribution_cents: Option<i32>,
     pub started_at: Option<DateTime<Utc>>,
     pub ended_at: Option<DateTime<Utc>>,
     pub attestation: Option<Attestation>,
@@ -252,7 +253,6 @@ pub struct GestureWindow {
 }
 
 /// `next_gesture` : le geste que l'utilisateur peut faire maintenant, s'il y en a un.
-/// `indicative_cents_per_km` : barème du partage de frais indicatif, à diviser entre les occupants.
 #[derive(Debug, Serialize)]
 pub struct TripDetail {
     #[serde(flatten)]
@@ -263,7 +263,6 @@ pub struct TripDetail {
     pub my_gestures: Vec<MyGesture>,
     pub next_gesture: Option<GestureKind>,
     pub gesture_window: GestureWindow,
-    pub indicative_cents_per_km: i64,
 }
 
 #[derive(Debug, Serialize)]
@@ -272,7 +271,6 @@ pub struct AdminProof {
     pub from_stop: TripStop,
     pub to_stop: TripStop,
     pub distance_meters: i32,
-    pub indicative_contribution_cents: Option<i32>,
     pub proof_class: Option<ProofClass>,
     pub proof_detail: Option<ProofDetail>,
 }

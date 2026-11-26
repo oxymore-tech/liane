@@ -1,6 +1,7 @@
 // Jeu de démonstration, suite de seed-lianes.mjs (« liane seed » lance les deux).
 // Sur la liane Florac – Mende : trois membres, quelques messages, un trajet terminé et prouvé
 // (une passagère avec position, un passager qui la refuse), un trajet annulé, deux trajets à venir.
+// La conductrice et la passagère ont un porte-monnaie : leur relevé du mois porte ce trajet.
 // Rejouable : si la liane a déjà des trajets à venir, rien n'est ajouté.
 import { execFileSync } from "node:child_process";
 
@@ -97,6 +98,13 @@ const inDays = (days, hourUtc, minute) => {
 
 await say("camille", "Bonjour à tous ! Je monte à Mende presque tous les matins.");
 await say("louise", "Super, je cherche justement pour le marché du samedi.");
+
+// Camille et Louise partagent les frais, Nadir n'a pas de porte-monnaie. Sans tarif configuré, il n'y en a pas.
+const wallet = await call(tokens.camille, "GET", "/wallet");
+if (wallet.kind !== "Disabled") {
+  await call(tokens.camille, "PUT", "/wallet");
+  await call(tokens.louise, "PUT", "/wallet");
+}
 
 // Un trajet qui a eu lieu : Louise donne sa position (trajet attesté), Nadir la refuse en montant.
 const done = await propose("camille", new Date(Date.now() + 2 * 60_000), "Outbound", 3);

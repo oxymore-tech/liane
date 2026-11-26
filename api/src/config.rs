@@ -18,11 +18,6 @@ impl Keys {
     }
 }
 
-/// À VALIDER — barème du partage de frais indicatif, en centimes d'euro par kilomètre, pour la
-/// voiture entière : il est divisé entre les occupants (conducteur compris). Valeur reprise de
-/// l'ancienne application (0,30 €/km). Aucun paiement n'en découle.
-pub const INDICATIVE_COST_SHARING_CENTS_PER_KM: i64 = 30;
-
 const DEFAULT_PORT: u16 = 5000;
 const DEFAULT_BREVO_SMS_URL: &str = "https://api.brevo.com/v3/transactionalSMS/sms";
 const DEFAULT_SMS_SENDER: &str = "Liane";
@@ -67,6 +62,9 @@ pub struct Config {
     /// Clé publique VAPID donnée aux navigateurs pour s'abonner aux notifications.
     /// Absente : les notifications ne sont pas proposées.
     pub vapid_public_key: Option<String>,
+    /// Tarif du partage des frais, en centimes d'euro par kilomètre parcouru par le passager.
+    /// Absent : pas de partage des frais, le porte-monnaie n'est pas proposé.
+    pub cost_share_cents_per_km: Option<i32>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -186,6 +184,7 @@ impl Settings {
                 auth_limits,
                 trusted_proxy_count: number(&get, "TRUSTED_PROXY_COUNT", 0)?,
                 vapid_public_key,
+                cost_share_cents_per_km: cost_share_cents_per_km(&get)?,
             },
             database_url: required("DATABASE_URL")?,
             port: number(&get, "PORT", DEFAULT_PORT)?,
@@ -193,6 +192,18 @@ impl Settings {
             sms,
             push,
         })
+    }
+}
+
+fn cost_share_cents_per_km(get: &impl Fn(&str) -> Option<String>) -> Result<Option<i32>, String> {
+    let Some(value) = get("COST_SHARE_CENTS_PER_KM") else {
+        return Ok(None);
+    };
+    match value.trim().parse::<i32>() {
+        Ok(cents) if cents > 0 => Ok(Some(cents)),
+        _ => Err(format!(
+            "COST_SHARE_CENTS_PER_KM must be a positive number of cents, not {value}"
+        )),
     }
 }
 
@@ -243,6 +254,21 @@ mod tests {
         assert_eq!(settings.config.test_account, None);
         assert_eq!(settings.config.trusted_proxy_count, 0);
         assert_eq!(settings.config.auth_limits, AuthLimits::default());
+        assert_eq!(settings.config.cost_share_cents_per_km, None);
+    }
+
+    #[test]
+    fn cost_share_rate_is_a_positive_number_of_cents() {
+        let rate = |value| settings(&[("COST_SHARE_CENTS_PER_KM", value)]);
+        assert_eq!(rate("12").unwrap().config.cost_share_cents_per_km, Some(12));
+        for refused in ["0", "-3", "0.5", "abc"] {
+            assert!(
+                rate(refused)
+                    .err()
+                    .expect("tarif refusé")
+                    .contains("COST_SHARE_CENTS_PER_KM")
+            );
+        }
     }
 
     #[test]
