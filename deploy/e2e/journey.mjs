@@ -127,7 +127,7 @@ await shot(admin, "09-admin-sans-compte");
 await admin.getByRole("link", { name: "Se connecter" }).click();
 await login(admin, "+33600000000", "000000");
 await admin.getByRole("button", { name: "Se connecter" }).click();
-await admin.waitForURL(/\/admin\/lianes/);
+await admin.waitForURL(/\/admin\/liane/);
 await admin.getByRole("link", { name: "Nouvelle liane" }).waitFor();
 await shot(admin, "10-admin-lianes");
 
@@ -161,7 +161,7 @@ const stopsText = await admin.locator("ol > li").allInnerTexts();
 log("arrêts choisis:", JSON.stringify(stopsText));
 await admin.getByLabel("Nom de la liane").fill("Essai navigateur");
 await admin.getByRole("button", { name: "Créer la liane" }).click();
-await admin.waitForURL(/\/admin\/lianes$/);
+await admin.waitForURL(/\/admin\/liane$/);
 await admin.getByRole("link", { name: "Essai navigateur" }).waitFor();
 await shot(admin, "13-admin-liane-creee");
 const card = admin.locator("section", { has: admin.getByRole("link", { name: "Essai navigateur" }) });

@@ -88,9 +88,9 @@ await visitor.waitForURL(/\/l\/florac-/);
 
 // 4. administrateur : modifier une liane existante
 const admin = await newPage("admin");
-await admin.goto(BASE + "/connexion?retour=%2Fadmin%2Flianes");
+await admin.goto(BASE + "/connexion?retour=%2Fadmin%2Fliane");
 await login(admin, "+33600000000", "000000");
-await admin.waitForURL(/\/admin\/lianes/);
+await admin.waitForURL(/\/admin\/liane/);
 const cardOf = (name) => admin.locator("section", { has: admin.getByRole("link", { name, exact: true }) });
 await cardOf("Mende – Langogne").getByRole("link", { name: "Modifier" }).click();
 await admin.getByRole("heading", { name: "Modifier la liane" }).waitFor();
@@ -109,7 +109,7 @@ const after = (await admin.getByText(/Tracé par la route/).innerText()).replace
 log("aperçu avant :", before, "| après :", after);
 await fullShot(admin, "08-admin-liane-modifiee-apercu");
 await admin.getByRole("button", { name: "Enregistrer" }).click();
-await admin.waitForURL(/\/admin\/lianes$/);
+await admin.waitForURL(/\/admin\/liane$/);
 await cardOf("Mende – Langogne par Laubert").getByText(/Laubert/).first().waitFor();
 log("liane modifiée :", (await cardOf("Mende – Langogne par Laubert").innerText()).replace(/\n+/g, " | ").slice(0, 300));
 await shot(admin, "09-admin-liane-enregistree");
@@ -123,7 +123,7 @@ await admin.getByRole("option", { name: /Mairie de Badaroux/ }).click();
 await admin.getByRole("button", { name: "Monter Mairie de Badaroux" }).click();
 await admin.getByRole("button", { name: "Monter Mairie de Badaroux" }).click();
 await admin.getByRole("button", { name: "Enregistrer" }).click();
-await admin.waitForURL(/\/admin\/lianes$/);
+await admin.waitForURL(/\/admin\/liane$/);
 await cardOf("Mende – Langogne").getByText(/Badaroux/).first().waitFor();
 
 // 5. profil : prénom, nom, puis suppression du compte

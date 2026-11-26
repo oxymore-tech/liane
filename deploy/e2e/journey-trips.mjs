@@ -221,7 +221,7 @@ const admin = await newPage("admin");
 await admin.goto(BASE + "/admin/trajet");
 await admin.getByRole("link", { name: "Se connecter" }).click();
 await login(admin, "+33600000000", "000000");
-await admin.waitForURL(/\/admin\/trajets/);
+await admin.waitForURL(/\/admin\/trajet/);
 await admin.getByRole("button", { name: "Exporter les preuves (JSON)" }).waitFor();
 await admin.getByText("Classe C").first().waitFor();
 await admin.getByRole("button", { name: /voir le détail/ }).first().click();
