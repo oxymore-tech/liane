@@ -24,6 +24,7 @@ use uuid::Uuid;
 const ADMIN_PHONE: &str = "+33600000000";
 const ADMIN_CODE: &str = "000000";
 pub const TEST_VAPID_PUBLIC_KEY: &str = "cle-publique-vapid-de-test";
+pub const TEST_COST_SHARE_CENTS_PER_KM: i32 = 10;
 
 /// Une API complète sur un port local, branchée sur la base `TEST_DATABASE_URL`.
 /// Les tests partagent la base : chacun travaille dans sa propre zone géographique
@@ -144,18 +145,27 @@ impl TestApp {
     }
 
     pub async fn spawn_with_osrm(osrm_url: &str) -> Self {
-        Self::spawn_with(osrm_url, generous_limits(), true).await
+        Self::spawn_with(osrm_url, generous_limits(), true, true).await
     }
 
     pub async fn spawn_with_limits(auth_limits: AuthLimits) -> Self {
-        Self::spawn_with("", auth_limits, true).await
+        Self::spawn_with("", auth_limits, true, true).await
     }
 
     pub async fn spawn_without_test_account() -> Self {
-        Self::spawn_with("", generous_limits(), false).await
+        Self::spawn_with("", generous_limits(), false, true).await
     }
 
-    async fn spawn_with(osrm_url: &str, auth_limits: AuthLimits, with_test_account: bool) -> Self {
+    pub async fn spawn_without_cost_share() -> Self {
+        Self::spawn_with("", generous_limits(), true, false).await
+    }
+
+    async fn spawn_with(
+        osrm_url: &str,
+        auth_limits: AuthLimits,
+        with_test_account: bool,
+        with_cost_share: bool,
+    ) -> Self {
         let database_url = var("TEST_DATABASE_URL")
             .expect("TEST_DATABASE_URL doit désigner une base PostgreSQL + PostGIS jetable");
         let db = PgPoolOptions::new()
@@ -183,6 +193,7 @@ impl TestApp {
             auth_limits,
             trusted_proxy_count: 1,
             vapid_public_key: Some(TEST_VAPID_PUBLIC_KEY.to_string()),
+            cost_share_cents_per_km: with_cost_share.then_some(TEST_COST_SHARE_CENTS_PER_KM),
         };
         let pushes = Arc::new(RecordingPushSender::default());
         let sms = Arc::new(RecordingSmsSender::default());

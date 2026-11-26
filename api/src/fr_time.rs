@@ -34,6 +34,14 @@ pub fn day_and_time(at: DateTime<Utc>) -> String {
     )
 }
 
+/// Le premier jour du mois, à l'heure de Paris, dans lequel tombe un instant.
+pub fn paris_month(at: DateTime<Utc>) -> NaiveDate {
+    (at + Duration::hours(paris_offset_hours(at)))
+        .date_naive()
+        .with_day(1)
+        .expect("first day of month")
+}
+
 /// Heure d'été du dernier dimanche de mars au dernier dimanche d'octobre, bascule à 1 h UTC.
 fn paris_offset_hours(at: DateTime<Utc>) -> i64 {
     let switch = |month| {
@@ -80,6 +88,15 @@ mod tests {
             day_and_time(utc(2026, 7, 14, 22, 5)),
             "mercredi 15 juillet à 00:05"
         );
+    }
+
+    #[test]
+    fn a_late_evening_in_utc_already_belongs_to_the_next_month_in_paris() {
+        let first_of = |year, month| NaiveDate::from_ymd_opt(year, month, 1).unwrap();
+        assert_eq!(paris_month(utc(2026, 11, 30, 22, 59)), first_of(2026, 11));
+        assert_eq!(paris_month(utc(2026, 11, 30, 23, 0)), first_of(2026, 12));
+        assert_eq!(paris_month(utc(2026, 7, 31, 22, 0)), first_of(2026, 8));
+        assert_eq!(paris_month(utc(2026, 12, 31, 23, 30)), first_of(2027, 1));
     }
 
     #[test]

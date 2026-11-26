@@ -7,6 +7,7 @@
 //! Conservé, détaché de toute identité lisible : les trajets attestés (au moins un geste de départ ou
 //! d'arrivée déclaré), avec leurs gestes et positions, rattachés à une coquille de compte anonyme qui ne
 //! garde que l'identité pseudonymisée demandée par le registre de preuve de covoiturage.
+//! Les lignes de partage des frais de ces trajets restent dues à l'autre occupant, ou par lui.
 
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -95,6 +96,7 @@ pub async fn delete_account(db: &PgPool, notifier: &Notifier, user_id: &Uuid) ->
                 picture_url = NULL,
                 is_admin = false,
                 is_signed_up = false,
+                wallet_opened_at = NULL,
                 deleted_at = NOW(),
                 proof_identity_key = $3,
                 proof_phone_trunc = $4

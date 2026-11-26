@@ -14,7 +14,7 @@ use uuid::Uuid;
 
 use crate::error::Result;
 use crate::trip::model::{GestureKind, GestureRow, PositionStatus, ProofClass, TripRole};
-use crate::trip::rules::{END_CLOSES_AFTER_SECONDS, indicative_contribution_cents};
+use crate::trip::rules::END_CLOSES_AFTER_SECONDS;
 use crate::user::identity::{identity_key, phone_trunc};
 
 /// Contrôle de vraisemblance : une position déclarée à plus de 2 km de l'arrêt attendu est signalée
@@ -195,16 +195,16 @@ pub async fn find_gestures(db: &PgPool, trip_id: &Uuid) -> Result<Vec<GestureRow
     Ok(gestures)
 }
 
-/// Recalcule, pour chaque passager inscrit, la classe de preuve, son détail et le partage de frais indicatif.
+/// Recalcule, pour chaque passager inscrit, la classe de preuve et son détail.
 /// Appelé après chaque inscription, désinscription et geste.
 pub async fn refresh(db: &PgPool, trip_id: &Uuid) -> Result<()> {
     let driver_id: Uuid = sqlx::query_scalar("SELECT driver_id FROM trip WHERE id = $1")
         .bind(trip_id)
         .fetch_one(db)
         .await?;
-    let passengers: Vec<(Uuid, DateTime<Utc>, i32)> = sqlx::query_as(
+    let passengers: Vec<(Uuid, DateTime<Utc>)> = sqlx::query_as(
         r#"
-            SELECT user_id, created_at, distance_meters
+            SELECT user_id, created_at
             FROM trip_member
             WHERE trip_id = $1
               AND canceled_at IS NULL
@@ -216,15 +216,14 @@ pub async fn refresh(db: &PgPool, trip_id: &Uuid) -> Result<()> {
     let gestures = find_gestures(db, trip_id).await?;
     let driver = Occupant::of(&gestures, &driver_id);
 
-    for (passenger_id, booked_at, distance_meters) in &passengers {
+    for (passenger_id, booked_at) in &passengers {
         let proof = assess(driver, Occupant::of(&gestures, passenger_id), *booked_at);
         sqlx::query(
             r#"
                 UPDATE trip_member
                 SET proof_class = $3,
                     proof_detail = $4,
-                    proof_computed_at = NOW(),
-                    indicative_contribution_cents = $5
+                    proof_computed_at = NOW()
                 WHERE trip_id = $1
                   AND user_id = $2
             "#,
@@ -233,10 +232,6 @@ pub async fn refresh(db: &PgPool, trip_id: &Uuid) -> Result<()> {
         .bind(passenger_id)
         .bind(proof.class)
         .bind(Json(&proof.detail))
-        .bind(indicative_contribution_cents(
-            *distance_meters,
-            passengers.len() as i64,
-        ))
         .execute(db)
         .await?;
     }
@@ -264,7 +259,6 @@ struct ExportRow {
     distance_meters: i32,
     proof_class: ProofClass,
     proof_detail: Option<Json<ProofDetail>>,
-    indicative_contribution_cents: Option<i32>,
     contribution_cents: Option<i32>,
     driver_revenue_cents: Option<i32>,
     from_stop_lat: f64,
@@ -412,7 +406,6 @@ pub struct ExportedExtras {
     pub end_position_source: PositionSource,
     pub driver: DeclaredGestures,
     pub passenger: DeclaredGestures,
-    pub indicative_contribution_cents: Option<i32>,
     pub proof_detail: Option<ProofDetail>,
     pub warnings: Vec<ExportWarning>,
 }
@@ -442,7 +435,6 @@ pub async fn export(db: &PgPool, class: Option<ProofClass>) -> Result<Vec<Export
                 tm.distance_meters,
                 tm.proof_class,
                 tm.proof_detail,
-                tm.indicative_contribution_cents,
                 tm.contribution_cents,
                 tm.driver_revenue_cents,
                 ST_Y(from_stop.location::geometry) AS from_stop_lat,
@@ -657,7 +649,6 @@ fn to_journey(row: ExportRow) -> ExportedJourney {
             end_position_source,
             driver: driver_gestures,
             passenger: passenger_gestures,
-            indicative_contribution_cents: row.indicative_contribution_cents,
             proof_detail: row.proof_detail.map(|Json(detail)| detail),
             warnings,
         },

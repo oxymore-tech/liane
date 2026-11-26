@@ -212,16 +212,9 @@ async fn a_driver_and_two_passengers_prove_their_trip_at_class_c_and_b() {
     let (status, refusal) = app.post(&booking, Some(&tom), json!({})).await;
     assert_eq!((status, refusal), (StatusCode::CONFLICT, json!("TripFull")));
 
-    // 0,30 €/km sur le tronçon du passager, divisé entre les trois occupants.
-    let paula_distance = distance_of(3) - distance_of(1);
-    let expected_cents = (paula_distance as f64 / 1000.0 * 30.0 / 3.0).round() as i64;
     assert_eq!(
         passenger(&booked, &paula_id)["distance_meters"],
-        paula_distance
-    );
-    assert_eq!(
-        passenger(&booked, &paula_id)["indicative_contribution_cents"],
-        expected_cents
+        distance_of(3) - distance_of(1)
     );
 
     let (status, _) = gesture(&app, trip_id, &outsider, gesture_at("Start", a)).await;
@@ -423,7 +416,7 @@ async fn a_driver_and_two_passengers_prove_their_trip_at_class_c_and_b() {
         );
         assert!(identity.get("phone").is_none());
     }
-    assert_eq!(journey["distance"], paula_distance);
+    assert_eq!(journey["distance"], distance_of(3) - distance_of(1));
     assert!(is_close(&journey["start"]["lat"], b.lat));
     assert!(is_close(&journey["start"]["lon"], b.lng));
     assert!(is_close(&journey["end"]["lat"], d.lat));
@@ -439,10 +432,6 @@ async fn a_driver_and_two_passengers_prove_their_trip_at_class_c_and_b() {
     assert_eq!(item["liane"]["start_position_source"], "PassengerGesture");
     assert!(is_close(&item["liane"]["driver"]["start"]["lat"], a.lat));
     assert!(is_close(&item["liane"]["driver"]["end"]["lon"], d.lng));
-    assert_eq!(
-        item["liane"]["indicative_contribution_cents"],
-        expected_cents
-    );
 
     // Le schéma est réellement appliqué : il refuse un champ inconnu, un identifiant avec tirets, un numéro complet.
     let mut with_extra_field = journey.clone();

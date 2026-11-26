@@ -4,7 +4,6 @@ use sqlx::{FromRow, PgPool};
 use uuid::Uuid;
 
 use crate::auth::model::AuthUser;
-use crate::config::INDICATIVE_COST_SHARING_CENTS_PER_KM;
 use crate::error::{AppError, Result};
 use crate::fr_time::day_and_time;
 use crate::liane;
@@ -22,6 +21,7 @@ use crate::trip::rules::{
     self, END_CLOSES_AFTER_SECONDS, MAX_SEAT_COUNT, MIN_SEAT_COUNT, Refusal,
     START_CLOSES_AFTER_SECONDS,
 };
+use crate::wallet;
 
 const PAST_TRIPS_LIMIT: i64 = 50;
 const ADMIN_TRIPS_LIMIT: i64 = 200;
@@ -187,7 +187,6 @@ pub async fn find_detail(db: &PgPool, id: &Uuid, viewer: &AuthUser) -> Result<Tr
                     city: row.to_city,
                 },
                 distance_meters: row.distance_meters,
-                indicative_contribution_cents: row.indicative_contribution_cents,
             }
         })
         .collect();
@@ -218,7 +217,6 @@ pub async fn find_detail(db: &PgPool, id: &Uuid, viewer: &AuthUser) -> Result<Tr
             .collect(),
         next_gesture,
         gesture_window: rules::gesture_window(trip.departure_time),
-        indicative_cents_per_km: INDICATIVE_COST_SHARING_CENTS_PER_KM,
         trip,
     })
 }
@@ -435,9 +433,11 @@ async fn remove_booking(
 
 /// Un occupant déclare le début ou la fin de son trajet. L'heure est celle du serveur ;
 /// la position est facultative et ne fait jamais refuser le geste.
+/// Un passager descendu doit sa part des frais si le partage s'applique (voir `wallet`).
 pub async fn record_gesture(
     db: &PgPool,
     notifier: &Notifier,
+    cost_share_cents_per_km: Option<i32>,
     id: &Uuid,
     occupant: &AuthUser,
     input: &GestureInput,
@@ -531,6 +531,7 @@ pub async fn record_gesture(
     }
     tx.commit().await?;
     proof::refresh(db, id).await?;
+    wallet::service::record_entries(db, cost_share_cents_per_km, id).await?;
 
     let detail = find_detail(db, id, occupant).await?;
     if is_driver {
@@ -611,7 +612,6 @@ pub async fn list_for_admin(db: &PgPool, admin_id: &Uuid) -> Result<Vec<AdminTri
                     city: row.to_city,
                 },
                 distance_meters: row.distance_meters,
-                indicative_contribution_cents: row.indicative_contribution_cents,
                 proof_class: row.proof_class,
                 proof_detail: row.proof_detail.map(|Json(detail)| detail),
             })
@@ -690,7 +690,8 @@ async fn find_trips(db: &PgPool, viewer_id: &Uuid, filter: TripFilter) -> Result
                 EXISTS (
                     SELECT 1 FROM trip_member tm
                     WHERE tm.trip_id = t.id AND tm.user_id = $1 AND tm.canceled_at IS NULL
-                ) AS viewer_is_passenger
+                ) AS viewer_is_passenger,
+                driver.wallet_opened_at IS NOT NULL AS driver_has_wallet
             FROM trip t
             INNER JOIN liane l ON l.id = t.liane_id
             INNER JOIN "user" driver ON driver.id = t.driver_id
@@ -751,6 +752,7 @@ fn to_trip(row: TripRow, viewer_id: &Uuid, now: DateTime<Utc>) -> Trip {
         state: row.state,
         is_open: rules::is_open(row.state, row.departure_time, now),
         my_role,
+        driver_has_wallet: row.driver_has_wallet,
     }
 }
 
@@ -767,7 +769,6 @@ async fn find_passengers(db: &PgPool, trip_id: &Uuid) -> Result<Vec<PassengerRow
                 destination.label AS to_label,
                 destination.city AS to_city,
                 tm.distance_meters,
-                tm.indicative_contribution_cents,
                 tm.proof_class,
                 tm.proof_detail
             FROM trip_member tm
