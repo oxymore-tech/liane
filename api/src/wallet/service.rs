@@ -55,9 +55,6 @@ pub async fn close(db: &PgPool, cents_per_km: Option<i32>, user_id: &Uuid) -> Re
     Ok(Wallet::Closed { cents_per_km })
 }
 
-/// Inscrit la part des frais de chaque passager du trajet qui est monté puis descendu, si lui et le
-/// conducteur avaient un porte-monnaie quand il est descendu. Une seule ligne par passager et par
-/// trajet : rappeler la fonction ne change rien.
 pub async fn record_entries(db: &PgPool, cents_per_km: Option<i32>, trip_id: &Uuid) -> Result<()> {
     let Some(cents_per_km) = cents_per_km else {
         return Ok(());
@@ -116,6 +113,12 @@ async fn find_due_shares(db: &PgPool, trip_id: &Uuid) -> Result<Vec<DueShare>> {
                     AND boarding.user_id = tm.user_id
                     AND boarding.kind = 'Start'
               )
+              AND (
+                  SELECT COUNT(DISTINCT driving.kind) FROM trip_event driving
+                  WHERE driving.trip_id = tm.trip_id
+                    AND driving.user_id = t.driver_id
+                    AND driving.kind IN ('Start', 'End')
+              ) = 2
               AND NOT EXISTS (
                   SELECT 1 FROM wallet_entry w
                   WHERE w.trip_id = tm.trip_id AND w.passenger_id = tm.user_id

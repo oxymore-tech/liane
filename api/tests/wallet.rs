@@ -277,3 +277,40 @@ async fn a_wallet_opened_after_getting_off_does_not_share_that_trip() {
         0
     );
 }
+
+#[tokio::test]
+#[ignore = "exige TEST_DATABASE_URL"]
+async fn a_share_is_recorded_only_once_the_driver_has_declared_the_trip_too() {
+    let app = TestApp::spawn().await;
+    let admin = app.admin_token().await;
+    let points = app.points(2).await;
+    let (a, b) = (&points[0], &points[1]);
+    let liane = app
+        .create_liane(&admin, &unique_name("Les deux"), &[a, b])
+        .await;
+    let liane_id = liane["id"].as_str().unwrap();
+    let (driver, _) = app.new_member("Denis", liane_id, a, b).await;
+    let (paula, _) = app.new_member("Paula", liane_id, a, b).await;
+    open_wallet(&app, &driver).await;
+    open_wallet(&app, &paula).await;
+
+    let ride = propose(&app, liane_id, &driver).await;
+    let month = month_of(&ride);
+    book(&app, &ride, &paula).await;
+    declare(&app, &ride, &driver, "Start", a).await;
+    declare(&app, &ride, &paula, "Start", a).await;
+    declare(&app, &ride, &paula, "End", b).await;
+    assert_eq!(
+        statement_of(&app, &paula, &month).await["entries"],
+        json!([])
+    );
+
+    declare(&app, &ride, &driver, "End", b).await;
+    assert_eq!(
+        statement_of(&app, &paula, &month).await["entries"]
+            .as_array()
+            .unwrap()
+            .len(),
+        1
+    );
+}

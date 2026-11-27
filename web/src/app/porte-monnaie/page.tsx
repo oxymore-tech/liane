@@ -67,6 +67,10 @@ function OpenWallet({ centsPerKm }: { centsPerKm: number }) {
           Le partage ne se fait qu'entre deux personnes qui ont chacune un
           porte-monnaie.
         </li>
+        <li>
+          Un trajet compte quand le passager et le conducteur l'ont tous deux
+          déclaré.
+        </li>
         <li>Tout est dû une seule fois, à la fin du mois.</li>
       </ul>
       <p className={mutedClass}>
